@@ -278,6 +278,18 @@
       flex: 0 0 auto
     }
 
+    .armory {
+      flex: 0 0 auto;
+      text-decoration: none;
+      font-size: 13px;
+      opacity: .55;
+      margin-left: auto
+    }
+
+    .armory:hover {
+      opacity: 1
+    }
+
     /* import modal */
     #modal {
       display: none;
@@ -370,8 +382,8 @@
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
     function load() { try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; } }
 
-    const collapsed = new Set();
-    function toggleRank(i) { if (collapsed.has(i)) collapsed.delete(i); else collapsed.add(i); paint(); }
+    const collapsed = new Set(["low"]);   // low-level section starts collapsed
+    function toggleRank(i) { i = String(i); if (collapsed.has(i)) collapsed.delete(i); else collapsed.add(i); paint(); }
 
     // derive the main character for an alt (from "<Main> Alt" in officer/public note)
     function mainOf(m) {
@@ -533,27 +545,37 @@
         : sortMode === "level" ? (a, b) => (b.level || 0) - (a.level || 0) || (a.name || "").localeCompare(b.name || "")
           : (a, b) => (a.name || "").localeCompare(b.name || "");
 
+      // low-level toons (leveling alts/banks, < 80) go in their own section at the bottom
+      const isLow = m => (m.level || 0) < MAX_LEVEL;
+      const section = (key, label, list, color) => {
+        if (!list.length) return "";
+        const isC = !q && collapsed.has(key);   // searching expands all sections so matches show
+        const head = `<div class="rhead" style="cursor:pointer;user-select:none${color ? ';color:' + color : ''}" onclick="toggleRank('${key}')"><span style="display:inline-block;width:14px;color:#8a8d93">${isC ? "▶" : "▼"}</span> ${esc(label)} <span class="c">(${list.length})</span></div>`;
+        return `<div class="rank">${head}<div class="members"${isC ? ' style="display:none"' : ''}>${list.map(memberRow).join("")}</div></div>`;
+      };
+
       let html = "";
       ranksOrder.forEach(r => {
-        const list = (byRank[r.rankIndex] || []).sort(sortFn);
-        if (!list.length) return;
-        const isC = collapsed.has(r.rankIndex);
-        html += `<div class="rank"><div class="rhead" style="cursor:pointer;user-select:none" onclick="toggleRank(${r.rankIndex})"><span style="display:inline-block;width:14px;color:#8a8d93">${isC ? "▶" : "▼"}</span> ${esc(r.name)} <span class="c">(${list.length})</span></div><div class="members"${isC ? ' style="display:none"' : ''}>`;
-        list.forEach(m => {
-          const col = CLASS_COLOR[m.class] || "#fff";
-          const main = isAlt(m) ? mainOf(m) : null;
-          html += `<div class="m" title="${esc(m.class)} · lvl ${m.level} · ${esc(m.publicNote || "")}">
-            <span class="fang${isFang(m) ? ' on' : ''}" data-name="${esc(m.name)}" title="Toggle Fang (10-man squad)">💀</span>
-            <span class="mn" style="color:${col}">${esc(m.name)}</span>
-            <span class="lv">${m.level}</span>
-            ${main ? `<span class="altof">↳ ${esc(main)}</span>` : ""}
-            ${joinedOf(m) ? `<span class="joined" title="Joined the guild">📅 ${esc(joinedOf(m))}</span>` : ""}
-            <span class="note">${esc(m.publicNote || "")}</span>
-          </div>`;
-        });
-        html += `</div></div>`;
+        const list = (byRank[r.rankIndex] || []).filter(m => !isLow(m)).sort(sortFn);
+        html += section(String(r.rankIndex), r.name, list);
       });
+      const lows = roster.filter(isLow).sort(sortFn);
+      html += section("low", "⬇ Low level (< " + MAX_LEVEL + ")", lows, "#8a8d93");
       document.getElementById("roster").innerHTML = html || `<p class="sub">No members match.</p>`;
+    }
+
+    const MAX_LEVEL = 80;
+    function memberRow(m) {
+      const col = CLASS_COLOR[m.class] || "#fff";
+      const main = isAlt(m) ? mainOf(m) : null;
+      return `<div class="m" title="${esc(m.class)} · lvl ${m.level} · ${esc(m.publicNote || "")}">
+        <span class="fang${isFang(m) ? ' on' : ''}" data-name="${esc(m.name)}" title="Toggle Fang (10-man squad)">💀</span>
+        <span class="mn" style="color:${col}">${esc(m.name)}</span>
+        <span class="lv">${m.level}</span>
+        ${main ? `<span class="altof">↳ ${esc(main)}</span>` : ""}
+        ${joinedOf(m) ? `<span class="joined" title="Joined the guild">📅 ${esc(joinedOf(m))}</span>` : ""}
+        <a class="armory" href="https://armory.warmane.com/character/${encodeURIComponent(m.name)}/Onyxia/summary" target="_blank" rel="noopener" title="Open ${esc(m.name)} on Warmane Armory" onclick="event.stopPropagation()">🔗</a>
+      </div>`;
     }
 
     async function exportRoster() {
