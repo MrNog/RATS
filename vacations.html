@@ -86,7 +86,7 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 40px;
+      height: 38px;
       font-size: 14px;
       color-scheme: dark;
       min-width: 150px
@@ -100,14 +100,14 @@
       cursor: pointer
     }
 
+
     button {
       background: var(--accent);
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 0 18px;
-      height: 40px;
-      font-weight: 800;
+      padding: 9px 16px;
+      font-weight: 700;
       cursor: pointer;
       font-size: 13px
     }
@@ -143,13 +143,13 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 40px;
+      height: 38px;
       font-size: 14px
     }
 
     .ac {
       position: absolute;
-      top: 44px;
+      top: 42px;
       left: 0;
       right: 0;
       z-index: 10;
@@ -253,6 +253,14 @@
       font-style: italic;
       padding: 10px 2px
     }
+
+    h2.sec { cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px }
+    h2.sec:hover { color:#e0b860 }
+    .caret { font-size:11px; color:#8a8d93 }
+    .cnt { color:#6e7178; font-size:12px; font-weight:600; text-transform:none; letter-spacing:0 }
+    .seclist { max-height:300px; overflow:auto; border:1px solid #2f3137; border-radius:8px; background:#16181c; padding:0 12px 8px }
+    .seclist table { margin-top:0 }
+    .seclist thead th { position:sticky; top:0; background:#16181c; z-index:1 }
   </style>
 </head>
 
@@ -272,27 +280,27 @@
             onfocus="acFilter()" style="width:100%">
           <div id="vList" class="ac" style="display:none"></div>
         </div>
-        <input type="date" id="vStart" title="From">
-        <input type="date" id="vEnd" title="To (optional)">
-        <input type="text" id="vNote" placeholder="note (optional)" maxlength="120" style="flex:1;min-width:140px">
-        <button onclick="addVac()">+ I'm away</button>
+        <input type="date" id="vStart" lang="en-GB" title="From">
+        <input type="date" id="vEnd" lang="en-GB" title="To (optional)">
+        <input type="text" id="vNote" placeholder="note for officers (optional)" maxlength="120" style="flex:1;min-width:140px">
+        <button onclick="addVac()">+ Add vacation</button>
       </div>
       <div class="msg" id="msg"></div>
     </div>
 
-    <div id="previewWrap" class="card" style="display:none;border-color:#3a4a5b">
+    <div id="previewWrap" class="card" style="border-color:#3a4a5b">
       <div
         style="font-size:12px;color:#9ad0ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
-        👁 Preview <span style="color:#6e7178;font-weight:600;text-transform:none;letter-spacing:0"> · how your away
+        👁 Live preview <span style="color:#6e7178;font-weight:600;text-transform:none;letter-spacing:0"> · how your away
           card will look</span>
       </div>
       <div id="previewCard"></div>
     </div>
 
-    <h2>🟢 Away now</h2>
-    <div id="active"></div>
-    <h2>📅 All vacations</h2>
-    <div id="all"></div>
+    <h2 class="sec" onclick="toggleSec('active')"><span class="caret" id="caretactive">▼</span> 🟢 Away now <span class="cnt" id="cntactive"></span></h2>
+    <div id="activeWrap" class="seclist"><div id="active"></div></div>
+    <h2 class="sec" onclick="toggleSec('all')"><span class="caret" id="caretall">▶</span> 📅 All vacations <span class="cnt" id="cntall"></span></h2>
+    <div id="allWrap" class="seclist" style="display:none"><div id="all"></div></div>
   </div>
 
   <script>
@@ -312,6 +320,14 @@
 
     // ---- away-card preview (same card the officer alert posts; no reminder, sends nothing) ----
     function daysBetween(s, e) { const a = new Date(s), b = new Date(e || s); return Math.round((b - a) / 86400000) + 1; }
+    const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    function fmtDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? (+m[3]) + " " + MON[+m[2] - 1] + " " + m[1] : (s || "—"); }
+    function vacProgress(v) {
+      const total = daysBetween(v.start, v.end);
+      const idx = Math.max(1, Math.min(total, Math.round((new Date(todayStr()) - new Date(v.start)) / 86400000) + 1));
+      const p = Math.max(0, Math.min(100, Math.round(idx / total * 100)));
+      return { p, idx, total, left: total - idx };
+    }
     const CLASS_QUIPS = {
       "Warrior": ["Charged off the edge of the calendar.", "Gone to find a bigger axe.", "Rage went on cooldown.", "Heroic Leap'd straight to the beach."],
       "Paladin": ["Bubble-hearthed to the beach.", "Even the Light takes a day off.", "AFK, blessing the buffet.", "Divine Shield up, raid invites bounce off."],
@@ -370,13 +386,13 @@
       </div>`;
     }
     function updatePreview() {
-      const box = document.getElementById("previewCard"), wrap = document.getElementById("previewWrap");
+      const box = document.getElementById("previewCard");
       const typed = document.getElementById("vSearch").value.trim();
       const picked = selName && selName.toLowerCase() === typed.toLowerCase();
       const name = picked ? selName : typed, cls = picked ? selClass : "";
       const start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value, note = document.getElementById("vNote").value.trim();
-      if (!name || !start) { wrap.style.display = "none"; return; }
-      wrap.style.display = "";
+      if (!name || !start) { box.innerHTML = '<div class="empty" style="padding:2px">Pick your character and a From date to preview your card…</div>'; return; }
+      if (end && end < start) { box.innerHTML = '<div class="empty" style="padding:2px;color:#ff6b6b">⚠️ "To" is before "From".</div>'; return; }
       box.innerHTML = renderEmbedCard(buildVacEmbed({ name, class: cls, start, end, note }), { name, color: CLASS_COLOR[cls] || "#fff" });
     }
 
@@ -397,23 +413,38 @@
       const col = CLASS_COLOR[v.class] || "#ddd";
       const st = status(v), lbl = { active: "away now", soon: "upcoming", past: "ended" }[st];
       const note = v.note ? ` <span title="${esc(v.note)}" style="cursor:help">📝</span>` : "";
+      let statusCell = `<span class="pill ${st}">${lbl}</span>`;
+      if (st === "active") {
+        const pr = vacProgress(v);
+        statusCell = `<div style="min-width:130px" title="${pr.left} day${pr.left !== 1 ? "s" : ""} left">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d93;margin-bottom:2px"><span>day ${pr.idx}/${pr.total}</span><span style="font-weight:700;color:#8fdf9f">${pr.p}%</span></div>
+          <div style="height:6px;background:#232529;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:${pr.p}%;background:linear-gradient(90deg,#43b581,#8fdf9f)"></i></div>
+        </div>`;
+      }
       return `<tr>
         <td class="nm" style="color:${col}">${esc(v.name)}${note}</td>
-        <td style="color:${col}">${esc(v.class || "—")}</td>
-        <td>${esc(v.start)}</td>
-        <td>${esc(v.end || "—")}</td>
-        <td><span class="pill ${st}">${lbl}</span></td>
-        <td style="text-align:right"><button class="del" onclick="removeVac('${v.key}')">remove</button></td>
+        <td>${esc(fmtDate(v.start))}</td>
+        <td>${esc(v.end ? fmtDate(v.end) : "—")}</td>
+        <td>${statusCell}</td>
       </tr>`;
     }
     function table(list) {
       if (!list.length) return '<div class="empty">None.</div>';
-      return '<table><thead><tr><th>Raider</th><th>Class</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>' + list.map(rowHtml).join("") + '</tbody></table>';
+      return '<table><thead><tr><th>Raider</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>' + list.map(rowHtml).join("") + '</tbody></table>';
     }
     function render() {
-      const vs = VACS.slice().sort((a, b) => (b.start || "").localeCompare(a.start || ""));
-      document.getElementById("active").innerHTML = table(vs.filter(v => status(v) === "active"));
+      const vs = VACS.slice().sort((a, b) => (a.start || "").localeCompare(b.start || ""));   // chronological, like officer
+      const active = vs.filter(v => status(v) === "active");
+      document.getElementById("active").innerHTML = table(active);
       document.getElementById("all").innerHTML = table(vs);
+      document.getElementById("cntactive").textContent = active.length ? "(" + active.length + ")" : "";
+      document.getElementById("cntall").textContent = vs.length ? "(" + vs.length + ")" : "";
+    }
+    const secOpen = { active: true, all: false };
+    function toggleSec(key) {
+      secOpen[key] = !secOpen[key];
+      document.getElementById(key + "Wrap").style.display = secOpen[key] ? "" : "none";
+      document.getElementById("caret" + key).textContent = secOpen[key] ? "▼" : "▶";
     }
     async function reload() {
       const o = await fbGet("vacations");
@@ -430,7 +461,7 @@
       const start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value;
       const note = document.getElementById("vNote").value.trim();
       if (!start) { msg("Pick a From date.", "#ff6b6b"); return; }
-      if (end && end < start) { msg("'To' is before 'From'.", "#ff6b6b"); return; }
+      if (end && end < start) { msg("'To' is before 'From' — no negative days.", "#ff6b6b"); return; }
       msg("⏳ Saving…", "#8a8d93");
       try {
         await fbPost("vacations", { name, class: cls, start, end: end || "", note });
@@ -458,6 +489,7 @@
     ["vSearch", "vStart", "vEnd", "vNote"].forEach(id => document.getElementById(id).addEventListener("input", updatePreview));
 
     (async function boot() {
+      updatePreview();
       MEMBERS = (await fbGet("members")) || [];
       await reload();
     })();

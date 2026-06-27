@@ -225,6 +225,14 @@
     const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const msg = (t, c) => { const e = document.getElementById("msg"); e.style.color = c || "#7CFC8A"; e.textContent = t || ""; };
     const todayStr = () => { const d = new Date(), z = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); };
+    // project-wide date format: "26 Jul 2026" (accepts ISO 2026-07-26 or DD-MM-YYYY 26-07-2026)
+    const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    function fmtDate(s) {
+      s = String(s == null ? "" : s).trim();
+      let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); if (m) return (+m[3]) + " " + MON[+m[2] - 1] + " " + m[1];
+      m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(s); if (m) return (+m[1]) + " " + MON[+m[2] - 1] + " " + m[3];
+      return s;
+    }
 
     async function fbGet(p) { try { const r = await fetch(FB + p + ".json", { cache: "no-store" }); return r.ok ? await r.json() : null; } catch (e) { return null; } }
     async function fbPost(p, o) { const r = await fetch(FB + p + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(o) }); if (!r.ok) throw new Error("HTTP " + r.status); return (await r.json()).name; }
@@ -241,7 +249,7 @@
       return { ver, date, items };
     }
     function buildEmbed(e) {
-      const head = e.date + (e.ver ? " · " + e.ver : "");
+      const head = fmtDate(e.date) + (e.ver ? " · " + e.ver : "");
       return {
         author: { name: "RATS • App update" },
         title: "📜 What's new" + (e.ver ? " — " + e.ver : ""),
@@ -299,7 +307,7 @@
       if (!LOGS.length) { box.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
       box.innerHTML = LOGS.map(e => `<div class="entry">
         <div class="row" style="justify-content:space-between">
-          <div class="d">${esc(e.date)}${e.ver ? " · " + esc(e.ver) : ""}${e.pub ? ' <span style="color:#7CFC8A;font-size:11px">🌐 public</span>' : ' <span style="color:#6e7178;font-size:11px">officer-only</span>'}</div>
+          <div class="d">${esc(fmtDate(e.date))}${e.ver ? " · " + esc(e.ver) : ""}${e.pub ? ' <span style="color:#7CFC8A;font-size:11px">🌐 public</span>' : ' <span style="color:#6e7178;font-size:11px">officer-only</span>'}</div>
           <div style="white-space:nowrap"><button class="del" onclick="repost('${e.key}')" style="border-color:#c0943a;color:#e0b860;margin-right:6px">📣 repost</button><button class="del" onclick="del('${e.key}')">delete</button></div>
         </div>
         <ul>${(e.items || []).map(i => `<li>${esc(i)}</li>`).join("")}</ul>

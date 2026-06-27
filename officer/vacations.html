@@ -395,8 +395,8 @@
             onfocus="acFilter()" style="width:100%">
           <div id="vList" class="ac" style="display:none"></div>
         </div>
-        <input type="date" id="vStart" title="From">
-        <input type="date" id="vEnd" title="To (optional — single day? leave empty)">
+        <input type="date" id="vStart" lang="en-GB" title="From">
+        <input type="date" id="vEnd" lang="en-GB" title="To (optional — single day? leave empty)">
         <input type="text" id="vNote" placeholder="note (optional)" maxlength="120" style="flex:1;min-width:140px">
         <button onclick="addVac()">+ Add vacation</button>
       </div>
@@ -467,9 +467,8 @@
       if (editable && v.key === editingKey) {
         return `<tr>
           <td class="nm" style="color:${col}">${esc(v.name)}</td>
-          <td style="color:${col}">${esc(v.class || "—")}</td>
-          <td><input type="date" id="edStart" value="${esc(v.start)}" style="height:32px;min-width:140px"></td>
-          <td><input type="date" id="edEnd" value="${esc(v.end || "")}" style="height:32px;min-width:140px"></td>
+          <td><input type="date" id="edStart" lang="en-GB" value="${esc(v.start)}" style="height:32px;min-width:140px"></td>
+          <td><input type="date" id="edEnd" lang="en-GB" value="${esc(v.end || "")}" style="height:32px;min-width:140px"></td>
           <td colspan="2" style="text-align:right;white-space:nowrap">
             <button onclick="saveEdit('${v.key}')" style="padding:6px 12px">Save</button>
             <button class="del" onclick="cancelEdit()" style="border-color:#3a3d44;color:#9aa0a6">Cancel</button>
@@ -488,16 +487,15 @@
       }
       return `<tr>
         <td class="nm" style="color:${col}">${esc(v.name)}${note}</td>
-        <td style="color:${col}">${esc(v.class || "—")}</td>
-        <td>${esc(v.start)}</td>
-        <td>${esc(v.end || "—")}</td>
+        <td>${esc(fmtDate(v.start))}</td>
+        <td>${esc(v.end ? fmtDate(v.end) : "—")}</td>
         <td>${statusCell}</td>
         <td style="text-align:right;white-space:nowrap">${editable ? `<button class="del" onclick="repostVac('${v.key}')" style="border-color:#c0943a;color:#e0b860;margin-right:6px" title="Re-post this alert to Discord">📣 repost</button><button class="del" onclick="editVac('${v.key}')" style="border-color:#3a4a5b;color:#9ad0ff;margin-right:6px">edit</button><button class="del" onclick="removeVac('${v.key}')">remove</button>` : ""}</td>
       </tr>`;
     }
     function table(list, editable) {
       if (!list.length) return '<div class="empty">None.</div>';
-      return '<table><thead><tr><th>Raider</th><th>Class</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>'
+      return '<table><thead><tr><th>Raider</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>'
         + list.map(v => rowHtml(v, editable)).join("") + '</tbody></table>';
     }
     function render() {
@@ -581,7 +579,7 @@
     function daysBetween(s, e) { const a = new Date(s), b = new Date(e || s); return Math.round((b - a) / 86400000) + 1; }
     // "2026-06-10" -> "10 Jun" (short, friendly for the alert card)
     const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    function fmtDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? (+m[3]) + " " + MON[+m[2] - 1] : (s || "—"); }
+    function fmtDate(s) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return m ? (+m[3]) + " " + MON[+m[2] - 1] + " " + m[1] : (s || "—"); }
     // single source of truth for the alert card — used by both the live webhook post and the dev preview
     // ---- per-class flavor quips (a random one per vacation, stable so preview == posted) ----
     const CLASS_QUIPS = {
@@ -685,6 +683,7 @@
       const name = picked ? selName : typed, cls = picked ? selClass : "";
       const start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value, note = document.getElementById("vNote").value.trim();
       if (!name || !start) { box.innerHTML = '<div class="empty" style="padding:2px">Pick a raider and a From date to preview the alert…</div>'; return; }
+      if (end && end < start) { box.innerHTML = '<div class="empty" style="padding:2px;color:#ff6b6b">⚠️ "To" is before "From".</div>'; return; }
       const v = { name, class: cls, start, end, note };
       const hl = { name, color: CLASS_COLOR[cls] || "#fff" };
       const lbl = t => `<div style="font-size:11px;color:#6e7178;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px">${t}</div>`;
