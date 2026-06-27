@@ -222,6 +222,10 @@
         <div class="t">📁 Officer Files →</div>
         <div class="d">Shared files for officers — sheets, exports, docs. Hosted here, one-click download. No external drive.</div>
       </a>
+      <a class="tool" href="changelog.html">
+        <div class="t">📜 Changelog / Dev log →</div>
+        <div class="d">Write what changed in the app — updates the hub's Changelog drawer and posts to #okanor-logs on Discord.</div>
+      </a>
     </div>
     <div class="foot">FOR THE RATS 🧀 — all client-side, nothing leaves your browser except the Discord post.</div>
   </div>
@@ -235,38 +239,17 @@
   <aside id="clog">
     <button class="x" onclick="toggleClog()" title="Close">✕</button>
     <h2>📜 Changelog</h2>
-    <p class="sub" style="margin:0">What's new in the tools.</p>
-    <!-- newest first: add a new .cl-entry block at the top on each update -->
+    <!-- entries load live from Firebase; the blocks below are the offline fallback -->
+    <div id="clogEntries">
     <div class="cl-entry">
-      <div class="cl-date">2026-06-27 · v4</div>
+      <div class="cl-date">June 2026</div>
       <ul>
-        <li>📊 <b>Attendance/History</b> — fixed class colors (resolved from spec) and smarter name matching so Discord nicks map to the in-game roster (handles <code>[tags]</code>, <code>/alts</code> and spellings); fewer false "Unranked / Pug".</li>
-        <li>🗓 Discord post — a 10-man no longer shows empty Group 3/4/5; No-shows slide into the Group 3 column.</li>
+        <li>🏖️ <b>Vacations</b> — self-service time off, day-before reminders &amp; a calendar of who's away.</li>
+        <li>🗓 <b>Raid Comp</b> — build a comp from the roster and post it to Discord.</li>
+        <li>📊 <b>Attendance &amp; History</b> — per-raider %, 25/10-man tracked, vacations excused.</li>
+        <li>👥 <b>Roster</b>, 📁 <b>Officer Files</b>, 📜 <b>Lore</b> &amp; this 🛠️ <b>dev-log</b>.</li>
       </ul>
     </div>
-    <div class="cl-entry">
-      <div class="cl-date">2026-06-27 · v3</div>
-      <ul>
-        <li>🗓 <b>Raid Comp</b> — hover a raider to <b>change their spec</b> inline (fixes the icon + the tank/healer/dps count), and <b>drag onto another raider</b> to set the exact order within a group.</li>
-        <li>👥 Roster picker now lists raiders <b>alphabetically</b> within each class — easier to find names.</li>
-      </ul>
-    </div>
-    <div class="cl-entry">
-      <div class="cl-date">2026-06-27 · v2</div>
-      <ul>
-        <li>📁 <b>Officer Files</b> page — folder tree with one-click downloads, hosted in the repo (no more Google Drive link). Starting with the Phase 3 Loot Prio sheet.</li>
-      </ul>
-    </div>
-    <div class="cl-entry">
-      <div class="cl-date">2026-06-25 · v1</div>
-      <ul>
-        <li>🧩 New <b>Addons</b> page — Okanvil host + plugins, with .zip downloads + install tips.</li>
-        <li>📜 New <b>Lore &amp; Stories</b> — post raid tales (markdown, images, real @mentions) to Discord.</li>
-        <li>📊 New <b>Attendance &amp; History</b> — per-raider %, 25/10-man tracked separately, vacation excuses, collapsible ranks.</li>
-        <li>🗓 <b>Raid Comp</b> — drag &amp; drop between groups, add many from the roster, empty-group template, needs 10+ to post.</li>
-        <li>⚡ <b>Instant saves</b> (Firebase) — no more download/commit; plus repo backup &amp; auto-restore.</li>
-        <li>🔑 Multiple named <b>Discord webhooks</b> in Admin · 🧀 cheese favicon.</li>
-      </ul>
     </div>
   </aside>
 
@@ -278,6 +261,23 @@
       document.getElementById("clogOv").classList.toggle("open");
     }
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") { document.getElementById("clog").classList.remove("open"); document.getElementById("clogOv").classList.remove("open"); } });
+
+    // officer view: load ALL dev-log entries from Firebase (public + officer-only); falls back to static blocks
+    (function loadChangelog() {
+      var FB = "https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/changelog.json";
+      var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); };
+      fetch(FB, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (o) {
+        if (!o) return;
+        var list = Object.keys(o).map(function (k) { return o[k]; }).filter(function (e) { return e && e.items; })
+          .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+        if (!list.length) return;
+        document.getElementById("clogEntries").innerHTML = list.map(function (e) {
+          return '<div class="cl-entry"><div class="cl-date">' + esc(e.date) + (e.ver ? " · " + esc(e.ver) : "")
+            + (e.pub ? ' 🌐' : '') + '</div><ul>'
+            + (e.items || []).map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + '</ul></div>';
+        }).join("");
+      }).catch(function () { });
+    })();
   </script>
 </body>
 
