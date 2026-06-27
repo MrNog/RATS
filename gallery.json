@@ -302,29 +302,29 @@
   },
   {
     "cat": "warchiefs",
-    "file": "images/warchiefs/Warchiefs (1).png",
-    "title": "Warchiefs (1)",
+    "file": "images/warchiefs/Warchiefs 1.png",
+    "title": "Warchiefs #1",
     "caption": "",
     "date": "2026-06"
   },
   {
     "cat": "warchiefs",
-    "file": "images/warchiefs/Warchiefs (2).png",
-    "title": "Warchiefs (2)",
+    "file": "images/warchiefs/Warchiefs 2.png",
+    "title": "Warchiefs #2",
     "caption": "",
     "date": "2026-06"
   },
   {
     "cat": "warchiefs",
-    "file": "images/warchiefs/Warchiefs (3).png",
-    "title": "Warchiefs (3)",
+    "file": "images/warchiefs/Warchiefs 3.png",
+    "title": "Warchiefs #3",
     "caption": "",
     "date": "2026-06"
   },
   {
     "cat": "warchiefs",
-    "file": "images/warchiefs/Warchiefs (4).png",
-    "title": "Warchiefs (4)",
+    "file": "images/warchiefs/Warchiefs 4.png",
+    "title": "Warchiefs #4",
     "caption": "",
     "date": "2026-06"
   },
@@ -445,6 +445,13 @@
     "cat": "icons",
     "file": "images/icons/Guild RATS 2.png",
     "title": "Guild RATS 2",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/okanor-logs.png",
+    "title": "Okanor Logs",
     "caption": "",
     "date": "2026-06"
   },
