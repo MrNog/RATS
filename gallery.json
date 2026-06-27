@@ -371,11 +371,26 @@
   },
   {
     "cat": "banners",
+    "file": "images/banners/Ulduar 10 normal.png",
+    "title": "Ulduar 10 Normal",
+    "caption": "",
+    "date": "2026-06",
+    "wide": true
+  },
+  {
+    "cat": "banners",
     "file": "images/banners/Ulduar 25.png",
     "title": "Ulduar (25-man)",
     "caption": "",
     "date": "2026-06",
     "wide": true
+  },
+  {
+    "cat": "wallpaper",
+    "file": "images/wallpaper/Rats ToC 4k.png",
+    "title": "Rats ToC 4k",
+    "caption": "",
+    "date": "2026-06"
   },
   {
     "cat": "wallpaper",
