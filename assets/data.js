@@ -333,10 +333,17 @@ window.RatsData = (function () {
   // ---- access gate: block the page until the guild key is entered ----
   let _unlocked = false;
 
-  function _lockUI(resolve, verify) {
+  // create the full-screen blocker immediately (synchronously) so officer content never flashes
+  function _makeOverlay() {
     const ov = document.createElement("div");
     ov.id = "ratsGate";
-    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:#0f1012;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Roboto,Arial,sans-serif";
+    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:#0f1012;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#8a8d93";
+    ov.innerHTML = '<div style="font-size:40px;line-height:1">🧀🔒</div>';
+    (document.body || document.documentElement).appendChild(ov);
+    return ov;
+  }
+
+  function _lockUI(ov, resolve, verify) {
     ov.innerHTML =
       '<div style="background:#1b1d21;border:1px solid #34373d;border-radius:12px;padding:30px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,.6)">'
       + '<div style="font-size:46px;line-height:1;margin-bottom:8px">🧀🔒</div>'
@@ -365,16 +372,22 @@ window.RatsData = (function () {
   async function gate(opts) {
     opts = opts || {};
     if (_unlocked) return true;
+    const ov = _makeOverlay();   // block the page right away, before any async check
     let blob = null;
     const checks = opts.checks || ["gate.json", "roster.json"];
     for (let i = 0; i < checks.length; i++) {
       try { const r = await fetch(checks[i], { cache: "no-store" }); if (r.ok) { const j = await r.json(); if (j && (j.enc || j.ct)) { blob = j; break; } } } catch (e) { }
     }
-    if (!blob) { _unlocked = true; return true; }
+    // unified site: the encrypted lock lives in the shared Firebase (gate token, else the roster)
+    if (!blob && fbOn()) {
+      try { const g = await fbGet("gate"); if (g && (g.enc || g.ct)) blob = g; } catch (e) { }
+      if (!blob) { try { const r = await fbGet("roster"); if (r && (r.enc || r.ct)) blob = r; } catch (e) { } }
+    }
+    if (!blob) { ov.remove(); _unlocked = true; return true; }   // no lock armed -> open
     const verify = async function (pass) { const obj = await decrypt(blob, pass); if (obj && obj.roster) cache(obj); setPass(pass); _unlocked = true; return true; };
     const cp = getPass();
-    if (cp) { try { await verify(cp); return true; } catch (e) { clearPass(); } }
-    return new Promise(function (res) { _lockUI(res, verify); });
+    if (cp) { try { await verify(cp); ov.remove(); return true; } catch (e) { clearPass(); } }
+    return new Promise(function (res) { _lockUI(ov, res, function (p) { return verify(p); }); });
   }
 
   // ---- Discord-name -> in-game name aliases ----

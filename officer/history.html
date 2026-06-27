@@ -396,6 +396,7 @@
     <div class="msg" id="msg"></div>
 
     <h2 id="attHead">📊 Attendance</h2>
+    <div id="legend" class="sub" style="margin:-4px 0 10px;line-height:1.5"></div>
     <div id="attendance"></div>
 
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
@@ -577,6 +578,17 @@
       const sizeLbl = sf === "all" ? "all raids" : sf + "-man";
       document.getElementById("attHead").textContent = "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
 
+      const lg = document.getElementById("legend");
+      const fmt = '<b>Days</b> = times present <b>/</b> raids that counted for them.';
+      if (sf === "10") {
+        lg.innerHTML = '💀 <b>Fangs</b> are expected at every 10-man, so all 10-mans count for them — that\'s why a Fang who skipped both shows <b>0 / 2</b>. '
+          + 'Everyone else only counts for the 10-mans they actually joined. ' + fmt;
+      } else if (sf === "25") {
+        lg.innerHTML = '25-mans are <b>mandatory</b> — every 25-man counts for everyone since they joined. ' + fmt;
+      } else {
+        lg.innerHTML = 'Combined: 25-mans count for everyone; 10-mans count for 💀 Fangs and anyone who joined them. 🏖️ Vacations are excused. ' + fmt;
+      }
+
       const q = (document.getElementById("search").value || "").toLowerCase().trim();
       let list = q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
       const sort = document.getElementById("sort").value;
@@ -624,11 +636,18 @@
         const hidden = (byRank && curCollapsed) ? ' style="display:none"' : '';
         const col = CLASS_COLOR[r.cls] || "#ddd";
         const ns = r.noShow ? `<span class="pill" title="explicit no-shows">${r.noShow} no-show${r.noShow != 1 ? "s" : ""}</span>` : "";
+        const fang = isFangName(r.name);
+        const fangMark = fang ? `<span title="Fang — expected at all 10-mans" style="cursor:help">💀 </span>` : "";
+        const sfNow = (document.getElementById("sizeF") || {}).value || "25";
+        const why = sfNow === "10"
+          ? (fang ? `Fang: all ${r.total} 10-man${r.total != 1 ? "s" : ""} count — present at ${r.present}.`
+                  : `${r.total} 10-man${r.total != 1 ? "s" : ""} this raider joined — present at ${r.present}.`)
+          : `${r.present} present out of ${r.total} raid${r.total != 1 ? "s" : ""} that counted.`;
         html += `<tr${hidden}>
-          <td class="nm" style="color:${col}">${esc(r.name)}</td>
+          <td class="nm" style="color:${col}">${fangMark}${esc(r.name)}</td>
           <td style="color:${col}">${esc(r.cls || "—")}</td>
           <td><div class="bar"><i style="width:${r.pct}%;background:${barColor(r.pct)}"></i></div></td>
-          <td>${r.present} / ${r.total}${ns}</td>
+          <td title="${esc(why)}" style="cursor:help">${r.present} / ${r.total}${ns}</td>
           <td class="pct" style="color:${barColor(r.pct)}">${r.pct}%</td>
         </tr>`;
       });

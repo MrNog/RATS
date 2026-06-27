@@ -546,7 +546,14 @@
     // roster-picker icons: 👑 GM (King Rat) · ⭐ officer (Warchief Rat) · 💀 Fang
     function compGuildData() { try { return JSON.parse(localStorage.getItem("ratsGuild") || "null") || {}; } catch (e) { return {}; } }
     function isFangP(m) { const fs = (compGuildData().fangs) || [], n = (m.name || "").toLowerCase().replace(/[^a-z0-9]/g, ""); return fs.some(x => (x || "").toLowerCase().replace(/[^a-z0-9]/g, "") === n); }
-    function rankIcon(m) { let s = m.rankIndex === 0 ? "👑" : m.rankIndex === 1 ? "⭐" : ""; if (isFangP(m)) s += "💀"; return s ? `<span style="flex:0 0 auto" title="${m.rankIndex === 0 ? "Guild Master" : m.rankIndex === 1 ? "Officer" : ""}${isFangP(m) ? " · Fang" : ""}">${s}</span>` : ""; }
+    // one icon only, highest rank wins: 👑 GM > ⭐ officer > 💀 Fang (no doubling up)
+    function rankIcon(m) {
+      let s = "", t = "";
+      if (m.rankIndex === 0) { s = "👑"; t = "Guild Master"; }
+      else if (m.rankIndex === 1) { s = "⭐"; t = "Officer"; }
+      else if (isFangP(m)) { s = "💀"; t = "Fang"; }
+      return s ? `<span style="flex:0 0 auto" title="${t}">${s}</span>` : "";
+    }
     function populateGuildNames() {
       const dl = document.getElementById("guildNames"); if (!dl) return;
       dl.innerHTML = guildRoster().map(m => `<option value="${(m.name || "").replace(/"/g, "")}">`).join("");
