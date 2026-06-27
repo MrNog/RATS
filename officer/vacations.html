@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Vacations</title>
+  <style>
+    :root { --accent:#c0943a }
+    * { box-sizing:border-box }
+    body { margin:0; background:#141517; color:#dcddde; font-family:"Segoe UI",Roboto,Arial,sans-serif; font-size:14px }
+    .wrap { max-width:1000px; margin:0 auto; padding:18px }
+    h1 { font-size:18px; margin:0; color:#fff; letter-spacing:.5px }
+    h2 { font-size:14px; color:var(--accent); margin:24px 0 8px; letter-spacing:.3px; text-transform:uppercase }
+    .sub { color:#8a8d93; font-size:13px; margin:8px 0 0 }
+    .row { display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+    a.btn { display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-size:13px; font-weight:600;
+      color:#9aa0a6; background:#202225; border:1px solid #2f3137; border-radius:6px; padding:6px 12px }
+    a.btn:hover { border-color:var(--accent); color:#fff }
+    input[type=date], select { -webkit-appearance:none; appearance:none; background:#0f1012; color:#fff; border:1px solid #333;
+      border-radius:6px; padding:0 12px; height:38px; font-size:14px; color-scheme:dark; min-width:150px }
+    select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8d93' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; cursor:pointer }
+    button { background:var(--accent); color:#1b1d21; border:0; border-radius:6px; padding:9px 16px; font-weight:700; cursor:pointer; font-size:13px }
+    button:hover { filter:brightness(1.1) }
+    .card { background:#1b1d21; border:1px solid #2f3137; border-radius:10px; padding:12px 14px; margin-top:12px }
+    .form { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+    .form select { min-width:150px }
+    .msg:not(:empty) { margin:8px 0 0; font-size:13px; color:#7CFC8A }
+    table { width:100%; border-collapse:collapse; margin-top:4px }
+    th { text-align:left; color:#9aa0a6; font-size:11px; text-transform:uppercase; letter-spacing:.6px; padding:6px 10px; border-bottom:1px solid #34373d }
+    td { padding:8px 10px; border-bottom:1px solid #232529 }
+    tr:hover td { background:#202225 }
+    .nm { font-weight:800 }
+    .pill { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; border-radius:9px; padding:1px 8px }
+    .pill.active { background:#23362a; color:#8fdf9f; border:1px solid #3a5b42 }
+    .pill.soon { background:#2a2f3a; color:#9ad0ff; border:1px solid #3f5a6a }
+    .pill.past { background:#2a2c31; color:#8a8d93; border:1px solid #3a3d44 }
+    .del { background:none; border:1px solid #5a2e2e; color:#ff9b9b; border-radius:6px; padding:5px 10px; font-weight:700; font-size:12px; cursor:pointer }
+    .del:hover { background:#3a2626; color:#fff }
+    .empty { color:#8a8d93; font-style:italic; padding:10px 2px }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="index.html">← Back to Tools</a>
+      <h1>🏖️ RATS — Vacations</h1>
+      <a class="btn" href="history.html" style="margin-left:auto">📊 Attendance →</a>
+    </div>
+    <p class="sub">Raiders marked away here are <b>excused</b> — raids in their date range don't count as a miss (25 or 10).</p>
+
+    <div class="card">
+      <div class="form">
+        <select id="vName"><option value="">Raider…</option></select>
+        <input type="date" id="vStart" title="From">
+        <input type="date" id="vEnd" title="To (optional — single day? leave empty)">
+        <button onclick="addVac()">+ Add vacation</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <h2>🟢 Currently away</h2>
+    <div id="active"></div>
+
+    <h2>📅 All vacations</h2>
+    <div id="all"></div>
+  </div>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    const CLASS_COLOR = { "Death Knight": "#C41E3A", "DK": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function msg(t, c) { const e = document.getElementById("msg"); e.style.color = c || "#7CFC8A"; e.textContent = t || ""; }
+    const todayStr = () => { const d = new Date(); const z = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); };
+
+    let VACS = [];   // shared vacations from Firebase: [{key,name,class,start,end}]
+    function guildRoster() { try { const d = JSON.parse(localStorage.getItem("ratsGuild") || "null"); return (d && d.roster) ? d.roster : []; } catch (e) { return []; } }
+    function guildMember(name) { const n = (name || "").toLowerCase(); return guildRoster().find(m => (m.name || "").toLowerCase() === n) || null; }
+    function altMainNote(m) { const on = ((m && m.officerNote) || "").trim(); const mm = on.match(/^(.+?)\s+alt\b/i); return mm ? mm[1].trim() : null; }
+    function isAltG(m) { return m && (m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m)); }
+
+    function status(v) {
+      const t = todayStr(), end = v.end || v.start;
+      if (t < v.start) return "soon";
+      if (t > end) return "past";
+      return "active";
+    }
+    let editingKey = "";
+    function rowHtml(v, editable) {
+      const col = CLASS_COLOR[v.class] || "#ddd";
+      if (editable && v.key === editingKey) {
+        return `<tr>
+          <td class="nm" style="color:${col}">${esc(v.name)}</td>
+          <td style="color:${col}">${esc(v.class || "—")}</td>
+          <td><input type="date" id="edStart" value="${esc(v.start)}" style="height:32px;min-width:140px"></td>
+          <td><input type="date" id="edEnd" value="${esc(v.end || "")}" style="height:32px;min-width:140px"></td>
+          <td colspan="2" style="text-align:right;white-space:nowrap">
+            <button onclick="saveEdit('${v.key}')" style="padding:6px 12px">Save</button>
+            <button class="del" onclick="cancelEdit()" style="border-color:#3a3d44;color:#9aa0a6">Cancel</button>
+          </td>
+        </tr>`;
+      }
+      const st = status(v), lbl = { active: "away now", soon: "upcoming", past: "ended" }[st];
+      return `<tr>
+        <td class="nm" style="color:${col}">${esc(v.name)}</td>
+        <td style="color:${col}">${esc(v.class || "—")}</td>
+        <td>${esc(v.start)}</td>
+        <td>${esc(v.end || "—")}</td>
+        <td><span class="pill ${st}">${lbl}</span></td>
+        <td style="text-align:right;white-space:nowrap">${editable ? `<button class="del" onclick="editVac('${v.key}')" style="border-color:#3a4a5b;color:#9ad0ff;margin-right:6px">edit</button>` : ""}<button class="del" onclick="removeVac('${v.key}')">remove</button></td>
+      </tr>`;
+    }
+    function table(list, editable) {
+      if (!list.length) return '<div class="empty">None.</div>';
+      return '<table><thead><tr><th>Raider</th><th>Class</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead><tbody>'
+        + list.map(v => rowHtml(v, editable)).join("") + '</tbody></table>';
+    }
+    function render() {
+      const vs = VACS.slice().sort((a, b) => (b.start || "").localeCompare(a.start || ""));
+      document.getElementById("active").innerHTML = table(vs.filter(v => status(v) === "active"), false);
+      document.getElementById("all").innerHTML = table(vs, true);
+    }
+    function editVac(key) { editingKey = key; render(); msg(""); }
+    function cancelEdit() { editingKey = ""; render(); }
+    async function saveEdit(key) {
+      const v = VACS.find(x => x.key === key); if (!v) return;
+      const s = document.getElementById("edStart").value, e = document.getElementById("edEnd").value;
+      if (!s) { msg("From date is required.", "#ff6b6b"); return; }
+      if (e && e < s) { msg("'To' is before 'From'.", "#ff6b6b"); return; }
+      editingKey = "";
+      msg("⏳ Saving…", "#8a8d93");
+      try { await RatsData.updateVacation(key, { name: v.name, class: v.class || "", start: s, end: e || "" }); await reload(); msg("✅ Updated " + v.name + " — shared.", "#7CFC8A"); }
+      catch (err) { msg("❌ " + (err && err.message ? err.message : err), "#ff6b6b"); }
+    }
+    function fillPicker() {
+      const mains = guildRoster().filter(m => !isAltG(m) && !/pug/i.test(m.rankName || ""));
+      const order = ["Warrior", "Paladin", "Death Knight", "Hunter", "Rogue", "Priest", "Shaman", "Mage", "Warlock", "Druid"];
+      const byClass = {};
+      mains.forEach(m => { (byClass[m.class] = byClass[m.class] || []).push(m); });
+      const classes = Object.keys(byClass).sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b); });
+      let html = '<option value="">Raider…</option>';
+      classes.forEach(cl => {
+        const col = CLASS_COLOR[cl] || "#fff";
+        html += `<optgroup label="${esc(cl)}">`;
+        html += byClass[cl].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+          .map(m => `<option value="${esc(m.name)}" style="color:${col}">${esc(m.name)}</option>`).join("");
+        html += `</optgroup>`;
+      });
+      document.getElementById("vName").innerHTML = html;
+    }
+
+    // the "Vacations" webhook lives in this browser's saved hooks (Admin → Discord webhooks)
+    function vacWebhook() { try { const a = JSON.parse(localStorage.getItem("ratsWebhooks") || "[]"); const h = a.find(x => /vacation/i.test(x.name || "")); return (h && h.url) || ""; } catch (e) { return ""; } }
+    function daysBetween(s, e) { const a = new Date(s), b = new Date(e || s); return Math.round((b - a) / 86400000) + 1; }
+    async function postVacEmbed(url, v) {
+      const hex = CLASS_COLOR[v.class] || "#43b581";
+      const embed = {
+        author: { name: "RATS • Vacations" },
+        title: "🏖️ " + v.name + " will be away",
+        color: parseInt(hex.slice(1), 16),
+        fields: [
+          { name: "From", value: v.start, inline: true },
+          { name: "To", value: v.end || "—", inline: true },
+          { name: "Days", value: String(daysBetween(v.start, v.end)), inline: true }
+        ],
+        footer: { text: "Excused — won't count as a raid miss · FOR THE RATS 🧀" }
+      };
+      await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [embed] }) });
+    }
+    // post any vacation that hasn't been announced yet, then flag it so it's never re-posted
+    async function announceNew() {
+      const url = vacWebhook(); if (!url) return;
+      for (const v of VACS) {
+        if (v.announced || !v.start) continue;
+        try {
+          await postVacEmbed(url, v);
+          const e = Object.assign({}, v); delete e.key; e.announced = true;
+          await RatsData.updateVacation(v.key, e); v.announced = true;
+        } catch (err) { /* leave unannounced; retry next refresh */ }
+      }
+    }
+    async function reload() { try { VACS = await RatsData.loadVacations(); } catch (e) { VACS = []; } render(); await announceNew(); }
+    async function addVac() {
+      const name = document.getElementById("vName").value, start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value;
+      if (!name || !start) { msg("Pick a raider and a From date.", "#ff6b6b"); return; }
+      if (end && end < start) { msg("'To' is before 'From'.", "#ff6b6b"); return; }
+      const m = guildMember(name);
+      msg("⏳ Saving…", "#8a8d93");
+      try {
+        await RatsData.addVacation({ name: m ? m.name : name, class: m ? m.class : "", start, end: end || "" });
+        document.getElementById("vName").value = ""; document.getElementById("vStart").value = ""; document.getElementById("vEnd").value = "";
+        await reload(); msg("✅ Added " + (m ? m.name : name) + " — shared.", "#7CFC8A");
+      } catch (e) { msg("❌ " + (e && e.message ? e.message : e), "#ff6b6b"); }
+    }
+    async function removeVac(key) {
+      msg("⏳ Removing…", "#8a8d93");
+      try { await RatsData.removeVacation(key); await reload(); msg("✅ Removed — shared.", "#7CFC8A"); }
+      catch (e) { msg("❌ " + (e && e.message ? e.message : e), "#ff6b6b"); }
+    }
+
+    async function boot() {
+      try { if (window.RatsData) await RatsData.loadRoster({ interactive: false }); } catch (e) {}
+      fillPicker();
+      await reload();
+      setInterval(reload, 60000); // while open, pick up & announce new member-submitted vacations
+    }
+    if (window.RatsData) RatsData.gate();
+    boot();
+  </script>
+</body>
+
+</html>

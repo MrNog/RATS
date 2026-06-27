@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Attendance &amp; History</title>
+  <style>
+    :root {
+      --bg: #1b1d21;
+      --panel: #26282d;
+      --row: #2f3137;
+      --rowhover: #3a3d44;
+      --text: #dcddde;
+      --muted: #8a8d93;
+      --header: #9aa0a6;
+      --accent: #c0943a;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: #141517;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    h2 {
+      font-size: 15px;
+      color: var(--accent);
+      margin: 26px 0 10px;
+      letter-spacing: .3px
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0
+    }
+
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: #9aa0a6;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 6px;
+      padding: 6px 12px
+    }
+
+    a.btn:hover {
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 14px 0 4px
+    }
+
+    input[type=text],
+    input[type=date],
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: #0f1012;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 0 12px;
+      height: 38px;
+      font-size: 14px;
+      color-scheme: dark
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8d93' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+      min-width: 150px;
+      cursor: pointer
+    }
+
+    input[type=text] {
+      min-width: 180px
+    }
+
+    label.chk {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer
+    }
+
+    /* attendance table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px
+    }
+
+    th {
+      text-align: left;
+      color: var(--header);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding: 6px 10px;
+      border-bottom: 1px solid #34373d;
+      cursor: pointer;
+      user-select: none
+    }
+
+    th:hover {
+      color: #fff
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #232529
+    }
+
+    tr:hover td {
+      background: #202225
+    }
+
+    .nm {
+      font-weight: 700
+    }
+
+    tr.rankrow td {
+      padding: 18px 10px 5px;
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      border-bottom: 1px solid #34373d;
+      background: transparent !important
+    }
+
+    tr.rankrow:first-child td {
+      padding-top: 4px
+    }
+
+    .bar {
+      position: relative;
+      height: 16px;
+      width: 160px;
+      max-width: 38vw;
+      background: #232529;
+      border-radius: 8px;
+      overflow: hidden
+    }
+
+    .bar > i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      display: block;
+      border-radius: 8px
+    }
+
+    .pct {
+      font-weight: 800;
+      width: 52px;
+      display: inline-block
+    }
+
+    .pill {
+      font-size: 11px;
+      color: #ff9b9b;
+      background: #3a2626;
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 6px
+    }
+
+    /* raid log */
+    .raid {
+      background: var(--row);
+      border: 1px solid #2f3137;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden
+    }
+
+    .raid > .head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      cursor: pointer
+    }
+
+    .raid > .head:hover {
+      background: var(--rowhover)
+    }
+
+    .raid .date {
+      font-weight: 800;
+      color: var(--accent);
+      min-width: 130px
+    }
+
+    .szbadge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #1b1d21;
+      background: var(--accent);
+      border-radius: 10px;
+      padding: 1px 8px;
+      flex: 0 0 auto
+    }
+
+    .raid .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-left: auto
+    }
+
+    .raid .body {
+      display: none;
+      padding: 4px 12px 14px;
+      border-top: 1px solid #2a2c31
+    }
+
+    .raid.open .body {
+      display: block
+    }
+
+    .ggrid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 8px
+    }
+
+    .ghead {
+      color: var(--header);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 4px
+    }
+
+    .mrow {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 2px 0;
+      font-weight: 600
+    }
+
+    .ic {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px
+    }
+
+    .del,
+    .exp {
+      background: none;
+      border: 1px solid #5a2e2e;
+      color: #ff9b9b;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .exp {
+      border-color: #3a5b42;
+      color: #8fdf9f
+    }
+
+    .exp:hover {
+      background: #23362a;
+      color: #fff;
+      border-color: #57a06a
+    }
+
+    .del:hover {
+      background: #3a2626;
+      color: #fff
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 30px 10px;
+      text-align: center
+    }
+
+    .msg {
+      min-height: 18px;
+      font-size: 13px;
+      margin: 10px 0;
+      color: #7CFC8A
+    }
+
+    /* edit mode + post button */
+    .editbtn, .savebtn { background:#202225; border:1px solid #2f3137; color:#9aa0a6; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer }
+    .editbtn:hover, .savebtn:hover { border-color:var(--accent); color:#fff }
+    .editbtn.on { background:var(--accent); color:#1b1d21; border-color:var(--accent) }
+    .savebtn { background:#2f4a35; border-color:#3a5b42; color:#8fdf9f }
+    .savebtn:hover { background:#23362a; color:#fff }
+    .mrow.editable { cursor:pointer; border-radius:4px }
+    .mrow.editable:hover { background:#3a2626 }
+    .vac { font-size:10px; color:#7CFC8A; font-style:italic }
+    .post { background:#3b4178; border:1px solid #5865F2; color:#dfe2ff; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px }
+    .post:hover { filter:brightness(1.12); color:#fff }
+
+    @media(max-width:680px) {
+      .ggrid {
+        grid-template-columns: 1fr
+      }
+
+      .raid .date {
+        min-width: 0
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <a class="btn" href="index.html">← Back to Tools</a>
+      <h1>🐀 RATS — Attendance &amp; History</h1>
+      <a class="btn" href="comp.html" style="margin-left:auto">🗓 Raid Comp →</a>
+    </div>
+    <p class="sub" style="margin-top:8px"><b>25-man = mandatory</b> (counts for everyone since they joined).
+      <b>10-man = optional</b> — only counts for raiders who were actually in it (present or no-show), so people
+      not invited aren't penalized. An alt counts for its main. <b>🏖️ Vacations are excused</b> (don't count).
+      No-show = signed up &amp; didn't come (red counter). Pick the size above; <b>All sizes</b> combines them fairly.</p>
+
+    <div class="controls">
+      <select id="sizeF" onchange="rerender()">
+        <option value="25" selected>25-man</option>
+        <option value="10">10-man</option>
+        <option value="all">All sizes</option>
+      </select>
+      <select id="range" onchange="rerender()">
+        <option value="0">All time</option>
+        <option value="14">Last 14 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="60">Last 60 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <input type="date" id="from" title="From (overrides range)" onchange="rerender()">
+      <input type="date" id="to" title="To" onchange="rerender()">
+      <select id="sort" onchange="rerender()">
+        <option value="rank" selected>Sort: guild rank (default)</option>
+        <option value="pct">Sort: attendance %</option>
+        <option value="present">Sort: days present</option>
+        <option value="name">Sort: name</option>
+        <option value="class">Sort: class</option>
+      </select>
+      <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
+      <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
+    </div>
+    <div class="msg" id="msg"></div>
+
+    <h2 id="attHead">📊 Attendance</h2>
+    <div id="attendance"></div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
+      <h2 style="margin:0">🗒 Raid log</h2>
+      <a class="editbtn" href="vacations.html" style="text-decoration:none">🏖️ Vacations ↗</a>
+      <button id="editBtn" class="editbtn" onclick="toggleEdit()">✏️ Edit mode</button>
+      <button id="saveBtn" class="savebtn" onclick="saveChanges()" style="display:none">💾 Save changes</button>
+      <span id="editHint" class="sub" style="display:none">Click a ❌ no-show to mark it 🏖️ <b>vacation</b> (excused). Use <b>Mark optional/mandatory</b> on a raid to change how it counts.</span>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    const CDN = id => "https://cdn.discordapp.com/emojis/" + id + ".png?size=44";
+    const CLASS_COLOR = { "Death Knight": "#C41E3A", "DK": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function prettySpec(n) { return (n || "").replace(/1$/, "").replace(/_/g, " "); }
+    // Raid-Helper sometimes stores a STATUS (Tank/Tentative/Late/Bench/Absence) as className — recover the real class from the spec
+    function classFromSpec(s) {
+      s = s || "";
+      if (/Protection1|Holy1|Retribution/i.test(s)) return "Paladin";
+      if (/_DPS|_Tank/i.test(s)) return "Death Knight";
+      if (/Guardian|Feral|Balance|^Restoration$/i.test(s)) return "Druid";
+      if (/Arms|Fury|^Protection$/i.test(s)) return "Warrior";
+      if (/Assassination|Combat|Subtlety/i.test(s)) return "Rogue";
+      if (/Elemental|Enhancement|Restoration1/i.test(s)) return "Shaman";
+      if (/Arcane|Fire|^Frost$/i.test(s)) return "Mage";
+      if (/Discipline|^Holy$|Shadow|Smite/i.test(s)) return "Priest";
+      if (/Affliction|Demonology|Destruction/i.test(s)) return "Warlock";
+      if (/Beastmastery|Marksmanship|Survival/i.test(s)) return "Hunter";
+      return "";
+    }
+    function realClass(m) { const c = m && m.className; if (c && CLASS_COLOR[c]) return c === "DK" ? "Death Knight" : c; return classFromSpec(m && m.specName) || c || ""; }
+    function msg(t, c) { const e = document.getElementById("msg"); e.style.color = c || "#7CFC8A"; e.textContent = t || ""; }
+
+    let HIST = { raids: [] };
+    let VAC = [];   // shared vacations (plain Firebase node, written by members + officers)
+
+    // ---- alt -> main (same rules as the comp tool, reading the shared roster) ----
+    function guildRoster() { try { const d = JSON.parse(localStorage.getItem("ratsGuild") || "null"); return (d && d.roster) ? d.roster : []; } catch (e) { return []; } }
+    function guildData() { try { return JSON.parse(localStorage.getItem("ratsGuild") || "null") || {}; } catch (e) { return {}; } }
+    function joinDateOf(name) { const j = (guildData().joined) || {}, n = normName(name); for (const k in j) if (normName(k) === n) return j[k]; return ""; }
+    function isFangName(name) { const fs = (guildData().fangs) || [], n = normName(name); return fs.some(x => normName(x) === n); }
+    // Raid-Helper gives the DISCORD name (with decorations); the roster has the IN-GAME name.
+    // Normalize so they match: strip [tags]/(parens), take the part before a "/" (main/alt), drop punctuation.
+    function normName(s) {
+      return (s || "").toLowerCase()
+        .replace(/\[.*?\]/g, "").replace(/\(.*?\)/g, "")  // [SHAKA] / (alt)
+        .split(/[\/|,]/)[0]                                // Lecoque/Chims -> Lecoque
+        .replace(/[^a-z0-9]/g, "").trim();
+    }
+    function guildMember(name) {
+      let n = normName(name); if (!n) return null;
+      const alias = (window.RatsData && RatsData.aliasFor) ? RatsData.aliasFor(name) : null;
+      if (alias) n = normName(alias);                             // Discord nick -> in-game
+      return guildRoster().find(x => normName(x.name) === n) || null;  // exact (normalized) or alias only — no fuzzy guessing
+    }
+    function altMainNote(m) { const on = ((m && m.officerNote) || "").trim(); const mm = on.match(/^(.+?)\s+alt\b/i); return mm ? mm[1].trim() : null; }
+    function isAltG(m) { return m && (m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m)); }
+    function mainOfG(m) {
+      if (!m) return null;
+      const on = (m.officerNote || "").trim(); const mm = on.match(/^(.+?)\s+alt\b/i); if (mm) return mm[1].trim();
+      const pn = (m.publicNote || "").trim(); if (pn) { const t = pn.split(/[\s,/\-(]/)[0]; if (/^[A-Za-zÀ-ÿ]{2,}$/.test(t)) return t; }
+      return null;
+    }
+    function resolveMain(typed) {
+      const m = guildMember(typed);
+      if (!m) return typed;                                  // not in roster -> keep as-is (pug)
+      if (isAltG(m)) { const mn = mainOfG(m); if (mn) return mn; }  // alt -> its main
+      return m.name;                                         // canonical roster name (merges Kobe/Kobee, etc.)
+    }
+
+    // ---- date range ----
+    function inRange(dateStr) {
+      const from = document.getElementById("from").value, to = document.getElementById("to").value;
+      if (from && dateStr < from) return false;
+      if (to && dateStr > to) return false;
+      if (!from && !to) {
+        const days = parseInt(document.getElementById("range").value) || 0;
+        if (days > 0) {
+          const cut = new Date(); cut.setDate(cut.getDate() - days);
+          const z = n => String(n).padStart(2, "0");
+          const cutStr = cut.getFullYear() + "-" + z(cut.getMonth() + 1) + "-" + z(cut.getDate());
+          if (dateStr < cutStr) return false;
+        }
+      }
+      return true;
+    }
+
+    // 25-man vs 10-man (explicit size on the entry; legacy entries inferred from headcount)
+    function raidSize(r) {
+      if (r.size === 10 || r.size === 25) return r.size;
+      const n = (r.groups || []).reduce((a, g) => a + (g.members || []).length, 0);
+      return n > 10 ? 25 : 10;
+    }
+    // Optional/selective raids only count for raiders who were actually in them (present or no-show).
+    // Mandatory raids count for everyone since they joined. Default: 10-man = optional, 25-man = mandatory.
+    function isOptional(r) { return r.optional != null ? !!r.optional : raidSize(r) === 10; }
+    // a raider on vacation that day -> that raid is excused (no miss, doesn't count)
+    function onVacation(name, date) {
+      const vs = VAC || [], n = normName(name);
+      return vs.some(v => v.start && normName(v.name) === n && date >= v.start && date <= (v.end || v.start));
+    }
+    function filteredRaids() {
+      const sf = (document.getElementById("sizeF") || {}).value || "25";
+      return (HIST.raids || [])
+        .filter(r => r.date && inRange(r.date) && (sf === "all" || String(raidSize(r)) === sf))
+        .sort((a, b) => (a.date < b.date ? 1 : -1));
+    }
+
+    // ---- attendance aggregation ----
+    function computeAttendance(raids) {
+      const map = {}; // key -> {name, cls, present, noShow, lastDate}
+      function ent(name, cls) {
+        const main = resolveMain(name), key = main.toLowerCase();
+        if (!map[key]) {
+          // prefer the MAIN's true class from the roster, not whichever alt raided that night
+          const rm = guildMember(main);
+          map[key] = { name: main, cls: (rm && rm.class) || cls || "", present: 0, noShow: 0, lastDate: "", involved: new Set(), presentDates: new Set(), excused: new Set(), rankIndex: rm && rm.rankIndex != null ? rm.rankIndex : 99, rankName: (rm && rm.rankName) || "" };
+        } else if (!map[key].cls && cls) map[key].cls = cls;
+        return map[key];
+      }
+      raids.forEach(r => {
+        const seen = new Set();
+        (r.groups || []).forEach(g => (g.members || []).forEach(m => {
+          const o = ent(m.name, realClass(m)), key = o.name.toLowerCase();
+          if (!seen.has(key)) { o.present++; seen.add(key); }
+          o.involved.add(r.date); o.presentDates.add(r.date);   // showed up -> always counts (even if on vacation)
+          // roster members keep their MAIN's class; pugs show whatever they last raided
+          if (r.date >= o.lastDate) { o.lastDate = r.date; if (!o._roster) { const rc = realClass(m); if (rc) o.cls = rc; } }
+        }));
+        (r.noshows || []).forEach(m => {
+          const o = ent(m.name, realClass(m)), key = o.name.toLowerCase();
+          if (seen.has(key)) return;
+          if (m.vacation || onVacation(o.name, r.date)) { o.excused.add(r.date); }  // 🏖️ excused -> never counts
+          else { o.noShow++; o.involved.add(r.date); }   // signed up & missed -> counts (+ red counter)
+        });
+      });
+      // optionally include roster raiders who never showed in this range
+      if (document.getElementById("incRoster").checked) {
+        guildRoster().forEach(m => {
+          if (isAltG(m)) return;
+          if (/pug/i.test(m.rankName || "")) return;
+          const key = (m.name || "").toLowerCase();
+          if (key && !map[key]) map[key] = { name: m.name, cls: m.class || "", present: 0, noShow: 0, lastDate: "", involved: new Set(), presentDates: new Set(), excused: new Set(), rankIndex: m.rankIndex != null ? m.rankIndex : 99, rankName: m.rankName || "" };
+        });
+      }
+      const total = raids.length;
+      const rows = Object.values(map).map(o => {
+        const joinD = joinDateOf(o.name), fang = isFangName(o.name);
+        // a raid counts toward this raider when:
+        //   25 (mandatory): they were in it, OR it happened on/after they joined
+        //   10 (optional):  Fangs since they joined (or anyone who actually played it)
+        // excused (🏖️ vacation) raids never count.
+        let denom = 0;
+        raids.forEach(r => {
+          const d = r.date;
+          const present = o.presentDates.has(d);
+          // excused (🏖️ vacation) only skips when they DIDN'T show; if they came anyway, it counts
+          if (!present && (o.excused.has(d) || onVacation(o.name, d))) return;
+          const inv = o.involved.has(d);
+          const counts = present || (isOptional(r)
+            ? (inv || (fang && (!joinD || d >= joinD)))
+            : (inv || !joinD || d >= joinD));
+          if (counts) denom++;
+        });
+        return { ...o, total: denom, pct: denom ? Math.round(o.present / denom * 100) : 0 };
+      });
+      return { rows, total };
+    }
+
+    function barColor(p) { return p >= 80 ? "#43b581" : p >= 50 ? "#c0943a" : "#d9534f"; }
+
+    function renderAttendance() {
+      const raids = filteredRaids();
+      const { rows, total } = computeAttendance(raids);
+      const sf = (document.getElementById("sizeF") || {}).value || "25";
+      const sizeLbl = sf === "all" ? "all raids" : sf + "-man";
+      document.getElementById("attHead").textContent = "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
+
+      const q = (document.getElementById("search").value || "").toLowerCase().trim();
+      let list = q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
+      const sort = document.getElementById("sort").value;
+      list = list.slice().sort((a, b) => {
+        if (sort === "name") return a.name.localeCompare(b.name);
+        if (sort === "class") return (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct;
+        if (sort === "present") return b.present - a.present || b.pct - a.pct;
+        if (sort === "pct") return b.pct - a.pct || b.present - a.present || a.name.localeCompare(b.name);
+        // default: guild rank (GM → Officer → Raider → Sewer), then class, then alphabetical
+        return (a.rankIndex - b.rankIndex) || (a.cls || "").localeCompare(b.cls || "") || a.name.localeCompare(b.name);
+      });
+
+      const el = document.getElementById("attendance");
+      if (!total) { el.innerHTML = '<div class="empty">No raids saved in this range yet. Build a comp and hit <b>💾 Save to history</b>.</div>'; return; }
+      if (!list.length) { el.innerHTML = '<div class="empty">No raiders match.</div>'; return; }
+
+      const ar = s => sort === s ? ' ▼' : '';
+      const tc = s => sort === s ? ' style="color:#fff"' : '';
+      let html = '<table><thead><tr>'
+        + `<th onclick="setSort('name')"${tc('name')}>Raider${ar('name')}</th>`
+        + `<th onclick="setSort('class')"${tc('class')}>Class${ar('class')}</th>`
+        + '<th>Attendance</th>'
+        + `<th onclick="setSort('present')"${tc('present')}>Days${ar('present')}</th>`
+        + `<th onclick="setSort('pct')"${tc('pct')}>%${ar('pct')}</th>`
+        + '</tr></thead><tbody>';
+      const byRank = (sort === "rank"); // collapsible rank groups only when sorted by rank
+      // seed defaults once: Sewer Rats collapsed (less important)
+      if (byRank && collapsedRanks === null) {
+        collapsedRanks = new Set();
+        list.forEach(r => { const rk = r.rankName || "Unranked / Pug"; if (/sewer/i.test(rk)) collapsedRanks.add(rk); });
+        saveCollapsed();
+      }
+      const collapsed = byRank ? (collapsedRanks || new Set()) : new Set();
+      const rankCounts = {};
+      if (byRank) list.forEach(r => { const rk = r.rankName || "Unranked / Pug"; rankCounts[rk] = (rankCounts[rk] || 0) + 1; });
+      let curRank = null, curCollapsed = false;
+      list.forEach(r => {
+        if (byRank) {
+          const rk = r.rankName || "Unranked / Pug";
+          if (rk !== curRank) {
+            curRank = rk; curCollapsed = collapsed.has(rk);
+            html += `<tr class="rankrow"><td colspan="5" data-rk="${esc(rk).replace(/"/g, "&quot;")}" onclick="toggleRank(this.dataset.rk)" style="cursor:pointer;user-select:none">${curCollapsed ? "▸" : "▾"} ${esc(rk)} <span style="color:#6e7178;font-weight:600">(${rankCounts[rk]})</span></td></tr>`;
+          }
+        }
+        const hidden = (byRank && curCollapsed) ? ' style="display:none"' : '';
+        const col = CLASS_COLOR[r.cls] || "#ddd";
+        const ns = r.noShow ? `<span class="pill" title="explicit no-shows">${r.noShow} no-show${r.noShow != 1 ? "s" : ""}</span>` : "";
+        html += `<tr${hidden}>
+          <td class="nm" style="color:${col}">${esc(r.name)}</td>
+          <td style="color:${col}">${esc(r.cls || "—")}</td>
+          <td><div class="bar"><i style="width:${r.pct}%;background:${barColor(r.pct)}"></i></div></td>
+          <td>${r.present} / ${r.total}${ns}</td>
+          <td class="pct" style="color:${barColor(r.pct)}">${r.pct}%</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      el.innerHTML = html;
+    }
+
+    function setSort(v) { document.getElementById("sort").value = v; renderAttendance(); }
+
+    // collapsible rank sections (state persisted; Sewer Rats collapsed by default)
+    let collapsedRanks = (function () { try { const a = JSON.parse(localStorage.getItem("ratsAttCollapsed") || "null"); return Array.isArray(a) ? new Set(a) : null; } catch (e) { return null; } })();
+    function saveCollapsed() { try { localStorage.setItem("ratsAttCollapsed", JSON.stringify([...(collapsedRanks || [])])); } catch (e) {} }
+    function toggleRank(rk) {
+      if (!collapsedRanks) collapsedRanks = new Set();
+      if (collapsedRanks.has(rk)) collapsedRanks.delete(rk); else collapsedRanks.add(rk);
+      saveCollapsed(); renderAttendance();
+    }
+
+    function renderLog() {
+      const raids = filteredRaids();
+      const el = document.getElementById("log");
+      if (!raids.length) { el.innerHTML = '<div class="empty">No raids in this range.</div>'; return; }
+      el.innerHTML = raids.map((r, i) => {
+        const count = (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0);
+        const ns = (r.noshows || []).length;
+        const groups = (r.groups || []).map(g => {
+          const mem = (g.members || []).map(m => {
+            const icon = m.specEmoteId || m.classEmoteId;
+            const img = icon ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+            const col = CLASS_COLOR[realClass(m)] || "#ddd";
+            return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
+          }).join("");
+          return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
+        }).join("");
+        const nsRows = (r.noshows || []).map((m, idx) => {
+          const vac = !!m.vacation;
+          const tag = vac ? ' <span class="vac">vacation</span>' : '';
+          const col = CLASS_COLOR[realClass(m)] || "#ddd";
+          const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
+          const cls = editMode ? "mrow editable" : "mrow";
+          const click = editMode ? ` title="Click to toggle 🏖️ vacation (excused)" onclick="toggleVacation('${esc(r.date)}',${idx})"` : "";
+          const ico = m.specEmoteId || m.classEmoteId;
+          const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+          return `<div class="${cls}"${click}><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
+        }).join("");
+        const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
+        return `<div class="raid" id="raid${i}">
+          <div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
+            <span class="date">${esc(r.title || r.date)}</span>
+            <span class="szbadge">${raidSize(r)}-man</span>
+            ${isOptional(r) ? '<span style="font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;background:#26323c;color:#9ad0ff;border:1px solid #3f5a6a">OPTIONAL</span>' : ''}
+            <span class="sub">${esc(r.desc || "")}</span>
+            <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
+          </div>
+          <div class="body">
+            <div class="ggrid">${groups}${nsBlock}</div>
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              ${editMode ? `<button class="exp" style="border-color:#3f5a6a;color:#9ad0ff" onclick="event.stopPropagation();toggleOptional('${esc(r.date)}')">${isOptional(r) ? "→ Mark mandatory" : "→ Mark optional"}</button>` : ""}
+              <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
+              <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
+              <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
+            </div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    function rerender() { renderAttendance(); renderLog(); }
+
+    // rebuild comp-tool-importable JSON (slots format) from a saved raid and download it
+    function exportRaid(date) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r) return;
+      const groups = r.groups || [];
+      const slots = [];
+      groups.forEach((g, gi) => (g.members || []).forEach((m, si) => {
+        slots.push({
+          name: m.name, className: m.className, specName: m.specName,
+          specEmoteId: m.specEmoteId, classEmoteId: m.classEmoteId,
+          color: CLASS_COLOR[m.className] || "#ffffff",
+          groupNumber: gi + 1, slotNumber: si + 1
+        });
+      }));
+      const out = {
+        title: r.title || r.date,
+        date: r.date,
+        desc: r.desc || "",
+        groupCount: Math.max(5, groups.length),
+        groups: groups.map((g, gi) => ({ name: g.name || ("Group " + (gi + 1)), position: gi + 1 })),
+        slots,
+        noshows: (r.noshows || []).map(m => ({ name: m.name, className: m.className, specName: m.specName, specEmoteId: m.specEmoteId, classEmoteId: m.classEmoteId, color: CLASS_COLOR[m.className] || "#ffffff", vacation: !!m.vacation }))
+      };
+      const a = document.createElement("a");
+      a.download = "raid-" + r.date + ".json";
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
+      a.click();
+      msg("✅ Exported raid-" + r.date + ".json — paste it into the Raid Comp tool's Import to reload it.");
+    }
+
+    // post a saved raid straight to Discord (same embed as the comp tool, using the webhook from Admin)
+    function postRaidToDiscord(date) {
+      const url = (localStorage.getItem("ratsWebhook") || "").trim();
+      if (!/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/\S+/.test(url)) {
+        msg("❌ No Discord webhook set — add it in the Admin console (🛠 Admin → Discord webhook).", "#ff6b6b"); return;
+      }
+      const r = (HIST.raids || []).find(x => x.date === date); if (!r) return;
+      const healSpecs = /Holy|Discipline|Restoration/i, tankSpecs = /Protection|Guardian|_Tank/i;
+      const emo = m => { const id = m.specEmoteId || m.classEmoteId; const nm = ((m.specName || m.className || "spec").replace(/[^A-Za-z0-9_]/g, "") || "spec").slice(0, 32); return id ? `<:${nm}:${id}> ` : ""; };
+      let tanks = 0, heals = 0, dps = 0, total = 0;
+      const fields = (r.groups || []).filter(g => (g.members || []).length).map(g => {
+        (g.members || []).forEach(m => { total++; const s = m.specName || ""; if (tankSpecs.test(s)) tanks++; else if (healSpecs.test(s)) heals++; else dps++; });
+        return { name: g.name, value: (g.members || []).map(m => emo(m) + "**" + m.name + "**").join("\n") || "—", inline: true };
+      });
+      const ns = (r.noshows || []);
+      if (ns.length) fields.push({ name: "❌ No-shows (" + ns.length + ")", value: ns.map(m => emo(m) + "**" + m.name + "**" + (m.vacation ? " 🏖️" : "")).join("\n"), inline: true });
+      while (fields.length % 3 !== 0) fields.push({ name: "​", value: "​", inline: true });
+      const embed = {
+        author: { name: "RATS • Raid Roster" },
+        title: "🐀 " + (r.title || r.date),
+        color: 0xC0943A,
+        fields,
+        footer: { text: total + " raiders   •   " + tanks + " Tank · " + heals + " Healer · " + dps + " DPS   •   FOR THE RATS 🧀" },
+        timestamp: new Date((r.date || "") + "T20:00:00").toISOString()
+      };
+      if (r.desc) embed.description = r.desc;
+      msg("⏳ Posting to Discord…", "#8a8d93");
+      fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [embed] }) })
+        .then(rr => { if (rr.ok) msg("✅ Posted to Discord!", "#7CFC8A"); else msg("❌ Discord rejected it (HTTP " + rr.status + ").", "#ff6b6b"); })
+        .catch(() => msg("❌ Post blocked (CORS / file:// origin). Open the tools via a local server, not file://.", "#ff6b6b"));
+    }
+
+    async function deleteRaid(date) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r) return;
+      const fb = window.RatsData && RatsData.fbOn();
+      if (!confirm("Delete the raid \"" + (r.title || date) + "\" from history?" + (fb ? " This deletes it for everyone." : " You'll download an updated history.json to commit."))) return;
+      if (!window.RatsData) { msg("❌ Data layer not loaded.", "#ff6b6b"); return; }
+      const pass = RatsData.getPass();
+      if (!pass) { msg("❌ Locked — open the tools from the index and enter the guild key first.", "#ff6b6b"); return; }
+      HIST.raids = HIST.raids.filter(x => x.date !== date);
+      msg("⏳ Deleting…", "#8a8d93");
+      try {
+        const res = await RatsData.saveHistory(HIST, pass);
+        rerender();
+        msg(res.mode === "firebase" ? "✅ Deleted for everyone." : "✅ Deleted — commit the downloaded history.json via Fork to publish.");
+      } catch (e) { msg("❌ Delete failed: " + e.message, "#ff6b6b"); }
+    }
+
+    // ---- edit mode: mark a no-show as 🏖️ vacation (excused, not counted) ----
+    let editMode = false, dirty = false;
+    function toggleEdit() {
+      editMode = !editMode;
+      const b = document.getElementById("editBtn");
+      b.textContent = editMode ? "✓ Done editing" : "✏️ Edit mode";
+      b.classList.toggle("on", editMode);
+      document.getElementById("editHint").style.display = editMode ? "" : "none";
+      updateSaveBtn();
+      renderLog();
+    }
+    function updateSaveBtn() {
+      document.getElementById("saveBtn").style.display = (editMode && dirty) ? "" : "none";
+    }
+    function toggleVacation(date, idx) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r || !r.noshows || !r.noshows[idx]) return;
+      r.noshows[idx].vacation = !r.noshows[idx].vacation;
+      if (window.RatsData) RatsData.cacheHistory(HIST);
+      dirty = true; updateSaveBtn();
+      renderAttendance(); renderLog();
+    }
+    // mark a raid optional (counts only for who was in it) or mandatory (counts for everyone since they joined)
+    function toggleOptional(date) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r) return;
+      r.optional = !isOptional(r);   // explicit override of the size-based default
+      if (window.RatsData) RatsData.cacheHistory(HIST);
+      dirty = true; updateSaveBtn();
+      renderAttendance(); renderLog();
+    }
+    async function saveChanges() {
+      if (!window.RatsData) return;
+      const pass = RatsData.getPass();
+      if (!pass) { msg("❌ Locked — open from the index and enter the guild key first.", "#ff6b6b"); return; }
+      msg("⏳ Saving…", "#8a8d93");
+      try {
+        const res = await RatsData.saveHistory(HIST, pass);
+        dirty = false; updateSaveBtn();
+        msg(res.mode === "firebase" ? "✅ Saved & shared instantly." : "✅ Saved — commit the downloaded history.json via Fork.");
+      } catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
+    }
+
+    async function boot() {
+      try { if (window.RatsData) await RatsData.loadRoster({ interactive: false }); } catch (e) {}
+      try { HIST = (window.RatsData ? await RatsData.loadHistory({ interactive: false }) : { raids: [] }) || { raids: [] }; }
+      catch (e) { HIST = { raids: [] }; }
+      if (!Array.isArray(HIST.raids)) HIST = { raids: [] };
+      try { VAC = window.RatsData ? await RatsData.loadVacations() : []; } catch (e) { VAC = []; }
+      rerender();
+    }
+    boot();
+  </script>
+</body>
+
+</html>

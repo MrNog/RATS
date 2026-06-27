@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Addons</title>
+  <style>
+    :root { --accent:#c0943a }
+    * { box-sizing:border-box }
+    body { margin:0; background:#141517; color:#dcddde; font-family:"Segoe UI",Roboto,Arial,sans-serif; font-size:14px }
+    .wrap { max-width:880px; margin:0 auto; padding:18px }
+    h1 { font-size:18px; margin:0; color:#fff; letter-spacing:.5px }
+    .sub { color:#8a8d93; font-size:13px; margin:8px 0 0 }
+    a.btn { display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-size:13px; font-weight:600;
+      color:#9aa0a6; background:#202225; border:1px solid #2f3137; border-radius:6px; padding:6px 12px }
+    a.btn:hover { border-color:var(--accent); color:#fff }
+    .row { display:flex; align-items:center; gap:14px; flex-wrap:wrap }
+    .note { background:#202225; border:1px solid #2f3137; border-radius:10px; padding:12px 14px; margin:16px 0 18px;
+      color:#9aa0a6; font-size:13px }
+    code { background:#0f1012; border:1px solid #2f3137; border-radius:4px; padding:1px 5px; font-size:12px }
+
+    /* one addon per line */
+    .item { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+      background:#1b1d21; border:1px solid #2f3137; border-radius:10px; padding:12px 16px; margin-top:10px }
+    .item:hover { border-color:#3a3d44 }
+    .ic { font-size:20px; flex:0 0 auto; width:24px; text-align:center }
+    .nm { font-weight:800; color:#fff; flex:0 0 auto }
+    .tag { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; border-radius:9px;
+      padding:2px 7px; background:#3a2f44; color:#d6b3ff; border:1px solid #5a4a6a }
+    .desc { color:#9aa0a6; font-size:13px; flex:1 1 240px; min-width:160px }
+    .acts { display:flex; gap:8px; margin-left:auto; flex:0 0 auto }
+    .acts a { display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-size:12px; font-weight:700;
+      border-radius:6px; padding:7px 11px; border:1px solid #2f3137; background:#202225; color:#9aa0a6 }
+    .acts a.primary { background:var(--accent); color:#1b1d21; border-color:var(--accent) }
+    .acts a:hover { border-color:var(--accent); color:#fff }
+    .acts a.primary:hover { filter:brightness(1.1); color:#1b1d21 }
+
+    /* section divider for the optional group */
+    .sec { display:flex; align-items:center; gap:12px; margin:30px 0 4px }
+    .sec::before, .sec::after { content:""; height:1px; background:#2f3137; flex:1 }
+    .sec h2 { font-size:13px; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:.6px; margin:0; white-space:nowrap }
+    .sechint { color:#8a8d93; font-size:12.5px; margin:6px 0 0; text-align:center }
+
+    /* MANDATORY heading — bigger / more important */
+    .sec.big { margin:22px 0 6px }
+    .sec.big h2 { font-size:18px }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="index.html">← Back</a>
+      <h1>📥 RATS — Addons</h1>
+    </div>
+    <p class="sub">Every download is the <b>latest version</b> straight from the source — no need to check for updates.</p>
+
+    <div class="note">
+      <b>Install:</b> download the <b>.zip</b> → extract → drop the addon folder into
+      <code>World of Warcraft\Interface\AddOns\</code> → <code>/reload</code>. If the extracted folder ends in
+      <code>-main</code> / <code>-master</code>, <b>rename it</b> to remove that suffix.
+    </div>
+
+    <div class="sec big"><h2>📥 Mandatory addons — every raider</h2></div>
+    <div id="list"></div>
+
+    <div class="sec"><h2>✨ WeakAura tier packs — important for raids</h2></div>
+    <p class="sechint">Import in-game: open a pack → copy the code → <code>/wa</code> → <b>Import</b> → paste.</p>
+    <div id="listWA"></div>
+
+    <div class="sec"><h2>🧩 Visual patch — optional (non-HD)</h2></div>
+    <p class="sechint">Drop <code>patch-y.mpq</code> in <code>World of Warcraft\Data\</code> (NOT AddOns) → restart. Works on the normal 3.3.5a client.</p>
+    <div id="listPatch"></div>
+
+    <div class="sec"><h2>🐀 Cool extras — optional</h2></div>
+    <p class="sechint">Not required, but handy or just fun. Install only if you want them.</p>
+    <div id="listOptional"></div>
+  </div>
+
+  <script>
+    // dl = direct "always latest" download; gh = source page. Edit freely.
+    const ADDONS = [
+      { name: "WeakAuras", emoji: "✨",
+        desc: "Auras/notifications framework — required for the raid's shared WeakAuras.",
+        dl: "https://github.com/NoM0Re/WeakAuras-WotLK/archive/refs/heads/master.zip",
+        gh: "https://github.com/NoM0Re/WeakAuras-WotLK" },
+      { name: "Deadly Boss Mods (DBM)", emoji: "💀",
+        desc: "Boss timers and warnings (Warmane build).",
+        dl: "https://github.com/Zidras/DBM-Warmane/archive/refs/heads/main.zip",
+        gh: "https://github.com/Zidras/DBM-Warmane" },
+      { name: "RCLootCouncil", emoji: "🎲",
+        desc: "Loot council distribution (Warmane 3.3.5a).",
+        dl: "https://github.com/MrNog/RCLlootCouncil---WARMANE---3.3.5/archive/refs/heads/main.zip",
+        gh: "https://github.com/MrNog/RCLlootCouncil---WARMANE---3.3.5" },
+      { name: "PallyPower (Improved)", emoji: "🛡️", paladin: true,
+        desc: "Paladin blessing assignments.",
+        dl: "https://github.com/NoM0Re/PallyPower-Improved-3.3.5/archive/refs/heads/main.zip",
+        gh: "https://github.com/NoM0Re/PallyPower-Improved-3.3.5" }
+    ];
+
+    // Optional / fun addons — separate group below the mandatory list.
+    const OPTIONAL = [
+      { name: "Rats-Redeemer", emoji: "⚰️",
+        desc: "Resurrection messages with guild flavour — fires a line when you battle-res someone. /redeemer",
+        dl: "https://github.com/MrNog/Rats-Redeemer/releases/latest/download/Rats-Redeemer.zip",
+        gh: "https://github.com/MrNog/Rats-Redeemer" }
+    ];
+
+    // WeakAura tier packs — imported in-game from wago.io (not downloaded).
+    const WA_PACKS = [
+      { name: "T7 Pack", raid: "Naxxramas · Obsidian Sanctum · Eye of Eternity", url: "https://wago.io/Dic_mszCj" },
+      { name: "T8 Pack", raid: "Ulduar", url: "https://wago.io/wIeM-Q6Qh" },
+      { name: "T9 Pack", raid: "Trial of the Crusader", url: "https://wago.io/ZGexKRmOL" },
+      { name: "T10 Pack", raid: "Icecrown Citadel", url: "https://wago.io/OQP0SKedt" }
+    ];
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+
+    function renderList(arr) {
+      return arr.map(a => `<div class="item">
+        <span class="ic">${a.emoji || ""}</span>
+        <span class="nm">${esc(a.name)}</span>
+        ${a.paladin ? '<span class="tag">Paladins only</span>' : ""}
+        <span class="desc">${esc(a.desc)}</span>
+        <span class="acts">
+          <a class="primary" href="${a.dl}">⬇ Download (latest)</a>
+          <a href="${a.gh}" target="_blank" rel="noopener">Source ↗</a>
+        </span>
+      </div>`).join("");
+    }
+
+    document.getElementById("list").innerHTML = renderList(ADDONS);
+    document.getElementById("listOptional").innerHTML = renderList(OPTIONAL);
+    document.getElementById("listPatch").innerHTML = `<div class="item">
+      <span class="ic">🧩</span>
+      <span class="nm">patch-y.mpq</span>
+      <span class="desc">Optional visual patch (non-HD). Drop it in <code>World of Warcraft\\Data\\</code> and restart.</span>
+      <span class="acts">
+        <a class="primary" href="downloads/patch-y.mpq" download>⬇ Download (27 MB)</a>
+      </span>
+    </div>`;
+    document.getElementById("listWA").innerHTML = WA_PACKS.map(w => `<div class="item">
+      <span class="ic">✨</span>
+      <span class="nm">${esc(w.name)}</span>
+      <span class="desc">${esc(w.raid)}</span>
+      <span class="acts">
+        <a class="primary" href="${w.url}" target="_blank" rel="noopener">Import ↗</a>
+      </span>
+    </div>`).join("");
+  </script>
+</body>
+
+</html>

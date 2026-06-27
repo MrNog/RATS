@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Admin Console</title>
+  <style>
+    :root {
+      --accent: #c0943a
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: #141517;
+      color: #dcddde;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 14px
+    }
+
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 18px
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    h2 {
+      font-size: 15px;
+      margin: 0 0 4px;
+      color: var(--accent)
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap
+    }
+
+    .sub {
+      color: #8a8d93;
+      font-size: 13px;
+      margin: 8px 0 14px
+    }
+
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      color: #9aa0a6;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 6px;
+      padding: 6px 12px
+    }
+
+    a.btn:hover {
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      background: #0f1012;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 9px 10px;
+      font-size: 14px;
+      color-scheme: dark
+    }
+
+    textarea {
+      min-height: 120px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      resize: vertical
+    }
+
+    button {
+      background: var(--accent);
+      color: #1b1d21;
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px
+    }
+
+    button:hover {
+      filter: brightness(1.1)
+    }
+
+    .card {
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 14px
+    }
+
+    .card .sub {
+      margin: 4px 0 12px
+    }
+
+    .field {
+      margin-bottom: 10px
+    }
+
+    code {
+      background: #0f1012;
+      border: 1px solid #2f3137;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px
+    }
+
+    .msg {
+      min-height: 18px;
+      font-size: 13px;
+      margin-top: 8px;
+      color: #7CFC8A
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="index.html">← Back to Tools</a>
+      <h1>🛠 RATS — Admin Console</h1>
+    </div>
+    <p class="sub" id="banner">Manage the guild key, the lock, and the roster. This console is for officers/GM only.</p>
+
+    <div id="console" style="display:none">
+
+      <div class="card">
+        <h2>🔑 Guild key &amp; lock</h2>
+        <div class="sub">The key officers type to unlock the tools. Set it here and <b>arm the lock</b> — this works
+          with <b>no roster needed</b>.</div>
+        <div class="field"><input id="guildKey" type="text" placeholder="Guild key (the password officers will use)">
+        </div>
+        <button onclick="armLock()">🔒 Arm lock — download gate.json</button>
+        <div class="sub" style="margin-top:8px">Commit the downloaded <code>gate.json</code> to the repo → the index
+          lock turns on. Share the key in the officer channel.</div>
+      </div>
+
+      <div class="card">
+        <h2>📦 Roster</h2>
+        <div class="sub">Paste your in-game guild export, then export it <b>encrypted</b> with the guild key above.
+        </div>
+        <div class="field"><textarea id="rosterJson" placeholder="Paste the guild roster JSON here…"></textarea></div>
+        <button onclick="exportRoster()">💾 Save roster</button>
+        <div class="sub" style="margin-top:8px">Saves instantly to all officers when Firebase is on; otherwise downloads
+          <code>roster.json</code> to commit via Fork. The Guild Roster + comp autocomplete read it.</div>
+      </div>
+
+      <div class="card">
+        <h2>💾 Backup</h2>
+        <div class="sub">Download the current <b>encrypted</b> <code>roster.json</code> + <code>history.json</code> and
+          commit them via Fork. Each commit is a frozen, unchangeable snapshot. If the live data is ever wiped, the
+          site restores from these automatically.</div>
+        <button onclick="doBackup()">⬇ Download backup (roster.json + history.json)</button>
+        <div class="sub" style="margin-top:8px">Tip: do this after big roster/raid changes. Your browser may ask to
+          allow multiple downloads — say yes.</div>
+      </div>
+
+      <div class="card">
+        <h2>📣 Discord webhooks</h2>
+        <div class="sub">One per channel/purpose — give each a <b>name</b> so tools know which is which (e.g. <i>Raid
+            Roster</i>, <i>Lore / Stories</i>). Stored only in <b>your</b> browser — never committed.</div>
+        <div id="hookList"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <button type="button" onclick="addHookRow()" style="background:#3a3d44;color:#fff">➕ Add webhook</button>
+          <button onclick="saveHooks()">💾 Save webhooks</button>
+        </div>
+        <div class="sub" style="margin-top:8px">The comp tool posts to a hook named like <code>roster</code>/<code>raid</code>;
+          the Lore page uses one named like <code>lore</code>/<code>story</code> (or you pick at post time).</div>
+      </div>
+
+      <div class="card">
+        <h2>🛠 Admin password</h2>
+        <div class="sub">Locks <i>this</i> console (separate from the guild key — only you should know it).</div>
+        <div class="field"><input id="adminPass" type="password" placeholder="Set / change admin password"></div>
+        <button onclick="setAdmin()">Set admin password — download admin.json</button>
+        <div class="sub" style="margin-top:8px">Commit the downloaded <code>admin.json</code> → this console requires
+          that password.</div>
+      </div>
+
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    const AKEY = "ratsAdminKey";
+    function dl(name, obj) { const a = document.createElement("a"); a.download = name; a.href = URL.createObjectURL(new Blob([JSON.stringify(obj)], { type: "application/json" })); a.click(); }
+    function msg(t, c) { const e = document.getElementById("msg"); e.style.color = c || "#7CFC8A"; e.textContent = t; }
+    const WH_RE = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/\S+/;
+    function showConsole() {
+      document.getElementById("console").style.display = "";
+      const k = localStorage.getItem("ratsGuildKey") || ""; if (k) document.getElementById("guildKey").value = k;
+      renderHooks();
+    }
+    function loadHooks() {
+      try { const a = JSON.parse(localStorage.getItem("ratsWebhooks") || "null"); if (Array.isArray(a)) return a; } catch (e) {}
+      const w = localStorage.getItem("ratsWebhook"); // migrate the old single webhook
+      return w ? [{ name: "Raid Roster", url: w }] : [];
+    }
+    function addHookRow(name, url) {
+      const row = document.createElement("div");
+      row.className = "hookRow";
+      row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px";
+      row.innerHTML =
+        '<input class="hName" placeholder="Name (Raid Roster, Lore…)" style="flex:1;min-width:130px">'
+        + '<input class="hUrl" type="password" placeholder="https://discord.com/api/webhooks/…" style="flex:2;min-width:200px">'
+        + '<button type="button" title="show/hide" style="background:#3a3d44;color:#fff" onclick="var i=this.previousElementSibling;i.type=(i.type===\'password\'?\'text\':\'password\')">👁</button>'
+        + '<button type="button" title="send test" style="background:#3a3d44;color:#fff" onclick="testHook(this)">Test</button>'
+        + '<button type="button" title="remove" style="background:#5a2e2e;color:#fff" onclick="this.closest(\'.hookRow\').remove()">✕</button>';
+      document.getElementById("hookList").appendChild(row);
+      row.querySelector(".hName").value = name || "";
+      row.querySelector(".hUrl").value = url || "";
+      return row;
+    }
+    function renderHooks() {
+      document.getElementById("hookList").innerHTML = "";
+      const hooks = loadHooks();
+      if (!hooks.length) addHookRow("Raid Roster", "");
+      else hooks.forEach(h => addHookRow(h.name, h.url));
+    }
+    function saveHooks() {
+      const rows = [...document.querySelectorAll("#hookList .hookRow")];
+      const out = [];
+      for (const r of rows) {
+        const name = r.querySelector(".hName").value.trim();
+        const url = r.querySelector(".hUrl").value.trim();
+        if (!name && !url) continue;
+        if (!WH_RE.test(url)) { msg("“" + (name || "(unnamed)") + "” doesn't have a valid Discord webhook URL.", "#ff6b6b"); return; }
+        out.push({ name: name || "Webhook", url: url });
+      }
+      localStorage.setItem("ratsWebhooks", JSON.stringify(out));
+      // back-compat: the comp tool reads ratsWebhook — point it at the roster/raid hook (or the first)
+      const roster = out.find(h => /roster|raid|comp/i.test(h.name)) || out[0];
+      if (roster) localStorage.setItem("ratsWebhook", roster.url); else localStorage.removeItem("ratsWebhook");
+      msg("✅ Saved " + out.length + " webhook" + (out.length != 1 ? "s" : "") + " on this browser.");
+    }
+    async function testHook(btn) {
+      const url = (btn.closest(".hookRow").querySelector(".hUrl").value || "").trim();
+      if (!WH_RE.test(url)) { msg("Enter a valid webhook URL in that row first.", "#ff6b6b"); return; }
+      msg("⏳ Sending test…", "#8a8d93");
+      try {
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: "🐀 RATS admin — webhook test OK!" }) });
+        msg(r.ok ? "✅ Test sent to Discord!" : "❌ Discord rejected it (HTTP " + r.status + ").", r.ok ? "#7CFC8A" : "#ff6b6b");
+      } catch (e) { msg("❌ Blocked (CORS / file://). Works on the hosted https site.", "#ff6b6b"); }
+    }
+
+    function lockOverlay(blob) {
+      const ov = document.createElement("div");
+      ov.style.cssText = "position:fixed;inset:0;z-index:999;background:#0f1012;display:flex;align-items:center;justify-content:center";
+      ov.innerHTML = '<div class="card" style="max-width:340px;width:90%;text-align:center">'
+        + '<div style="font-size:42px;line-height:1">🛠🔒</div>'
+        + '<div style="color:#fff;font-weight:800;font-size:17px;margin-top:6px">Admin only</div>'
+        + '<div class="sub">Enter the admin password.</div>'
+        + '<input id="ap" type="password" placeholder="Admin password" style="text-align:center">'
+        + '<div id="ae" style="color:#ff6b6b;font-size:12px;min-height:16px;margin:8px 0"></div>'
+        + '<button id="ab" style="width:100%">Unlock 🛠</button></div>';
+      document.body.appendChild(ov);
+      const ip = ov.querySelector("#ap"), ae = ov.querySelector("#ae"), ab = ov.querySelector("#ab");
+      setTimeout(function () { ip.focus(); }, 50);
+      async function go() {
+        const p = ip.value; if (!p) return;
+        ab.disabled = true; ae.style.color = "#8a8d93"; ae.textContent = "Checking…";
+        try { await RatsData.decrypt(blob, p); localStorage.setItem(AKEY, p); ov.remove(); showConsole(); }
+        catch (e) { ae.style.color = "#ff6b6b"; ae.textContent = "Wrong password."; ab.disabled = false; ip.select(); }
+      }
+      ab.onclick = go; ip.onkeydown = function (e) { if (e.key === "Enter") go(); };
+    }
+
+    async function init() {
+      let blob = null;
+      try { const r = await fetch("admin.json", { cache: "no-store" }); if (r.ok) blob = await r.json(); } catch (e) { }
+      if (!blob || !(blob.enc || blob.ct)) { // no admin password set yet -> first-time setup, open
+        document.getElementById("banner").innerHTML = "⚙️ <b>First-time setup</b> — no admin password yet. Set one in the last card and commit <code>admin.json</code> to lock this console.";
+        showConsole(); return;
+      }
+      let pass = localStorage.getItem(AKEY) || "";
+      if (pass) { try { await RatsData.decrypt(blob, pass); showConsole(); return; } catch (e) { localStorage.removeItem(AKEY); } }
+      lockOverlay(blob);
+    }
+
+    async function armLock() {
+      const k = document.getElementById("guildKey").value.trim();
+      if (!k) { msg("Enter a guild key first.", "#ff6b6b"); return; }
+      localStorage.setItem("ratsGuildKey", k);
+      dl("gate.json", await RatsData.encrypt({ gate: true }, k));
+      msg("✅ gate.json downloaded — commit it to arm the lock. Officers unlock with this guild key.");
+    }
+    async function exportRoster() {
+      const k = document.getElementById("guildKey").value.trim();
+      if (!k) { msg("Enter the guild key first (it encrypts the roster).", "#ff6b6b"); return; }
+      let data; try { data = JSON.parse(document.getElementById("rosterJson").value.trim()); } catch (e) { msg("Invalid roster JSON.", "#ff6b6b"); return; }
+      if (!data.roster) { msg("That JSON has no 'roster' array.", "#ff6b6b"); return; }
+      try {
+        const res = await RatsData.saveRoster(data, k);
+        msg(res.mode === "firebase" ? "✅ Roster saved & shared instantly — every officer sees it on refresh." : "✅ roster.json downloaded — commit it via Fork. (Encrypted with the guild key.)");
+      } catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
+    }
+    async function doBackup() {
+      msg("⏳ Preparing backup…", "#8a8d93");
+      try {
+        const files = await RatsData.backup();
+        msg(files.length ? "✅ Downloaded " + files.join(" + ") + " — commit them via Fork." : "Nothing to back up yet.", files.length ? "#7CFC8A" : "#8a8d93");
+      } catch (e) { msg("❌ Backup failed: " + (e && e.message ? e.message : e), "#ff6b6b"); }
+    }
+
+    async function setAdmin() {
+      const p = document.getElementById("adminPass").value.trim();
+      if (!p) { msg("Enter an admin password.", "#ff6b6b"); return; }
+      localStorage.setItem(AKEY, p);
+      dl("admin.json", await RatsData.encrypt({ admin: true }, p));
+      msg("✅ admin.json downloaded — commit it to lock this console with that password.");
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Tools</title>
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #141517;
+      color: #dcddde;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px
+    }
+
+    .wrap {
+      max-width: 560px;
+      width: 100%;
+      text-align: center
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 26px;
+      margin: 0 0 6px;
+      letter-spacing: .5px
+    }
+
+    p.sub {
+      color: #8a8d93;
+      margin: 0 0 26px
+    }
+
+    .tools {
+      display: grid;
+      gap: 14px
+    }
+
+    a.tool {
+      display: block;
+      text-decoration: none;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 10px;
+      padding: 18px 20px;
+      text-align: left;
+      transition: border-color .15s, transform .05s
+    }
+
+    a.tool:hover {
+      border-color: #c0943a;
+      transform: translateY(-1px)
+    }
+
+    a.tool .t {
+      color: #c0943a;
+      font-weight: 800;
+      font-size: 17px
+    }
+
+    a.tool .d {
+      color: #9aa0a6;
+      font-size: 13px;
+      margin-top: 4px
+    }
+
+    .foot {
+      color: #5e6166;
+      font-size: 12px;
+      margin-top: 26px
+    }
+
+    /* changelog side drawer */
+    #clogBtn {
+      position: fixed;
+      top: 14px;
+      left: 16px;
+      z-index: 5;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: #9aa0a6;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 6px;
+      padding: 6px 10px
+    }
+
+    #clogBtn:hover {
+      border-color: #c0943a;
+      color: #fff
+    }
+
+    #clogOv {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s
+    }
+
+    #clogOv.open {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    #clog {
+      position: fixed;
+      top: 0;
+      left: -380px;
+      width: 360px;
+      max-width: 88vw;
+      height: 100%;
+      z-index: 21;
+      background: #1b1d21;
+      border-right: 1px solid #2f3137;
+      box-shadow: 12px 0 40px rgba(0, 0, 0, .45);
+      transition: left .25s;
+      overflow: auto;
+      padding: 20px;
+      text-align: left
+    }
+
+    #clog.open {
+      left: 0
+    }
+
+    #clog h2 {
+      color: #fff;
+      font-size: 16px;
+      margin: 0 0 2px
+    }
+
+    #clog .x {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      color: #9aa0a6;
+      background: none;
+      border: 0;
+      font-size: 18px
+    }
+
+    #clog .x:hover {
+      color: #fff
+    }
+
+    .cl-entry {
+      margin-top: 14px
+    }
+
+    .cl-date {
+      color: #c0943a;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: .4px
+    }
+
+    #clog ul {
+      margin: 6px 0 0;
+      padding-left: 18px
+    }
+
+    #clog li {
+      color: #9aa0a6;
+      font-size: 12.5px;
+      margin: 4px 0;
+      line-height: 1.45
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>🐀 RATS — Tools</h1>
+    <p class="sub">Officer utilities for the guild. <a href="../index.html" style="color:#c0943a;text-decoration:none">← Back to Hub</a></p>
+    <div class="tools">
+      <a class="tool" href="guild.html">
+        <div class="t">👥 Guild Roster →</div>
+        <div class="d">Import the guild roster: browse members by rank, search, see mains &amp; alts. Powers name
+          autocomplete in the comp tool.</div>
+      </a>
+      <a class="tool" href="comp.html">
+        <div class="t">🗓 Raid Comp Viewer →</div>
+        <div class="d">Paste a Raid-Helper composition, render it with spec icons + no-shows, and post it to Discord as
+          a clean embed.</div>
+      </a>
+      <a class="tool" href="history.html">
+        <div class="t">📊 Attendance &amp; History →</div>
+        <div class="d">Saved raids over time + per-raider attendance %. Alts count for their main; each raid day
+          counts separately. Mandatory-day tracking.</div>
+      </a>
+      <a class="tool" href="vacations.html">
+        <div class="t">🏖️ Vacations →</div>
+        <div class="d">See who's away and add a raider's vacation dates — excused absences don't hurt their attendance.</div>
+      </a>
+      <!-- <a class="tool" href="addons.html">
+        <div class="t">Addons →</div>
+        <div class="d">The guild's addons — Okanvil &amp; plugins, Redeemer. Download the .zip and drop it in your
+          AddOns folder.</div>
+      </a> -->
+      <a class="tool" href="lore.html">
+        <div class="t">📜 Lore &amp; Stories →</div>
+        <div class="d">Write tales about the raid — markdown + images — and post them to Discord. For the storytellers
+          of the Rats. 🐀</div>
+      </a>
+      <a class="tool" href="files.html">
+        <div class="t">📁 Officer Files →</div>
+        <div class="d">Shared files for officers — sheets, exports, docs. Hosted here, one-click download. No external drive.</div>
+      </a>
+    </div>
+    <div class="foot">FOR THE RATS 🧀 — all client-side, nothing leaves your browser except the Discord post.</div>
+  </div>
+
+  <a href="admin.html" title="Admin console"
+    style="position:fixed;top:14px;right:16px;z-index:5;text-decoration:none;font-size:12px;font-weight:700;color:#9aa0a6;background:#202225;border:1px solid #2f3137;border-radius:6px;padding:6px 10px">🛠 Admin</a>
+
+  <!-- Changelog side drawer -->
+  <button id="clogBtn" onclick="toggleClog()" title="What's new">📜 Changelog</button>
+  <div id="clogOv" onclick="toggleClog()"></div>
+  <aside id="clog">
+    <button class="x" onclick="toggleClog()" title="Close">✕</button>
+    <h2>📜 Changelog</h2>
+    <p class="sub" style="margin:0">What's new in the tools.</p>
+    <!-- newest first: add a new .cl-entry block at the top on each update -->
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v4</div>
+      <ul>
+        <li>📊 <b>Attendance/History</b> — fixed class colors (resolved from spec) and smarter name matching so Discord nicks map to the in-game roster (handles <code>[tags]</code>, <code>/alts</code> and spellings); fewer false "Unranked / Pug".</li>
+        <li>🗓 Discord post — a 10-man no longer shows empty Group 3/4/5; No-shows slide into the Group 3 column.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v3</div>
+      <ul>
+        <li>🗓 <b>Raid Comp</b> — hover a raider to <b>change their spec</b> inline (fixes the icon + the tank/healer/dps count), and <b>drag onto another raider</b> to set the exact order within a group.</li>
+        <li>👥 Roster picker now lists raiders <b>alphabetically</b> within each class — easier to find names.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v2</div>
+      <ul>
+        <li>📁 <b>Officer Files</b> page — folder tree with one-click downloads, hosted in the repo (no more Google Drive link). Starting with the Phase 3 Loot Prio sheet.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-25 · v1</div>
+      <ul>
+        <li>🧩 New <b>Addons</b> page — Okanvil host + plugins, with .zip downloads + install tips.</li>
+        <li>📜 New <b>Lore &amp; Stories</b> — post raid tales (markdown, images, real @mentions) to Discord.</li>
+        <li>📊 New <b>Attendance &amp; History</b> — per-raider %, 25/10-man tracked separately, vacation excuses, collapsible ranks.</li>
+        <li>🗓 <b>Raid Comp</b> — drag &amp; drop between groups, add many from the roster, empty-group template, needs 10+ to post.</li>
+        <li>⚡ <b>Instant saves</b> (Firebase) — no more download/commit; plus repo backup &amp; auto-restore.</li>
+        <li>🔑 Multiple named <b>Discord webhooks</b> in Admin · 🧀 cheese favicon.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    if (window.RatsData) RatsData.gate();
+    function toggleClog() {
+      document.getElementById("clog").classList.toggle("open");
+      document.getElementById("clogOv").classList.toggle("open");
+    }
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { document.getElementById("clog").classList.remove("open"); document.getElementById("clogOv").classList.remove("open"); } });
+  </script>
+</body>
+
+</html>

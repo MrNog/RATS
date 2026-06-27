@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Guild Hub</title>
+  <style>
+    :root { --accent:#c0943a; --bg:#141517 }
+    * { box-sizing:border-box }
+    body { margin:0; min-height:100vh; background:var(--bg); color:#dcddde;
+      font-family:"Segoe UI",Roboto,Arial,sans-serif; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:32px 20px; text-align:center }
+    .brand { margin:0 0 6px; color:#fff; font-size:28px; font-weight:800; letter-spacing:.5px }
+    .tag { color:#8a8d93; margin:0 0 26px; font-size:15px }
+    .gold { color:var(--accent) }
+    .links { display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; max-width:440px }
+    a.card { width:100%; text-decoration:none; background:#202225; border:1px solid #2f3137;
+      border-radius:12px; padding:20px; text-align:left; transition:border-color .15s, transform .05s }
+    a.card:hover { border-color:var(--accent); transform:translateY(-1px) }
+    a.card .t { color:var(--accent); font-weight:800; font-size:18px }
+    a.card .d { color:#9aa0a6; font-size:13px; margin-top:5px; line-height:1.45 }
+    #discord { position:fixed; top:14px; right:16px; z-index:5; display:inline-flex; align-items:center; gap:6px;
+      text-decoration:none; font-size:12px; font-weight:700; color:#9aa0a6; background:#202225;
+      border:1px solid #2f3137; border-radius:6px; padding:6px 10px }
+    #discord:hover { border-color:var(--accent); color:#fff }
+    #discord svg { width:15px; height:15px }
+    .foot { color:#5e6166; font-size:12px; margin-top:30px }
+
+    /* changelog side drawer (top-left) */
+    #clogBtn { position:fixed; top:14px; left:16px; z-index:5; cursor:pointer; font-size:12px; font-weight:700;
+      color:#9aa0a6; background:#202225; border:1px solid #2f3137; border-radius:6px; padding:6px 10px }
+    #clogBtn:hover { border-color:var(--accent); color:#fff }
+    #clogOv { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:20; opacity:0; pointer-events:none; transition:opacity .2s }
+    #clogOv.open { opacity:1; pointer-events:auto }
+    #clog { position:fixed; top:0; left:-380px; width:360px; max-width:88vw; height:100%; z-index:21; background:#1b1d21;
+      border-right:1px solid #2f3137; box-shadow:12px 0 40px rgba(0,0,0,.45); transition:left .25s; overflow:auto; padding:20px; text-align:left }
+    #clog.open { left:0 }
+    #clog h2 { color:#fff; font-size:16px; margin:0 0 2px }
+    #clog .x { position:absolute; top:14px; right:14px; cursor:pointer; color:#9aa0a6; background:none; border:0; font-size:18px }
+    #clog .x:hover { color:#fff }
+    .cl-entry { margin-top:14px }
+    .cl-date { color:var(--accent); font-weight:800; font-size:12px; letter-spacing:.4px }
+    #clog ul { margin:6px 0 0; padding-left:18px }
+    #clog li { color:#9aa0a6; font-size:12.5px; margin:4px 0; line-height:1.45 }
+  </style>
+</head>
+
+<body>
+  <h1 class="brand">🧀 RATS — Guild Hub</h1>
+  <p class="tag">The guild hub — addons, stories &amp; more. <span class="gold">🧀 For the rats.</span></p>
+
+  <div class="links">
+    <a class="card" href="addons.html">
+      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Addons & WeakAuras →</div>
+      <div class="d">Everything to set up for raids — mandatory addons, WeakAura tier packs, the visual patch & optional extras. One click = always the latest.</div>
+    </a>
+    <a class="card" href="gallery.html">
+      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> Gallery →</div>
+      <div class="d">Stories & art the guild has made — click any piece to view full size and download.</div>
+    </a>
+    <a class="card" href="vacations.html">
+      <div class="t">🏖️ Vacations →</div>
+      <div class="d">Going away? Mark your dates here so you're not counted as a miss on raid attendance.</div>
+    </a>
+    <a class="card" href="officer/index.html" style="border-style:dashed">
+      <div class="t">🔧 Officer Tools →</div>
+      <div class="d">Roster, raid comp, attendance, lore &amp; more. Officers only — unlocks with the guild key.</div>
+    </a>
+  </div>
+
+  <div class="foot">FOR THE RATS 🐀🧀</div>
+
+  <a id="discord" href="#" target="_blank" rel="noopener" title="Join our Discord">Discord
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"></path><path d="M14 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"></path><path d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833 -1.667 3.5 -3c.667 -1.667 .5 -5.833 -1.5 -11.5c-1.457 -1.015 -3 -1.34 -4.5 -1.5l-.972 1.923a11.913 11.913 0 0 0 -4.053 0l-.975 -1.923c-1.5 .16 -3.043 .485 -4.5 1.5c-2 5.667 -2.167 9.833 -1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2 -2 2 -3"></path><path d="M7 16.5c3.5 1 6.5 1 10 0"></path></svg>
+  </a>
+
+  <!-- Changelog side drawer -->
+  <button id="clogBtn" onclick="toggleClog()" title="What's new">📜 Changelog</button>
+  <div id="clogOv" onclick="toggleClog()"></div>
+  <aside id="clog">
+    <button class="x" onclick="toggleClog()" title="Close">✕</button>
+    <h2>📜 Changelog</h2>
+    <p class="tag" style="margin:0;font-size:13px">What's new on the hub.</p>
+    <!-- newest first: add a new .cl-entry block at the top on each update -->
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v4</div>
+      <ul>
+        <li>📥 <b>Addons</b> page grew — <b>WeakAura tier packs</b> (T7–T10, in-game import), an optional <b>visual patch</b>, and <b>Rats-Redeemer</b>, each in its own section.</li>
+        <li>🖼 <b>Gallery</b> upgrades — new categories (Classes, Commissions, Lore, Fangs, Warchiefs, Banners, Wallpapers, Icons), a true masonry layout (no gaps), and a fullscreen viewer with download.</li>
+        <li>✨ Cleaner, simpler landing — “🧀 RATS — Guild Hub” title and matching gold icons.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v3</div>
+      <ul>
+        <li>🧀 Cheese favicon across the hub.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-27 · v2</div>
+      <ul>
+        <li>🖼 <b>Gallery</b> is live — category tabs (Classes, Commissions, Banners, Lore), masonry grid, and a fullscreen viewer with download.</li>
+      </ul>
+    </div>
+    <div class="cl-entry">
+      <div class="cl-date">2026-06-26 · v1</div>
+      <ul>
+        <li>🐀 New guild hub — landing, Discord link, crown logo.</li>
+        <li>📥 <b>Mandatory Addons</b> page — one-click downloads that always grab the latest version (WeakAuras, DBM, RCLootCouncil, PallyPower).</li>
+        <li>🖼 Gallery — coming soon.</li>
+      </ul>
+    </div>
+  </aside>
+
+  <script>
+    // Set your Discord invite here (e.g. "https://discord.gg/xxxxxx"); the button hides until it's set.
+    const DISCORD_URL = "https://discord.gg/v7Unzr7tUZ";
+    (function () {
+      var a = document.getElementById("discord");
+      if (DISCORD_URL) { a.href = DISCORD_URL; } else { a.style.display = "none"; }
+    })();
+    function toggleClog() {
+      document.getElementById("clog").classList.toggle("open");
+      document.getElementById("clogOv").classList.toggle("open");
+    }
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { document.getElementById("clog").classList.remove("open"); document.getElementById("clogOv").classList.remove("open"); } });
+  </script>
+</body>
+
+</html>

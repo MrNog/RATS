@@ -1,0 +1,601 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Guild Roster</title>
+  <style>
+    :root {
+      --bg: #1b1d21;
+      --panel: #26282d;
+      --row: #2f3137;
+      --rowhover: #3a3d44;
+      --text: #dcddde;
+      --muted: #8a8d93;
+      --accent: #c0943a
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: #141517;
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      font-size: 14px
+    }
+
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 0 16px
+    }
+
+    a.back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #9aa0a6;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 6px;
+      padding: 6px 12px
+    }
+
+    a.back:hover {
+      border-color: var(--accent);
+      color: #fff
+    }
+
+    button {
+      background: var(--accent);
+      color: #1b1d21;
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px
+    }
+
+    button.alt {
+      background: #3a3d44;
+      color: #fff
+    }
+
+    button:hover {
+      filter: brightness(1.1)
+    }
+
+    input[type=text] {
+      background: #0f1012;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 14px
+    }
+
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-color: #0f1012;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8d93' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 34px 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
+      height: 38px;
+      min-width: 130px;
+      line-height: 1;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin: 14px 0
+    }
+
+    .err {
+      color: #ff6b6b;
+      min-height: 18px;
+      font-size: 13px;
+      margin: 6px 0
+    }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      background: #0f1012;
+      color: #cfd2d6;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      resize: vertical
+    }
+
+    /* stats */
+    .stats {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px
+    }
+
+    .stat {
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 8px;
+      padding: 8px 14px;
+      min-width: 96px
+    }
+
+    .stat .n {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1
+    }
+
+    .stat .l {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-top: 4px
+    }
+
+    /* rank sections */
+    .rank {
+      margin-bottom: 18px
+    }
+
+    .rhead {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      border-bottom: 1px solid #34373d;
+      padding-bottom: 5px;
+      margin-bottom: 8px
+    }
+
+    .rhead .c {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px
+    }
+
+    .members {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 6px
+    }
+
+    .m {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--row);
+      border-radius: 5px;
+      padding: 6px 10px;
+      min-height: 34px
+    }
+
+    .m:hover {
+      background: var(--rowhover)
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex: 0 0 8px;
+      background: #5b5e66
+    }
+
+    .dot.on {
+      background: #43b581
+    }
+
+    .fang {
+      cursor: pointer;
+      font-size: 13px;
+      flex: 0 0 auto;
+      opacity: .22;
+      filter: grayscale(1);
+      user-select: none
+    }
+
+    .fang.on {
+      opacity: 1;
+      filter: none
+    }
+
+    .fang:hover {
+      opacity: .65
+    }
+
+    .mn {
+      font-weight: 700
+    }
+
+    .lv {
+      color: #6e7178;
+      font-size: 11px
+    }
+
+    .note {
+      color: #8a8d93;
+      font-size: 12px;
+      margin-left: auto;
+      max-width: 48%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .altof {
+      color: #7aa2c9;
+      font-size: 11px;
+      font-style: italic
+    }
+
+    .joined {
+      color: #6e7178;
+      font-size: 11px;
+      flex: 0 0 auto
+    }
+
+    /* import modal */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .65);
+      z-index: 100;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 16px;
+      overflow: auto
+    }
+
+    #modal .box {
+      background: #1b1d21;
+      border: 1px solid #34373d;
+      border-radius: 10px;
+      max-width: 780px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 14px 44px rgba(0, 0, 0, .55)
+    }
+
+    .hidden {
+      display: none !important
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <a class="back" href="index.html">← Back to Tools</a>
+      <h1>🐀 RATS — Guild Roster</h1>
+    </div>
+    <p class="sub" id="metaLine">Import your guild roster JSON (from the in-game export) to build the database.</p>
+
+    <div class="controls">
+      <button onclick="openModal()">📥 Import roster</button>
+      <button class="alt" onclick="exportRoster()"
+        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save roster</button>
+      <input type="text" id="search" placeholder="Search name / spec / profession…" oninput="paint()"
+        style="flex:1;min-width:200px" />
+      <select id="rankSel" onchange="paint()">
+        <option value="">All ranks</option>
+      </select>
+      <select id="sortSel" onchange="paint()">
+        <option value="class" selected>Sort: Class</option>
+        <option value="name">Sort: Name</option>
+        <option value="level">Sort: Level</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="hideAlts" onchange="paint()" checked /> hide alts
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="fangsOnly" onchange="paint()" /> 💀 fangs only
+      </label>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <div class="err" id="err"></div>
+    <div id="roster"></div>
+  </div>
+
+  <!-- import modal -->
+  <div id="modal" onclick="if(event.target===this) closeModal()">
+    <div class="box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <h2 style="margin:0;color:#fff;font-size:18px">📥 Paste guild roster JSON</h2>
+        <button class="alt" onclick="closeModal()" style="padding:6px 11px">✕</button>
+      </div>
+      <p class="sub" style="margin:0 0 10px">Run your in-game roster export addon, copy its JSON, and paste it below.
+        It <b>merges</b> with the current data — your <b>💀 Fangs</b> and <b>join dates</b> are kept; names, ranks &amp; new members update.</p>
+      <textarea id="jsonIn" placeholder="Paste the guild roster JSON here…"></textarea>
+      <div class="err" id="modalErr"></div>
+      <div class="controls">
+        <button onclick="importRoster()">🔍 Compare changes</button>
+        <button id="confirmBtn" onclick="confirmImport()" style="display:none">✅ Confirm &amp; merge</button>
+        <button class="alt" onclick="closeModal()">Cancel</button>
+      </div>
+      <div id="diff"></div>
+    </div>
+  </div>
+
+  <script src="../assets/data.js"></script>
+  <script>
+    const LS = "ratsGuild";
+    const CLASS_COLOR = { "Death Knight": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function load() { try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; } }
+
+    const collapsed = new Set();
+    function toggleRank(i) { if (collapsed.has(i)) collapsed.delete(i); else collapsed.add(i); paint(); }
+
+    // derive the main character for an alt (from "<Main> Alt" in officer/public note)
+    function mainOf(m) {
+      const on = (m.officerNote || "").trim();
+      let mm = on.match(/^(.+?)\s+alt\b/i);
+      if (mm) return mm[1].trim();
+      const pn = (m.publicNote || "").trim();
+      if (pn) { const t = pn.split(/[\s,/\-(]/)[0]; if (t && /^[A-Za-zÀ-ÿ]{2,}$/.test(t)) return t; }
+      return null;
+    }
+    // officer-note "<Main> Alt" marks an alt even when the rank isn't "Alt" (e.g. an alt parked on Officer)
+    function altMainNote(m) { const on = ((m && m.officerNote) || "").trim(); const mm = on.match(/^(.+?)\s+alt\b/i); return mm ? mm[1].trim() : null; }
+    function isAlt(m) { return m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m); }
+
+    // ---- Fangs (10-man squad) — stored as a list of names in data.fangs, survives re-imports ----
+    function normNm(s) { return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+    function fangList() { const d = load(); return (d && Array.isArray(d.fangs)) ? d.fangs : []; }
+    function isFang(m) { const s = normNm(m.name); return fangList().some(n => normNm(n) === s); }
+    function joinedOf(m) { const d = load(); return (d && d.joined && d.joined[m.name]) || ""; }
+    function toggleFang(name) {
+      const d = load(); if (!d) return;
+      d.fangs = Array.isArray(d.fangs) ? d.fangs : [];
+      const i = d.fangs.findIndex(n => normNm(n) === normNm(name));
+      if (i >= 0) d.fangs.splice(i, 1); else d.fangs.push(name);
+      localStorage.setItem(LS, JSON.stringify(d));
+      setMsgOk("💀 Fangs updated locally — click 💾 Save roster to share with the officers.");
+      paint();
+    }
+
+    let pendingImport = null;
+    function openModal() {
+      document.getElementById("modal").style.display = "flex";
+      document.getElementById("modalErr").textContent = "";
+      document.getElementById("diff").innerHTML = "";
+      document.getElementById("confirmBtn").style.display = "none";
+      pendingImport = null;
+      setTimeout(() => document.getElementById("jsonIn").focus(), 50);
+    }
+    function closeModal() { document.getElementById("modal").style.display = "none"; }
+
+    const lc = s => (s || "").toLowerCase();
+    const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+
+    // STEP 1 — parse + show what would change (nothing saved yet)
+    function importRoster() {
+      let data;
+      try { data = JSON.parse(document.getElementById("jsonIn").value.trim()); }
+      catch (e) { document.getElementById("modalErr").textContent = "❌ Invalid JSON."; return; }
+      if (!data.roster || !Array.isArray(data.roster)) { document.getElementById("modalErr").textContent = "❌ No 'roster' array found."; return; }
+      document.getElementById("modalErr").textContent = "";
+      pendingImport = data;
+      showDiff(load(), data);
+      document.getElementById("confirmBtn").style.display = "";
+    }
+
+    function showDiff(oldData, nw) {
+      const box = document.getElementById("diff");
+      if (!oldData || !Array.isArray(oldData.roster)) {
+        box.innerHTML = `<p class="sub" style="margin-top:12px">First import — <b>${nw.roster.length}</b> members will be added.</p>`;
+        return;
+      }
+      const oldR = oldData.roster, oldBy = {}, newBy = {};
+      oldR.forEach(m => oldBy[lc(m.name)] = m);
+      nw.roster.forEach(m => newBy[lc(m.name)] = m);
+      const joined = nw.roster.filter(m => !oldBy[lc(m.name)]);
+      const left = oldR.filter(m => !newBy[lc(m.name)]);
+      const rankCh = nw.roster.map(m => { const o = oldBy[lc(m.name)]; return o && o.rankName !== m.rankName ? { name: m.name, from: o.rankName, to: m.rankName } : null; }).filter(Boolean);
+      const fangsLost = ((oldData.fangs) || []).filter(n => !newBy[lc(n)]);
+      const joinedLost = Object.keys((oldData.joined) || {}).filter(n => !newBy[lc(n)]);
+
+      const names = arr => arr.length ? arr.map(m => esc(m.name || m)).join(", ") : '<span style="color:#5e6166">none</span>';
+      const sect = (color, label, html) => `<div style="margin-top:8px"><b style="color:${color}">${label}</b><div class="sub" style="margin:2px 0 0">${html}</div></div>`;
+      const importDate = nw.exportedAt ? ymd(new Date(nw.exportedAt * 1000)) : ymd(new Date());
+      let html = `<div style="background:#16181c;border:1px solid #2f3137;border-radius:8px;padding:12px;margin-top:12px;max-height:280px;overflow:auto">`;
+      html += sect("#7CFC8A", `🟢 New members (${joined.length}) — join date set to ${importDate}`, names(joined));
+      html += sect("#ff8a8a", `🔴 Left the guild (${left.length})`, names(left));
+      html += sect("#c0943a", `🔁 Rank changes (${rankCh.length})`, rankCh.length ? rankCh.map(c => `${esc(c.name)}: ${esc(c.from)} → ${esc(c.to)}`).join("<br>") : '<span style="color:#5e6166">none</span>');
+      if (fangsLost.length) html += sect("#ff8a8a", `💀 Fangs whose toon left (will be dropped) (${fangsLost.length})`, names(fangsLost));
+      if (joinedLost.length) html += sect("#ff8a8a", `📅 Join dates whose toon left (will be dropped) (${joinedLost.length})`, names(joinedLost));
+      html += `</div><p class="sub" style="margin:8px 0 0">💀 Fangs &amp; join dates for everyone still here are <b>kept</b>. Nothing is saved until you confirm.</p>`;
+      box.innerHTML = html;
+    }
+
+    // STEP 2 — merge & save (keep fangs + join dates for members still present)
+    function confirmImport() {
+      if (!pendingImport) return;
+      const oldData = load() || {};
+      const data = pendingImport;
+      const hadOld = Array.isArray(oldData.roster) && oldData.roster.length > 0;
+      const newBy = {}; data.roster.forEach(m => newBy[lc(m.name)] = true);
+      const oldBy = {}; (oldData.roster || []).forEach(m => oldBy[lc(m.name)] = true);
+
+      // keep Fangs for members still present
+      const fangs = (oldData.fangs || []).filter(n => newBy[lc(n)]);
+      if (fangs.length) data.fangs = fangs;
+
+      // keep join dates for members still present
+      const joined = oldData.joined || {}, keptJoined = {};
+      Object.keys(joined).forEach(n => { if (newBy[lc(n)]) keptJoined[n] = joined[n]; });
+
+      // AUTO: a member who wasn't in the previous roster is new -> their join date = this import's date
+      // (first import = baseline, nobody gets a join date so existing members aren't treated as newcomers)
+      let added = 0;
+      const importDate = data.exportedAt ? ymd(new Date(data.exportedAt * 1000)) : ymd(new Date());
+      if (hadOld) {
+        data.roster.forEach(m => { if (!oldBy[lc(m.name)] && !keptJoined[m.name]) { keptJoined[m.name] = importDate; added++; } });
+      }
+      if (Object.keys(keptJoined).length) data.joined = keptJoined;
+
+      localStorage.setItem(LS, JSON.stringify(data));
+      pendingImport = null;
+      closeModal();
+      boot();
+      setMsgOk(`✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}. Click 💾 Save roster to share.`);
+    }
+
+    function buildRankFilter(data) {
+      const sel = document.getElementById("rankSel");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">All ranks</option>';
+      (data.ranks || []).slice().sort((a, b) => a.rankIndex - b.rankIndex).forEach(r => {
+        const o = document.createElement("option"); o.value = r.rankIndex; o.textContent = r.name; sel.appendChild(o);
+      });
+      sel.value = cur;
+    }
+
+    function paint() {
+      const data = load(); if (!data) return;
+      const q = (document.getElementById("search").value || "").toLowerCase().trim();
+      const rankFilter = document.getElementById("rankSel").value;
+      const hideAlts = document.getElementById("hideAlts").checked;
+
+      let roster = data.roster.slice();
+      if (hideAlts) roster = roster.filter(m => !isAlt(m));
+      if (document.getElementById("fangsOnly").checked) roster = roster.filter(isFang);
+      if (rankFilter !== "") roster = roster.filter(m => String(m.rankIndex) === rankFilter);
+      if (q) roster = roster.filter(m =>
+        (m.name || "").toLowerCase().includes(q) ||
+        (m.publicNote || "").toLowerCase().includes(q) ||
+        (m.officerNote || "").toLowerCase().includes(q) ||
+        (m.class || "").toLowerCase().includes(q));
+
+      // stats (over the full roster, not the filtered view)
+      const all = data.roster;
+      const alts = all.filter(isAlt).length;
+      const mains = all.length - alts;
+      document.getElementById("stats").innerHTML = [
+        ["Members", all.length], ["Mains", mains], ["Alts", alts], ["💀 Fangs", all.filter(isFang).length]
+      ].map(s => `<div class="stat"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join("");
+
+      // group filtered roster by rank, in rank order (Alt rank pushed to the bottom)
+      const rankKey = r => (/alt/i.test(r.name) ? 999 : r.rankIndex);
+      const ranksOrder = (data.ranks || []).slice().sort((a, b) => rankKey(a) - rankKey(b));
+      const byRank = {};
+      roster.forEach(m => { (byRank[m.rankIndex] = byRank[m.rankIndex] || []).push(m); });
+
+      const sortMode = document.getElementById("sortSel").value;
+      const sortFn = sortMode === "class" ? (a, b) => (a.class || "").localeCompare(b.class || "") || (a.name || "").localeCompare(b.name || "")
+        : sortMode === "level" ? (a, b) => (b.level || 0) - (a.level || 0) || (a.name || "").localeCompare(b.name || "")
+          : (a, b) => (a.name || "").localeCompare(b.name || "");
+
+      let html = "";
+      ranksOrder.forEach(r => {
+        const list = (byRank[r.rankIndex] || []).sort(sortFn);
+        if (!list.length) return;
+        const isC = collapsed.has(r.rankIndex);
+        html += `<div class="rank"><div class="rhead" style="cursor:pointer;user-select:none" onclick="toggleRank(${r.rankIndex})"><span style="display:inline-block;width:14px;color:#8a8d93">${isC ? "▶" : "▼"}</span> ${esc(r.name)} <span class="c">(${list.length})</span></div><div class="members"${isC ? ' style="display:none"' : ''}>`;
+        list.forEach(m => {
+          const col = CLASS_COLOR[m.class] || "#fff";
+          const main = isAlt(m) ? mainOf(m) : null;
+          html += `<div class="m" title="${esc(m.class)} · lvl ${m.level} · ${esc(m.publicNote || "")}">
+            <span class="fang${isFang(m) ? ' on' : ''}" data-name="${esc(m.name)}" title="Toggle Fang (10-man squad)">💀</span>
+            <span class="mn" style="color:${col}">${esc(m.name)}</span>
+            <span class="lv">${m.level}</span>
+            ${main ? `<span class="altof">↳ ${esc(main)}</span>` : ""}
+            ${joinedOf(m) ? `<span class="joined" title="Joined the guild">📅 ${esc(joinedOf(m))}</span>` : ""}
+            <span class="note">${esc(m.publicNote || "")}</span>
+          </div>`;
+        });
+        html += `</div></div>`;
+      });
+      document.getElementById("roster").innerHTML = html || `<p class="sub">No members match.</p>`;
+    }
+
+    async function exportRoster() {
+      const data = load();
+      if (!data || !data.roster) { alert("Import a roster first (📥 Import roster)."); return; }
+      let pass = RatsData.getPass();
+      if (!pass) { pass = prompt("Set the guild password (officers enter this once to unlock the roster):"); if (!pass) return; RatsData.setPass(pass); }
+      try {
+        const res = await RatsData.saveRoster(data, pass);
+        // publish a plain names+class list (mains only) so the public vacation page has a picker (no roster decryption needed)
+        try {
+          const members = data.roster.filter(m => !isAlt(m) && !/pug/i.test(m.rankName || "")).map(m => ({ name: m.name, class: m.class || "" }));
+          await RatsData.publishMembers(members);
+        } catch (e) { }
+        setMsgOk(res.mode === "firebase" ? "✅ Roster saved & shared instantly — officers see it on refresh. Member list published for self-service vacations." : "✅ roster.json downloaded — commit it to the repo. Officers unlock with the same password.");
+      } catch (e) { const el = document.getElementById("err"); if (el) { el.style.color = "#ff6b6b"; el.textContent = "❌ Save failed: " + e.message; } }
+    }
+    function setMsgOk(t) { const e = document.getElementById("err"); if (e) { e.style.color = "#7CFC8A"; e.textContent = t; } }
+
+    function boot() {
+      const data = load();
+      if (!data) {
+        document.getElementById("metaLine").textContent = "No roster imported yet — click 📥 Import roster.";
+        document.getElementById("stats").innerHTML = "";
+        document.getElementById("roster").innerHTML = "";
+        return;
+      }
+      const when = data.exportedAt ? new Date(data.exportedAt * 1000).toLocaleString() : "unknown";
+      document.getElementById("metaLine").innerHTML = `<b>${esc(data.guildName || "Guild")}</b> · ${esc(data.realm || "")} · ${data.roster.length} members · exported ${esc(when)}`;
+      buildRankFilter(data);
+      paint();
+    }
+    // click a 💀 to toggle that member as a Fang (delegated; #roster persists across repaints)
+    document.getElementById("roster").addEventListener("click", e => {
+      const f = e.target.closest(".fang"); if (!f) return;
+      e.stopPropagation();
+      toggleFang(f.getAttribute("data-name"));
+    });
+
+    // load the shared (possibly encrypted) roster.json, then render; falls back to local import
+    if (window.RatsData) { RatsData.loadRoster({ interactive: false }).then(boot); } else { boot(); }
+  </script>
+</body>
+
+</html>

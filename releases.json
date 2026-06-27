@@ -1,0 +1,10 @@
+{
+  "hubUrl": "https://mrnog.github.io/rats-hub/addons.html",
+  "addons": [
+    { "name": "WeakAuras", "repo": "NoM0Re/WeakAuras-WotLK" },
+    { "name": "Deadly Boss Mods (DBM)", "repo": "Zidras/DBM-Warmane" },
+    { "name": "RCLootCouncil", "repo": "MrNog/RCLlootCouncil---WARMANE---3.3.5" },
+    { "name": "PallyPower (Improved)", "repo": "NoM0Re/PallyPower-Improved-3.3.5" },
+    { "name": "Rats-Redeemer", "repo": "MrNog/Rats-Redeemer" }
+  ]
+}
