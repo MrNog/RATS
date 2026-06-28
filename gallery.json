@@ -415,6 +415,13 @@
   },
   {
     "cat": "icons",
+    "file": "images/icons/FranzHerman.png",
+    "title": "FranzHerman",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "icons",
     "file": "images/icons/Guild RATS - ICC.png",
     "title": "Guild RATS ICC",
     "caption": "",
