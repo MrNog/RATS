@@ -507,8 +507,11 @@
         + list.map(v => rowHtml(v, editable)).join("") + '</tbody></table>';
     }
     function render() {
-      // always chronological by start date (soonest first)
-      const vs = VACS.slice().sort((a, b) => (a.start || "").localeCompare(b.start || ""));
+      // active/upcoming first (by start date), ended pushed to the bottom
+      const vs = VACS.slice().sort((a, b) => {
+        const pa = status(a) === "past" ? 1 : 0, pb = status(b) === "past" ? 1 : 0;
+        return pa - pb || (a.start || "").localeCompare(b.start || "");
+      });
       const active = vs.filter(v => status(v) === "active");
       document.getElementById("active").innerHTML = table(active, false);
       document.getElementById("all").innerHTML = table(vs, true);

@@ -440,7 +440,10 @@
       return '<table><thead><tr><th>Raider</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody>' + list.map(rowHtml).join("") + '</tbody></table>';
     }
     function render() {
-      const vs = VACS.slice().sort((a, b) => (a.start || "").localeCompare(b.start || ""));   // chronological, like officer
+      const vs = VACS.slice().sort((a, b) => {     // active/upcoming first by date, ended at the bottom
+        const pa = status(a) === "past" ? 1 : 0, pb = status(b) === "past" ? 1 : 0;
+        return pa - pb || (a.start || "").localeCompare(b.start || "");
+      });
       const active = vs.filter(v => status(v) === "active");
       document.getElementById("active").innerHTML = table(active);
       document.getElementById("all").innerHTML = table(vs);
