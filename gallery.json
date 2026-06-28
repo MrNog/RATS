@@ -457,8 +457,22 @@
   },
   {
     "cat": "icons",
+    "file": "images/icons/nutela.png",
+    "title": "Nutela",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "icons",
     "file": "images/icons/okanor-logs.png",
     "title": "Okanor Logs",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/Rankings Rat.png",
+    "title": "Rankings Rat",
     "caption": "",
     "date": "2026-06"
   },
