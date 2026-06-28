@@ -1,14 +1,16 @@
-name: Addon release notifier
+name: Addon update notifier
 
-# Posts to Discord when an addon you follow cuts a new release — you do NOT need to own those repos
-# (the GitHub releases API is public). Edit the watched list in releases.json.
+# Posts to the #okanor-logs Discord channel when an EXTERNAL mandatory addon updates.
+# These repos aren't ours and mostly don't cut "releases" — they just push commits — so we watch
+# the latest RELEASE if there is one, otherwise the latest COMMIT on the default branch.
+# Edit the watched list in releases.json (external mandatory addons only).
 on:
   schedule:
     - cron: "*/30 * * * *"   # every 30 min
   workflow_dispatch: {}        # run manually from the Actions tab
 
 permissions:
-  contents: write              # to store the "last seen" tags
+  contents: write              # to store the "last seen" version
 
 jobs:
   notify:
@@ -16,35 +18,47 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check for new releases
+      - name: Check external addons for updates
         env:
-          WEBHOOK: ${{ secrets.RELEASE_WEBHOOK }}   # add this secret = your Discord webhook URL
+          WEBHOOK: ${{ secrets.LOGS_WEBHOOK }}      # = your #okanor-logs Discord webhook URL
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           [ -f release-state.json ] || echo '{}' > release-state.json
           hub=$(jq -r '.hubUrl // ""' releases.json)
           n=$(jq '.addons | length' releases.json)
+          api() { curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "$1"; }
           changed=0
           for i in $(seq 0 $((n - 1))); do
             name=$(jq -r ".addons[$i].name" releases.json)
             repo=$(jq -r ".addons[$i].repo" releases.json)
-            tag=$(curl -s -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-                  "https://api.github.com/repos/$repo/releases/latest" | jq -r '.tag_name // empty')
-            [ -z "$tag" ] && continue
+
+            # 1) prefer a real release tag; 2) else the latest commit on the default branch
+            ver=$(api "https://api.github.com/repos/$repo/releases/latest" | jq -r '.tag_name // empty')
+            kind="release"
+            if [ -z "$ver" ]; then
+              branch=$(jq -r ".addons[$i].branch // empty" releases.json)
+              [ -z "$branch" ] && branch=$(api "https://api.github.com/repos/$repo" | jq -r '.default_branch // "master"')
+              ver=$(api "https://api.github.com/repos/$repo/commits/$branch" | jq -r '.sha // empty' | cut -c1-7)
+              kind="commit"
+            fi
+            [ -z "$ver" ] && { echo "no version for $repo"; continue; }
+
             last=$(jq -r --arg r "$repo" '.[$r] // empty' release-state.json)
-            if [ "$tag" != "$last" ]; then
-              # only announce when we had a previous tag (first run just seeds state, no spam)
+            if [ "$ver" != "$last" ]; then
+              # only announce when we had a previous value (first run just seeds state, no spam)
               if [ -n "$last" ] && [ -n "$WEBHOOK" ]; then
-                payload=$(jq -n --arg t "📦 $name — new update $tag" --arg u "$hub" \
-                  --arg d "A new version is out. Grab the latest from the RATS hub. ⬇" \
-                  '{embeds:[{title:$t,url:$u,description:$d,color:12686394,footer:{text:"FOR THE RATS 🧀"}}]}')
+                title="📦 $name — new update"
+                desc="New $kind \`$ver\` is out for **$name**.
+🔗 [Open the RATS hub →]($hub)"
+                payload=$(jq -n --arg t "$title" --arg u "$hub" --arg d "$desc" --arg f "$repo" \
+                  '{embeds:[{author:{name:"RATS • Addon updates"},title:$t,url:$u,description:$d,color:12686394,footer:{text:$f}}]}')
                 curl -s -H "Content-Type: application/json" -d "$payload" "$WEBHOOK" >/dev/null || true
-                echo "Announced $name $tag"
+                echo "Announced $name $ver"
               else
-                echo "Seeded $name $tag"
+                echo "Seeded $name $ver"
               fi
-              tmp=$(jq --arg r "$repo" --arg t "$tag" '.[$r]=$t' release-state.json)
+              tmp=$(jq --arg r "$repo" --arg v "$ver" '.[$r]=$v' release-state.json)
               echo "$tmp" > release-state.json
               changed=1
             fi
@@ -53,6 +67,6 @@ jobs:
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add release-state.json
-            git commit -m "chore: update addon release state [skip ci]"
+            git commit -m "chore: update addon version state [skip ci]"
             git push
           fi

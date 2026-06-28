@@ -375,6 +375,14 @@
       text-overflow: ellipsis;
       background: rgba(255, 255, 255, .05)
     }
+
+    /* pretty gold scrollbars */
+    .seclist::-webkit-scrollbar, .ac::-webkit-scrollbar { width:10px }
+    .seclist::-webkit-scrollbar-track, .ac::-webkit-scrollbar-track { background:#16181c; border-radius:8px }
+    .seclist::-webkit-scrollbar-thumb, .ac::-webkit-scrollbar-thumb { background:#c0943a; border-radius:8px; border:2px solid #16181c }
+    .seclist::-webkit-scrollbar-thumb:hover, .ac::-webkit-scrollbar-thumb:hover { background:#e0b860 }
+    .seclist, .ac { scrollbar-width:thin; scrollbar-color:#c0943a #16181c }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 

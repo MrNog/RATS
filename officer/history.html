@@ -326,10 +326,12 @@
     }
 
     .msg {
-      min-height: 18px;
       font-size: 13px;
       margin: 10px 0;
       color: #7CFC8A
+    }
+    .msg:empty {
+      display: none
     }
 
     /* edit mode + post button */
@@ -343,6 +345,24 @@
     .vac { font-size:10px; color:#7CFC8A; font-style:italic }
     .post { background:#3b4178; border:1px solid #5865F2; color:#dfe2ff; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px }
     .post:hover { filter:brightness(1.12); color:#fff }
+    /* per-card Optional toggle switch */
+    .optsw { display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none; flex:0 0 auto }
+    .optsw input { display:none }
+    .optsw .otrack { width:34px; height:18px; border-radius:10px; background:#3a3d44; position:relative; transition:background .15s }
+    .optsw .oknob { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#9aa0a6; transition:left .15s, background .15s }
+    .optsw input:checked + .otrack { background:var(--accent) }
+    .optsw input:checked + .otrack .oknob { left:18px; background:#1b1d21 }
+    .optsw .olbl { font-size:11px; color:#9aa0a6; font-weight:700 }
+    /* attendance explainer */
+    /* raid log: show ~7 then scroll inside */
+    #log { max-height:400px; overflow:auto; padding-right:6px }
+    .explain { margin:10px 0 2px; background:#1b1d21; border:1px solid #2f3137; border-radius:10px; padding:6px 14px }
+    .explain summary { cursor:pointer; color:#fff; font-weight:700; font-size:14px; padding:6px 0; list-style:none }
+    .explain summary::-webkit-details-marker { display:none }
+    .explain .exbody { color:#c4c7cc; font-size:13px; line-height:1.5; padding:4px 0 10px }
+    .explain .exbody p { margin:8px 0 }
+    .explain .exbody ul { margin:6px 0; padding-left:18px }
+    .explain .exbody li { margin:4px 0 }
 
     @media(max-width:680px) {
       .ggrid {
@@ -353,6 +373,7 @@
         min-width: 0
       }
     }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 
@@ -361,12 +382,26 @@
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <a class="btn" href="index.html">← Back to Tools</a>
       <h1>🐀 RATS — Attendance &amp; History</h1>
-      <a class="btn" href="comp.html" style="margin-left:auto">🗓 Raid Comp →</a>
+      <a class="btn" href="vacations.html" style="margin-left:auto">🏖️ Vacations →</a>
+      <a class="btn" href="comp.html">🗓 Raid Comp →</a>
     </div>
-    <p class="sub" style="margin-top:8px"><b>25-man = mandatory</b> (counts for everyone since they joined).
-      <b>10-man = optional</b> — only counts for raiders who were actually in it (present or no-show), so people
-      not invited aren't penalized. An alt counts for its main. <b>🏖️ Vacations are excused</b> (don't count).
-      No-show = signed up &amp; didn't come (red counter). Pick the size above; <b>All sizes</b> combines them fairly.</p>
+    <details class="explain">
+      <summary>📊 How attendance works — and why <span style="color:var(--accent);font-weight:600">(click)</span></summary>
+      <div class="exbody">
+        <p>Attendance is <b>not a punishment</b> — it shows <b>who's the most reliable</b>, so raid spots,
+          <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.</p>
+        <p><b>What counts as a "miss":</b> you <b>signed up &amp; didn't show</b>, or you were <b>expected</b>
+          for a mandatory raid and weren't there. 🏖️ <b>On vacation = excused.</b> New members are protected —
+          raids before their join date don't count. An <b>alt counts for its main</b>.</p>
+        <p><b>Which raids count:</b></p>
+        <ul>
+          <li>🔴 <b>25-man — Mandatory.</b> Counts for <b>everyone</b> from their join date.</li>
+          <li>💀 <b>10-man — Fang run.</b> Counts for <b>Warchief's Fangs</b> only (and anyone who actually played it).</li>
+          <li>⚪ <b>Optional — log-only.</b> Alt 25 runs, casual/pug 10-mans: saved as <b>history only</b>, counts for nobody.</li>
+        </ul>
+        <p>Flip any run with the <b>Optional</b> switch on its card in the log — it saves instantly.</p>
+      </div>
+    </details>
 
     <div class="controls">
       <select id="sizeF" onchange="rerender()">
@@ -401,10 +436,9 @@
 
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
       <h2 style="margin:0">🗒 Raid log</h2>
-      <a class="editbtn" href="vacations.html" style="text-decoration:none">🏖️ Vacations ↗</a>
       <button id="editBtn" class="editbtn" onclick="toggleEdit()">✏️ Edit mode</button>
       <button id="saveBtn" class="savebtn" onclick="saveChanges()" style="display:none">💾 Save changes</button>
-      <span id="editHint" class="sub" style="display:none">Click a ❌ no-show to mark it 🏖️ <b>vacation</b> (excused). Use <b>Mark optional/mandatory</b> on a raid to change how it counts.</span>
+      <span id="editHint" class="sub" style="display:none">Click a ❌ no-show to mark it 🏖️ <b>vacation</b> (excused). <span style="color:var(--accent)">Tip:</span> to change how a run counts, just flip its <b>Optional</b> switch — no edit mode needed.</span>
     </div>
     <div id="log"></div>
   </div>
@@ -493,9 +527,11 @@
       const n = (r.groups || []).reduce((a, g) => a + (g.members || []).length, 0);
       return n > 10 ? 25 : 10;
     }
-    // Optional/selective raids only count for raiders who were actually in them (present or no-show).
-    // Mandatory raids count for everyone since they joined. Default: 10-man = optional, 25-man = mandatory.
-    function isOptional(r) { return r.optional != null ? !!r.optional : raidSize(r) === 10; }
+    // The per-raid toggle: ⚪ Optional = log-only (history, counts for nobody). Default OFF.
+    // When NOT optional: 25-man counts for everyone, 10-man is a 💀 Fang run (counts for Fangs).
+    function isLogOnly(r) { return !!r.optional; }
+    // raid "kind" for the badge: 'log' | 'mando' (25) | 'fang' (10)
+    function raidKind(r) { return isLogOnly(r) ? "log" : (raidSize(r) === 25 ? "mando" : "fang"); }
     // a raider on vacation that day -> that raid is excused (no miss, doesn't count)
     function onVacation(name, date) {
       const vs = VAC || [], n = normName(name);
@@ -548,20 +584,21 @@
       const total = raids.length;
       const rows = Object.values(map).map(o => {
         const joinD = joinDateOf(o.name), fang = isFangName(o.name);
-        // a raid counts toward this raider when:
-        //   25 (mandatory): they were in it, OR it happened on/after they joined
-        //   10 (optional):  Fangs since they joined (or anyone who actually played it)
-        // excused (🏖️ vacation) raids never count.
+        // A raid counts toward this raider when:
+        //   ⚪ Optional (log-only): never — pure history.
+        //   🔴 25-man (mandatory): they were in it, OR it happened on/after they joined.
+        //   💀 10-man (Fang run): Fangs since they joined, OR anyone who actually played it.
+        // 🏖️ vacation excuses a raid only when they DIDN'T show.
         let denom = 0;
         raids.forEach(r => {
+          if (isLogOnly(r)) return;                       // history-only — counts for nobody
           const d = r.date;
           const present = o.presentDates.has(d);
-          // excused (🏖️ vacation) only skips when they DIDN'T show; if they came anyway, it counts
           if (!present && (o.excused.has(d) || onVacation(o.name, d))) return;
           const inv = o.involved.has(d);
-          const counts = present || (isOptional(r)
-            ? (inv || (fang && (!joinD || d >= joinD)))
-            : (inv || !joinD || d >= joinD));
+          const counts = raidSize(r) === 25
+            ? (present || inv || !joinD || d >= joinD)              // mandatory: everyone since join
+            : (present || inv || (fang && (!joinD || d >= joinD))); // fang run: fangs since join (+ anyone in it)
           if (counts) denom++;
         });
         return { ...o, total: denom, pct: denom ? Math.round(o.present / denom * 100) : 0 };
@@ -579,14 +616,14 @@
       document.getElementById("attHead").textContent = "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
 
       const lg = document.getElementById("legend");
-      const fmt = '<b>Days</b> = times present <b>/</b> raids that counted for them.';
+      const fmt = '<b>Days</b> = times present <b>/</b> raids that counted. ⚪ Optional runs never count.';
       if (sf === "10") {
-        lg.innerHTML = '💀 <b>Fangs</b> are expected at every 10-man, so all 10-mans count for them — that\'s why a Fang who skipped both shows <b>0 / 2</b>. '
-          + 'Everyone else only counts for the 10-mans they actually joined. ' + fmt;
+        lg.innerHTML = '💀 <b>Fang runs</b> (10-man) count for <b>Warchief\'s Fangs</b> — that\'s why a Fang who skipped both shows <b>0 / 2</b>. '
+          + 'Non-Fangs only count for the 10-mans they actually joined. ' + fmt;
       } else if (sf === "25") {
-        lg.innerHTML = '25-mans are <b>mandatory</b> — every 25-man counts for everyone since they joined. ' + fmt;
+        lg.innerHTML = '🔴 <b>25-mans are mandatory</b> — every 25-man counts for everyone since they joined. ' + fmt;
       } else {
-        lg.innerHTML = 'Combined: 25-mans count for everyone; 10-mans count for 💀 Fangs and anyone who joined them. 🏖️ Vacations are excused. ' + fmt;
+        lg.innerHTML = 'Combined: 🔴 25-mans count for everyone; 💀 10-man Fang runs count for Fangs. 🏖️ Vacations excused. ' + fmt;
       }
 
       const q = (document.getElementById("search").value || "").toLowerCase().trim();
@@ -698,14 +735,14 @@
           <div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
             <span class="date">${esc(r.title || r.date)}</span>
             <span class="szbadge">${raidSize(r)}-man</span>
-            ${isOptional(r) ? '<span style="font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;background:#26323c;color:#9ad0ff;border:1px solid #3f5a6a">OPTIONAL</span>' : ''}
+            ${kindBadge(r)}
             <span class="sub">${esc(r.desc || "")}</span>
             <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
+            ${optSwitch(r)}
           </div>
           <div class="body">
             <div class="ggrid">${groups}${nsBlock}</div>
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              ${editMode ? `<button class="exp" style="border-color:#3f5a6a;color:#9ad0ff" onclick="event.stopPropagation();toggleOptional('${esc(r.date)}')">${isOptional(r) ? "→ Mark mandatory" : "→ Mark optional"}</button>` : ""}
               <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
               <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
               <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
@@ -818,14 +855,31 @@
       dirty = true; updateSaveBtn();
       renderAttendance(); renderLog();
     }
-    // mark a raid optional (counts only for who was in it) or mandatory (counts for everyone since they joined)
-    function toggleOptional(date) {
+    // per-card badge + toggle
+    function kindBadge(r) {
+      const k = raidKind(r);
+      const s = "font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;border:1px solid";
+      if (k === "mando") return `<span style="${s} #6e5326;background:#3a3016;color:#e0b860" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
+      if (k === "fang") return `<span style="${s} #5a2e5a;background:#2e1f33;color:#e09ad0" title="Fang run — counts for Warchief's Fangs">💀 FANGS</span>`;
+      return `<span style="${s} #3a3d44;background:#26282d;color:#9aa0a6" title="Optional — log only, counts for nobody">⚪ OPTIONAL</span>`;
+    }
+    function optSwitch(r) {
+      return `<label class="optsw" onclick="event.stopPropagation()" title="Optional = log only (alt / casual run — doesn't count for attendance)">
+        <input type="checkbox" ${isLogOnly(r) ? "checked" : ""} onchange="setOptional('${esc(r.date)}',this.checked)">
+        <span class="otrack"><span class="oknob"></span></span><span class="olbl">Optional</span></label>`;
+    }
+    // toggle a raid to optional/log-only — saves immediately, no edit mode
+    async function setOptional(date, on) {
       const r = (HIST.raids || []).find(x => x.date === date);
       if (!r) return;
-      r.optional = !isOptional(r);   // explicit override of the size-based default
+      r.optional = !!on;
       if (window.RatsData) RatsData.cacheHistory(HIST);
-      dirty = true; updateSaveBtn();
       renderAttendance(); renderLog();
+      const pass = window.RatsData && RatsData.getPass();
+      if (!pass) { msg("⚠️ Changed locally — open from the index & enter the guild key to share it.", "#e0b860"); return; }
+      msg("⏳ Saving…", "#8a8d93");
+      try { const res = await RatsData.saveHistory(HIST, pass); msg(res.mode === "firebase" ? "✅ " + (on ? "Marked optional (log-only)." : "Now counts for attendance.") + " Shared." : "✅ Saved — commit history.json via Fork."); }
+      catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
     }
     async function saveChanges() {
       if (!window.RatsData) return;

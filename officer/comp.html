@@ -322,6 +322,7 @@
         flex: 1 1 auto
       }
     }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 
@@ -405,6 +406,9 @@
     <div class="controls" style="margin-top:22px">
       <button id="postBtn" onclick="postWebhook()" disabled>Post to Discord ↗</button>
       <button id="saveHistBtn" class="alt" onclick="saveToHistory()" disabled>💾 Save to history</button>
+      <label title="Optional = log only (alt / casual run — doesn't count for attendance). 25-man counts for all, 10-man counts for 💀 Fangs."
+        style="display:inline-flex;align-items:center;gap:6px;color:#9aa0a6;font-size:13px;font-weight:700;cursor:pointer">
+        <input type="checkbox" id="optIn"> ⚪ Optional (log only)</label>
       <a class="alt" href="history.html"
         style="display:inline-flex;align-items:center;text-decoration:none;color:#fff;background:#3a3d44;border-radius:6px;padding:9px 16px;font-weight:700;font-size:13px">📊 Attendance</a>
       <span class="sub" id="minHint" style="margin:0;color:#ff9b9b"></span>
@@ -981,6 +985,7 @@
           date: dateVal,
           title: window.__title || formatRaidTitle(dateVal),
           size: raidSize(),
+          optional: !!(document.getElementById("optIn") || {}).checked,   // ⚪ log-only (alt/casual run)
           desc: (document.getElementById("descIn").value || "").trim(),
           groups: (window.__comp || []).map(g => ({
             name: g.name,

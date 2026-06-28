@@ -261,6 +261,13 @@
     .seclist { max-height:300px; overflow:auto; border:1px solid #2f3137; border-radius:8px; background:#16181c; padding:0 12px 8px }
     .seclist table { margin-top:0 }
     .seclist thead th { position:sticky; top:0; background:#16181c; z-index:1 }
+    /* pretty gold scrollbars */
+    .seclist::-webkit-scrollbar, .ac::-webkit-scrollbar { width:10px }
+    .seclist::-webkit-scrollbar-track, .ac::-webkit-scrollbar-track { background:#16181c; border-radius:8px }
+    .seclist::-webkit-scrollbar-thumb, .ac::-webkit-scrollbar-thumb { background:#c0943a; border-radius:8px; border:2px solid #16181c }
+    .seclist::-webkit-scrollbar-thumb:hover, .ac::-webkit-scrollbar-thumb:hover { background:#e0b860 }
+    .seclist, .ac { scrollbar-width:thin; scrollbar-color:#c0943a #16181c }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 

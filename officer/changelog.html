@@ -181,6 +181,20 @@
       font-style: italic;
       padding: 10px 2px
     }
+
+    h2.sec { cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px }
+    h2.sec:hover { color:#e0b860 }
+    .caret { font-size:11px; color:#8a8d93 }
+    .cnt { color:#6e7178; font-size:12px; font-weight:600; text-transform:none; letter-spacing:0 }
+    /* scrollable list — ~4 entries tall, then scroll */
+    #listWrap { max-height:360px; overflow:auto }
+    /* pretty gold scrollbar */
+    #listWrap::-webkit-scrollbar, textarea::-webkit-scrollbar { width:10px }
+    #listWrap::-webkit-scrollbar-track, textarea::-webkit-scrollbar-track { background:#16181c; border-radius:8px }
+    #listWrap::-webkit-scrollbar-thumb, textarea::-webkit-scrollbar-thumb { background:#c0943a; border-radius:8px; border:2px solid #16181c }
+    #listWrap::-webkit-scrollbar-thumb:hover, textarea::-webkit-scrollbar-thumb:hover { background:#e0b860 }
+    #listWrap, textarea { scrollbar-width:thin; scrollbar-color:#c0943a #16181c }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 
@@ -214,8 +228,8 @@
     <h2>👁 Live preview — Discord card</h2>
     <div id="preview"></div>
 
-    <h2>🗂 Published entries</h2>
-    <div id="list"></div>
+    <h2 class="sec" onclick="toggleList()"><span class="caret" id="caretList">▼</span> 🗂 Published entries <span class="cnt" id="cntList"></span></h2>
+    <div id="listWrap"><div id="list"></div></div>
   </div>
 
   <script src="../assets/data.js"></script>
@@ -302,8 +316,15 @@
       try { await fbDelete("changelog/" + key); await reload(); msg("✅ Deleted."); }
       catch (err) { msg("❌ " + err.message, "#ff6b6b"); }
     }
+    let listOpen = true;
+    function toggleList() {
+      listOpen = !listOpen;
+      document.getElementById("listWrap").style.display = listOpen ? "" : "none";
+      document.getElementById("caretList").textContent = listOpen ? "▼" : "▶";
+    }
     function renderList() {
       const box = document.getElementById("list");
+      document.getElementById("cntList").textContent = LOGS.length ? "(" + LOGS.length + ")" : "";
       if (!LOGS.length) { box.innerHTML = '<div class="empty">No entries yet.</div>'; return; }
       box.innerHTML = LOGS.map(e => `<div class="entry">
         <div class="row" style="justify-content:space-between">

@@ -316,6 +316,7 @@
     .hidden {
       display: none !important
     }
+    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
   </style>
 </head>
 
@@ -350,6 +351,16 @@
     </div>
 
     <div class="stats" id="stats"></div>
+
+    <div id="staleWrap" style="background:#1b1d21;border:1px solid #3a4a5b;border-radius:10px;padding:12px 14px;margin:6px 0 0">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <b style="font-size:12px;color:#9ad0ff;text-transform:uppercase;letter-spacing:.5px">🔔 Stale-roster alert</b>
+        <span class="sub" id="staleNote" style="margin:0"></span>
+        <button class="alt" id="staleSend" onclick="sendStaleAlert(true)" style="margin-left:auto;padding:6px 12px;display:none">📣 Post to #okanor-logs</button>
+      </div>
+      <div id="staleCard"></div>
+    </div>
+
     <div class="err" id="err"></div>
     <div id="roster"></div>
   </div>
@@ -493,6 +504,7 @@
       }
       if (Object.keys(keptJoined).length) data.joined = keptJoined;
 
+      data.lastImport = Date.now();   // when the roster was last pulled from in-game into the hub
       localStorage.setItem(LS, JSON.stringify(data));
       pendingImport = null;
       closeModal();
@@ -508,6 +520,98 @@
         const o = document.createElement("option"); o.value = r.rankIndex; o.textContent = r.name; sel.appendChild(o);
       });
       sel.value = cur;
+    }
+
+    // ---- last in-game import timer (counts up until the next roster import) ----
+    function lastImportMs() { const d = load(); if (!d) return 0; return d.lastImport || (d.exportedAt ? d.exportedAt * 1000 : 0); }
+    function fmtDur(ms) {
+      let s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+      const d = Math.floor(s / 86400); s -= d * 86400;
+      const h = Math.floor(s / 3600); s -= h * 3600;
+      const m = Math.floor(s / 60); s -= m * 60;
+      if (d) return d + "d " + h + "h";
+      if (h) return h + "h " + m + "m";
+      if (m) return m + "m " + s + "s";
+      return s + "s";
+    }
+    function paintLastUpd() {
+      const el = document.getElementById("lastUpdN"); if (!el) return;
+      const ms = lastImportMs();
+      el.textContent = ms ? fmtDur(ms) : "—";
+      // nudge the officer to re-import if it's getting stale
+      const days = ms ? (Date.now() - ms) / 86400000 : 0;
+      el.style.color = days >= 30 ? "#ff6b6b" : days >= STALE_DAYS ? "#e0b860" : "#fff";
+      renderStale();
+    }
+    setInterval(paintLastUpd, 1000);
+
+    // ---- stale-roster alert -> #okanor-logs (after STALE_DAYS without an import) ----
+    const STALE_DAYS = 7;
+    const HUB_URL = "https://mrnog.github.io/rats/officer/guild.html";   // <- set to your live hub roster page
+    // the on-page PREVIEW is dev-only (so the admin can design it); the webhook auto-send stays live for everyone
+    const DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === "file:";
+    function staleDays() { const ms = lastImportMs(); return ms ? (Date.now() - ms) / 86400000 : 0; }
+    function logWebhook() { try { const a = JSON.parse(localStorage.getItem("ratsWebhooks") || "[]"); const h = a.find(x => /log|okanor/i.test(x.name || "")); return (h && h.url) || ""; } catch (e) { return ""; } }
+    function buildStaleEmbed() {
+      const ms = lastImportMs(), days = Math.floor(staleDays());
+      const when = ms ? new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "never";
+      return {
+        author: { name: "RATS • Roster" },
+        title: "⚠️ Time to refresh the roster",
+        url: HUB_URL,
+        color: 0xE0B860,
+        fields: [
+          { name: "⏳ Stale for", value: "**" + days + " day" + (days !== 1 ? "s" : "") + "**", inline: true },
+          { name: "📅 Last import", value: when, inline: true }
+        ],
+        description: "[🔗 Open the roster importer](" + HUB_URL + ")",
+        footer: { text: "Run the in-game export → import it into the hub 🐀🧀" }
+      };
+    }
+    function renderEmbedCard(embed) {
+      const hex = "#" + (embed.color || 0).toString(16).padStart(6, "0");
+      const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/\[(.+?)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#00a8fc">$1</a>')
+        .replace(/\n/g, "<br>");
+      const fields = (embed.fields || []).map(f =>
+        `<div style="${f.inline ? "min-width:120px" : "flex-basis:100%"}"><div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:1px">${md(f.name)}</div><div style="font-size:14px;color:#dbdee1">${md(f.value)}</div></div>`
+      ).join("");
+      const titleHtml = embed.url
+        ? `<a href="${esc(embed.url)}" target="_blank" rel="noopener" style="color:#00a8fc;text-decoration:none">${esc(embed.title)}</a>`
+        : esc(embed.title);
+      return `<div style="border-left:4px solid ${hex};background:#2b2d31;border-radius:4px;padding:12px 15px;max-width:460px;font-family:'gg sans','Segoe UI',sans-serif">
+        ${embed.author ? `<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:7px">${esc(embed.author.name)}</div>` : ""}
+        ${embed.title ? `<div style="font-size:16px;font-weight:700;margin-bottom:${fields || embed.description ? "9px" : "0"}">${titleHtml}</div>` : ""}
+        ${embed.description ? `<div style="font-size:14px;color:#dbdee1;line-height:1.5;margin-bottom:${fields ? "10px" : "0"}">${md(embed.description)}</div>` : ""}
+        ${fields ? `<div style="display:flex;gap:22px;flex-wrap:wrap">${fields}</div>` : ""}
+        ${embed.footer ? `<div style="font-size:12px;color:#949ba4;margin-top:11px">${esc(embed.footer.text)}</div>` : ""}
+      </div>`;
+    }
+    function renderStale() {
+      const wrap = document.getElementById("staleWrap");
+      const card = document.getElementById("staleCard"); if (!card) return;
+      // preview is dev-only (localhost/file://) — production never shows it; the webhook still auto-sends
+      if (!DEV || !load()) { if (wrap) wrap.style.display = "none"; return; }
+      if (wrap) wrap.style.display = "";
+      const days = Math.floor(staleDays()), stale = days >= STALE_DAYS;
+      card.innerHTML = renderEmbedCard(buildStaleEmbed());
+      const note = document.getElementById("staleNote");
+      note.textContent = stale ? `Roster is ${days} days old — alert is due.` : `Preview · auto-alerts after ${STALE_DAYS} days (currently ${days}).`;
+      note.style.color = stale ? "#e0b860" : "#6e7178";
+      document.getElementById("staleSend").style.display = (stale && logWebhook()) ? "" : "none";
+    }
+    async function sendStaleAlert(manual) {
+      const url = logWebhook();
+      if (!url) { if (manual) { const e = document.getElementById("err"); e.style.color = "#ff6b6b"; e.textContent = "❌ No #okanor-logs webhook saved (Admin → Discord webhooks)."; } return; }
+      if (!manual) {   // auto: once per stale roster — re-arms only after a fresh import resets lastImport
+        if (staleDays() < STALE_DAYS) return;
+        if (String(lastImportMs()) === localStorage.getItem("ratsStaleNotifiedFor")) return;
+      }
+      try {
+        await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [buildStaleEmbed()] }) });
+        localStorage.setItem("ratsStaleNotifiedFor", String(lastImportMs()));   // mark this roster as already alerted
+        if (manual) setMsgOk("✅ Posted the stale-roster alert to #okanor-logs.");
+      } catch (e) { if (manual) { const el = document.getElementById("err"); el.style.color = "#ff6b6b"; el.textContent = "❌ Couldn't post: " + e.message; } }
     }
 
     function paint() {
@@ -530,9 +634,16 @@
       const all = data.roster;
       const alts = all.filter(isAlt).length;
       const mains = all.length - alts;
-      document.getElementById("stats").innerHTML = [
+      let stats = [
         ["Members", all.length], ["Mains", mains], ["Alts", alts], ["💀 Fangs", all.filter(isFang).length]
       ].map(s => `<div class="stat"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join("");
+      // last in-game import — a live counter, refreshed every second by the interval below
+      const ms = lastImportMs();
+      stats += `<div class="stat" id="lastUpdCard" title="${ms ? new Date(ms).toLocaleString() : "no import recorded yet"}">
+        <div class="n" id="lastUpdN" style="font-size:15px;line-height:1.4">${ms ? fmtDur(ms) : "—"}</div>
+        <div class="l">since in-game update</div></div>`;
+      document.getElementById("stats").innerHTML = stats;
+      paintLastUpd();
 
       // group filtered roster by rank, in rank order (Alt rank pushed to the bottom)
       const rankKey = r => (/alt/i.test(r.name) ? 999 : r.rankIndex);
@@ -601,12 +712,15 @@
         document.getElementById("metaLine").textContent = "No roster imported yet — click 📥 Import roster.";
         document.getElementById("stats").innerHTML = "";
         document.getElementById("roster").innerHTML = "";
+        document.getElementById("staleWrap").style.display = "none";
         return;
       }
+      document.getElementById("staleWrap").style.display = "";
       const when = data.exportedAt ? new Date(data.exportedAt * 1000).toLocaleString() : "unknown";
       document.getElementById("metaLine").innerHTML = `<b>${esc(data.guildName || "Guild")}</b> · ${esc(data.realm || "")} · ${data.roster.length} members · exported ${esc(when)}`;
       buildRankFilter(data);
       paint();
+      sendStaleAlert(false);   // auto-post to #okanor-logs if it's been too long (once/day)
     }
     // click a 💀 to toggle that member as a Fang (delegated; #roster persists across repaints)
     document.getElementById("roster").addEventListener("click", e => {

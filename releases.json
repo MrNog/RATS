@@ -1,10 +1,9 @@
 {
-  "hubUrl": "https://mrnog.github.io/rats-hub/addons.html",
+  "hubUrl": "https://mrnog.github.io/rats/addons.html",
+  "_comment": "Watch ONLY external mandatory addons (repos you don't own). Your own forks are excluded — you know when you update those.",
   "addons": [
     { "name": "WeakAuras", "repo": "NoM0Re/WeakAuras-WotLK" },
     { "name": "Deadly Boss Mods (DBM)", "repo": "Zidras/DBM-Warmane" },
-    { "name": "RCLootCouncil", "repo": "MrNog/RCLlootCouncil---WARMANE---3.3.5" },
-    { "name": "PallyPower (Improved)", "repo": "NoM0Re/PallyPower-Improved-3.3.5" },
-    { "name": "Rats-Redeemer", "repo": "MrNog/Rats-Redeemer" }
+    { "name": "PallyPower (Improved)", "repo": "NoM0Re/PallyPower-Improved-3.3.5" }
   ]
 }
