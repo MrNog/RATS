@@ -50,7 +50,7 @@ jobs:
               if [ -n "$last" ] && [ -n "$WEBHOOK" ]; then
                 title="📦 $name — new update"
                 desc="New $kind \`$ver\` is out for **$name**.
-🔗 [Open the RATS hub →]($hub)"
+          🔗 [Open the RATS hub →]($hub)"
                 payload=$(jq -n --arg t "$title" --arg u "$hub" --arg d "$desc" --arg f "$repo" \
                   '{embeds:[{author:{name:"RATS • Addon updates"},title:$t,url:$u,description:$d,color:12686394,footer:{text:$f}}]}')
                 curl -s -H "Content-Type: application/json" -d "$payload" "$WEBHOOK" >/dev/null || true
