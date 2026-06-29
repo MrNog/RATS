@@ -52,6 +52,7 @@ Keep this consistent so every new piece matches the gallery. Local-only notes (g
   claws bared, emerald-green nature energy, hint of cat-form feral spirit.
 
 ### Class glow palette (for army/crowd scenes)
+
 Priests holy-gold / shadow-purple · Mages arcane-violet & frost-blue · Paladins gold ·
 Druids emerald · Warlocks sickly fel-green (small demon silhouettes) · Rogues shadow + daggers ·
 Death Knights bone-white/black plate, frost-blue runes, eerie green eyes, runeblades ·
@@ -137,8 +138,8 @@ Do NOT include: modern clothing, human faces, Alliance symbols, bright flat ligh
 > Examples done: **Okanor reforging Val'anyr** in Ulduar's titan forge; **Okanor over the fallen
 > Yogg-Saron** as the shattered fragments blaze into the legendary mace.
 
-**Lore fact — Val'anyr, Hammer of Ancient Kings (Ulduar, WotLK 3.1):** collect 30 *Fragment of
-Val'anyr* (drop from Ulduar bosses) → forms the dull *Reforged Hammer of Ancient Kings* → carry it
+**Lore fact — Val'anyr, Hammer of Ancient Kings (Ulduar, WotLK 3.1):** collect 30 _Fragment of
+Val'anyr_ (drop from Ulduar bosses) → forms the dull _Reforged Hammer of Ancient Kings_ → carry it
 into the Prison of Yogg-Saron and defeat the Old God; the released titanic energy restores it into
 the radiant legendary healer mace **Val'anyr**.
 
@@ -164,6 +165,7 @@ the radiant legendary healer mace **Val'anyr**.
 The signature individual hero card (matches the original `Rellik 1.png`). One rat per card.
 
 **Golden rules (what makes it clean — learned the hard way):**
+
 1. **Centered name** — brush-stroke name across the **TOP CENTER**, directly above the rat (NOT pushed
    to a side). Sandy tan-gold `#C8A96E`, grunge bristle texture. Title below in wide-spaced caps, then
    `—⧖—` Horde divider. Small `RATS` + Horde insignia watermark bottom-right.
@@ -195,8 +197,8 @@ The signature individual hero card (matches the original `Rellik 1.png`). One ra
   shifting to spirit-cat/bear (dynamic). **Ambient:** moonlit ancient grove — colossal gnarled trees,
   root-claimed ruins, sparse glowing wisps. Bark-brown/charcoal + emerald + moonlight.
 - **RELLIK — "HIGH WARLORD"** (Ret Paladin, dark-souls): two cards on file —
-  - *Original:* standing centered, runed greatsword point-down glowing, ruined battlefield, god-rays.
-  - *New:* striding mid-step, greatsword swung out WREATHED in molten-gold consecration fire, crimson
+  - _Original:_ standing centered, runed greatsword point-down glowing, ruined battlefield, god-rays.
+  - _New:_ striding mid-step, greatsword swung out WREATHED in molten-gold consecration fire, crimson
     cloak streaming. **Ambient:** vast ruined cathedral of ash under a blood-red eclipse — toppled
     columns, shattered rose window, molten-gold floor veins. Gold fire key vs blood-red eclipse.
 

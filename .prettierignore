@@ -1,0 +1,5 @@
+# HTML has inline JS — Prettier aggressively expands attributes and reformats script blocks
+**/*.html
+
+# GitHub Actions YAML — Prettier can break whitespace-sensitive indentation
+.github/workflows/*.yml

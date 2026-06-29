@@ -10,11 +10,7 @@
       "Bash(npx prettier*)",
       "Bash(npx --yes prettier*)"
     ],
-    "deny": [
-      "Bash(git reset --hard*)",
-      "Bash(git push --force*)",
-      "Bash(rm -rf*)"
-    ]
+    "deny": ["Bash(git reset --hard*)", "Bash(git push --force*)", "Bash(rm -rf*)"]
   },
   "hooks": {
     "PostToolUse": [
@@ -30,3 +26,4 @@
     ]
   }
 }
+

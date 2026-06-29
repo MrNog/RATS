@@ -7,12 +7,14 @@
 ---
 
 ## 1. Stack & shipping
+
 - Plain **HTML + vanilla JS**, no build step, no framework. Hosted on **GitHub Pages**.
 - Deployed via the **Fork GUI** (no `gh` CLI, no CI build). Repo kept commit-ready; don't push unless asked.
 - One folder `rats/` = public hub (root) + officer tools (`officer/`), sharing `assets/data.js`.
 - **Firebase Realtime DB** is the live data store (REST, no SDK). Cost-sensitive — see §5.
 
 ## 2. Repo layout
+
 ```
 index.html        hub landing + public changelog drawer
 addons.html       mandatory/recommended addons + NEW badge + update notifier preview
@@ -43,6 +45,7 @@ docs/             THIS folder (gitignored)
 ## 3. Pages & features
 
 ### Public hub
+
 - **index.html** — landing cards (gold line-SVG icons) linking each section. Public **changelog drawer**:
   reads `changelog` node, shows only `pub` (major) entries, with an **unseen badge** (count clears on open).
   Note: the word "Hub" links to pornhub.com — **intentional user edit, do not revert**.
@@ -54,6 +57,7 @@ docs/             THIS folder (gitignored)
 - **rankings.html** — see §7.
 
 ### Officer tools (gated by the guild key)
+
 - **officer/index.html** — landing + `RatsData.gate()` overlay (locks until key entered).
 - **guild.html** — roster browser. Per-row 🔗 Warmane armory link; one hierarchy icon (👑 GM > ⭐ Officer >
   💀 Fang); join dates; **low-level (<80)** collapsed at bottom; **last-import** stat card (warns at 14/30 days);
@@ -72,6 +76,7 @@ docs/             THIS folder (gitignored)
 - **admin.html** — maintainer console: set keys, webhooks, roster/history, backup. Self-gates with the admin password.
 
 ## 4. Data layer — `assets/data.js` (`RatsData`)
+
 Single shared module. `FIREBASE_URL` is set; when empty it falls back to committed files + downloads.
 
 **Encryption / gate:** roster & history are **AES-GCM**, key (PBKDF2, 150k iters) derived from the guild key.
@@ -87,19 +92,21 @@ Data is encrypted **in-browser before upload**, so Firebase only holds unreadabl
 (e.g. `ratsRankCache`, `ratsStaleNotifiedFor`, changelog seen-count).
 
 ## 5. Firebase nodes & COST model
+
 REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
 
-| node | content | who writes |
-|------|---------|-----------|
-| `roster` | encrypted roster blob | officer (guild.html/admin) |
-| `history` | encrypted history blob | officer (comp/history) |
-| `vacations` | plain, push-keyed entries | members + officers |
-| `members` | plain name+class (public picker) | officer publish |
-| `changelog` | plain entries (`pub` flag) | officer |
-| `gate` | encrypted lock token | admin |
-| `rankings` | computed rankings snapshot (planned) | officer Fetch (see §7) |
+| node        | content                              | who writes                 |
+| ----------- | ------------------------------------ | -------------------------- |
+| `roster`    | encrypted roster blob                | officer (guild.html/admin) |
+| `history`   | encrypted history blob               | officer (comp/history)     |
+| `vacations` | plain, push-keyed entries            | members + officers         |
+| `members`   | plain name+class (public picker)     | officer publish            |
+| `changelog` | plain entries (`pub` flag)           | officer                    |
+| `gate`      | encrypted lock token                 | admin                      |
+| `rankings`  | computed rankings snapshot (planned) | officer Fetch (see §7)     |
 
 **Cost rules (free tier ~360 MB/day download; REST reads the WHOLE node each time):**
+
 - **Reads are the cost**, not images (images are on GitHub Pages, not Firebase).
 - **Never read on every interaction.** Toggles/filters re-render from already-loaded data — no network.
 - **Cache reads in localStorage** with a TTL; re-visits within the TTL read nothing.
@@ -107,6 +114,7 @@ REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<n
 - Public pages should avoid reading big encrypted nodes; the rankings page reads **one** small snapshot, cached.
 
 ## 6. Discord webhooks & automation
+
 - Webhooks in `localStorage.ratsWebhooks` (named; matched by keyword `/vacation/i`, `/log|okanor/i`).
 - Every embed built from **one builder fn** so the live preview === what's posted. Discord renders the **title
   white** (color only on the left bar). Use **dynamic timestamps** (`<t:unix:D>` / `:R`).
@@ -116,6 +124,7 @@ REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<n
   (#okanor-logs), state in `release-state.json`.
 
 ## 7. Rankings (rankings.html) — logs-fed
+
 Public page; **no attendance** (ranking reflects absence naturally). Tabs: **🏆 Leaderboards** (personal: MVP,
 Top DPS/HPS, Most improved, Needs work, Records), **📊 Guild progress** (collective: week-over-week verdict +
 cards + per-boss kill times with killed/⏳pending/✖no-kill states), **🎉 Fun & shame** (deaths, awards, fun
@@ -132,6 +141,7 @@ TTL 30 min); all raid/size/period toggles filter client-side → ~0 reads. `SAMP
 contract and the fallback until the API is live (`RANKINGS_URL`/snapshot node still empty).
 
 ## 8. Operational (maintainer)
+
 - **Run locally:** use a server, not `file://` (fetch/crypto/webhooks are blocked on file://). VS Code Live Server
   or `python -m http.server 8000`.
 - **Keys:** guild key unlocks the tools + encrypts roster/history (shared in the officer channel, never in repo).
@@ -142,6 +152,7 @@ contract and the fallback until the API is live (`RANKINGS_URL`/snapshot node st
 - **Rotate:** new guild key → re-arm `gate.json` + re-export `roster.json`; new admin password → new `admin.json`.
 
 ## 9. Not built yet / roadmap
+
 - Rankings: wire `fetchData()` to the real API (pull → compute → write snapshot) once the dev ships it;
   smart fetch = `/reports` backfill when history empty, else `/latest`.
 - Apply the §5 localStorage cache pattern to the other public reads (vacations/members/changelog) to cut DB cost.

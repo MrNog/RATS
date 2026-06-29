@@ -1,5 +1,5 @@
 ---
-globs: ["**/*.html"]
+globs: ['**/*.html']
 ---
 
 # HTML file conventions
@@ -11,3 +11,4 @@ globs: ["**/*.html"]
 - Date pickers: always `assets/datepicker.js` (RatsCal). Never the native `<input type="date">` picker.
 - Buttons and inputs align on a `.frow` flex row at `height: 36px`. Icon-only buttons get `.icon-btn` (36×36 square).
 - Highlight / accent text uses `var(--accent)` (`#c0943a`), not blue or green.
+
