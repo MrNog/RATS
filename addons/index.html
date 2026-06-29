@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Addons</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="addons.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="../">← Back</a>
+      <h1>📥 RATS — Addons</h1>
+    </div>
+    <p class="sub">Every download is the <b>latest version</b> straight from the source. A gold <b
+        style="color:var(--accent)">NEW</b> badge means there's an update you haven't downloaded yet — it clears when
+      you hit <b>Download</b>.</p>
+
+    <div class="note">
+      <b>Install:</b> download the <b>.zip</b> → extract → drop the addon folder into
+      <code>World of Warcraft\Interface\AddOns\</code> → <code>/reload</code>. If the extracted folder ends in
+      <code>-main</code> / <code>-master</code>, <b>rename it</b> to remove that suffix.
+    </div>
+
+    <div class="sec big">
+      <h2>📥 Mandatory addons — every raider</h2>
+    </div>
+    <div id="list"></div>
+
+    <div class="sec">
+      <h2>✨ WeakAura tier packs — important for raids</h2>
+    </div>
+    <p class="sechint">Import in-game: open a pack → copy the code → <code>/wa</code> → <b>Import</b> → paste.</p>
+    <div id="listWA"></div>
+
+    <div class="sec">
+      <h2>🧩 Visual patch — optional (non-HD)</h2>
+    </div>
+    <p class="sechint">Drop <code>patch-y.mpq</code> in <code>World of Warcraft\Data\</code> (NOT AddOns) → restart.
+      Works on the normal 3.3.5a client.</p>
+    <div id="listPatch"></div>
+
+    <div class="sec">
+      <h2>🐀 Cool extras — optional</h2>
+    </div>
+    <p class="sechint">Not required, but handy or just fun. Install only if you want them.</p>
+    <div id="listOptional"></div>
+
+    <div id="alertPreview"></div>
+  </div>
+
+  <script src="addons.js"></script>
+</body>
+
+</html>

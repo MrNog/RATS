@@ -1,0 +1,53 @@
+.note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  margin: 16px 0 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.acts { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto }
+.acts a {
+  display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+  font-size: 12px; font-weight: 700; border-radius: var(--radius); padding: 7px 11px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text-dim);
+}
+.acts a.primary { background: var(--accent); color: var(--surface-2); border-color: var(--accent) }
+.acts a:hover { border-color: var(--accent); color: var(--white) }
+.acts a.primary:hover { filter: brightness(1.1); color: var(--surface-2) }
+
+/* folder header */
+.folder { margin-top: 18px }
+.ftoggle {
+  display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 13px 15px;
+}
+.ftoggle:hover { border-color: var(--border-2) }
+.ftoggle .arw { display: inline-block; transition: transform .15s; color: var(--accent); font-size: 13px }
+.ftoggle .fico { font-size: 24px; line-height: 1 }
+.ftoggle .fnm { font-weight: 800; color: var(--white); font-size: 16px }
+.ftoggle .fcount { font-size: 11px; color: var(--text-dim-2); font-weight: 600 }
+
+/* files as a tree under the folder */
+.files { margin: 2px 0 0 28px; position: relative }
+.files.collapsed { display: none }
+.ftree {
+  position: relative; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 11px 14px; margin-top: 12px;
+}
+.ftree:hover { border-color: var(--border-2) }
+.ftree::before { content: ""; position: absolute; left: -16px; top: -13px; width: 2px; bottom: 0; background: var(--border-2) }
+.ftree:last-child::before { bottom: auto; height: calc(50% + 13px) }
+.ftree::after { content: ""; position: absolute; left: -16px; top: 50%; width: 16px; height: 2px; background: var(--border-2) }
+.dico { font-size: 22px; line-height: 1; flex: 0 0 auto; width: 26px; text-align: center }
+.dinfo { flex: 1 1 220px; min-width: 0 }
+.dnm { font-weight: 800; color: var(--white); font-size: 15px }
+.dmeta { color: #6e7178; font-size: 11px; font-weight: 600; margin-left: 6px }
+.dtag {
+  font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-dim);
+  background: var(--border); border: 1px solid var(--border-2); border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: middle;
+}
+.ddesc { color: var(--text-dim); font-size: 12.5px; margin-top: 3px; line-height: 1.4 }
+.empty { color: var(--text-dim-2); font-style: italic; font-size: 13px; padding: 10px 2px }
