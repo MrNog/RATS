@@ -14,8 +14,8 @@
     h2 { font-size: 15px; margin: 0 0 4px; color: var(--accent) }
     .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
     .sub { color: #8a8d93; font-size: 13px; margin: 6px 0 0 }
-    a.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 13px; font-weight: 600; color: #9aa0a6; background: #202225; border: 1px solid #2f3137; border-radius: 6px; padding: 6px 12px }
-    a.btn:hover { border-color: var(--accent); color: #fff }
+    a.btn, button.btn { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 13px; font-weight: 600; color: #9aa0a6; background: #202225; border: 1px solid #2f3137; border-radius: 6px; padding: 6px 12px; height: 36px; cursor: pointer; white-space: nowrap }
+    a.btn:hover, button.btn:hover { border-color: var(--accent); color: #fff; filter: none }
 
     .card { background: #202225; border: 1px solid #2f3137; border-radius: 10px; padding: 16px; margin-top: 14px }
     code { background: #0f1012; border: 1px solid #2f3137; border-radius: 4px; padding: 1px 5px; font-size: 12px }
@@ -70,7 +70,7 @@
         <p class="sub">The key officers type to unlock the tools. Arm the lock &#8212; works with no roster needed.</p>
         <div class="frow">
           <input type="text" id="guildKey" placeholder="Guild key (the password officers will use)">
-          <button onclick="armLock()">&#128274; Arm lock &#8212; download gate.json</button>
+          <button class="btn" onclick="armLock()">&#128274; Arm lock &#8212; download gate.json</button>
         </div>
         <p class="sub">Commit the downloaded <code>gate.json</code> &#8594; the index lock turns on. Share the key in the officer channel.</p>
       </div>
