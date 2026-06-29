@@ -5,28 +5,69 @@
 
 ## Target structure
 
-HTML files stay at their current URLs — no broken links. CSS and JS move to co-located files.
+Each page lives in its own folder as `index.html` so the browser serves it at a clean URL
+(`/addons/` instead of `/addons.html`). CSS and JS are co-located in the same folder.
 Shared code lives in `assets/`.
 
 ```
 RATS/
-├── index.html              ← thin shell: markup only
-├── index.css               ← page-specific styles
-├── index.js                ← page logic
-├── addons.html / addons.css / addons.js
-├── gallery.html / gallery.css / gallery.js
-├── vacations.html / vacations.css / vacations.js
-├── rankings.html / rankings.css / rankings.js
+├── index.html              ← root hub, stays at root
+├── index.css
+├── index.js
+│
+├── addons/
+│   ├── index.html          (was addons.html  → URL: /addons/)
+│   ├── addons.css
+│   └── addons.js
+├── gallery/
+│   ├── index.html          (was gallery.html → URL: /gallery/)
+│   ├── gallery.css
+│   └── gallery.js
+├── vacations/
+│   ├── index.html          (was vacations.html → URL: /vacations/)
+│   ├── vacations.css
+│   └── vacations.js
+├── rankings/
+│   ├── index.html          (was rankings.html → URL: /rankings/)
+│   ├── rankings.css
+│   └── rankings.js
 │
 ├── officer/
-│   ├── guild.html / guild.css / guild.js
-│   ├── comp.html / comp.css / comp.js
-│   ├── history.html / history.css / history.js
-│   ├── vacations.html / vacations.css / vacations.js
-│   ├── changelog.html / changelog.css / changelog.js
-│   ├── lore.html / lore.css / lore.js
-│   ├── files.html / files.css / files.js
-│   └── admin.html / admin.css / admin.js
+│   ├── index.html          ← officer hub, stays at officer/
+│   ├── index.css
+│   ├── index.js
+│   ├── guild/
+│   │   ├── index.html      (was officer/guild.html → URL: /officer/guild/)
+│   │   ├── guild.css
+│   │   └── guild.js
+│   ├── comp/
+│   │   ├── index.html
+│   │   ├── comp.css
+│   │   └── comp.js
+│   ├── history/
+│   │   ├── index.html
+│   │   ├── history.css
+│   │   └── history.js
+│   ├── vacations/
+│   │   ├── index.html
+│   │   ├── vacations.css
+│   │   └── vacations.js
+│   ├── changelog/
+│   │   ├── index.html
+│   │   ├── changelog.css
+│   │   └── changelog.js
+│   ├── lore/
+│   │   ├── index.html
+│   │   ├── lore.css
+│   │   └── lore.js
+│   ├── files/
+│   │   ├── index.html
+│   │   ├── files.css
+│   │   └── files.js
+│   └── admin/
+│       ├── index.html
+│       ├── admin.css
+│       └── admin.js
 │
 └── assets/
     ├── data.js             ← RatsData (unchanged)
@@ -58,6 +99,31 @@ RATS/
 
 ## Phases
 
+### Phase 0 — Restructure: move each page into its folder
+
+Before any CSS/JS extraction, rename every HTML file into its own directory.
+
+- `addons.html`          → `addons/index.html`
+- `gallery.html`         → `gallery/index.html`
+- `vacations.html`       → `vacations/index.html`
+- `rankings.html`        → `rankings/index.html`
+- `officer/guild.html`   → `officer/guild/index.html`
+- `officer/comp.html`    → `officer/comp/index.html`
+- `officer/history.html` → `officer/history/index.html`
+- `officer/vacations.html` → `officer/vacations/index.html`
+- `officer/changelog.html` → `officer/changelog/index.html`
+- `officer/lore.html`    → `officer/lore/index.html`
+- `officer/files.html`   → `officer/files/index.html`
+- `officer/admin.html`   → `officer/admin/index.html`
+
+Update every internal `href` and `src` in the moved files to use the new relative depth
+(one `../` for root sub-pages, two `../../` for officer sub-pages — see Rules below).
+Update any cross-page links in `index.html` and `officer/index.html` (`addons.html` → `addons/`).
+
+**Verify:** every nav link resolves correctly in Live Server before continuing.
+
+---
+
 ### Phase 1 — Zero risk: extract shared CSS
 
 Pull the identical `<style>` blocks present in every page into two files.
@@ -75,7 +141,7 @@ Pull the identical `<style>` blocks present in every page into two files.
 
 Whatever page-specific `<style>` remains after Phase 1 moves to its own `.css` file.
 
-- For each HTML file: create `pagename.css` in the same folder
+- For each page folder: create `pagename.css` alongside `index.html`
 - Move remaining `<style>` content into it
 - Replace `<style>…</style>` with `<link rel="stylesheet" href="pagename.css">`
 
@@ -93,7 +159,7 @@ Pull repeated pure functions and widgets into shared files before extracting per
   `fmtDate`, `classColor`, `quipFor`, `lockoutStart`
 - Create `assets/js/components.js` — exposes `window.RatsUI`:
   `embedPreview(opts)`, `webhookTest(btn)`, `renderNav(backHref, title)`
-- Add `<script src="assets/js/utils.js">` and `components.js` to all pages that use them
+- Add `<script src="…/assets/js/utils.js">` and `components.js` to all pages that use them
   (load order: `data.js` → `datepicker.js` → `utils.js` → `components.js` → page script)
 - Update inline call sites to use `RatsUtils.fmtDate()` etc.
 
@@ -103,7 +169,7 @@ Pull repeated pure functions and widgets into shared files before extracting per
 
 Move each page's `<script>` block to its own `.js` file.
 
-- For each HTML: create `pagename.js` in the same folder
+- For each page folder: create `pagename.js` alongside `index.html`
 - Move the `<script>` content (minus anything already extracted in Phase 3)
 - Replace `<script>…</script>` with `<script src="pagename.js"></script>`
 - No module system needed — page scripts use globals, same as today
@@ -114,18 +180,20 @@ Move each page's `<script>` block to its own `.js` file.
 
 ## What each HTML file looks like after migration
 
+### Root sub-page (`addons/index.html`) — one level deep
+
 ```html
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="...">
+  <link rel="icon" href="../assets/img/favicon.ico">
   <title>RATS — Addons</title>
 
   <!-- shared -->
-  <link rel="stylesheet" href="assets/css/theme.css">
-  <link rel="stylesheet" href="assets/css/ui.css">
+  <link rel="stylesheet" href="../assets/css/theme.css">
+  <link rel="stylesheet" href="../assets/css/ui.css">
   <!-- page-specific -->
   <link rel="stylesheet" href="addons.css">
 </head>
@@ -135,10 +203,10 @@ Move each page's `<script>` block to its own `.js` file.
   <div class="wrap">...</div>
 
   <!-- shared -->
-  <script src="assets/data.js"></script>
-  <script src="assets/datepicker.js"></script>
-  <script src="assets/js/utils.js"></script>
-  <script src="assets/js/components.js"></script>
+  <script src="../assets/data.js"></script>
+  <script src="../assets/datepicker.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/components.js"></script>
   <!-- page-specific -->
   <script src="addons.js"></script>
 
@@ -146,12 +214,33 @@ Move each page's `<script>` block to its own `.js` file.
 </html>
 ```
 
+### Officer sub-page (`officer/guild/index.html`) — two levels deep
+
+```html
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="guild.css">
+  ...
+  <script src="../../assets/data.js"></script>
+  <script src="../../assets/datepicker.js"></script>
+  <script src="../../assets/js/utils.js"></script>
+  <script src="../../assets/js/components.js"></script>
+  <script src="guild.js"></script>
+```
+
 ---
 
 ## Rules
 
-- **Relative paths only.** GitHub Pages serves at `/rats/`, never `/`.
-  Root pages use `assets/css/theme.css`; officer pages use `../assets/css/theme.css`.
+- **Relative paths by depth.**
+  | Location | Prefix to `assets/` |
+  |---|---|
+  | Root (`index.html`) | `assets/` |
+  | Root sub-page (`addons/index.html`) | `../assets/` |
+  | Officer hub (`officer/index.html`) | `../assets/` |
+  | Officer sub-page (`officer/guild/index.html`) | `../../assets/` |
 - **No build step.** All files loaded directly by the browser via `<link>` and `<script src>`.
   No Webpack, Vite, or bundler.
 - **Globals only.** Shared code exposes objects on `window` (`RatsUtils`, `RatsUI`).
@@ -167,6 +256,7 @@ Move each page's `<script>` block to its own `.js` file.
 
 | Step | Files | Phase(s) |
 |---|---|---|
+| 0 | All pages | Phase 0 (restructure into folders) |
 | 1 | All pages (CSS only) | Phase 1 |
 | 2 | gallery | Phase 2 + 4 |
 | 3 | addons | Phase 2 + 4 |
