@@ -15,7 +15,7 @@ re-derive the conventions.
   `history.html`, `vacations.html`, `lore.html`, `files.html`, `admin.html`, `changelog.html`.
 - `assets/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
 - `images/<category>/`, `downloads/` (patch-y.mpq), `files/` (officer sheets), `scripts/` (gallery builder).
-- `docs/` = **maintainer-only, gitignored** (`PROMPTS.md` image-prompt library, PLAN/DEV/IDEAS). Never push.
+- `docs/` = maintainer notes (`PROMPTS.md` image-prompt library, PLAN/DEV/IDEAS), now **tracked in git**.
 
 ## Data — Firebase is the source of truth
 - Realtime DB via unauthenticated REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
