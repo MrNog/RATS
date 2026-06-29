@@ -377,7 +377,7 @@
       const endD = v.end || v.start, s = noon(v.start), e = noon(endD);
       let desc = "_Taking some personal time._\n\n";
       desc += v.end && v.end !== v.start ? "🗓️ <t:" + s + ":D> → <t:" + e + ":D>" : "🗓️ <t:" + s + ":D>";
-      if (v.note) desc += "\n📝 " + v.note;
+      if (v.note) desc += "\n\n📝 " + v.note;   // ok — only ever posted to the private officer channel
       return { author: { name: "RATS • Time off" }, title: "💤 " + v.name + " is away for a bit", color: parseInt(hex.slice(1), 16), description: desc };
     }
     function buildVacEmbed(v) {
@@ -390,7 +390,7 @@
       let desc = "_" + quipFor(v) + "_\n\n"
         + "🗓️ <t:" + s + ":D> → <t:" + e + ":D> · " + days + " day" + (days !== 1 ? "s" : "") + "\n"
         + "🛫 Starts <t:" + s + ":R>  ·  🛬 Back <t:" + r + ":R>";
-      if (v.note) desc += "\n📝 " + v.note;
+      if (v.note) desc += "\n📝 " + v.note;   // ok — only ever posted to the private officer channel
       return { author: { name: "RATS • Vacations" }, title: "🏖️ " + v.name + " will be away", color: parseInt(hex.slice(1), 16), description: desc };
     }
     function relTime(unix) {
@@ -453,7 +453,7 @@
     function rowHtml(v) {
       const col = CLASS_COLOR[v.class] || "#ddd";
       const st = status(v), lbl = { active: "away now", soon: "upcoming", past: "ended" }[st];
-      const note = v.note ? ` <span title="${esc(v.note)}" style="cursor:help">📝</span>` : "";
+      // note is officer-only — never shown on the public page (it's submitted FOR officers)
       const tag = v.type === "personal" ? ` <span title="Personal time off — low-key" style="cursor:help">💤</span>` : "";
       let statusCell = `<span class="pill ${st}">${lbl}</span>`;
       if (st === "active" && v.type !== "personal") {
@@ -464,7 +464,7 @@
         </div>`;
       }
       return `<tr>
-        <td class="nm" style="color:${col}">${esc(v.name)}${tag}${note}</td>
+        <td class="nm" style="color:${col}">${esc(v.name)}${tag}</td>
         <td>${esc(fmtDate(v.start))}</td>
         <td>${esc(v.end ? fmtDate(v.end) : "—")}</td>
         <td>${statusCell}</td>

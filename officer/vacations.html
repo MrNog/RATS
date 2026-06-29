@@ -646,7 +646,7 @@
       desc += v.end && v.end !== v.start
         ? "🗓️ <t:" + s + ":D> → <t:" + e + ":D>"
         : "🗓️ <t:" + s + ":D>";
-      if (v.note) desc += "\n📝 " + v.note;
+      if (v.note) desc += "\n\n📝 " + v.note;   // ok — Vacations webhook posts to the private officer channel
       return {
         author: { name: "RATS • Time off" },
         title: "💤 " + v.name + " is away for a bit",
@@ -667,7 +667,7 @@
       let desc = "_" + quipFor(v) + "_\n\n"
         + "🗓️ <t:" + s + ":D> → <t:" + e + ":D> · " + days + " day" + (days !== 1 ? "s" : "") + "\n"
         + "🛫 Starts <t:" + s + ":R>  ·  🛬 Back <t:" + r + ":R>";
-      if (v.note) desc += "\n📝 " + v.note;
+      if (v.note) desc += "\n📝 " + v.note;   // ok — posts to the private officer channel
       return {
         author: { name: "RATS • Vacations" },
         title: "🏖️ " + v.name + " will be away",
