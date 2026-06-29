@@ -11,5 +11,8 @@ desktop.ini
 # maintainer-only docs — never push to the public repo
 docs/
 
+# local Claude Code overrides (machine-specific, not shared)
+.claude/settings.local.json
+
 # release-notifier state (written by the GitHub Action)
 release-state.json

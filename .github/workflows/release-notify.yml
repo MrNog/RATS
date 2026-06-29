@@ -20,10 +20,14 @@ jobs:
 
       - name: Check external addons for updates
         env:
-          WEBHOOK: ${{ secrets.LOGS_WEBHOOK }}      # = your #okanor-logs Discord webhook URL
+          WEBHOOK: ${{ secrets.LOG_WEBHOOK }}       # = the "Logs" webhook URL (Admin → Discord webhooks → Logs)
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
+          # Fail loudly if the webhook secret is missing — check once up front
+          if [ -z "$WEBHOOK" ]; then
+            echo "::warning::LOG_WEBHOOK secret is not set — Discord notifications will be skipped. Add it in GitHub Settings → Secrets and variables → Actions."
+          fi
           [ -f release-state.json ] || echo '{}' > release-state.json
           hub=$(jq -r '.hubUrl // ""' releases.json)
           n=$(jq '.addons | length' releases.json)
@@ -47,16 +51,25 @@ jobs:
             last=$(jq -r --arg r "$repo" '.[$r] // empty' release-state.json)
             if [ "$ver" != "$last" ]; then
               # only announce when we had a previous value (first run just seeds state, no spam)
-              if [ -n "$last" ] && [ -n "$WEBHOOK" ]; then
-                title="📦 $name — new update"
-                desc="New $kind \`$ver\` is out for **$name**.
+              if [ -n "$last" ]; then
+                echo "Update detected: $name $last → $ver ($kind)"
+                if [ -n "$WEBHOOK" ]; then
+                  title="📦 $name — new update"
+                  desc="New $kind \`$ver\` is out for **$name**.
           🔗 [Open the RATS hub →]($hub)"
-                payload=$(jq -n --arg t "$title" --arg u "$hub" --arg d "$desc" --arg f "$repo" \
-                  '{embeds:[{author:{name:"RATS • Addon updates"},title:$t,url:$u,description:$d,color:12686394,footer:{text:$f}}]}')
-                curl -s -H "Content-Type: application/json" -d "$payload" "$WEBHOOK" >/dev/null || true
-                echo "Announced $name $ver"
+                  payload=$(jq -n --arg t "$title" --arg u "$hub" --arg d "$desc" --arg f "$repo" \
+                    '{embeds:[{author:{name:"RATS • Addon updates"},title:$t,url:$u,description:$d,color:12686394,footer:{text:$f}}]}')
+                  http_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$payload" "$WEBHOOK")
+                  if [ "$http_code" = "204" ] || [ "$http_code" = "200" ]; then
+                    echo "✅ Announced $name $ver to Discord (HTTP $http_code)"
+                  else
+                    echo "::error::Discord webhook failed for $name (HTTP $http_code) — check LOG_WEBHOOK secret"
+                  fi
+                else
+                  echo "::warning::Skipped Discord post for $name $ver — LOG_WEBHOOK not set"
+                fi
               else
-                echo "Seeded $name $ver"
+                echo "Seeded $name $ver (first run — no Discord post)"
               fi
               tmp=$(jq --arg r "$repo" --arg v "$ver" '.[$r]=$v' release-state.json)
               echo "$tmp" > release-state.json

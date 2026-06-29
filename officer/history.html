@@ -630,26 +630,48 @@
         });
       }
       const total = raids.length;
+      // Group non-optional 10-man raids by (lockout week + instance) so that multiple runs
+      // in the same weekly reset count as ONE obligation — no double-strike for missing one of
+      // two same-week runs, and an alt appearance in a second run doesn't add an extra "present"
+      // for the same main.
+      const lockout10Groups = {};
+      raids.forEach(r => {
+        if (isLogOnly(r) || raidSize(r) !== 10) return;
+        const inst = window.RatsData ? RatsData.raidKeyOf(r.desc) : (r.desc || "");
+        const gk = lockoutStart(r.date) + "|" + inst;
+        if (!lockout10Groups[gk]) lockout10Groups[gk] = [];
+        lockout10Groups[gk].push(r);
+      });
       const rows = Object.values(map).map(o => {
         const joinD = joinDateOf(o.name), fang = isFangName(o.name);
-        // A raid counts toward this raider when:
-        //   ⚪ Optional (log-only): never — pure history.
-        //   🔴 25-man (mandatory): they were in it, OR it happened on/after they joined.
-        //   💀 10-man (Fang run): Fangs since they joined, OR anyone who actually played it.
-        // 🏖️ vacation excuses a raid only when they DIDN'T show.
-        let denom = 0;
+        // 25-man: each run is its own obligation (mandatory for everyone since join date).
+        // 10-man: grouped by lockout week — attending ANY run in the week fulfils the obligation
+        //   for that week. An alt mapping to the same main doesn't create a second "present".
+        //   Missing ALL runs in a lockout = one strike, not one per run.
+        // ⚪ Optional (log-only): never counts for either size.
+        let denom = 0, present = 0;
+
         raids.forEach(r => {
-          if (isLogOnly(r)) return;                       // history-only — counts for nobody
+          if (isLogOnly(r) || raidSize(r) !== 25) return;
           const d = r.date;
-          const present = o.presentDates.has(d);
-          if (!present && (o.excused.has(d) || onVacation(o.name, d))) return;
+          const isPresent = o.presentDates.has(d);
+          if (!isPresent && (o.excused.has(d) || onVacation(o.name, d))) return;
           const inv = o.involved.has(d);
-          const counts = raidSize(r) === 25
-            ? (present || inv || !joinD || d >= joinD)              // mandatory: everyone since join
-            : (present || inv || (fang && (!joinD || d >= joinD))); // fang run: fangs since join (+ anyone in it)
-          if (counts) denom++;
+          if (isPresent || inv || !joinD || d >= joinD) { denom++; if (isPresent) present++; }
         });
-        return { ...o, total: denom, pct: denom ? Math.round(o.present / denom * 100) : 0 };
+
+        Object.values(lockout10Groups).forEach(lRaids => {
+          const firstDate = lRaids.map(r => r.date).sort()[0];
+          if (joinD && firstDate < joinD) return;                    // not yet a member
+          const presentInLockout = lRaids.some(r => o.presentDates.has(r.date));
+          const allExcused = !presentInLockout && lRaids.every(r =>
+            o.excused.has(r.date) || onVacation(o.name, r.date));
+          if (allExcused) return;                                     // 🏖️ excused from every run
+          const involvedInLockout = lRaids.some(r => o.involved.has(r.date));
+          if (presentInLockout || involvedInLockout || fang) { denom++; if (presentInLockout) present++; }
+        });
+
+        return { ...o, present, total: denom, pct: denom ? Math.round(present / denom * 100) : 0 };
       });
       return { rows, total };
     }
@@ -666,8 +688,8 @@
       const lg = document.getElementById("legend");
       const fmt = '<b>Days</b> = times present <b>/</b> raids that counted. ⚪ Optional runs never count.';
       if (sf === "10") {
-        lg.innerHTML = '💀 <b>Fang runs</b> (10-man) count for <b>Warchief\'s Fangs</b> — that\'s why a Fang who skipped both shows <b>0 / 2</b>. '
-          + 'Non-Fangs only count for the 10-mans they actually joined. ' + fmt;
+        lg.innerHTML = '💀 <b>Fang runs</b> (10-man) grouped by <b>lockout week</b> — multiple runs in the same reset count as <b>one obligation</b>. Attending any one run clears the whole week; missing all = one strike. '
+          + 'Non-Fangs only count for lockouts they actually joined. ' + fmt;
       } else if (sf === "25") {
         lg.innerHTML = '🔴 <b>25-mans are mandatory</b> — every 25-man counts for everyone since they joined. ' + fmt;
       } else {
@@ -725,8 +747,8 @@
         const fangMark = fang ? `<span title="Fang — expected at all 10-mans" style="cursor:help">💀 </span>` : "";
         const sfNow = SIZE;
         const why = sfNow === "10"
-          ? (fang ? `Fang: all ${r.total} 10-man${r.total != 1 ? "s" : ""} count — present at ${r.present}.`
-                  : `${r.total} 10-man${r.total != 1 ? "s" : ""} this raider joined — present at ${r.present}.`)
+          ? (fang ? `Fang: ${r.total} lockout week${r.total != 1 ? "s" : ""} counted — attended ${r.present}.`
+                  : `Attended ${r.present} of ${r.total} lockout week${r.total != 1 ? "s" : ""} that counted.`)
           : `${r.present} present out of ${r.total} raid${r.total != 1 ? "s" : ""} that counted.`;
         html += `<tr${hidden}>
           <td class="nm" style="color:${col}">${fangMark}${esc(r.name)}</td>

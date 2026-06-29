@@ -31,7 +31,8 @@
     .tag { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; border-radius:7px;
       padding:1px 5px; background:#3a2f44; color:#d6b3ff; border:1px solid #5a4a6a; flex:0 0 auto }
     .new { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:.3px; border-radius:7px;
-      padding:1px 5px; background:#3a3016; color:#e0b860; border:1px solid #6e5326; flex:0 0 auto }
+      padding:1px 5px; background:#1a3320; color:#7CFC8A; border:1px solid #3a5b42; flex:0 0 auto }
+    .item.has-update { border-color:#3a5b42 }
     .desc { color:#9aa0a6; font-size:13px; flex:1 1 120px; min-width:70px }
     .acts { display:flex; gap:8px; margin-left:auto; flex:0 0 auto }
     .acts a { display:inline-flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; font-size:12px; font-weight:700;
@@ -131,7 +132,7 @@
         <span class="ic">${a.emoji || ""}</span>
         <span class="nm">${esc(a.name)}</span>
         ${a.paladin ? '<span class="tag">Paladins only</span>' : ""}
-        <span class="new" style="display:none">NEW</span>
+        <span class="new" style="display:none">⬆ UPDATE</span>
         <span class="desc">${esc(a.desc)}</span>
         <span class="acts">
           <a class="primary" href="${a.dl}" onclick="markSeen(this)">⬇ Download (latest)</a>
@@ -152,6 +153,7 @@
       const item = a.closest(".item"); if (!item) return;
       const repo = item.dataset.repo; if (repo) setSeen(repo, window.__latest[repo] || "seen");
       const b = item.querySelector(".new"); if (b) b.style.display = "none";
+      item.classList.remove("has-update");
     }
     async function gh(url) { try { const r = await fetch(url, { headers: { Accept: "application/vnd.github+json" } }); return r.ok ? await r.json() : null; } catch (e) { return null; } }
     async function latestVersion(a) {
@@ -170,7 +172,10 @@
         window.__latest[repo] = info.ver; window.__kind[repo] = info.kind;
         if (seen[repo] !== info.ver) {     // you haven't downloaded this version yet
           const item = document.querySelector('.item[data-repo="' + repo + '"]');
-          if (item) { const b = item.querySelector(".new"); if (b) b.style.display = ""; }
+          if (item) {
+            const b = item.querySelector(".new"); if (b) b.style.display = "";
+            item.classList.add("has-update");
+          }
         }
       }
       renderAlertPreview();
