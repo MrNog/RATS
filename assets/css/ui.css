@@ -28,6 +28,7 @@ button {
   gap: 6px;
 }
 button:hover { filter: brightness(1.1) }
+button:disabled { opacity: .4; cursor: not-allowed; filter: none }
 button.dark { background: var(--border-2); color: var(--white) }
 button.dark:hover { background: #4a4d55; filter: none }
 
@@ -52,8 +53,13 @@ a.btn:hover, button.btn:hover { border-color: var(--accent); color: var(--white)
 
 .icon-btn { padding: 0; width: var(--ctl-h); justify-content: center }
 
+/* on/off toggle button — gold when .active, dark when off (used on lore, changelog, comp) */
+.tbtn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-weight: 700 }
+.tbtn:hover { color: var(--white); filter: none }
+.tbtn.active { background: var(--accent); border-color: var(--accent); color: var(--surface-2) }
+
 /* ---- fields ---- */
-input[type=text], input[type=date], input[type=number], select, textarea {
+input[type=text], input[type=date], input[type=number], input[type=password], select, textarea {
   background: var(--field);
   color: var(--white);
   border: 1px solid var(--field-border);
@@ -61,7 +67,7 @@ input[type=text], input[type=date], input[type=number], select, textarea {
   font-size: 13px;
   color-scheme: dark;
 }
-input[type=text], input[type=date], input[type=number], select {
+input[type=text], input[type=date], input[type=number], input[type=password], select {
   height: var(--ctl-h);
   padding: 0 12px;
 }
@@ -90,6 +96,19 @@ select {
   padding: 12px 14px;
   margin-top: 14px;
 }
+
+/* danger / delete button (outlined red) */
+.del {
+  background: none; border: 1px solid #5a2e2e; color: #ff9b9b; border-radius: var(--radius);
+  padding: 5px 10px; font-weight: 700; font-size: 12px; cursor: pointer; height: auto;
+}
+.del:hover { background: #3a2626; color: var(--white) }
+
+/* collapsible section header (h2.sec + caret + count) */
+h2.sec { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px }
+h2.sec:hover { color: var(--accent-hi) }
+.caret { font-size: 11px; color: var(--text-dim-2) }
+.cnt { color: #6e7178; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0 }
 
 /* ---- pill ---- */
 .pill {

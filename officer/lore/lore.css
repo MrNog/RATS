@@ -21,11 +21,6 @@ button.alt:hover { border-color: var(--accent); color: var(--white); filter: non
 .segs .seg:hover { color: var(--white); filter: none }
 .segs .seg.active { background: var(--accent); color: var(--surface-2) }
 
-/* on/off toggle button (gold when on, dark when off) — same as comp */
-.tbtn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-weight: 700 }
-.tbtn:hover { color: var(--white); filter: none }
-.tbtn.active { background: var(--accent); border-color: var(--accent); color: var(--surface-2) }
-
 /* native file picker styled to match (the "Choose Files" button) */
 input[type=file]::file-selector-button {
   background: var(--accent); color: var(--surface-2); border: 0; border-radius: var(--radius);

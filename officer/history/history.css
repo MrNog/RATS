@@ -1,0 +1,110 @@
+:root { --panel: #26282d; --row: #2f3137; --rowhover: #3a3d44; --muted: #8a8d93; --header: #9aa0a6 }
+
+h2 { font-size: 15px; color: var(--accent); margin: 26px 0 10px; letter-spacing: .3px; text-transform: none }
+.sub { color: var(--muted); margin: 0 }
+
+.controls { display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin: 14px 0 4px }
+.flbl { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; flex: 0 0 auto; width: 50px }
+.frow #search { flex: 1 1 220px; height: var(--ctl-h) }
+
+.segs { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px }
+.segs.grow { flex: 1 1 auto }
+.segs.grow .seg { flex: 1 1 0 }
+.seg {
+  background: transparent; border: 0; color: var(--text-dim); font-size: 13px; font-weight: 700;
+  padding: 0 11px; height: 24px; border-radius: var(--radius); cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.seg:hover { color: var(--white) }
+.seg.active { background: var(--accent); color: var(--surface-2) }
+
+input[type=text] { min-width: 180px }
+
+label.chk { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer }
+
+/* attendance table */
+table { width: 100%; border-collapse: collapse; margin-top: 4px }
+th { text-align: left; color: var(--header); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; padding: 6px 10px; border-bottom: 1px solid var(--border-2); cursor: pointer; user-select: none }
+th:hover { color: var(--white) }
+td { padding: 7px 10px; border-bottom: 1px solid #232529 }
+tr:hover td { background: var(--surface) }
+.nm { font-weight: 700 }
+tr.rankrow td {
+  padding: 18px 10px 5px; color: var(--accent); font-weight: 800; font-size: 12px;
+  text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--border-2); background: transparent !important;
+}
+tr.rankrow:first-child td { padding-top: 4px }
+
+.bar { position: relative; height: 16px; width: 160px; max-width: 38vw; background: #232529; border-radius: 8px; overflow: hidden }
+.bar > i { position: absolute; inset: 0 auto 0 0; display: block; border-radius: 8px }
+.pct { font-weight: 800; width: 52px; display: inline-block }
+
+/* red "missed" pill — reset the shared .pill base */
+.pill { font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; color: #ff9b9b; background: #3a2626; border-radius: 10px; padding: 1px 7px; margin-left: 6px }
+
+/* raid log */
+.raid { background: var(--row); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden }
+.raid > .head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer }
+.raid > .head:hover { background: var(--rowhover) }
+.raid .date { font-weight: 800; color: var(--accent); min-width: 130px }
+.szbadge { font-size: 11px; font-weight: 800; color: var(--surface-2); background: var(--accent); border-radius: 10px; padding: 1px 8px; flex: 0 0 auto }
+.raid .meta { color: var(--muted); font-size: 13px; margin-left: auto }
+.raid .body { display: none; padding: 4px 12px 14px; border-top: 1px solid #2a2c31 }
+.raid.open .body { display: block }
+.ggrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px }
+.ghead { color: var(--header); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px }
+.mrow { display: flex; align-items: center; gap: 7px; padding: 2px 0; font-weight: 600 }
+.ic { width: 18px; height: 18px; flex: 0 0 18px }
+
+.del, .exp {
+  background: none; border: 1px solid #5a2e2e; color: #ff9b9b; border-radius: var(--radius); height: var(--ctl-h);
+  padding: 0 12px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.editbtn {
+  background: none; border: 1px solid #3a4a5b; color: #9ad0ff; border-radius: var(--radius); height: var(--ctl-h);
+  padding: 0 12px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.editbtn:hover { background: #1f2a33; color: var(--white); border-color: #5a7da0 }
+.exp { border-color: #3a5b42; color: #8fdf9f }
+.exp:hover { background: #23362a; color: var(--white); border-color: #57a06a }
+.del:hover { background: #3a2626; color: var(--white) }
+
+.empty { color: var(--muted); padding: 30px 10px; text-align: center }
+.msg { font-size: 13px; margin: 10px 0; color: var(--ok) }
+.msg:empty { display: none }
+
+/* edit mode + post button */
+.vac { font-size: 10px; color: var(--ok); font-style: italic }
+.post { background: #3b4178; border: 1px solid #5865f2; color: #dfe2ff; border-radius: var(--radius); height: var(--ctl-h); padding: 0 12px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px }
+.post:hover { filter: brightness(1.12); color: var(--white) }
+.pen { background: none; border: 0; color: #6b7077; cursor: pointer; font-size: 12px; line-height: 1; padding: 3px 5px; border-radius: 4px; flex: 0 0 auto }
+.pen:hover { color: var(--accent); background: #2a2c31 }
+.head.editing { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.tedit { background: var(--field); color: var(--white); border: 1px solid #4a4d55; border-radius: var(--radius); height: var(--ctl-h); padding: 0 10px; font-size: 13px; font-weight: 700 }
+.tedit:focus { outline: none; border-color: var(--accent) }
+.ren { background: #2f4a35; border: 1px solid #3a5b42; color: #8fdf9f; border-radius: var(--radius); height: var(--ctl-h); padding: 0 12px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto }
+.ren:hover { background: #23362a; color: var(--white) }
+
+/* per-card Optional toggle switch */
+.optsw { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; flex: 0 0 auto }
+.optsw input { display: none }
+.optsw .otrack { width: 34px; height: 18px; border-radius: 10px; background: #3a3d44; position: relative; transition: background .15s }
+.optsw .oknob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #9aa0a6; transition: left .15s, background .15s }
+.optsw input:checked + .otrack { background: var(--accent) }
+.optsw input:checked + .otrack .oknob { left: 18px; background: var(--surface-2) }
+.optsw .olbl { font-size: 11px; color: #9aa0a6; font-weight: 700 }
+
+/* raid log: show ~7 then scroll inside */
+#log { max-height: 400px; overflow: auto; padding-right: 6px }
+.explain { margin: 10px 0 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 6px 14px }
+.explain summary { cursor: pointer; color: var(--white); font-weight: 700; font-size: 14px; padding: 6px 0; list-style: none }
+.explain summary::-webkit-details-marker { display: none }
+.explain .exbody { color: #c4c7cc; font-size: 13px; line-height: 1.5; padding: 4px 0 10px }
+.explain .exbody p { margin: 8px 0 }
+.explain .exbody ul { margin: 6px 0; padding-left: 18px }
+.explain .exbody li { margin: 4px 0 }
+
+@media (max-width: 680px) {
+  .ggrid { grid-template-columns: 1fr }
+  .raid .date { min-width: 0 }
+}

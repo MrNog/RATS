@@ -435,6 +435,7 @@ window.RatsData = (function () {
     "kobe": "Kobee",        // Discord "Kobe" -> in-game "Kobee"
     "mojo": "Mojobimbo",    // Discord "Mojo" -> one of his toons; roster alt->main does the rest
     "foug": "Fouug",        // Discord "Foug" -> in-game "Fouug" (Hunter)
+    "solanar": "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
     // add more Discord-nick -> in-game pairs here as needed:
     // "shockaa": "Shockaa",
   };

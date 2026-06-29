@@ -1,0 +1,50 @@
+:root { --panel: #26282d; --row: #2f3137; --rowhover: #3a3d44 }
+
+.sub { margin: 8px 0 16px }
+
+button.alt { background: var(--rowhover); color: var(--white) }
+
+textarea { width: 100%; height: 220px; color: #cfd2d6; padding: 10px; font-family: Consolas, monospace; font-size: 12px; resize: vertical }
+
+.controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 14px 0 }
+.err { color: #ff6b6b; min-height: 18px; font-size: 13px; margin: 6px 0 }
+
+/* stats */
+.stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; min-width: 96px }
+.stat .n { color: var(--white); font-size: 20px; font-weight: 800; line-height: 1 }
+.stat .l { color: var(--text-dim-2); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px }
+
+/* rank sections */
+.rank { margin-bottom: 18px }
+.rhead {
+  color: var(--accent); font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 1px solid var(--border-2); padding-bottom: 5px; margin-bottom: 8px;
+}
+.rhead .c { color: var(--text-dim-2); font-weight: 600; font-size: 12px }
+.members { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 6px }
+.m { display: flex; align-items: center; gap: 8px; background: var(--row); border-radius: 5px; padding: 6px 10px; min-height: 34px }
+.m:hover { background: var(--rowhover) }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; background: #5b5e66 }
+.dot.on { background: #43b581 }
+.fang { cursor: pointer; font-size: 13px; flex: 0 0 auto; opacity: .22; filter: grayscale(1); user-select: none }
+.fang.on { opacity: 1; filter: none }
+.fang:hover { opacity: .65 }
+.mn { font-weight: 700 }
+.lv { color: #6e7178; font-size: 11px }
+.note { color: var(--text-dim-2); font-size: 12px; margin-left: auto; max-width: 48%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.altof { color: #7aa2c9; font-size: 11px; font-style: italic }
+.joined { color: #6e7178; font-size: 11px; flex: 0 0 auto }
+.armory { flex: 0 0 auto; text-decoration: none; font-size: 13px; opacity: .55; margin-left: auto }
+.armory:hover { opacity: 1 }
+
+/* import modal */
+#modal {
+  display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .65); z-index: 100;
+  align-items: flex-start; justify-content: center; padding: 60px 16px; overflow: auto;
+}
+#modal .box {
+  background: var(--surface-2); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
+  max-width: 780px; width: 100%; padding: 20px; box-shadow: 0 14px 44px rgba(0, 0, 0, .55);
+}
+.hidden { display: none !important }

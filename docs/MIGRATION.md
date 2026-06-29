@@ -3,6 +3,33 @@
 
 ---
 
+## ✅ DONE (Jun 2026) — completed as a design system, not just a split
+
+All 13 pages now live in their own folder as `index.html` with a co-located `pagename.css` + `pagename.js`,
+no inline `<style>`/`<script>`. The shared layer became a **token-driven design system** (the goal shifted
+from "dedupe identical CSS" to "one consistent style, change a token once → every page follows"):
+
+- **`assets/css/theme.css`** — `:root` tokens (accent, surfaces, borders, text, `--wrap`/`--wrap-wide`,
+  `--ctl-h`, radii, font) + base reset (`body`, `.wrap`/`.wrap.wide`, `h1`/`h2`, `code`, gold scrollbar).
+  Linked on every page.
+- **`assets/css/ui.css`** — components: `button`/`button.dark`/`a.btn`·`button.btn`/`.icon-btn`/`.tbtn`/`.del`,
+  `.row`/`.frow`, dark `input`/`select`/`textarea`, `.msg`, `.card` (panel), `.pill`, `.seclist`,
+  `h2.sec`+`.caret`+`.cnt`. Linked on all content/form pages.
+
+**Deviations from the original plan (intentional):**
+- The two landing hubs (`index`, `officer/index`) link `theme.css` only — they keep a centered splash layout,
+  not the form-page components.
+- Name collisions were resolved by renaming, since they were different components: gallery masonry `.card`→`.tile`,
+  files tree row `.frow`→`.ftree`.
+- Widths unified to the `--wrap` token (960) / `.wrap.wide` (1180). `comp/` keeps 1280 (set in `comp.css`) — the
+  one genuine width exception, alongside the gallery masonry which uses the wide tier.
+- Recurring widgets were promoted into `ui.css` (`.tbtn`, `.del`, the collapsible `h2.sec` header, `button:disabled`,
+  `input[type=password]`) so future pages get them for free.
+- Phase 3 (shared JS `utils.js`/`components.js`) was **not** rewired into the existing pages — each page keeps its
+  own working `pagename.js`. An optional `assets/js/utils.js` toolkit exists for *new* pages.
+
+---
+
 ## Target structure
 
 Each page lives in its own folder as `index.html` so the browser serves it at a clean URL

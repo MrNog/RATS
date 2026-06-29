@@ -1,0 +1,347 @@
+    const LS = "ratsGuild";
+    const CLASS_COLOR = { "Death Knight": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
+
+    function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+    function load() { try { return JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { return null; } }
+
+    const collapsed = new Set(["low"]);   // low-level section starts collapsed
+    function toggleRank(i) { i = String(i); if (collapsed.has(i)) collapsed.delete(i); else collapsed.add(i); paint(); }
+
+    // derive the main character for an alt (from "<Main> Alt" in officer/public note)
+    function mainOf(m) {
+      const on = (m.officerNote || "").trim();
+      let mm = on.match(/^(.+?)\s+alt\b/i);
+      if (mm) return mm[1].trim();
+      const pn = (m.publicNote || "").trim();
+      if (pn) { const t = pn.split(/[\s,/\-(]/)[0]; if (t && /^[A-Za-zÀ-ÿ]{2,}$/.test(t)) return t; }
+      return null;
+    }
+    // officer-note "<Main> Alt" marks an alt even when the rank isn't "Alt" (e.g. an alt parked on Officer)
+    function altMainNote(m) { const on = ((m && m.officerNote) || "").trim(); const mm = on.match(/^(.+?)\s+alt\b/i); return mm ? mm[1].trim() : null; }
+    function isAlt(m) { return m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m); }
+
+    // ---- Fangs (10-man squad) — stored as a list of names in data.fangs, survives re-imports ----
+    function normNm(s) { return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+    function fangList() { const d = load(); return (d && Array.isArray(d.fangs)) ? d.fangs : []; }
+    function isFang(m) { const s = normNm(m.name); return fangList().some(n => normNm(n) === s); }
+    function joinedOf(m) { const d = load(); return (d && d.joined && d.joined[m.name]) || ""; }
+    function toggleFang(name) {
+      const d = load(); if (!d) return;
+      d.fangs = Array.isArray(d.fangs) ? d.fangs : [];
+      const i = d.fangs.findIndex(n => normNm(n) === normNm(name));
+      if (i >= 0) d.fangs.splice(i, 1); else d.fangs.push(name);
+      localStorage.setItem(LS, JSON.stringify(d));
+      setMsgOk("💀 Fangs updated locally — click 💾 Save roster to share with the officers.");
+      paint();
+    }
+
+    let pendingImport = null;
+    function openModal() {
+      document.getElementById("modal").style.display = "flex";
+      document.getElementById("modalErr").textContent = "";
+      document.getElementById("diff").innerHTML = "";
+      document.getElementById("confirmBtn").style.display = "none";
+      pendingImport = null;
+      setTimeout(() => document.getElementById("jsonIn").focus(), 50);
+    }
+    function closeModal() { document.getElementById("modal").style.display = "none"; }
+
+    const lc = s => (s || "").toLowerCase();
+    const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+
+    // STEP 1 — parse + show what would change (nothing saved yet)
+    function importRoster() {
+      let data;
+      try { data = JSON.parse(document.getElementById("jsonIn").value.trim()); }
+      catch (e) { document.getElementById("modalErr").textContent = "❌ Invalid JSON."; return; }
+      if (!data.roster || !Array.isArray(data.roster)) { document.getElementById("modalErr").textContent = "❌ No 'roster' array found."; return; }
+      document.getElementById("modalErr").textContent = "";
+      pendingImport = data;
+      showDiff(load(), data);
+      document.getElementById("confirmBtn").style.display = "";
+    }
+
+    function showDiff(oldData, nw) {
+      const box = document.getElementById("diff");
+      if (!oldData || !Array.isArray(oldData.roster)) {
+        box.innerHTML = `<p class="sub" style="margin-top:12px">First import — <b>${nw.roster.length}</b> members will be added.</p>`;
+        return;
+      }
+      const oldR = oldData.roster, oldBy = {}, newBy = {};
+      oldR.forEach(m => oldBy[lc(m.name)] = m);
+      nw.roster.forEach(m => newBy[lc(m.name)] = m);
+      const joined = nw.roster.filter(m => !oldBy[lc(m.name)]);
+      const left = oldR.filter(m => !newBy[lc(m.name)]);
+      const rankCh = nw.roster.map(m => { const o = oldBy[lc(m.name)]; return o && o.rankName !== m.rankName ? { name: m.name, from: o.rankName, to: m.rankName } : null; }).filter(Boolean);
+      const fangsLost = ((oldData.fangs) || []).filter(n => !newBy[lc(n)]);
+      const joinedLost = Object.keys((oldData.joined) || {}).filter(n => !newBy[lc(n)]);
+
+      const names = arr => arr.length ? arr.map(m => esc(m.name || m)).join(", ") : '<span style="color:#5e6166">none</span>';
+      const sect = (color, label, html) => `<div style="margin-top:8px"><b style="color:${color}">${label}</b><div class="sub" style="margin:2px 0 0">${html}</div></div>`;
+      const importDate = nw.exportedAt ? ymd(new Date(nw.exportedAt * 1000)) : ymd(new Date());
+      let html = `<div style="background:#16181c;border:1px solid #2f3137;border-radius:8px;padding:12px;margin-top:12px;max-height:280px;overflow:auto">`;
+      html += sect("#7CFC8A", `🟢 New members (${joined.length}) — join date set to ${importDate}`, names(joined));
+      html += sect("#ff8a8a", `🔴 Left the guild (${left.length})`, names(left));
+      html += sect("#c0943a", `🔁 Rank changes (${rankCh.length})`, rankCh.length ? rankCh.map(c => `${esc(c.name)}: ${esc(c.from)} → ${esc(c.to)}`).join("<br>") : '<span style="color:#5e6166">none</span>');
+      if (fangsLost.length) html += sect("#ff8a8a", `💀 Fangs whose toon left (will be dropped) (${fangsLost.length})`, names(fangsLost));
+      if (joinedLost.length) html += sect("#ff8a8a", `📅 Join dates whose toon left (will be dropped) (${joinedLost.length})`, names(joinedLost));
+      html += `</div><p class="sub" style="margin:8px 0 0">💀 Fangs &amp; join dates for everyone still here are <b>kept</b>. Nothing is saved until you confirm.</p>`;
+      box.innerHTML = html;
+    }
+
+    // STEP 2 — merge & save (keep fangs + join dates for members still present)
+    function confirmImport() {
+      if (!pendingImport) return;
+      const oldData = load() || {};
+      const data = pendingImport;
+      const hadOld = Array.isArray(oldData.roster) && oldData.roster.length > 0;
+      const newBy = {}; data.roster.forEach(m => newBy[lc(m.name)] = true);
+      const oldBy = {}; (oldData.roster || []).forEach(m => oldBy[lc(m.name)] = true);
+
+      // keep Fangs for members still present
+      const fangs = (oldData.fangs || []).filter(n => newBy[lc(n)]);
+      if (fangs.length) data.fangs = fangs;
+
+      // keep join dates for members still present
+      const joined = oldData.joined || {}, keptJoined = {};
+      Object.keys(joined).forEach(n => { if (newBy[lc(n)]) keptJoined[n] = joined[n]; });
+
+      // AUTO: a member who wasn't in the previous roster is new -> their join date = this import's date
+      // (first import = baseline, nobody gets a join date so existing members aren't treated as newcomers)
+      let added = 0;
+      const importDate = data.exportedAt ? ymd(new Date(data.exportedAt * 1000)) : ymd(new Date());
+      if (hadOld) {
+        data.roster.forEach(m => { if (!oldBy[lc(m.name)] && !keptJoined[m.name]) { keptJoined[m.name] = importDate; added++; } });
+      }
+      if (Object.keys(keptJoined).length) data.joined = keptJoined;
+
+      data.lastImport = Date.now();   // when the roster was last pulled from in-game into the hub
+      localStorage.setItem(LS, JSON.stringify(data));
+      pendingImport = null;
+      closeModal();
+      boot();
+      setMsgOk(`✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}. Click 💾 Save roster to share.`);
+    }
+
+    function buildRankFilter(data) {
+      const sel = document.getElementById("rankSel");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">All ranks</option>';
+      (data.ranks || []).slice().sort((a, b) => a.rankIndex - b.rankIndex).forEach(r => {
+        const o = document.createElement("option"); o.value = r.rankIndex; o.textContent = r.name; sel.appendChild(o);
+      });
+      sel.value = cur;
+    }
+
+    // ---- last in-game import timer (counts up until the next roster import) ----
+    function lastImportMs() { const d = load(); if (!d) return 0; return d.lastImport || (d.exportedAt ? d.exportedAt * 1000 : 0); }
+    function fmtDur(ms) {
+      let s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+      const d = Math.floor(s / 86400); s -= d * 86400;
+      const h = Math.floor(s / 3600); s -= h * 3600;
+      const m = Math.floor(s / 60); s -= m * 60;
+      if (d) return d + "d " + h + "h";
+      if (h) return h + "h " + m + "m";
+      if (m) return m + "m " + s + "s";
+      return s + "s";
+    }
+    function paintLastUpd() {
+      const el = document.getElementById("lastUpdN"); if (!el) return;
+      const ms = lastImportMs();
+      el.textContent = ms ? fmtDur(ms) : "—";
+      // nudge the officer to re-import if it's getting stale
+      const days = ms ? (Date.now() - ms) / 86400000 : 0;
+      el.style.color = days >= 30 ? "#ff6b6b" : days >= STALE_DAYS ? "#e0b860" : "#fff";
+      renderStale();
+    }
+    setInterval(paintLastUpd, 1000);
+
+    // ---- stale-roster alert -> #okanor-logs (after STALE_DAYS without an import) ----
+    const STALE_DAYS = 7;
+    const HUB_URL = "https://mrnog.github.io/rats/officer/guild/";   // <- set to your live hub roster page
+    // the on-page PREVIEW is dev-only (so the admin can design it); the webhook auto-send stays live for everyone
+    const DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || location.protocol === "file:";
+    function staleDays() { const ms = lastImportMs(); return ms ? (Date.now() - ms) / 86400000 : 0; }
+    function logWebhook() { try { const a = JSON.parse(localStorage.getItem("ratsWebhooks") || "[]"); const h = a.find(x => /log|okanor/i.test(x.name || "")); return (h && h.url) || ""; } catch (e) { return ""; } }
+    function buildStaleEmbed() {
+      const ms = lastImportMs(), days = Math.floor(staleDays());
+      const when = ms ? new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "never";
+      return {
+        author: { name: "RATS • Roster" },
+        title: "⚠️ Time to refresh the roster",
+        url: HUB_URL,
+        color: 0xE0B860,
+        fields: [
+          { name: "⏳ Stale for", value: "**" + days + " day" + (days !== 1 ? "s" : "") + "**", inline: true },
+          { name: "📅 Last import", value: when, inline: true }
+        ],
+        description: "[🔗 Open the roster importer](" + HUB_URL + ")",
+        footer: { text: "Run the in-game export → import it into the hub 🐀🧀" }
+      };
+    }
+    function renderEmbedCard(embed) {
+      const hex = "#" + (embed.color || 0).toString(16).padStart(6, "0");
+      const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/\[(.+?)\]\((https?:[^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:#00a8fc">$1</a>')
+        .replace(/\n/g, "<br>");
+      const fields = (embed.fields || []).map(f =>
+        `<div style="${f.inline ? "min-width:120px" : "flex-basis:100%"}"><div style="font-size:12px;font-weight:700;color:#fff;margin-bottom:1px">${md(f.name)}</div><div style="font-size:14px;color:#dbdee1">${md(f.value)}</div></div>`
+      ).join("");
+      const titleHtml = embed.url
+        ? `<a href="${esc(embed.url)}" target="_blank" rel="noopener" style="color:#00a8fc;text-decoration:none">${esc(embed.title)}</a>`
+        : esc(embed.title);
+      return `<div style="border-left:4px solid ${hex};background:#2b2d31;border-radius:4px;padding:12px 15px;max-width:460px;font-family:'gg sans','Segoe UI',sans-serif">
+        ${embed.author ? `<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:7px">${esc(embed.author.name)}</div>` : ""}
+        ${embed.title ? `<div style="font-size:16px;font-weight:700;margin-bottom:${fields || embed.description ? "9px" : "0"}">${titleHtml}</div>` : ""}
+        ${embed.description ? `<div style="font-size:14px;color:#dbdee1;line-height:1.5;margin-bottom:${fields ? "10px" : "0"}">${md(embed.description)}</div>` : ""}
+        ${fields ? `<div style="display:flex;gap:22px;flex-wrap:wrap">${fields}</div>` : ""}
+        ${embed.footer ? `<div style="font-size:12px;color:#949ba4;margin-top:11px">${esc(embed.footer.text)}</div>` : ""}
+      </div>`;
+    }
+    function renderStale() {
+      const wrap = document.getElementById("staleWrap");
+      const card = document.getElementById("staleCard"); if (!card) return;
+      // preview is dev-only (localhost/file://) — production never shows it; the webhook still auto-sends
+      if (!DEV || !load()) { if (wrap) wrap.style.display = "none"; return; }
+      if (wrap) wrap.style.display = "";
+      const days = Math.floor(staleDays()), stale = days >= STALE_DAYS;
+      card.innerHTML = renderEmbedCard(buildStaleEmbed());
+      const note = document.getElementById("staleNote");
+      note.textContent = stale ? `Roster is ${days} days old — alert is due.` : `Preview · auto-alerts after ${STALE_DAYS} days (currently ${days}).`;
+      note.style.color = stale ? "#e0b860" : "#6e7178";
+      document.getElementById("staleSend").style.display = (stale && logWebhook()) ? "" : "none";
+    }
+    async function sendStaleAlert(manual) {
+      const url = logWebhook();
+      if (!url) { if (manual) { const e = document.getElementById("err"); e.style.color = "#ff6b6b"; e.textContent = "❌ No #okanor-logs webhook saved (Admin → Discord webhooks)."; } return; }
+      if (!manual) {   // auto: once per stale roster — re-arms only after a fresh import resets lastImport
+        if (staleDays() < STALE_DAYS) return;
+        if (String(lastImportMs()) === localStorage.getItem("ratsStaleNotifiedFor")) return;
+      }
+      try {
+        await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [buildStaleEmbed()] }) });
+        localStorage.setItem("ratsStaleNotifiedFor", String(lastImportMs()));   // mark this roster as already alerted
+        if (manual) setMsgOk("✅ Posted the stale-roster alert to #okanor-logs.");
+      } catch (e) { if (manual) { const el = document.getElementById("err"); el.style.color = "#ff6b6b"; el.textContent = "❌ Couldn't post: " + e.message; } }
+    }
+
+    // toggle button backed by a hidden checkbox (keeps .checked reads working)
+    function toggleChk(id, btn) { const c = document.getElementById(id); c.checked = !c.checked; btn.classList.toggle("active", c.checked); paint(); }
+
+    function paint() {
+      const data = load(); if (!data) return;
+      const q = (document.getElementById("search").value || "").toLowerCase().trim();
+      const rankFilter = document.getElementById("rankSel").value;
+      const hideAlts = document.getElementById("hideAlts").checked;
+
+      let roster = data.roster.slice();
+      if (hideAlts) roster = roster.filter(m => !isAlt(m));
+      if (document.getElementById("fangsOnly").checked) roster = roster.filter(isFang);
+      if (rankFilter !== "") roster = roster.filter(m => String(m.rankIndex) === rankFilter);
+      if (q) roster = roster.filter(m =>
+        (m.name || "").toLowerCase().includes(q) ||
+        (m.publicNote || "").toLowerCase().includes(q) ||
+        (m.officerNote || "").toLowerCase().includes(q) ||
+        (m.class || "").toLowerCase().includes(q));
+
+      // stats (over the full roster, not the filtered view)
+      const all = data.roster;
+      const alts = all.filter(isAlt).length;
+      const mains = all.length - alts;
+      let stats = [
+        ["Members", all.length], ["Mains", mains], ["Alts", alts], ["💀 Fangs", all.filter(isFang).length]
+      ].map(s => `<div class="stat"><div class="n">${s[1]}</div><div class="l">${s[0]}</div></div>`).join("");
+      // last in-game import — a live counter, refreshed every second by the interval below
+      const ms = lastImportMs();
+      stats += `<div class="stat" id="lastUpdCard" title="${ms ? new Date(ms).toLocaleString() : "no import recorded yet"}">
+        <div class="n" id="lastUpdN" style="font-size:15px;line-height:1.4">${ms ? fmtDur(ms) : "—"}</div>
+        <div class="l">since in-game update</div></div>`;
+      document.getElementById("stats").innerHTML = stats;
+      paintLastUpd();
+
+      // group filtered roster by rank, in rank order (Alt rank pushed to the bottom)
+      const rankKey = r => (/alt/i.test(r.name) ? 999 : r.rankIndex);
+      const ranksOrder = (data.ranks || []).slice().sort((a, b) => rankKey(a) - rankKey(b));
+      const byRank = {};
+      roster.forEach(m => { (byRank[m.rankIndex] = byRank[m.rankIndex] || []).push(m); });
+
+      const sortMode = document.getElementById("sortSel").value;
+      const sortFn = sortMode === "class" ? (a, b) => (a.class || "").localeCompare(b.class || "") || (a.name || "").localeCompare(b.name || "")
+        : sortMode === "level" ? (a, b) => (b.level || 0) - (a.level || 0) || (a.name || "").localeCompare(b.name || "")
+          : (a, b) => (a.name || "").localeCompare(b.name || "");
+
+      // low-level toons (leveling alts/banks, < 80) go in their own section at the bottom
+      const isLow = m => (m.level || 0) < MAX_LEVEL;
+      const section = (key, label, list, color) => {
+        if (!list.length) return "";
+        const isC = !q && collapsed.has(key);   // searching expands all sections so matches show
+        const head = `<div class="rhead" style="cursor:pointer;user-select:none${color ? ';color:' + color : ''}" onclick="toggleRank('${key}')"><span style="display:inline-block;width:14px;color:#8a8d93">${isC ? "▶" : "▼"}</span> ${esc(label)} <span class="c">(${list.length})</span></div>`;
+        return `<div class="rank">${head}<div class="members"${isC ? ' style="display:none"' : ''}>${list.map(memberRow).join("")}</div></div>`;
+      };
+
+      let html = "";
+      ranksOrder.forEach(r => {
+        const list = (byRank[r.rankIndex] || []).filter(m => !isLow(m)).sort(sortFn);
+        html += section(String(r.rankIndex), r.name, list);
+      });
+      const lows = roster.filter(isLow).sort(sortFn);
+      html += section("low", "⬇ Low level (< " + MAX_LEVEL + ")", lows, "#8a8d93");
+      document.getElementById("roster").innerHTML = html || `<p class="sub">No members match.</p>`;
+    }
+
+    const MAX_LEVEL = 80;
+    function memberRow(m) {
+      const col = CLASS_COLOR[m.class] || "#fff";
+      const main = isAlt(m) ? mainOf(m) : null;
+      return `<div class="m" title="${esc(m.class)} · lvl ${m.level} · ${esc(m.publicNote || "")}">
+        <span class="fang${isFang(m) ? ' on' : ''}" data-name="${esc(m.name)}" title="Toggle Fang (10-man squad)">💀</span>
+        <span class="mn" style="color:${col}">${esc(m.name)}</span>
+        <span class="lv">${m.level}</span>
+        ${main ? `<span class="altof">↳ ${esc(main)}</span>` : ""}
+        ${joinedOf(m) ? `<span class="joined" title="Joined the guild">📅 ${esc(joinedOf(m))}</span>` : ""}
+        <a class="armory" href="https://armory.warmane.com/character/${encodeURIComponent(m.name)}/Onyxia/summary" target="_blank" rel="noopener" title="Open ${esc(m.name)} on Warmane Armory" onclick="event.stopPropagation()">🔗</a>
+      </div>`;
+    }
+
+    async function exportRoster() {
+      const data = load();
+      if (!data || !data.roster) { alert("Import a roster first (📥 Import roster)."); return; }
+      let pass = RatsData.getPass();
+      if (!pass) { pass = prompt("Set the guild password (officers enter this once to unlock the roster):"); if (!pass) return; RatsData.setPass(pass); }
+      try {
+        const res = await RatsData.saveRoster(data, pass);
+        // publish a plain names+class list (mains only) so the public vacation page has a picker (no roster decryption needed)
+        try {
+          const members = data.roster.filter(m => !isAlt(m) && !/pug/i.test(m.rankName || "")).map(m => ({ name: m.name, class: m.class || "" }));
+          await RatsData.publishMembers(members);
+        } catch (e) { }
+        setMsgOk(res.mode === "firebase" ? "✅ Roster saved & shared instantly — officers see it on refresh. Member list published for self-service vacations." : "✅ roster.json downloaded — commit it to the repo. Officers unlock with the same password.");
+      } catch (e) { const el = document.getElementById("err"); if (el) { el.style.color = "#ff6b6b"; el.textContent = "❌ Save failed: " + e.message; } }
+    }
+    function setMsgOk(t) { const e = document.getElementById("err"); if (e) { e.style.color = "#7CFC8A"; e.textContent = t; } }
+
+    function boot() {
+      const data = load();
+      if (!data) {
+        document.getElementById("metaLine").textContent = "No roster imported yet — click 📥 Import roster.";
+        document.getElementById("stats").innerHTML = "";
+        document.getElementById("roster").innerHTML = "";
+        document.getElementById("staleWrap").style.display = "none";
+        return;
+      }
+      document.getElementById("staleWrap").style.display = "";
+      const when = data.exportedAt ? new Date(data.exportedAt * 1000).toLocaleString() : "unknown";
+      document.getElementById("metaLine").innerHTML = `<b>${esc(data.guildName || "Guild")}</b> · ${esc(data.realm || "")} · ${data.roster.length} members · exported ${esc(when)}`;
+      buildRankFilter(data);
+      paint();
+      sendStaleAlert(false);   // auto-post to #okanor-logs if it's been too long (once/day)
+    }
+    // click a 💀 to toggle that member as a Fang (delegated; #roster persists across repaints)
+    document.getElementById("roster").addEventListener("click", e => {
+      const f = e.target.closest(".fang"); if (!f) return;
+      e.stopPropagation();
+      toggleFang(f.getAttribute("data-name"));
+    });
+
+    // load the shared (possibly encrypted) roster.json, then render; falls back to local import
+    if (window.RatsData) { RatsData.loadRoster({ interactive: false }).then(boot); } else { boot(); }
