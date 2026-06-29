@@ -83,14 +83,19 @@
       color: #fff;
       border: 1px solid #333;
       border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 14px;
+      font-size: 13px;
       font-family: inherit
+    }
+
+    input[type=text] {
+      height: 30px;
+      padding: 0 12px
     }
 
     textarea {
       width: 100%;
       min-height: 120px;
+      padding: 10px 12px;
       resize: vertical;
       line-height: 1.5
     }
@@ -100,15 +105,32 @@
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 9px 16px;
+      height: 30px;
+      padding: 0 14px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 13px
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
     button:hover {
       filter: brightness(1.1)
     }
+
+    /* on/off toggle button (gold when on, dark when off) — same as comp */
+    .tbtn {
+      background: #202225;
+      border: 1px solid #2f3137;
+      color: #9aa0a6;
+      font-weight: 700
+    }
+    .tbtn:hover { color: #fff; filter: none }
+    .tbtn.active { background: var(--accent); border-color: var(--accent); color: #1b1d21 }
+    /* the Discord-post toggle goes Discord-blue when on */
+    #alsoPostBtn.active { background: #3b4178; border-color: #5865F2; color: #dfe2ff }
 
     .card {
       background: #1b1d21;
@@ -211,16 +233,17 @@
     <div class="card">
       <div class="row" style="gap:8px;margin-bottom:8px">
         <input type="text" id="ver" placeholder="version (e.g. v5)" style="width:140px">
-        <input type="text" id="date" placeholder="date" style="width:150px">
+        <input type="date" id="date" title="Entry date">
         <span class="sub" style="margin:0">date defaults to today</span>
       </div>
       <textarea id="items"
         placeholder="One change per line, e.g.&#10;🗓️ Vacations calendar — see who's away &amp; overlaps&#10;🔔 Day-before reminder card&#10;📜 This dev-log!"></textarea>
       <div class="row" style="margin-top:10px;gap:14px">
         <button onclick="addEntry()">+ Save entry</button>
-        <label class="chk"><input type="checkbox" id="alsoPost" checked> 📣 post to #okanor-logs</label>
-        <label class="chk"><input type="checkbox" id="pub"> 🌐 show on public hub <span
-            style="color:#6e7178">(major)</span></label>
+        <button type="button" id="alsoPostBtn" class="tbtn active" onclick="toggleChk('alsoPost', this)">📣 post to #okanor-logs</button>
+        <input type="checkbox" id="alsoPost" checked hidden>
+        <button type="button" id="pubBtn" class="tbtn" onclick="toggleChk('pub', this)">🌐 show on public hub <span style="color:#6e7178;font-weight:600">(major)</span></button>
+        <input type="checkbox" id="pub" hidden>
         <span class="msg" id="msg"></span>
       </div>
     </div>
@@ -233,6 +256,7 @@
   </div>
 
   <script src="../assets/data.js"></script>
+  <script src="../assets/datepicker.js"></script>
   <script>
     const FB = "https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/";
     const GOLD = 0xC0943A;
@@ -284,6 +308,9 @@
     }
     function renderPreview() { document.getElementById("preview").innerHTML = renderCard(buildEmbed(draft())); }
 
+    // toggle button backed by a hidden checkbox (keeps .checked reads working)
+    function toggleChk(id, btn) { const c = document.getElementById(id); c.checked = !c.checked; btn.classList.toggle("active", c.checked); }
+
     async function postToDiscord(e) {
       const url = logWebhook();
       if (!url) { msg("❌ No #okanor-logs webhook saved (Admin → Discord webhooks, name it with 'log').", "#ff6b6b"); return false; }
@@ -301,6 +328,8 @@
         if (document.getElementById("alsoPost").checked) { try { if (await postToDiscord(e)) note += " Posted to #okanor-logs."; } catch (err) { note += " (Discord post failed: " + err.message + ")"; } }
         document.getElementById("ver").value = ""; document.getElementById("items").value = ""; document.getElementById("date").value = "";
         document.getElementById("pub").checked = false;
+        document.getElementById("pubBtn").classList.remove("active");
+        if (window.RatsCal) RatsCal.sync();
         renderPreview(); await reload(); msg(note);
       } catch (err) { msg("❌ " + (err && err.message ? err.message : err), "#ff6b6b"); }
     }
@@ -329,7 +358,7 @@
       box.innerHTML = LOGS.map(e => `<div class="entry">
         <div class="row" style="justify-content:space-between">
           <div class="d">${esc(fmtDate(e.date))}${e.ver ? " · " + esc(e.ver) : ""}${e.pub ? ' <span style="color:#7CFC8A;font-size:11px">🌐 public</span>' : ' <span style="color:#6e7178;font-size:11px">officer-only</span>'}</div>
-          <div style="white-space:nowrap"><button class="del" onclick="repost('${e.key}')" style="border-color:#c0943a;color:#e0b860;margin-right:6px">📣 repost</button><button class="del" onclick="del('${e.key}')">delete</button></div>
+          <div style="white-space:nowrap"><button class="del" onclick="repost('${e.key}')" style="background:#3b4178;border:1px solid #5865F2;color:#dfe2ff;margin-right:6px">📣 Post to Discord</button><button class="del" onclick="del('${e.key}')">delete</button></div>
         </div>
         <ul>${(e.items || []).map(i => `<li>${esc(i)}</li>`).join("")}</ul>
       </div>`).join("");
@@ -343,6 +372,7 @@
     ["ver", "date", "items"].forEach(id => document.getElementById(id).addEventListener("input", renderPreview));
     if (window.RatsData) RatsData.gate();
     document.getElementById("date").value = todayStr();
+    if (window.RatsCal) RatsCal.sync();
     renderPreview();
     reload();
   </script>

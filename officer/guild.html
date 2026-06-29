@@ -73,16 +73,26 @@
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 9px 16px;
+      height: 30px;
+      padding: 0 14px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 13px
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
     button.alt {
       background: #3a3d44;
       color: #fff
     }
+
+    /* on/off toggle button (gold when on, dark when off) — same as comp */
+    .tbtn { background:#202225; border:1px solid #2f3137; color:#9aa0a6 }
+    .tbtn:hover { color:#fff }
+    .tbtn.active { background:var(--accent); border-color:var(--accent); color:#1b1d21 }
 
     button:hover {
       filter: brightness(1.1)
@@ -93,8 +103,9 @@
       color: #fff;
       border: 1px solid #333;
       border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 14px
+      height: 30px;
+      padding: 0 10px;
+      font-size: 13px
     }
 
     select {
@@ -108,10 +119,10 @@
       color: #fff;
       border: 1px solid #333;
       border-radius: 6px;
-      padding: 8px 34px 8px 12px;
-      font-size: 14px;
+      padding: 0 34px 0 12px;
+      font-size: 13px;
       cursor: pointer;
-      height: 38px;
+      height: 30px;
       min-width: 130px;
       line-height: 1;
     }
@@ -342,12 +353,10 @@
         <option value="name">Sort: Name</option>
         <option value="level">Sort: Level</option>
       </select>
-      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer">
-        <input type="checkbox" id="hideAlts" onchange="paint()" checked /> hide alts
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;color:var(--muted);cursor:pointer">
-        <input type="checkbox" id="fangsOnly" onchange="paint()" /> 💀 fangs only
-      </label>
+      <button type="button" class="tbtn active" onclick="toggleChk('hideAlts', this)">hide alts</button>
+      <input type="checkbox" id="hideAlts" checked hidden>
+      <button type="button" class="tbtn" onclick="toggleChk('fangsOnly', this)">💀 fangs only</button>
+      <input type="checkbox" id="fangsOnly" hidden>
     </div>
 
     <div class="stats" id="stats"></div>
@@ -613,6 +622,9 @@
         if (manual) setMsgOk("✅ Posted the stale-roster alert to #okanor-logs.");
       } catch (e) { if (manual) { const el = document.getElementById("err"); el.style.color = "#ff6b6b"; el.textContent = "❌ Couldn't post: " + e.message; } }
     }
+
+    // toggle button backed by a hidden checkbox (keeps .checked reads working)
+    function toggleChk(id, btn) { const c = document.getElementById(id); c.checked = !c.checked; btn.classList.toggle("active", c.checked); paint(); }
 
     function paint() {
       const data = load(); if (!data) return;

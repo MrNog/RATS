@@ -86,8 +86,8 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 38px;
-      font-size: 14px;
+      height: 30px;
+      font-size: 13px;
       color-scheme: dark;
       min-width: 150px
     }
@@ -106,10 +106,15 @@
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 9px 16px;
+      height: 30px;
+      padding: 0 14px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 13px
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
     button:hover {
@@ -143,8 +148,8 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 38px;
-      font-size: 14px
+      height: 30px;
+      font-size: 13px
     }
 
     .ac {
@@ -310,6 +315,7 @@
     <div id="allWrap" class="seclist" style="display:none"><div id="all"></div></div>
   </div>
 
+  <script src="assets/datepicker.js"></script>
   <script>
     // shared Firebase Realtime DB (same as the officer tools) — plain 'vacations' + 'members' nodes
     const FB = "https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/";
@@ -477,6 +483,7 @@
         await fbPost("vacations", { name, class: cls, start, end: end || "", note });
         document.getElementById("vSearch").value = ""; selName = ""; selClass = "";
         document.getElementById("vStart").value = ""; document.getElementById("vEnd").value = ""; document.getElementById("vNote").value = "";
+        if (window.RatsCal) RatsCal.sync();
         updatePreview();
         await reload(); msg("✅ Done — you're marked away. Have a good one! 🧀");
       } catch (e) { msg("❌ Couldn't save (" + e.message + ").", "#ff6b6b"); }

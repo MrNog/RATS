@@ -86,8 +86,8 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 38px;
-      font-size: 14px;
+      height: 30px;
+      font-size: 13px;
       color-scheme: dark;
       min-width: 150px
     }
@@ -105,10 +105,15 @@
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 9px 16px;
+      height: 30px;
+      padding: 0 14px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 13px
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
     button:hover {
@@ -142,8 +147,8 @@
       border: 1px solid #333;
       border-radius: 6px;
       padding: 0 12px;
-      height: 38px;
-      font-size: 14px
+      height: 30px;
+      font-size: 13px
     }
 
     .ac {
@@ -444,6 +449,7 @@
   </div>
 
   <script src="../assets/data.js"></script>
+  <script src="../assets/datepicker.js"></script>
   <script>
     const CLASS_COLOR = { "Death Knight": "#C41E3A", "DK": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
@@ -518,6 +524,7 @@
       document.getElementById("cntactive").textContent = active.length ? "(" + active.length + ")" : "";
       document.getElementById("cntall").textContent = vs.length ? "(" + vs.length + ")" : "";
       renderCalendar();
+      if (window.RatsCal) RatsCal.enhanceAll();   // enhance any edit-row date inputs just rendered
     }
 
     // ---- month calendar: who's away each day, overlaps visible as stacked chips ----
@@ -760,6 +767,7 @@
         await RatsData.addVacation({ name, class: cls, start, end: end || "", note });
         document.getElementById("vSearch").value = ""; selName = ""; selClass = "";
         document.getElementById("vStart").value = ""; document.getElementById("vEnd").value = ""; document.getElementById("vNote").value = "";
+        if (window.RatsCal) RatsCal.sync();
         await reload(); msg("✅ Added " + name + " — shared.", "#7CFC8A");
       } catch (e) { msg("❌ " + (e && e.message ? e.message : e), "#ff6b6b"); }
     }

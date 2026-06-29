@@ -13,6 +13,42 @@ window.RatsData = (function () {
   const PASS_LS = "ratsGuildKey"; // cached guild password
   const DATA_LS = "ratsGuild"; // cached decrypted roster (also what the tools read)
 
+  // ---- raid color badges (shared so every tool uses the same palette) ----
+  const RAID_COLORS = {
+    ICC: "#5bc0eb",     // Icecrown — frost blue
+    Ulduar: "#e0a13e",  // Ulduar — titan bronze
+    ToC: "#d9534f",     // Trial of the Crusader — coliseum red
+    Ony: "#b76fe0",     // Onyxia — dragon purple
+    Naxx: "#6fce5a",    // Naxxramas — necro green
+    RS: "#ff6b81",      // Ruby Sanctum — ruby pink
+    VoA: "#8ab4f8",     // Vault of Archavon
+    EoE: "#49d6c4",     // Eye of Eternity
+  };
+  // pull a raid key out of a free-text subtitle ("ULDUAR 25 HM", "Ulduar HM", "ICC"…)
+  function raidKeyOf(desc) {
+    const s = String(desc || "").toLowerCase();
+    if (/icc|icecrown/.test(s)) return "ICC";
+    if (/ulduar|\buld\b/.test(s)) return "Ulduar";
+    if (/togc|\btoc\b|trial|crusader|coliseum/.test(s)) return "ToC";
+    if (/onyxia|\bony\b/.test(s)) return "Ony";
+    if (/naxx/.test(s)) return "Naxx";
+    if (/ruby|\brs\b/.test(s)) return "RS";
+    if (/voa|archavon|vault/.test(s)) return "VoA";
+    if (/eoe|eternity|malygos/.test(s)) return "EoE";
+    return null;
+  }
+  function escHtml(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+  // a colored pill for a raid subtitle; self-contained styles (no CSS needed), muted fallback
+  function raidBadge(desc) {
+    const d = String(desc || "").trim();
+    if (!d) return "";
+    const key = raidKeyOf(d), c = key && RAID_COLORS[key];
+    if (!c) return '<span style="color:#9aa0a6;font-size:13px">' + escHtml(d) + '</span>';
+    return '<span style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;'
+      + 'border-radius:10px;padding:2px 9px;border:1px solid ' + c + '66;background:' + c + '22;color:' + c + '">'
+      + escHtml(d) + '</span>';
+  }
+
   function getPass() {
     try {
       return localStorage.getItem(PASS_LS) || "";
@@ -429,5 +465,8 @@ window.RatsData = (function () {
     clearPass,
     cached,
     gate,
+    RAID_COLORS,
+    raidKeyOf,
+    raidBadge,
   };
 })();

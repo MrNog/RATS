@@ -28,8 +28,12 @@ re-derive the conventions.
 
 ## Formatting rules
 - **Dates display as `26 Jul 2026`** everywhere (helper `fmtDate`, accepts ISO or dd-mm-yyyy).
-- Native `<input type="date">` uses `lang="en-GB"` so the picker shows **dd/mm/yyyy**. Keep the native
-  calendar — don't replace it with day/month/year dropdowns.
+- **Date pickers use the shared dark calendar** `assets/datepicker.js` — it auto-enhances every
+  `<input type="date">` into a themed button + popup (keeping the input as the value holder, so
+  `.value` reads and `input`/`change` listeners still work). After rendering inputs dynamically call
+  `RatsCal.enhanceAll()`; after a programmatic `.value` reset call `RatsCal.sync()`. Opt into the raid
+  "WED — JUN 26" label with `data-cal-format="weekday"` (default is `26 Jun 2026`). Don't reintroduce
+  the native picker or day/month/year dropdowns.
 - **Class colors**: WotLK map (DK `#C41E3A`, Druid `#FF7C0A`, Hunter `#AAD372`, Mage `#3FC7EB`,
   Paladin `#F58CBA`, Priest `#E6E6E6`, Rogue `#FFF569`, Shaman `#0070DD`, Warlock `#8788EE`,
   Warrior `#C69B6D`). Color the **name** by class instead of adding a Class column.

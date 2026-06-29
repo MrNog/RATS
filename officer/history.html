@@ -78,11 +78,21 @@
 
     .controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 10px;
-      align-items: center;
+      align-items: stretch;
       margin: 14px 0 4px
     }
+    .frow { display:flex; align-items:center; gap:10px; flex-wrap:wrap }
+    .flbl { color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; flex:0 0 auto; width:50px }
+    .frow #search { flex:1 1 220px; height:30px }
+
+    .segs { display:inline-flex; background:#202225; border:1px solid #2f3137; border-radius:8px; padding:2px }
+    .segs.grow { flex:1 1 auto }
+    .segs.grow .seg { flex:1 1 0 }
+    .seg { background:transparent; border:0; color:#9aa0a6; font-size:13px; font-weight:700; padding:0 11px; height:24px; border-radius:6px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center }
+    .seg:hover { color:#fff }
+    .seg.active { background:var(--accent); color:#1b1d21 }
 
     input[type=text],
     input[type=date],
@@ -294,12 +304,14 @@
       border: 1px solid #5a2e2e;
       color: #ff9b9b;
       border-radius: 6px;
-      padding: 6px 12px;
+      height: 30px;
+      padding: 0 12px;
       font-weight: 700;
       font-size: 12px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px
     }
 
@@ -335,16 +347,16 @@
     }
 
     /* edit mode + post button */
-    .editbtn, .savebtn { background:#202225; border:1px solid #2f3137; color:#9aa0a6; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer }
-    .editbtn:hover, .savebtn:hover { border-color:var(--accent); color:#fff }
-    .editbtn.on { background:var(--accent); color:#1b1d21; border-color:var(--accent) }
-    .savebtn { background:#2f4a35; border-color:#3a5b42; color:#8fdf9f }
-    .savebtn:hover { background:#23362a; color:#fff }
-    .mrow.editable { cursor:pointer; border-radius:4px }
-    .mrow.editable:hover { background:#3a2626 }
     .vac { font-size:10px; color:#7CFC8A; font-style:italic }
-    .post { background:#3b4178; border:1px solid #5865F2; color:#dfe2ff; border-radius:6px; padding:6px 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px }
+    .post { background:#3b4178; border:1px solid #5865F2; color:#dfe2ff; border-radius:6px; height:30px; padding:0 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px }
     .post:hover { filter:brightness(1.12); color:#fff }
+    .pen { background:none; border:0; color:#6b7077; cursor:pointer; font-size:12px; line-height:1; padding:3px 5px; border-radius:4px; flex:0 0 auto }
+    .pen:hover { color:var(--accent); background:#2a2c31 }
+    .head.editing { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+    .tedit { background:#0f1012; color:#fff; border:1px solid #4a4d55; border-radius:6px; height:30px; padding:0 10px; font-size:13px; font-weight:700 }
+    .tedit:focus { outline:none; border-color:var(--accent) }
+    .ren { background:#2f4a35; border:1px solid #3a5b42; color:#8fdf9f; border-radius:6px; height:30px; padding:0 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto }
+    .ren:hover { background:#23362a; color:#fff }
     /* per-card Optional toggle switch */
     .optsw { display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none; flex:0 0 auto }
     .optsw input { display:none }
@@ -404,29 +416,36 @@
     </details>
 
     <div class="controls">
-      <select id="sizeF" onchange="rerender()">
-        <option value="25" selected>25-man</option>
-        <option value="10">10-man</option>
-        <option value="all">All sizes</option>
-      </select>
-      <select id="range" onchange="rerender()">
-        <option value="0">All time</option>
-        <option value="14">Last 14 days</option>
-        <option value="30">Last 30 days</option>
-        <option value="60">Last 60 days</option>
-        <option value="90">Last 90 days</option>
-      </select>
-      <input type="date" id="from" title="From (overrides range)" onchange="rerender()">
-      <input type="date" id="to" title="To" onchange="rerender()">
-      <select id="sort" onchange="rerender()">
-        <option value="rank" selected>Sort: guild rank (default)</option>
-        <option value="pct">Sort: attendance %</option>
-        <option value="present">Sort: days present</option>
-        <option value="name">Sort: name</option>
-        <option value="class">Sort: class</option>
-      </select>
-      <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
-      <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
+      <div class="frow">
+        <span class="flbl">Raid</span>
+        <div class="segs" id="sizeSegs">
+          <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
+          <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
+          <button class="seg" data-s="all" onclick="setSize(this)">All</button>
+        </div>
+        <div class="segs grow" id="rangeSegs">
+          <button class="seg active" data-d="0" onclick="setRange(this)">All time</button>
+          <button class="seg" data-d="14" onclick="setRange(this)">14d</button>
+          <button class="seg" data-d="30" onclick="setRange(this)">30d</button>
+          <button class="seg" data-d="60" onclick="setRange(this)">60d</button>
+          <button class="seg" data-d="90" onclick="setRange(this)">90d</button>
+        </div>
+      </div>
+      <div class="frow">
+        <span class="flbl">Sort</span>
+        <div class="segs grow" id="sortSegs" title="Sort raiders by">
+          <button class="seg active" data-v="rank" onclick="setSort('rank')">Guild rank</button>
+          <button class="seg" data-v="pct" onclick="setSort('pct')">Attendance %</button>
+          <button class="seg" data-v="present" onclick="setSort('present')">Days present</button>
+          <button class="seg" data-v="name" onclick="setSort('name')">Name</button>
+          <button class="seg" data-v="class" onclick="setSort('class')">Class</button>
+        </div>
+      </div>
+      <div class="frow">
+        <span class="flbl">Find</span>
+        <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
+        <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
+      </div>
     </div>
     <div class="msg" id="msg"></div>
 
@@ -436,9 +455,6 @@
 
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
       <h2 style="margin:0">🗒 Raid log</h2>
-      <button id="editBtn" class="editbtn" onclick="toggleEdit()">✏️ Edit mode</button>
-      <button id="saveBtn" class="savebtn" onclick="saveChanges()" style="display:none">💾 Save changes</button>
-      <span id="editHint" class="sub" style="display:none">Click a ❌ no-show to mark it 🏖️ <b>vacation</b> (excused). <span style="color:var(--accent)">Tip:</span> to change how a run counts, just flip its <b>Optional</b> switch — no edit mode needed.</span>
     </div>
     <div id="log"></div>
   </div>
@@ -504,19 +520,14 @@
       return m.name;                                         // canonical roster name (merges Kobe/Kobee, etc.)
     }
 
-    // ---- date range ----
+    // ---- date range (quick-range segments) ----
     function inRange(dateStr) {
-      const from = document.getElementById("from").value, to = document.getElementById("to").value;
-      if (from && dateStr < from) return false;
-      if (to && dateStr > to) return false;
-      if (!from && !to) {
-        const days = parseInt(document.getElementById("range").value) || 0;
-        if (days > 0) {
-          const cut = new Date(); cut.setDate(cut.getDate() - days);
-          const z = n => String(n).padStart(2, "0");
-          const cutStr = cut.getFullYear() + "-" + z(cut.getMonth() + 1) + "-" + z(cut.getDate());
-          if (dateStr < cutStr) return false;
-        }
+      const days = RANGE_DAYS;
+      if (days > 0) {
+        const cut = new Date(); cut.setDate(cut.getDate() - days);
+        const z = n => String(n).padStart(2, "0");
+        const cutStr = cut.getFullYear() + "-" + z(cut.getMonth() + 1) + "-" + z(cut.getDate());
+        if (dateStr < cutStr) return false;
       }
       return true;
     }
@@ -527,6 +538,43 @@
       const n = (r.groups || []).reduce((a, g) => a + (g.members || []).length, 0);
       return n > 10 ? 25 : 10;
     }
+    // ---- continuation detection ----
+    // A "continuation" = a later run that resumes an earlier run's WEEKLY LOCKOUT.
+    // Same lockout week (Wed→Wed reset) + same instance + same size + ≥50% of the SAME
+    // toons (name AND class — an alt like Okanata ≠ Okanor, so it's a fresh lockout).
+    function lockoutStart(dateStr) {
+      const p = String(dateStr || "").split("-").map(Number); if (p.length !== 3) return dateStr;
+      const d = new Date(p[0], p[1] - 1, p[2]);
+      const back = (d.getDay() - 3 + 7) % 7;   // Wednesday = 3; step back to this lockout's Wed
+      d.setDate(d.getDate() - back);
+      const z = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+    }
+    function rosterKeys(r) {   // Set of "toon|class" for everyone in the groups
+      const set = new Set();
+      (r.groups || []).forEach(g => (g.members || []).forEach(m => {
+        const nm = normName(m.name); if (nm) set.add(nm + "|" + realClass(m));
+      }));
+      return set;
+    }
+    function isContinuation(r) {
+      if (/continuation/i.test(r.desc || "")) return true;   // honor a manually-typed note
+      const keysR = rosterKeys(r); if (!keysR.size) return false;
+      const wk = lockoutStart(r.date), sz = raidSize(r), rk = RatsData.raidKeyOf(r.desc);
+      for (const p of (HIST.raids || [])) {
+        if (p === r || !(p.date < r.date)) continue;          // only an EARLIER run counts as the origin
+        if (lockoutStart(p.date) !== wk || raidSize(p) !== sz || RatsData.raidKeyOf(p.desc) !== rk) continue;
+        const keysP = rosterKeys(p); if (!keysP.size) continue;
+        let shared = 0; keysR.forEach(k => { if (keysP.has(k)) shared++; });
+        if (shared / Math.min(keysR.size, keysP.size) >= 0.5) return true;
+      }
+      return false;
+    }
+    function contBadge(r) {
+      if (!isContinuation(r)) return "";
+      return '<span title="Same weekly lockout as an earlier run (≥50% same toons)" style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:2px 8px;border:1px solid #6e5326;background:#3a3016;color:#e0b860">🔁 CONTINUATION</span>';
+    }
+
     // The per-raid toggle: ⚪ Optional = log-only (history, counts for nobody). Default OFF.
     // When NOT optional: 25-man counts for everyone, 10-man is a 💀 Fang run (counts for Fangs).
     function isLogOnly(r) { return !!r.optional; }
@@ -538,7 +586,7 @@
       return vs.some(v => v.start && normName(v.name) === n && date >= v.start && date <= (v.end || v.start));
     }
     function filteredRaids() {
-      const sf = (document.getElementById("sizeF") || {}).value || "25";
+      const sf = SIZE;
       return (HIST.raids || [])
         .filter(r => r.date && inRange(r.date) && (sf === "all" || String(raidSize(r)) === sf))
         .sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -611,7 +659,7 @@
     function renderAttendance() {
       const raids = filteredRaids();
       const { rows, total } = computeAttendance(raids);
-      const sf = (document.getElementById("sizeF") || {}).value || "25";
+      const sf = SIZE;
       const sizeLbl = sf === "all" ? "all raids" : sf + "-man";
       document.getElementById("attHead").textContent = "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
 
@@ -628,7 +676,7 @@
 
       const q = (document.getElementById("search").value || "").toLowerCase().trim();
       let list = q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
-      const sort = document.getElementById("sort").value;
+      const sort = SORT;
       list = list.slice().sort((a, b) => {
         if (sort === "name") return a.name.localeCompare(b.name);
         if (sort === "class") return (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct;
@@ -675,7 +723,7 @@
         const ns = r.noShow ? `<span class="pill" title="explicit no-shows">${r.noShow} no-show${r.noShow != 1 ? "s" : ""}</span>` : "";
         const fang = isFangName(r.name);
         const fangMark = fang ? `<span title="Fang — expected at all 10-mans" style="cursor:help">💀 </span>` : "";
-        const sfNow = (document.getElementById("sizeF") || {}).value || "25";
+        const sfNow = SIZE;
         const why = sfNow === "10"
           ? (fang ? `Fang: all ${r.total} 10-man${r.total != 1 ? "s" : ""} count — present at ${r.present}.`
                   : `${r.total} 10-man${r.total != 1 ? "s" : ""} this raider joined — present at ${r.present}.`)
@@ -692,7 +740,12 @@
       el.innerHTML = html;
     }
 
-    function setSort(v) { document.getElementById("sort").value = v; renderAttendance(); }
+    function setSort(v) { SORT = v; document.querySelectorAll("#sortSegs .seg").forEach(s => s.classList.toggle("active", s.dataset.v === SORT)); renderAttendance(); }
+
+    // segmented filters (raid size + quick date range + sort) — same style as the rankings page
+    let SIZE = "25", RANGE_DAYS = 0, SORT = "rank";
+    function setSize(b) { SIZE = b.dataset.s; document.querySelectorAll("#sizeSegs .seg").forEach(s => s.classList.toggle("active", s === b)); rerender(); }
+    function setRange(b) { RANGE_DAYS = parseInt(b.dataset.d) || 0; document.querySelectorAll("#rangeSegs .seg").forEach(s => s.classList.toggle("active", s === b)); rerender(); }
 
     // collapsible rank sections (state persisted; Sewer Rats collapsed by default)
     let collapsedRanks = (function () { try { const a = JSON.parse(localStorage.getItem("ratsAttCollapsed") || "null"); return Array.isArray(a) ? new Set(a) : null; } catch (e) { return null; } })();
@@ -724,22 +777,30 @@
           const tag = vac ? ' <span class="vac">vacation</span>' : '';
           const col = CLASS_COLOR[realClass(m)] || "#ddd";
           const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
-          const cls = editMode ? "mrow editable" : "mrow";
-          const click = editMode ? ` title="Click to toggle 🏖️ vacation (excused)" onclick="toggleVacation('${esc(r.date)}',${idx})"` : "";
           const ico = m.specEmoteId || m.classEmoteId;
           const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
-          return `<div class="${cls}"${click}><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
+          return `<div class="mrow"><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
         }).join("");
         const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
+        const head = editDate === r.date
+          ? `<div class="head editing">
+              <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
+              <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
+              <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
+              <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
+            </div>`
+          : `<div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
+              <span class="date">${esc(r.title || r.date)}</span>
+              <span class="szbadge">${raidSize(r)}-man</span>
+              ${kindBadge(r)}
+              ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+              ${contBadge(r)}
+              <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
+              ${optSwitch(r)}
+              <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+            </div>`;
         return `<div class="raid" id="raid${i}">
-          <div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
-            <span class="date">${esc(r.title || r.date)}</span>
-            <span class="szbadge">${raidSize(r)}-man</span>
-            ${kindBadge(r)}
-            <span class="sub">${esc(r.desc || "")}</span>
-            <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
-            ${optSwitch(r)}
-          </div>
+          ${head}
           <div class="body">
             <div class="ggrid">${groups}${nsBlock}</div>
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
@@ -816,6 +877,27 @@
         .catch(() => msg("❌ Post blocked (CORS / file:// origin). Open the tools via a local server, not file://.", "#ff6b6b"));
     }
 
+    // ---- inline edit of a saved raid's title + note (prompt() is unreliable in the desktop webview) ----
+    let editDate = null;
+    function editTitle(date) { editDate = date; renderLog(); const el = document.getElementById("te_title"); if (el) { el.focus(); el.select(); } }
+    function cancelTitle() { editDate = null; renderLog(); }
+    async function saveTitle(date) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r) return;
+      const title = (document.getElementById("te_title").value || "").trim();
+      const desc = (document.getElementById("te_desc").value || "").trim();
+      r.title = title || r.date;
+      r.desc = desc;
+      editDate = null;
+      if (window.RatsData) RatsData.cacheHistory(HIST);
+      renderLog();
+      const pass = window.RatsData && RatsData.getPass();
+      if (!pass) { msg("⚠️ Changed locally — open from the index & enter the guild key to share it.", "#e0b860"); return; }
+      msg("⏳ Saving…", "#8a8d93");
+      try { const res = await RatsData.saveHistory(HIST, pass); msg(res.mode === "firebase" ? "✅ Title updated & shared." : "✅ Saved — commit history.json via Fork."); }
+      catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
+    }
+
     async function deleteRaid(date) {
       const r = (HIST.raids || []).find(x => x.date === date);
       if (!r) return;
@@ -833,28 +915,6 @@
       } catch (e) { msg("❌ Delete failed: " + e.message, "#ff6b6b"); }
     }
 
-    // ---- edit mode: mark a no-show as 🏖️ vacation (excused, not counted) ----
-    let editMode = false, dirty = false;
-    function toggleEdit() {
-      editMode = !editMode;
-      const b = document.getElementById("editBtn");
-      b.textContent = editMode ? "✓ Done editing" : "✏️ Edit mode";
-      b.classList.toggle("on", editMode);
-      document.getElementById("editHint").style.display = editMode ? "" : "none";
-      updateSaveBtn();
-      renderLog();
-    }
-    function updateSaveBtn() {
-      document.getElementById("saveBtn").style.display = (editMode && dirty) ? "" : "none";
-    }
-    function toggleVacation(date, idx) {
-      const r = (HIST.raids || []).find(x => x.date === date);
-      if (!r || !r.noshows || !r.noshows[idx]) return;
-      r.noshows[idx].vacation = !r.noshows[idx].vacation;
-      if (window.RatsData) RatsData.cacheHistory(HIST);
-      dirty = true; updateSaveBtn();
-      renderAttendance(); renderLog();
-    }
     // per-card badge + toggle
     function kindBadge(r) {
       const k = raidKind(r);
@@ -880,17 +940,6 @@
       msg("⏳ Saving…", "#8a8d93");
       try { const res = await RatsData.saveHistory(HIST, pass); msg(res.mode === "firebase" ? "✅ " + (on ? "Marked optional (log-only)." : "Now counts for attendance.") + " Shared." : "✅ Saved — commit history.json via Fork."); }
       catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
-    }
-    async function saveChanges() {
-      if (!window.RatsData) return;
-      const pass = RatsData.getPass();
-      if (!pass) { msg("❌ Locked — open from the index and enter the guild key first.", "#ff6b6b"); return; }
-      msg("⏳ Saving…", "#8a8d93");
-      try {
-        const res = await RatsData.saveHistory(HIST, pass);
-        dirty = false; updateSaveBtn();
-        msg(res.mode === "firebase" ? "✅ Saved & shared instantly." : "✅ Saved — commit the downloaded history.json via Fork.");
-      } catch (e) { msg("❌ Save failed: " + e.message, "#ff6b6b"); }
     }
 
     async function boot() {

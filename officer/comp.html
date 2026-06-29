@@ -105,6 +105,39 @@
       color: #fff
     }
 
+    .segs {
+      display: inline-flex;
+      background: #202225;
+      border: 1px solid #2f3137;
+      border-radius: 8px;
+      padding: 2px
+    }
+
+    .seg {
+      background: transparent;
+      border: 0;
+      color: #9aa0a6;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 0 11px;
+      height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .seg:hover {
+      color: #fff
+    }
+
+    .seg.active {
+      background: var(--accent);
+      color: #1b1d21
+    }
+
     .sug:hover {
       background: #2f3137
     }
@@ -136,6 +169,7 @@
       cursor: pointer;
       font-size: 13px;
       line-height: 1;
+      height: auto;
       padding: 2px 5px;
       border-radius: 4px
     }
@@ -145,15 +179,21 @@
       background: #3a3d44
     }
 
+    /* canonical button: 34px tall, icon + label centered, used app-wide */
     button {
       background: var(--accent);
       color: #1b1d21;
       border: 0;
       border-radius: 6px;
-      padding: 9px 16px;
+      height: 30px;
+      padding: 0 12px;
       font-weight: 700;
       cursor: pointer;
-      font-size: 13px
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
     }
 
     button.alt {
@@ -322,15 +362,97 @@
         flex: 1 1 auto
       }
     }
+
     /* Optional toggle switch (matches the history page) */
-    .optsw { display:inline-flex; align-items:center; gap:7px; cursor:pointer; user-select:none }
-    .optsw input { display:none }
-    .optsw .otrack { width:34px; height:18px; border-radius:10px; background:#3a3d44; position:relative; transition:background .15s }
-    .optsw .oknob { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#9aa0a6; transition:left .15s, background .15s }
-    .optsw input:checked + .otrack { background:var(--accent) }
-    .optsw input:checked + .otrack .oknob { left:18px; background:#1b1d21 }
-    .optsw .olbl { font-size:13px; color:#9aa0a6; font-weight:700 }
-    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
+    /* Post to Discord — dark Discord-blue, same as the attendance log's post button */
+    #postBtn {
+      background: #3b4178;
+      border: 1px solid #5865F2;
+      color: #dfe2ff
+    }
+
+    #postBtn:hover:not(:disabled) {
+      filter: brightness(1.12);
+      color: #fff
+    }
+
+    /* on/off toggle button (gold when on, dark when off) — same look as the top toggles */
+    .tbtn {
+      height: 30px;
+      padding: 0 14px;
+      border-radius: 6px;
+      border: 1px solid #2f3137;
+      background: #202225;
+      color: #9aa0a6;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px
+    }
+
+    .tbtn:hover {
+      color: #fff
+    }
+
+    .tbtn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #1b1d21
+    }
+
+    .tbtn .tsub {
+      font-weight: 600;
+      opacity: .65
+    }
+
+    /* flat action rows + clean tip list (no heavy bordered boxes) */
+    .barrow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .tips {
+      list-style: none;
+      margin: 14px 0 0;
+      padding: 0;
+      color: #8a8d93;
+      font-size: 12.5px;
+      line-height: 1.75
+    }
+
+    .tips li {
+      margin: 0
+    }
+
+    /* global-gold-scroll */
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #c0943a #16181c
+    }
+
+    ::-webkit-scrollbar {
+      width: 11px;
+      height: 11px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #16181c
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #c0943a;
+      border-radius: 8px;
+      border: 2px solid #16181c
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #e0b860
+    }
   </style>
 </head>
 
@@ -338,22 +460,36 @@
   <div class="wrap">
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px">
       <a href="index.html"
-        style="display:inline-flex;align-items:center;gap:6px;color:#9aa0a6;text-decoration:none;font-size:13px;font-weight:600;background:#202225;border:1px solid #2f3137;border-radius:6px;padding:6px 12px"
+        style="display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#9aa0a6;text-decoration:none;font-size:13px;font-weight:600;background:#202225;border:1px solid #2f3137;border-radius:6px;height:30px;padding:0 12px"
         onmouseover="this.style.borderColor='#c0943a';this.style.color='#fff'"
         onmouseout="this.style.borderColor='#2f3137';this.style.color='#9aa0a6'">← Back to Tools</a>
       <h1 style="margin:0">🐀 RATS — Raid Comp Viewer</h1>
-      <button onclick="openImport()" style="margin-left:auto">📥 Import JSON</button>
+      <a href="history.html"
+        style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:#9aa0a6;background:#202225;border:1px solid #2f3137;border-radius:6px;height:30px;padding:0 12px;font-weight:600;font-size:13px"
+        onmouseover="this.style.borderColor='#c0943a';this.style.color='#fff'"
+        onmouseout="this.style.borderColor='#2f3137';this.style.color='#9aa0a6'">📊 Attendance →</a>
+      <button onclick="openImport()">📥 Import JSON</button>
     </div>
-    <p class="sub"><b>Import JSON</b> from Raid-Helper, tweak the roster, then <b>Post to Discord</b>.</p>
 
-    <div class="controls">
-      <input type="date" id="dateIn" title="Raid date"
-        style="height:38px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px;color-scheme:dark;min-width:170px" />
-      <select id="sizeIn" title="Raid size" style="min-width:120px">
-        <option value="25">25-man</option>
-        <option value="10">10-man</option>
-      </select>
-      <input type="text" id="descIn" placeholder="Subtitle (e.g. RAID - ULDUAR)" style="flex:1" />
+    <div class="controls" style="margin-top:14px">
+      <input type="date" id="dateIn" title="Raid date" data-cal-format="weekday" />
+      <div class="segs" id="sizeSegs" title="Raid size">
+        <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
+        <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
+      </div>
+      <div class="segs" id="raidSegs" title="Raid">
+        <button class="seg active" data-r="ICC" onclick="setRaid(this)">ICC</button>
+        <button class="seg" data-r="Ulduar" onclick="setRaid(this)">Ulduar</button>
+        <button class="seg" data-r="ToC" onclick="setRaid(this)">ToC</button>
+        <button class="seg" data-r="Ony" onclick="setRaid(this)">Ony</button>
+        <button class="seg" data-r="Naxx" onclick="setRaid(this)">Naxx</button>
+        <button class="seg" data-r="RS" onclick="setRaid(this)">RS</button>
+      </div>
+      <div class="segs" id="diffSegs" title="Difficulty">
+        <button class="seg active" data-d="" onclick="setDiff(this)">Normal</button>
+        <button class="seg" data-d="HM" onclick="setDiff(this)">Heroic</button>
+      </div>
+      <button onclick="openRosterPicker()" style="margin-left:auto">👥 Add raiders from roster</button>
     </div>
 
     <!-- Import modal -->
@@ -391,12 +527,15 @@
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
           <input type="text" id="rpSearch" placeholder="Search…" oninput="renderRosterPicker()"
             style="flex:1;min-width:160px;height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px">
-          <label style="display:inline-flex;align-items:center;gap:6px;color:#8a8d93;font-size:13px;cursor:pointer"><input type="checkbox" id="rpAlts" onchange="renderRosterPicker()"> include alts</label>
+          <label
+            style="display:inline-flex;align-items:center;gap:6px;color:#8a8d93;font-size:13px;cursor:pointer"><input
+              type="checkbox" id="rpAlts" onchange="renderRosterPicker()"> include alts</label>
           <button class="alt" onclick="rpSelectAll(true)" style="padding:6px 11px">Select all</button>
           <button class="alt" onclick="rpSelectAll(false)" style="padding:6px 11px">Clear</button>
         </div>
         <div id="rosterList"
-          style="max-height:52vh;overflow:auto;border:1px solid #2a2c31;border-radius:8px;padding:10px;background:#161719"></div>
+          style="max-height:52vh;overflow:auto;border:1px solid #2a2c31;border-radius:8px;padding:10px;background:#161719">
+        </div>
         <div class="controls" style="margin-top:12px;align-items:center">
           <button onclick="applyRosterPicker()">Add selected to comp</button>
           <button class="alt" onclick="closeRosterPicker()">Cancel</button>
@@ -405,24 +544,18 @@
       </div>
     </div>
 
-    <div style="background:#202225;border:1px solid #2f3137;border-radius:8px;padding:10px;margin-top:10px">
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <button onclick="openRosterPicker()" style="font-size:14px">👥 Add raiders from roster</button>
-        <span class="sub" style="margin:0">Pick many at once — alts count as their main. Then <b>drag</b> to arrange groups or onto No-shows.</span>
-      </div>
-    </div>
-    <div class="controls" style="margin-top:22px">
-      <button id="postBtn" onclick="postWebhook()" disabled>Post to Discord ↗</button>
+    <div class="barrow" style="margin-top:12px">
+      <button id="postBtn" onclick="postWebhook()" disabled>📣 Post to Discord</button>
       <button id="saveHistBtn" class="alt" onclick="saveToHistory()" disabled>💾 Save to history</button>
-      <label class="optsw" title="Optional = log only (alt / casual run — doesn't count for attendance). 25-man counts for all, 10-man counts for 💀 Fangs.">
-        <input type="checkbox" id="optIn"><span class="otrack"><span class="oknob"></span></span><span class="olbl">⚪ Optional (log only)</span></label>
-      <a class="alt" href="history.html"
-        style="display:inline-flex;align-items:center;text-decoration:none;color:#fff;background:#3a3d44;border-radius:6px;padding:9px 16px;font-weight:700;font-size:13px">📊 Attendance</a>
-      <span class="sub" id="minHint" style="margin:0;color:#ff9b9b"></span>
+      <button type="button" id="optBtn" class="tbtn" onclick="toggleOpt(this)"
+        title="Optional = log only (alt / casual run — doesn't count for attendance). 25-man counts for all, 10-man counts for 💀 Fangs.">Optional
+        <span class="tsub">log only</span></button>
     </div>
 
-    <div class="sub" style="margin-top:-2px">🎨 Class/spec icons are pulled automatically from the JSON you paste.
-      &nbsp;·&nbsp; 🖱️ <b>Drag</b> a raider onto another to set the order, onto a group to move it, or onto No-shows. &nbsp;·&nbsp; ✏️ <b>Hover</b> a raider and pick a <b>spec</b> to fix the icon &amp; the tank/healer/dps count.</div>
+    <ul class="tips">
+      <li>🖱️ <b>Drag</b> a raider onto another to reorder, onto a group to move it, or onto No-shows. &nbsp;·&nbsp; ✏️
+        <b>Hover</b> a raider and pick a <b>spec</b> to fix its icon &amp; the tank/healer/dps count.</li>
+    </ul>
 
     <div class="err" id="err"></div>
 
@@ -436,6 +569,7 @@
   </div>
 
   <script src="../assets/data.js"></script>
+  <script src="../assets/datepicker.js"></script>
   <script>
     const CDN = id => "https://cdn.discordapp.com/emojis/" + id + ".png?size=44";
 
@@ -792,7 +926,40 @@
       if (p[0] === "slot") slotNoShow(+p[1]);
     }
 
-    function raidSize() { const e = document.getElementById("sizeIn"); return e && e.value === "10" ? 10 : 25; }
+    let SIZE = "25"; // raid size segmented toggle (25 / 10)
+    function raidSize() { return SIZE === "10" ? 10 : 25; }
+    function setSize(b) {
+      SIZE = b.dataset.s;
+      document.querySelectorAll("#sizeSegs .seg").forEach(s => s.classList.toggle("active", s === b));
+      try { localStorage.setItem("ratsSize", SIZE); } catch (e) { }
+      render();
+    }
+
+    // raid + difficulty toggles -> the subtitle (e.g. "Ulduar HM")
+    let RAID = "ICC", DIFF = "";
+    function compDesc() { return (RAID + (DIFF ? " " + DIFF : "")).trim(); }
+    function setRaid(b) {
+      RAID = b.dataset.r;
+      document.querySelectorAll("#raidSegs .seg").forEach(s => s.classList.toggle("active", s === b));
+      try { localStorage.setItem("ratsRaid", RAID); } catch (e) { }
+      render();
+    }
+    function setDiff(b) {
+      DIFF = b.dataset.d;
+      document.querySelectorAll("#diffSegs .seg").forEach(s => s.classList.toggle("active", s === b));
+      try { localStorage.setItem("ratsDiff", DIFF); } catch (e) { }
+      render();
+    }
+
+    // Optional (log-only) on/off toggle button
+    let OPT = false;
+    function toggleOpt(b) { OPT = !OPT; b.classList.toggle("active", OPT); }
+
+    // date input uses the shared dark calendar (assets/datepicker.js); we just react to changes
+    document.getElementById("dateIn").addEventListener("change", function () {
+      try { localStorage.setItem("ratsDate", this.value); } catch (e) { }
+      render();
+    });
 
     function render() {
       const errEl = document.getElementById("err");
@@ -809,10 +976,10 @@
 
       // title / desc: manual override > JSON title > default
       const dateVal = document.getElementById("dateIn").value;
-      const dIn = document.getElementById("descIn").value.trim();
+      const dIn = compDesc();
       const resolvedTitle = formatRaidTitle(dateVal) || data.title || "Raid Composition";
       document.getElementById("boardTitle").textContent = resolvedTitle;
-      document.getElementById("boardDesc").textContent = dIn || "";
+      document.getElementById("boardDesc").innerHTML = (window.RatsData && RatsData.raidBadge) ? RatsData.raidBadge(dIn) : esc(dIn || "");
       window.__title = resolvedTitle;
       window.__date = dateVal; // saved for the future history feature
 
@@ -888,10 +1055,9 @@
     function updatePostState() {
       const total = (window.__stats && window.__stats.total) || 0;
       const ok = total >= MIN_RAIDERS;
-      const pb = document.getElementById("postBtn"), sb = document.getElementById("saveHistBtn"), h = document.getElementById("minHint");
+      const pb = document.getElementById("postBtn"), sb = document.getElementById("saveHistBtn");
       if (pb) pb.disabled = !ok;
       if (sb) sb.disabled = !ok;
-      if (h) h.textContent = ok ? "" : `⚠️ Need at least ${MIN_RAIDERS} raiders to post / save (have ${total}).`;
     }
 
     function setMsg(txt, color) {
@@ -903,18 +1069,20 @@
     // ---- webhook persistence + posting ----
     (function () {
       try {
-        // remember date + subtitle across sessions (date defaults to today)
-        const di = document.getElementById("dateIn"), de = document.getElementById("descIn");
+        // remember date across sessions (date defaults to today); the shared calendar renders the label
+        const di = document.getElementById("dateIn");
         const z = n => String(n).padStart(2, "0"), now = new Date();
         const today = now.getFullYear() + "-" + z(now.getMonth() + 1) + "-" + z(now.getDate());
         di.value = localStorage.getItem("ratsDate") || today;
-        de.value = localStorage.getItem("ratsDesc") || "";
-        di.addEventListener("input", () => { try { localStorage.setItem("ratsDate", di.value); } catch (e) { } });
-        de.addEventListener("input", () => { try { localStorage.setItem("ratsDesc", de.value); } catch (e) { } });
+        if (window.RatsCal) RatsCal.sync();
         // raid size (25/10) — remembered; changing it re-templates the empty board
-        const sz = document.getElementById("sizeIn");
-        sz.value = localStorage.getItem("ratsSize") || "25";
-        sz.addEventListener("change", () => { try { localStorage.setItem("ratsSize", sz.value); } catch (e) { } render(); });
+        SIZE = localStorage.getItem("ratsSize") || "25";
+        document.querySelectorAll("#sizeSegs .seg").forEach(s => s.classList.toggle("active", s.dataset.s === SIZE));
+        // raid + difficulty -> subtitle, remembered
+        RAID = localStorage.getItem("ratsRaid") || "ICC";
+        DIFF = localStorage.getItem("ratsDiff") || "";
+        document.querySelectorAll("#raidSegs .seg").forEach(s => s.classList.toggle("active", s.dataset.r === RAID));
+        document.querySelectorAll("#diffSegs .seg").forEach(s => s.classList.toggle("active", s.dataset.d === DIFF));
         // load the shared guild roster (for the roster picker + alt->main merge); gate lives on the index
         if (window.RatsData) RatsData.loadRoster({ interactive: false });
         render(); // draw the empty-group template on load
@@ -931,7 +1099,7 @@
       if (((window.__stats && window.__stats.total) || 0) < MIN_RAIDERS) { setMsg("❌ Need at least " + MIN_RAIDERS + " raiders to post."); return; }
 
       const title = window.__title || formatRaidTitle(document.getElementById("dateIn").value) || "Raid Composition";
-      const desc = document.getElementById("descIn").value.trim();
+      const desc = compDesc();
       const st = window.__stats || { total: 0, tanks: 0, heals: 0, dps: 0 };
       const blankField = () => ({ name: "​", value: "​", inline: true });
       // only post groups that actually have raiders — drops empty G3/G4/G5 on a 10-man,
@@ -991,8 +1159,8 @@
           date: dateVal,
           title: window.__title || formatRaidTitle(dateVal),
           size: raidSize(),
-          optional: !!(document.getElementById("optIn") || {}).checked,   // ⚪ log-only (alt/casual run)
-          desc: (document.getElementById("descIn").value || "").trim(),
+          optional: OPT,   // ⚪ log-only (alt/casual run)
+          desc: compDesc(),
           groups: (window.__comp || []).map(g => ({
             name: g.name,
             members: g.members.map(m => ({ name: m.name, className: m.className, specName: m.specName, specEmoteId: m.specEmoteId, classEmoteId: m.classEmoteId }))
