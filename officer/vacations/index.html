@@ -135,6 +135,11 @@
       align-items: center
     }
 
+    .segs { display:inline-flex; background:#202225; border:1px solid #2f3137; border-radius:8px; padding:2px }
+    .seg { background:transparent; border:0; color:#9aa0a6; font-size:13px; font-weight:700; padding:0 12px; height:26px; border-radius:6px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:5px }
+    .seg:hover { color:#fff }
+    .seg.active { background:var(--accent); color:#1b1d21 }
+
     .msg:not(:empty) {
       margin: 8px 0 0;
       font-size: 13px;
@@ -408,10 +413,14 @@
             onfocus="acFilter()" style="width:100%">
           <div id="vList" class="ac" style="display:none"></div>
         </div>
+        <div class="segs" id="typeSegs" title="Vacation = playful away card. Personal = soft, low-key note (no dates/countdown)">
+          <button type="button" class="seg active" data-t="vacation" onclick="setType(this)">🏖️ Vacation</button>
+          <button type="button" class="seg" data-t="personal" onclick="setType(this)">💤 Personal</button>
+        </div>
         <input type="date" id="vStart" lang="en-GB" title="From">
         <input type="date" id="vEnd" lang="en-GB" title="To (optional — single day? leave empty)">
         <input type="text" id="vNote" placeholder="note (optional)" maxlength="120" style="flex:1;min-width:140px">
-        <button onclick="addVac()">+ Add vacation</button>
+        <button onclick="addVac()">+ Add</button>
       </div>
       <div class="msg" id="msg"></div>
     </div>
@@ -491,8 +500,9 @@
       }
       const st = status(v), lbl = { active: "away now", soon: "upcoming", past: "ended" }[st];
       const note = v.note ? ` <span title="${esc(v.note)}" style="cursor:help">📝</span>` : "";
+      const tag = v.type === "personal" ? ` <span title="Personal time off — low-key" style="cursor:help">💤</span>` : "";
       let statusCell = `<span class="pill ${st}">${lbl}</span>`;
-      if (st === "active") {
+      if (st === "active" && v.type !== "personal") {
         const pr = vacProgress(v);
         statusCell = `<div style="min-width:130px" title="${pr.left} day${pr.left !== 1 ? "s" : ""} left">
           <div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d93;margin-bottom:2px"><span>day ${pr.idx}/${pr.total}</span><span style="font-weight:700;color:#8fdf9f">${pr.p}%</span></div>
@@ -500,7 +510,7 @@
         </div>`;
       }
       return `<tr>
-        <td class="nm" style="color:${col}">${esc(v.name)}${note}</td>
+        <td class="nm" style="color:${col}">${esc(v.name)}${tag}${note}</td>
         <td>${esc(fmtDate(v.start))}</td>
         <td>${esc(v.end ? fmtDate(v.end) : "—")}</td>
         <td>${statusCell}</td>
@@ -575,8 +585,15 @@
       if (e && e < s) { msg("'To' is before 'From'.", "#ff6b6b"); return; }
       editingKey = "";
       msg("⏳ Saving…", "#8a8d93");
-      try { await RatsData.updateVacation(key, { name: v.name, class: v.class || "", start: s, end: e || "", note: v.note || "" }); await reload(); msg("✅ Updated " + v.name + " — shared.", "#7CFC8A"); }
+      try { await RatsData.updateVacation(key, { name: v.name, class: v.class || "", start: s, end: e || "", note: v.note || "", type: v.type || "vacation" }); await reload(); msg("✅ Updated " + v.name + " — shared.", "#7CFC8A"); }
       catch (err) { msg("❌ " + (err && err.message ? err.message : err), "#ff6b6b"); }
+    }
+    // vacation vs personal-time toggle (segmented, like the 25/10-man toggle)
+    let vacType = "vacation";
+    function setType(btn) {
+      vacType = btn.dataset.t;
+      btn.parentNode.querySelectorAll(".seg").forEach(b => b.classList.toggle("active", b === btn));
+      updateDevPreview();
     }
     // typeahead picker (filters as you type, class-coloured)
     let selName = "", selClass = "";
@@ -620,8 +637,26 @@
       let h = 0; for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
       return list[h % list.length];
     }
+    // soft, low-key card for personal time — no quip, no date range, no countdown timeline
+    function buildPersonalEmbed(v) {
+      const hex = CLASS_COLOR[v.class] || "#9aa0a6";
+      const noon = d => Math.floor(new Date(d + "T12:00:00").getTime() / 1000);
+      const endD = v.end || v.start, s = noon(v.start), e = noon(endD);
+      let desc = "_Taking some personal time._\n\n";
+      desc += v.end && v.end !== v.start
+        ? "🗓️ <t:" + s + ":D> → <t:" + e + ":D>"
+        : "🗓️ <t:" + s + ":D>";
+      if (v.note) desc += "\n\n📝 " + v.note;   // ok — Vacations webhook posts to the private officer channel
+      return {
+        author: { name: "RATS • Time off" },
+        title: "💤 " + v.name + " is away for a bit",
+        color: parseInt(hex.slice(1), 16),
+        description: desc
+      };
+    }
     // Option A — quip + Discord dynamic timestamps (localized dates + live "returns in…" countdown)
     function buildVacEmbed(v) {
+      if (v.type === "personal") return buildPersonalEmbed(v);
       const hex = CLASS_COLOR[v.class] || "#43b581";
       const noon = d => Math.floor(new Date(d + "T12:00:00").getTime() / 1000);
       const endD = v.end || v.start;
@@ -632,7 +667,7 @@
       let desc = "_" + quipFor(v) + "_\n\n"
         + "🗓️ <t:" + s + ":D> → <t:" + e + ":D> · " + days + " day" + (days !== 1 ? "s" : "") + "\n"
         + "🛫 Starts <t:" + s + ":R>  ·  🛬 Back <t:" + r + ":R>";
-      if (v.note) desc += "\n📝 " + v.note;
+      if (v.note) desc += "\n📝 " + v.note;   // ok — posts to the private officer channel
       return {
         author: { name: "RATS • Vacations" },
         title: "🏖️ " + v.name + " will be away",
@@ -700,15 +735,16 @@
       const picked = selName && selName.toLowerCase() === typed.toLowerCase();
       const name = picked ? selName : typed, cls = picked ? selClass : "";
       const start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value, note = document.getElementById("vNote").value.trim();
+      const type = vacType;
       if (!name || !start) { box.innerHTML = '<div class="empty" style="padding:2px">Pick a raider and a From date to preview the alert…</div>'; return; }
       if (end && end < start) { box.innerHTML = '<div class="empty" style="padding:2px;color:#ff6b6b">⚠️ "To" is before "From".</div>'; return; }
-      const v = { name, class: cls, start, end, note };
+      const v = { name, class: cls, start, end, note, type };
       const hl = { name, color: CLASS_COLOR[cls] || "#fff" };
       const lbl = t => `<div style="font-size:11px;color:#6e7178;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px">${t}</div>`;
-      box.innerHTML = '<div style="display:flex;gap:22px;flex-wrap:wrap">'
-        + '<div>' + lbl("On + add vacation") + renderEmbedCard(buildVacEmbed(v), hl) + '</div>'
-        + '<div>' + lbl("Reminder · day before start") + renderEmbedCard(buildReminderEmbed(v), hl) + '</div>'
-        + '</div>';
+      let html = '<div style="display:flex;gap:22px;flex-wrap:wrap">'
+        + '<div>' + lbl(type === "personal" ? "On + add" : "On + add vacation") + renderEmbedCard(buildVacEmbed(v), hl) + '</div>';
+      if (type !== "personal") html += '<div>' + lbl("Reminder · day before start") + renderEmbedCard(buildReminderEmbed(v), hl) + '</div>';
+      box.innerHTML = html + '</div>';
     }
     // post any vacation that hasn't been announced yet, then flag it so it's never re-posted
     async function announceNew() {
@@ -727,6 +763,7 @@
       const url = vacWebhook(); if (!url) return;
       const tm = tomorrowStr();
       for (const v of VACS) {
+        if (v.type === "personal") continue;   // personal time stays low-key — no countdown reminder
         if (v.reminded || !v.start || v.start !== tm) continue;
         try {
           await postReminder(url, v);
@@ -760,12 +797,14 @@
       }
       const start = document.getElementById("vStart").value, end = document.getElementById("vEnd").value;
       const note = document.getElementById("vNote").value.trim();
+      const type = vacType;
       if (!start) { msg("Pick a From date.", "#ff6b6b"); return; }
       if (end && end < start) { msg("'To' is before 'From'.", "#ff6b6b"); return; }
       msg("⏳ Saving…", "#8a8d93");
       try {
-        await RatsData.addVacation({ name, class: cls, start, end: end || "", note });
+        await RatsData.addVacation({ name, class: cls, start, end: end || "", note, type });
         document.getElementById("vSearch").value = ""; selName = ""; selClass = "";
+        vacType = "vacation"; document.querySelectorAll("#typeSegs .seg").forEach(b => b.classList.toggle("active", b.dataset.t === "vacation"));
         document.getElementById("vStart").value = ""; document.getElementById("vEnd").value = ""; document.getElementById("vNote").value = "";
         if (window.RatsCal) RatsCal.sync();
         await reload(); msg("✅ Added " + name + " — shared.", "#7CFC8A");

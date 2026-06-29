@@ -102,8 +102,10 @@
     }
     btn.addEventListener("click", function (e) { e.stopPropagation(); if (pop.style.display === "none") open(); else closeAll(); });
     pop.addEventListener("click", function (e) {
-      var t = e.target; if (!t) return;
-      if (t.dataset.shift) { vm += +t.dataset.shift; if (vm < 0) { vm = 11; vy--; } if (vm > 11) { vm = 0; vy++; } render(); return; }
+      var t = e.target && e.target.closest ? e.target.closest("button") : e.target;
+      if (!t) return;
+      e.preventDefault(); e.stopPropagation();
+      if (t.dataset.shift) { vm += +t.dataset.shift; if (vm < 0) { vm = 11; vy--; } else if (vm > 11) { vm = 0; vy++; } render(); return; }
       if (t.dataset.iso) { commit(t.dataset.iso); return; }
       if (t.dataset.act === "today") { var n = new Date(); commit(n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate())); return; }
       if (t.dataset.act === "clear") { commit(""); return; }
