@@ -115,9 +115,6 @@ function insertExample() {
   renderPreview();
 }
 
-// allow @everyone/@here toggle button (backed by a hidden checkbox)
-function toggleEveryone(btn) { const c = document.getElementById("pingEveryone"); c.checked = !c.checked; btn.classList.toggle("active", c.checked); }
-
 // User/Role segmented toggle (backed by a hidden input so .value reads still work)
 function setMType(b) { document.getElementById("mType").value = b.dataset.v; document.querySelectorAll("#mTypeSegs .seg").forEach(s => s.classList.toggle("active", s === b)); }
 
@@ -130,8 +127,7 @@ async function postLore() {
   if (content.length > 2000) { msg("❌ Discord limit is 2000 characters (you have " + content.length + ").", "#ff6b6b"); return; }
 
   // allow user & role pings; @everyone/@here only if the box is ticked
-  const parse = ["users", "roles"];
-  if (document.getElementById("pingEveryone").checked) parse.push("everyone");
+  const parse = ["users", "roles", "everyone"]; // chronicles always ping @everyone
 
   const fd = new FormData();
   fd.append("payload_json", JSON.stringify({ content: content, allowed_mentions: { parse: parse } }));
