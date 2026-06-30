@@ -1,0 +1,77 @@
+/* RATS — design tokens + base reset.
+   Linked on EVERY page. Change a token here and the whole site follows.
+   Components live in ui.css. */
+
+:root {
+  /* brand */
+  --accent: #c0943a;
+  --accent-hi: #e0b860;
+
+  /* surfaces (dark -> light) */
+  --bg: #141517;
+  --surface: #202225;
+  --surface-2: #1b1d21;
+  --surface-3: #16181c;
+  --field: #0f1012;
+
+  /* lines */
+  --border: #2f3137;
+  --border-2: #34373d;
+  --field-border: #333;
+
+  /* text */
+  --text: #dcddde;
+  --text-dim: #9aa0a6;
+  --text-dim-2: #8a8d93;
+  --text-faint: #5e6166;
+  --white: #fff;
+
+  /* status */
+  --ok: #7cfc8a;
+
+  /* layout */
+  --wrap: 960px;       /* standard page width */
+  --wrap-wide: 1180px; /* data/table pages */
+  --pad: 18px;
+
+  /* controls */
+  --ctl-h: 30px;       /* button + input height */
+  --radius: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  --font: "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+* { box-sizing: border-box }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+}
+
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: var(--pad) }
+.wrap.wide { max-width: var(--wrap-wide) }
+
+h1 { font-size: 18px; margin: 0; color: var(--white); letter-spacing: .5px }
+h2 { font-size: 13px; color: var(--accent); margin: 22px 0 8px; letter-spacing: .4px; text-transform: uppercase }
+
+.sub { color: var(--text-dim-2); font-size: 13px; margin: 8px 0 0 }
+
+code {
+  background: var(--field);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 12px;
+}
+
+/* global gold scrollbar */
+html { scrollbar-width: thin; scrollbar-color: var(--accent) var(--surface-3) }
+::-webkit-scrollbar { width: 11px; height: 11px }
+::-webkit-scrollbar-track { background: var(--surface-3) }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; border: 2px solid var(--surface-3) }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-hi) }

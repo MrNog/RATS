@@ -19,11 +19,37 @@ Plain JSON, raw numbers, times in **seconds**. Please enable **CORS**.
 {
   "ok": true,
   "data": {
-    "report": { "reportId":"20459", "reportUrl":"https://wow-logs.co.in/20459", "raid":"icc", "size":25, "uploadedAt":"2026-06-25T23:55:00Z" },
+    "report": {
+      "reportId": "20459",
+      "reportUrl": "https://wow-logs.co.in/20459",
+      "raid": "icc",
+      "size": 25,
+      "uploadedAt": "2026-06-25T23:55:00Z"
+    },
     "fights": [
-      { "encounter":"Festergut", "boss":true, "kill":true, "hardmode":false, "start":"2026-06-25T21:14:03Z", "durationSec":220,
+      {
+        "encounter": "Festergut",
+        "boss": true,
+        "kill": true,
+        "hardmode": false,
+        "start": "2026-06-25T21:14:03Z",
+        "durationSec": 220,
         "players": [
-          { "name":"Kobee", "class":"Rogue", "spec":"Assassination", "dps":6210, "hps":0, "damage":13662000, "healing":0, "deaths":0, "interrupts":2, "damageTaken":410000, "overhealing":0, "activity":0.97, "biggestHit":{"ability":"Mutilate","amount":18234} }
+          {
+            "name": "Kobee",
+            "class": "Rogue",
+            "spec": "Assassination",
+            "dps": 6210,
+            "hps": 0,
+            "damage": 13662000,
+            "healing": 0,
+            "deaths": 0,
+            "interrupts": 2,
+            "damageTaken": 410000,
+            "overhealing": 0,
+            "activity": 0.97,
+            "biggestHit": { "ability": "Mutilate", "amount": 18234 }
+          }
         ]
       }
     ]

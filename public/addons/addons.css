@@ -1,0 +1,142 @@
+.note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  margin: 16px 0 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+/* one addon per line */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  margin-top: 10px;
+}
+.item:hover {
+  border-color: var(--border-2);
+}
+.ic {
+  font-size: 20px;
+  flex: 0 0 auto;
+  width: 24px;
+  text-align: center;
+}
+.nm {
+  font-weight: 800;
+  color: var(--white);
+  flex: 0 0 auto;
+}
+.tag {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: 7px;
+  padding: 1px 5px;
+  background: #3a2f44;
+  color: #d6b3ff;
+  border: 1px solid #5a4a6a;
+  flex: 0 0 auto;
+}
+.new {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: 7px;
+  padding: 1px 5px;
+  background: #1a3320;
+  color: var(--ok);
+  border: 1px solid #3a5b42;
+  flex: 0 0 auto;
+}
+.item.has-update {
+  border-color: #3a5b42;
+}
+.desc {
+  color: var(--text-dim);
+  font-size: 13px;
+  flex: 1 1 120px;
+  min-width: 70px;
+}
+
+.acts {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.acts a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: var(--radius);
+  height: var(--ctl-h);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+}
+.acts a.primary {
+  background: var(--accent);
+  color: var(--surface-2);
+  border-color: var(--accent);
+}
+.acts a:hover {
+  border-color: var(--accent);
+  color: var(--white);
+}
+.acts a.primary:hover {
+  filter: brightness(1.1);
+  color: var(--surface-2);
+}
+
+/* section divider for the optional group */
+.sec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 30px 0 4px;
+}
+.sec::before,
+.sec::after {
+  content: "";
+  height: 1px;
+  background: var(--border);
+  flex: 1;
+}
+.sec h2 {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 0;
+  white-space: nowrap;
+}
+.sechint {
+  color: var(--text-dim-2);
+  font-size: 12.5px;
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+/* MANDATORY heading — bigger / more important */
+.sec.big {
+  margin: 22px 0 6px;
+}
+.sec.big h2 {
+  font-size: 18px;
+}

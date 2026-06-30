@@ -1,466 +1,3 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon"
-    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
-  <title>RATS — Attendance &amp; History</title>
-  <style>
-    :root {
-      --bg: #1b1d21;
-      --panel: #26282d;
-      --row: #2f3137;
-      --rowhover: #3a3d44;
-      --text: #dcddde;
-      --muted: #8a8d93;
-      --header: #9aa0a6;
-      --accent: #c0943a;
-    }
-
-    * {
-      box-sizing: border-box
-    }
-
-    body {
-      margin: 0;
-      background: #141517;
-      color: var(--text);
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 14px
-    }
-
-    .wrap {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 18px
-    }
-
-    h1 {
-      font-size: 18px;
-      margin: 0;
-      color: #fff;
-      letter-spacing: .5px
-    }
-
-    h2 {
-      font-size: 15px;
-      color: var(--accent);
-      margin: 26px 0 10px;
-      letter-spacing: .3px
-    }
-
-    .sub {
-      color: var(--muted);
-      font-size: 13px;
-      margin: 0
-    }
-
-    a.btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      color: #9aa0a6;
-      background: #202225;
-      border: 1px solid #2f3137;
-      border-radius: 6px;
-      padding: 6px 12px
-    }
-
-    a.btn:hover {
-      border-color: var(--accent);
-      color: #fff
-    }
-
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: stretch;
-      margin: 14px 0 4px
-    }
-    .frow { display:flex; align-items:center; gap:10px; flex-wrap:wrap }
-    .flbl { color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; flex:0 0 auto; width:50px }
-    .frow #search { flex:1 1 220px; height:30px }
-
-    .segs { display:inline-flex; background:#202225; border:1px solid #2f3137; border-radius:8px; padding:2px }
-    .segs.grow { flex:1 1 auto }
-    .segs.grow .seg { flex:1 1 0 }
-    .seg { background:transparent; border:0; color:#9aa0a6; font-size:13px; font-weight:700; padding:0 11px; height:24px; border-radius:6px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center }
-    .seg:hover { color:#fff }
-    .seg.active { background:var(--accent); color:#1b1d21 }
-
-    input[type=text],
-    input[type=date],
-    select {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      background-color: #0f1012;
-      color: #fff;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 0 12px;
-      height: 38px;
-      font-size: 14px;
-      color-scheme: dark
-    }
-
-    select {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8d93' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 34px;
-      min-width: 150px;
-      cursor: pointer
-    }
-
-    input[type=text] {
-      min-width: 180px
-    }
-
-    label.chk {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--muted);
-      font-size: 13px;
-      cursor: pointer
-    }
-
-    /* attendance table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 4px
-    }
-
-    th {
-      text-align: left;
-      color: var(--header);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      padding: 6px 10px;
-      border-bottom: 1px solid #34373d;
-      cursor: pointer;
-      user-select: none
-    }
-
-    th:hover {
-      color: #fff
-    }
-
-    td {
-      padding: 7px 10px;
-      border-bottom: 1px solid #232529
-    }
-
-    tr:hover td {
-      background: #202225
-    }
-
-    .nm {
-      font-weight: 700
-    }
-
-    tr.rankrow td {
-      padding: 18px 10px 5px;
-      color: var(--accent);
-      font-weight: 800;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .8px;
-      border-bottom: 1px solid #34373d;
-      background: transparent !important
-    }
-
-    tr.rankrow:first-child td {
-      padding-top: 4px
-    }
-
-    .bar {
-      position: relative;
-      height: 16px;
-      width: 160px;
-      max-width: 38vw;
-      background: #232529;
-      border-radius: 8px;
-      overflow: hidden
-    }
-
-    .bar > i {
-      position: absolute;
-      inset: 0 auto 0 0;
-      display: block;
-      border-radius: 8px
-    }
-
-    .pct {
-      font-weight: 800;
-      width: 52px;
-      display: inline-block
-    }
-
-    .pill {
-      font-size: 11px;
-      color: #ff9b9b;
-      background: #3a2626;
-      border-radius: 10px;
-      padding: 1px 7px;
-      margin-left: 6px
-    }
-
-    /* raid log */
-    .raid {
-      background: var(--row);
-      border: 1px solid #2f3137;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      overflow: hidden
-    }
-
-    .raid > .head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      cursor: pointer
-    }
-
-    .raid > .head:hover {
-      background: var(--rowhover)
-    }
-
-    .raid .date {
-      font-weight: 800;
-      color: var(--accent);
-      min-width: 130px
-    }
-
-    .szbadge {
-      font-size: 11px;
-      font-weight: 800;
-      color: #1b1d21;
-      background: var(--accent);
-      border-radius: 10px;
-      padding: 1px 8px;
-      flex: 0 0 auto
-    }
-
-    .raid .meta {
-      color: var(--muted);
-      font-size: 13px;
-      margin-left: auto
-    }
-
-    .raid .body {
-      display: none;
-      padding: 4px 12px 14px;
-      border-top: 1px solid #2a2c31
-    }
-
-    .raid.open .body {
-      display: block
-    }
-
-    .ggrid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 8px
-    }
-
-    .ghead {
-      color: var(--header);
-      font-weight: 700;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
-      margin-bottom: 4px
-    }
-
-    .mrow {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 2px 0;
-      font-weight: 600
-    }
-
-    .ic {
-      width: 18px;
-      height: 18px;
-      flex: 0 0 18px
-    }
-
-    .del,
-    .exp {
-      background: none;
-      border: 1px solid #5a2e2e;
-      color: #ff9b9b;
-      border-radius: 6px;
-      height: 30px;
-      padding: 0 12px;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px
-    }
-
-    .exp {
-      border-color: #3a5b42;
-      color: #8fdf9f
-    }
-
-    .exp:hover {
-      background: #23362a;
-      color: #fff;
-      border-color: #57a06a
-    }
-
-    .del:hover {
-      background: #3a2626;
-      color: #fff
-    }
-
-    .empty {
-      color: var(--muted);
-      padding: 30px 10px;
-      text-align: center
-    }
-
-    .msg {
-      font-size: 13px;
-      margin: 10px 0;
-      color: #7CFC8A
-    }
-    .msg:empty {
-      display: none
-    }
-
-    /* edit mode + post button */
-    .vac { font-size:10px; color:#7CFC8A; font-style:italic }
-    .post { background:#3b4178; border:1px solid #5865F2; color:#dfe2ff; border-radius:6px; height:30px; padding:0 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px }
-    .post:hover { filter:brightness(1.12); color:#fff }
-    .pen { background:none; border:0; color:#6b7077; cursor:pointer; font-size:12px; line-height:1; padding:3px 5px; border-radius:4px; flex:0 0 auto }
-    .pen:hover { color:var(--accent); background:#2a2c31 }
-    .head.editing { display:flex; align-items:center; gap:8px; flex-wrap:wrap }
-    .tedit { background:#0f1012; color:#fff; border:1px solid #4a4d55; border-radius:6px; height:30px; padding:0 10px; font-size:13px; font-weight:700 }
-    .tedit:focus { outline:none; border-color:var(--accent) }
-    .ren { background:#2f4a35; border:1px solid #3a5b42; color:#8fdf9f; border-radius:6px; height:30px; padding:0 12px; font-weight:700; font-size:12px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto }
-    .ren:hover { background:#23362a; color:#fff }
-    /* per-card Optional toggle switch */
-    .optsw { display:inline-flex; align-items:center; gap:6px; cursor:pointer; user-select:none; flex:0 0 auto }
-    .optsw input { display:none }
-    .optsw .otrack { width:34px; height:18px; border-radius:10px; background:#3a3d44; position:relative; transition:background .15s }
-    .optsw .oknob { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#9aa0a6; transition:left .15s, background .15s }
-    .optsw input:checked + .otrack { background:var(--accent) }
-    .optsw input:checked + .otrack .oknob { left:18px; background:#1b1d21 }
-    .optsw .olbl { font-size:11px; color:#9aa0a6; font-weight:700 }
-    /* attendance explainer */
-    /* raid log: show ~7 then scroll inside */
-    #log { max-height:400px; overflow:auto; padding-right:6px }
-    .explain { margin:10px 0 2px; background:#1b1d21; border:1px solid #2f3137; border-radius:10px; padding:6px 14px }
-    .explain summary { cursor:pointer; color:#fff; font-weight:700; font-size:14px; padding:6px 0; list-style:none }
-    .explain summary::-webkit-details-marker { display:none }
-    .explain .exbody { color:#c4c7cc; font-size:13px; line-height:1.5; padding:4px 0 10px }
-    .explain .exbody p { margin:8px 0 }
-    .explain .exbody ul { margin:6px 0; padding-left:18px }
-    .explain .exbody li { margin:4px 0 }
-
-    @media(max-width:680px) {
-      .ggrid {
-        grid-template-columns: 1fr
-      }
-
-      .raid .date {
-        min-width: 0
-      }
-    }
-    /* global-gold-scroll */ html{scrollbar-width:thin;scrollbar-color:#c0943a #16181c} ::-webkit-scrollbar{width:11px;height:11px} ::-webkit-scrollbar-track{background:#16181c} ::-webkit-scrollbar-thumb{background:#c0943a;border-radius:8px;border:2px solid #16181c} ::-webkit-scrollbar-thumb:hover{background:#e0b860}
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <a class="btn" href="index.html">← Back to Tools</a>
-      <h1>🐀 RATS — Attendance &amp; History</h1>
-      <a class="btn" href="vacations.html" style="margin-left:auto">🏖️ Vacations →</a>
-      <a class="btn" href="comp.html">🗓 Raid Comp →</a>
-    </div>
-    <details class="explain">
-      <summary>📊 How attendance works — and why <span style="color:var(--accent);font-weight:600">(click)</span></summary>
-      <div class="exbody">
-        <p>Attendance is <b>not a punishment</b> — it shows <b>who's the most reliable</b>, so raid spots,
-          <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.</p>
-        <p><b>What counts as a "miss":</b> you <b>signed up &amp; didn't show</b>, or you were <b>expected</b>
-          for a mandatory raid and weren't there. 🏖️ <b>On vacation = excused.</b> New members are protected —
-          raids before their join date don't count. An <b>alt counts for its main</b>.</p>
-        <p><b>Which raids count:</b></p>
-        <ul>
-          <li>🔴 <b>25-man — Mandatory.</b> Counts for <b>everyone</b> from their join date.</li>
-          <li>💀 <b>10-man — Fang run.</b> Counts for <b>Warchief's Fangs</b> only (and anyone who actually played it).</li>
-          <li>⚪ <b>Optional — log-only.</b> Alt 25 runs, casual/pug 10-mans: saved as <b>history only</b>, counts for nobody.</li>
-        </ul>
-        <p>Flip any run with the <b>Optional</b> switch on its card in the log — it saves instantly.</p>
-      </div>
-    </details>
-
-    <div class="controls">
-      <div class="frow">
-        <span class="flbl">Raid</span>
-        <div class="segs" id="sizeSegs">
-          <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
-          <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
-          <button class="seg" data-s="all" onclick="setSize(this)">All</button>
-        </div>
-        <div class="segs grow" id="rangeSegs">
-          <button class="seg active" data-d="0" onclick="setRange(this)">All time</button>
-          <button class="seg" data-d="14" onclick="setRange(this)">14d</button>
-          <button class="seg" data-d="30" onclick="setRange(this)">30d</button>
-          <button class="seg" data-d="60" onclick="setRange(this)">60d</button>
-          <button class="seg" data-d="90" onclick="setRange(this)">90d</button>
-        </div>
-      </div>
-      <div class="frow">
-        <span class="flbl">Sort</span>
-        <div class="segs grow" id="sortSegs" title="Sort raiders by">
-          <button class="seg active" data-v="rank" onclick="setSort('rank')">Guild rank</button>
-          <button class="seg" data-v="pct" onclick="setSort('pct')">Attendance %</button>
-          <button class="seg" data-v="present" onclick="setSort('present')">Days present</button>
-          <button class="seg" data-v="name" onclick="setSort('name')">Name</button>
-          <button class="seg" data-v="class" onclick="setSort('class')">Class</button>
-        </div>
-      </div>
-      <div class="frow">
-        <span class="flbl">Find</span>
-        <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
-        <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
-      </div>
-    </div>
-    <div class="msg" id="msg"></div>
-
-    <h2 id="attHead">📊 Attendance</h2>
-    <div id="legend" class="sub" style="margin:-4px 0 10px;line-height:1.5"></div>
-    <div id="attendance"></div>
-
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
-      <h2 style="margin:0">🗒 Raid log</h2>
-    </div>
-    <div id="log"></div>
-  </div>
-
-  <script src="../assets/data.js"></script>
-  <script>
     const CDN = id => "https://cdn.discordapp.com/emojis/" + id + ".png?size=44";
     const CLASS_COLOR = { "Death Knight": "#C41E3A", "DK": "#C41E3A", "Druid": "#FF7C0A", "Hunter": "#AAD372", "Mage": "#3FC7EB", "Paladin": "#F58CBA", "Priest": "#E6E6E6", "Rogue": "#FFF569", "Shaman": "#0070DD", "Warlock": "#8788EE", "Warrior": "#C69B6D" };
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
@@ -572,7 +109,7 @@
     }
     function contBadge(r) {
       if (!isContinuation(r)) return "";
-      return '<span title="Same weekly lockout as an earlier run (≥50% same toons)" style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:2px 8px;border:1px solid #6e5326;background:#3a3016;color:#e0b860">🔁 CONTINUATION</span>';
+      return '<span title="Same weekly lockout as an earlier run (≥50% same toons)" style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:2px 8px;border:1px solid #2e5a52;background:#13302b;color:#5bd6c0"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;flex:0 0 auto"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>CONTINUATION</span>';
     }
 
     // The per-raid toggle: ⚪ Optional = log-only (history, counts for nobody). Default OFF.
@@ -778,69 +315,126 @@
       saveCollapsed(); renderAttendance();
     }
 
+    // ---- WoW lockout grouping: runs of the same instance + size in one Wed→Wed week = one lockout ----
+    function lockoutWed(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      if (isNaN(d)) return dateStr;
+      d.setDate(d.getDate() - ((d.getDay() - 3 + 7) % 7)); // back to the Wednesday on/before
+      const z = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+    }
+    function lockoutKey(r) {
+      const inst = (window.RatsData && RatsData.raidKeyOf) ? (RatsData.raidKeyOf(r.desc || "") || "?") : "?";
+      return inst + "|" + raidSize(r) + "|" + lockoutWed(r.date);
+    }
+    function raiderCount(r) { return (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0); }
+    function metaHtml(r) {
+      const ns = (r.noshows || []).length;
+      return `<span class="meta">${raiderCount(r)} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>`;
+    }
+    function editHeadHtml(r) {
+      return `<div class="head editing">
+        <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
+        <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
+        <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
+        <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
+      </div>`;
+    }
+    // the roster + no-shows grid + actions for ONE run (shared by standalone & grouped runs)
+    function runBodyHtml(r) {
+      const groups = (r.groups || []).map(g => {
+        const mem = (g.members || []).map(m => {
+          const icon = m.specEmoteId || m.classEmoteId;
+          const img = icon ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+          const col = CLASS_COLOR[realClass(m)] || "#ddd";
+          return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
+        }).join("");
+        return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
+      }).join("");
+      const ns = (r.noshows || []).length;
+      const nsRows = (r.noshows || []).map(m => {
+        const vac = !!m.vacation;
+        const tag = vac ? ' <span class="vac">vacation</span>' : '';
+        const col = CLASS_COLOR[realClass(m)] || "#ddd";
+        const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
+        const ico = m.specEmoteId || m.classEmoteId;
+        const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+        return `<div class="mrow"><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
+      }).join("");
+      const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
+      return `<div class="body">
+        <div class="ggrid">${groups}${nsBlock}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(r.date)}')" title="Open this raid in the Comp tool to fix names / move raiders, then Save to overwrite it">✏️ Edit in Comp</button>
+          <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
+          <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
+          <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
+        </div>
+      </div>`;
+    }
+    // standalone run (a lockout with a single run) — full header with size + raid + continuation badge
+    function runCard(r, id) {
+      const head = editDate === r.date ? editHeadHtml(r)
+        : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+            <span class="date">${esc(r.title || r.date)}</span>
+            <span class="szbadge">${raidSize(r)}-man</span>
+            ${kindBadge(r)}
+            ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+            ${contBadge(r)}
+            ${metaHtml(r)}
+            ${optSwitch(r)}
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+          </div>`;
+      return `<div class="raid" id="${id}">${head}${runBodyHtml(r)}</div>`;
+    }
+    // a run INSIDE a lockout group — size + raid live on the group header, so omit them here
+    function subRunCard(r, id) {
+      const head = editDate === r.date ? editHeadHtml(r)
+        : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+            <span class="date">${esc(r.title || r.date)}</span>
+            ${kindBadge(r)}
+            ${metaHtml(r)}
+            ${optSwitch(r)}
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+          </div>`;
+      return `<div class="raid subraid" id="${id}">${head}${runBodyHtml(r)}</div>`;
+    }
+    // a lockout with 2+ runs → one group card; expand to see each run; each run expands to its roster
+    function groupCard(runs, gid) {
+      const ordered = runs.slice().sort((a, b) => (a.date < b.date ? -1 : 1)); // oldest -> newest inside
+      const r0 = ordered[0], rN = ordered[ordered.length - 1];
+      // UNIQUE raiders across the lockout (don't sum 25+25 — count each person once)
+      const uniq = new Set();
+      ordered.forEach(r => (r.groups || []).forEach(g => (g.members || []).forEach(m => uniq.add((m.name || "").trim().toLowerCase()))));
+      const total = uniq.size;
+      const subs = ordered.map((r, j) => subRunCard(r, "run" + gid + "_" + j)).join("");
+      const head = `<div class="head" onclick="document.getElementById('grp${gid}').classList.toggle('open')">
+        <span class="date">${esc(r0.title || r0.date)} <span style="color:var(--text-dim-2)">→</span> ${esc(rN.title || rN.date)}</span>
+        <span class="szbadge">${raidSize(r0)}-man</span>
+        ${kindBadge(r0)}
+        ${RatsData.raidBadge((r0.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+        <span class="runs-chip" title="Same lockout — ${ordered.length} runs">⛓ ${ordered.length} runs</span>
+        <span class="meta">${total} raider${total !== 1 ? "s" : ""}</span>
+      </div>`;
+      return `<div class="raid grp" id="grp${gid}">${head}<div class="body">${subs}</div></div>`;
+    }
     function renderLog() {
       const raids = filteredRaids();
       const el = document.getElementById("log");
       if (!raids.length) { el.innerHTML = '<div class="empty">No raids in this range.</div>'; return; }
-      el.innerHTML = raids.map((r, i) => {
-        const count = (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0);
-        const ns = (r.noshows || []).length;
-        const groups = (r.groups || []).map(g => {
-          const mem = (g.members || []).map(m => {
-            const icon = m.specEmoteId || m.classEmoteId;
-            const img = icon ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
-            const col = CLASS_COLOR[realClass(m)] || "#ddd";
-            return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
-          }).join("");
-          return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
-        }).join("");
-        const nsRows = (r.noshows || []).map((m, idx) => {
-          const vac = !!m.vacation;
-          const tag = vac ? ' <span class="vac">vacation</span>' : '';
-          const col = CLASS_COLOR[realClass(m)] || "#ddd";
-          const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
-          const ico = m.specEmoteId || m.classEmoteId;
-          const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
-          return `<div class="mrow"><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
-        }).join("");
-        const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
-        const head = editDate === r.date
-          ? `<div class="head editing">
-              <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
-              <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
-              <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
-              <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
-            </div>`
-          : `<div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
-              <span class="date">${esc(r.title || r.date)}</span>
-              <span class="szbadge">${raidSize(r)}-man</span>
-              ${kindBadge(r)}
-              ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
-              ${contBadge(r)}
-              <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
-              ${optSwitch(r)}
-              <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
-            </div>`;
-        return `<div class="raid" id="raid${i}">
-          ${head}
-          <div class="body">
-            <div class="ggrid">${groups}${nsBlock}</div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
-              <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
-              <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
-            </div>
-          </div>
-        </div>`;
+      // group by lockout, keeping the (newest-first) order of first appearance
+      const order = [], byKey = {};
+      raids.forEach(r => { const k = lockoutKey(r); if (!byKey[k]) { byKey[k] = []; order.push(k); } byKey[k].push(r); });
+      el.innerHTML = order.map((k, gi) => {
+        const runs = byKey[k];
+        return runs.length > 1 ? groupCard(runs, gi) : runCard(runs[0], "raid" + gi);
       }).join("");
     }
 
     function rerender() { renderAttendance(); renderLog(); }
 
-    // rebuild comp-tool-importable JSON (slots format) from a saved raid and download it
-    function exportRaid(date) {
-      const r = (HIST.raids || []).find(x => x.date === date);
-      if (!r) return;
+    // build comp-tool-importable JSON (slots format) from a saved raid
+    function compJSON(r) {
       const groups = r.groups || [];
       const slots = [];
       groups.forEach((g, gi) => (g.members || []).forEach((m, si) => {
@@ -851,7 +445,7 @@
           groupNumber: gi + 1, slotNumber: si + 1
         });
       }));
-      const out = {
+      return {
         title: r.title || r.date,
         date: r.date,
         desc: r.desc || "",
@@ -860,6 +454,28 @@
         slots,
         noshows: (r.noshows || []).map(m => ({ name: m.name, className: m.className, specName: m.specName, specEmoteId: m.specEmoteId, classEmoteId: m.classEmoteId, color: CLASS_COLOR[m.className] || "#ffffff", vacation: !!m.vacation }))
       };
+    }
+
+    // open the Comp tool with this saved raid loaded for editing — Save there overwrites it (same date)
+    function editInComp(date) {
+      const r = (HIST.raids || []).find(x => x.date === date); if (!r) return;
+      const d = r.desc || "";
+      const raid = /icc|icecrown/i.test(d) ? "ICC" : /uld/i.test(d) ? "Ulduar" : /to[gc]c?|crusader/i.test(d) ? "ToC"
+        : /ony/i.test(d) ? "Ony" : /naxx/i.test(d) ? "Naxx" : /\brs\b|ruby|halion/i.test(d) ? "RS" : "ICC";
+      const diff = /\bhm\b|heroic|hard/i.test(d) ? "HM" : "";
+      try {
+        localStorage.setItem("ratsCompEdit", JSON.stringify({
+          json: JSON.stringify(compJSON(r)), date: r.date, size: String(raidSize(r)), raid: raid, diff: diff, optional: !!isLogOnly(r)
+        }));
+      } catch (e) { msg("❌ Couldn't open the editor (storage blocked).", "#ff6b6b"); return; }
+      location.href = "../comp/index.html";
+    }
+
+    // rebuild comp-tool-importable JSON (slots format) from a saved raid and download it
+    function exportRaid(date) {
+      const r = (HIST.raids || []).find(x => x.date === date);
+      if (!r) return;
+      const out = compJSON(r);
       const a = document.createElement("a");
       a.download = "raid-" + r.date + ".json";
       a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: "application/json" }));
@@ -941,7 +557,7 @@
     function kindBadge(r) {
       const k = raidKind(r);
       const s = "font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;border:1px solid";
-      if (k === "mando") return `<span style="${s} #6e5326;background:#3a3016;color:#e0b860" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
+      if (k === "mando") return `<span style="${s} #6e2e2e;background:#3a1c1c;color:#ff8a8a" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
       if (k === "fang") return `<span style="${s} #5a2e5a;background:#2e1f33;color:#e09ad0" title="Fang run — counts for Warchief's Fangs">💀 FANGS</span>`;
       return `<span style="${s} #3a3d44;background:#26282d;color:#9aa0a6" title="Optional — log only, counts for nobody">⚪ OPTIONAL</span>`;
     }
@@ -973,7 +589,3 @@
       rerender();
     }
     boot();
-  </script>
-</body>
-
-</html>

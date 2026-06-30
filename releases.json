@@ -1,5 +1,5 @@
 {
-  "hubUrl": "https://mrnog.github.io/rats/addons.html",
+  "hubUrl": "https://mrnog.github.io/rats/public/addons/",
   "_comment": "Watch ONLY external mandatory addons (repos you don't own). Your own forks are excluded — you know when you update those.",
   "addons": [
     { "name": "WeakAuras", "repo": "NoM0Re/WeakAuras-WotLK" },

@@ -1,0 +1,15 @@
+textarea { width: 100%; min-height: 120px; padding: 10px 12px; resize: vertical; line-height: 1.5; font-family: inherit }
+
+/* the Discord-post toggle goes Discord-blue when on */
+#alsoPostBtn.active { background: #3b4178; border-color: #5865f2; color: #dfe2ff }
+
+label.chk { display: inline-flex; align-items: center; gap: 7px; color: var(--text-dim); font-size: 13px; cursor: pointer }
+
+.entry { background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-top: 10px }
+.entry .d { color: var(--accent); font-weight: 800; font-size: 13px; letter-spacing: .3px }
+.entry ul { margin: 6px 0 0; padding-left: 18px }
+.entry li { color: #cfd2d6; font-size: 13px; margin: 3px 0; line-height: 1.45 }
+.empty { color: var(--text-dim-2); font-style: italic; padding: 10px 2px }
+
+/* scrollable list — ~4 entries tall, then scroll */
+#listWrap { max-height: 360px; overflow: auto; scrollbar-width: thin; scrollbar-color: var(--accent) var(--surface-3) }

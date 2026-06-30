@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Changelog / Dev log</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="changelog.css">
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="../index.html">← Back to Tools</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg> RATS — Changelog / Dev log</h1>
+    </div>
+    <p class="sub">Your app dev-log. By default it goes to <b>#okanor-logs</b> (your detailed log). Tick <b>🌐 show on
+        public hub</b>
+      only for <b>major</b> updates guildies should see in the hub's <b>🛠️ What's new</b>. One bullet per line.</p>
+
+    <div class="card">
+      <div class="row" style="gap:8px;margin-bottom:8px">
+        <input type="text" id="ver" placeholder="version (e.g. v5)" style="width:140px">
+        <input type="date" id="date" title="Entry date">
+        <span class="sub" style="margin:0">date defaults to today</span>
+      </div>
+      <textarea id="items"
+        placeholder="One change per line, e.g.&#10;🗓️ Vacations calendar — see who's away &amp; overlaps&#10;🔔 Day-before reminder card&#10;📜 This dev-log!"></textarea>
+      <div class="row" style="margin-top:10px;gap:14px">
+        <button onclick="addEntry()">+ Save entry</button>
+        <button type="button" id="alsoPostBtn" class="tbtn active" onclick="toggleChk('alsoPost', this)">📣 post to #okanor-logs</button>
+        <input type="checkbox" id="alsoPost" checked hidden>
+        <button type="button" id="pubBtn" class="tbtn" onclick="toggleChk('pub', this)">🌐 show on public hub <span style="color:#6e7178;font-weight:600">(major)</span></button>
+        <input type="checkbox" id="pub" hidden>
+        <span class="msg" id="msg"></span>
+      </div>
+    </div>
+
+    <h2>👁 Live preview — Discord card</h2>
+    <div id="preview"></div>
+
+    <h2 class="sec" onclick="toggleList()"><span class="caret" id="caretList">▼</span> 🗂 Published entries <span class="cnt" id="cntList"></span></h2>
+    <div id="listWrap"><div id="list"></div></div>
+  </div>
+
+  <script src="../../assets/js/data.js"></script>
+  <script src="../../assets/js/datepicker.js"></script>
+  <script src="changelog.js"></script>
+</body>
+
+</html>
