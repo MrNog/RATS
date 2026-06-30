@@ -145,6 +145,10 @@ contract and the fallback until the API is live (`RANKINGS_URL`/snapshot node st
 - Rankings: wire `fetchData()` to the real API (pull → compute → write snapshot) once the dev ships it;
   smart fetch = `/reports` backfill when history empty, else `/latest`.
 - Apply the §5 localStorage cache pattern to the other public reads (vacations/members/changelog) to cut DB cost.
-- Player profile page (deferred).
+- **Player profile page** (deferred — idea): pick a character → a one-page résumé of that raider. Pulls from
+  data we already have + the rankings API: **wow-logs ranking** (boss points / avg / per-boss %), **our own**
+  attendance + comp history, and **earned badges** (e.g. "on a 3-raid streak", "Top DPS", "Fang", "perfect
+  attendance"). Cool card UI. Feeds off the same `rankings` snapshot + `history`/`roster` — no new data store.
+  Guild leaderboard with real numbers comes alongside it. (First we just want the full API data; UI later.)
 - Web roster overrides (notes/alt-main/spec/tags) layered on the imported roster via a Firebase `overrides` node.
 - Weekly attendance auto-post embed from `history`.
