@@ -47,10 +47,20 @@ tr.rankrow:first-child td { padding-top: 4px }
 .raid > .head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer }
 .raid > .head:hover { background: var(--rowhover) }
 .raid .date { font-weight: 800; color: var(--accent); min-width: 130px }
-.szbadge { font-size: 11px; font-weight: 800; color: var(--surface-2); background: var(--accent); border-radius: 10px; padding: 1px 8px; flex: 0 0 auto }
+.szbadge { font-size: 11px; font-weight: 800; color: #cfd2d6; background: var(--surface); border: 1px solid var(--border-2); border-radius: 10px; padding: 1px 8px; flex: 0 0 auto }
 .raid .meta { color: var(--muted); font-size: 13px; margin-left: auto }
-.raid .body { display: none; padding: 4px 12px 14px; border-top: 1px solid #2a2c31 }
-.raid.open .body { display: block }
+/* direct-child only, so opening a lockout group does NOT auto-open every run inside it */
+.raid > .body { display: none; padding: 4px 12px 14px; border-top: 1px solid #2a2c31 }
+.raid.open > .body { display: block }
+
+/* lockout group: runs nested inside — slimmer than a top-level card */
+.subraid { background: var(--surface-2); border-color: var(--border-2); margin: 8px 0 0 }
+.subraid > .head { padding: 5px 10px; gap: 9px }
+.subraid .date { min-width: 104px; font-size: 13px }
+.runs-chip {
+  display: inline-flex; align-items: center; font-size: 10px; font-weight: 800; letter-spacing: .4px;
+  border-radius: 10px; padding: 1px 8px; color: #e0b860; background: #3a3016; border: 1px solid #6e5326; flex: 0 0 auto;
+}
 .ggrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px }
 .ghead { color: var(--header); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px }
 .mrow { display: flex; align-items: center; gap: 7px; padding: 2px 0; font-weight: 600 }

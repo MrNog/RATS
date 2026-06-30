@@ -369,7 +369,7 @@ async function boot() {
     document.body.classList.add("officer");
     const att = document.getElementById("attLink"); if (att) att.style.display = "inline-flex";
     const cal = document.getElementById("calSection"); if (cal) cal.style.display = "block";
-    const back = document.getElementById("backLink"); if (back) { back.href = "../officer/index.html"; back.textContent = "← Back to Tools"; }
+    const back = document.getElementById("backLink"); if (back) { back.href = "../../officer/index.html"; back.textContent = "← Back to Tools"; }
   }
   await loadPickerMembers();
   document.getElementById("previewWrap").style.display = "";

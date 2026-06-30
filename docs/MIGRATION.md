@@ -1,4 +1,5 @@
 # RATS — Migration Plan
+
 ## Separate HTML / CSS / JS · Extract reusable components · No build step
 
 ---
@@ -17,6 +18,7 @@ from "dedupe identical CSS" to "one consistent style, change a token once → ev
   `h2.sec`+`.caret`+`.cnt`. Linked on all content/form pages.
 
 **Deviations from the original plan (intentional):**
+
 - The two landing hubs (`index`, `officer/index`) link `theme.css` only — they keep a centered splash layout,
   not the form-page components.
 - Name collisions were resolved by renaming, since they were different components: gallery masonry `.card`→`.tile`,
@@ -26,7 +28,7 @@ from "dedupe identical CSS" to "one consistent style, change a token once → ev
 - Recurring widgets were promoted into `ui.css` (`.tbtn`, `.del`, the collapsible `h2.sec` header, `button:disabled`,
   `input[type=password]`) so future pages get them for free.
 - Phase 3 (shared JS `utils.js`/`components.js`) was **not** rewired into the existing pages — each page keeps its
-  own working `pagename.js`. An optional `assets/js/utils.js` toolkit exists for *new* pages.
+  own working `pagename.js`. An optional `assets/js/utils.js` toolkit exists for _new_ pages.
 
 ---
 
@@ -111,16 +113,16 @@ RATS/
 
 ## Reusable components to extract
 
-| Component | Currently in | Extract to |
-|---|---|---|
-| CSS vars + dark bg + scrollbar | every page `<style>` | `assets/css/theme.css` |
-| card · btn · frow · input · .msg | every page `<style>` | `assets/css/ui.css` |
-| seclist + collapsibles | vacations, history, guild | `assets/css/ui.css` |
-| `fmtDate()`, `classColor()` | inline in multiple pages | `assets/js/utils.js` |
-| per-class quips (vacation card flavour) | vacations public + officer | `assets/js/utils.js` |
-| Discord embed preview renderer | vacations, changelog, lore | `assets/js/components.js` |
-| webhook test button logic | admin, changelog | `assets/js/components.js` |
-| nav back-button markup | every officer page | `assets/js/components.js` |
+| Component                               | Currently in               | Extract to                |
+| --------------------------------------- | -------------------------- | ------------------------- |
+| CSS vars + dark bg + scrollbar          | every page `<style>`       | `assets/css/theme.css`    |
+| card · btn · frow · input · .msg        | every page `<style>`       | `assets/css/ui.css`       |
+| seclist + collapsibles                  | vacations, history, guild  | `assets/css/ui.css`       |
+| `fmtDate()`, `classColor()`             | inline in multiple pages   | `assets/js/utils.js`      |
+| per-class quips (vacation card flavour) | vacations public + officer | `assets/js/utils.js`      |
+| Discord embed preview renderer          | vacations, changelog, lore | `assets/js/components.js` |
+| webhook test button logic               | admin, changelog           | `assets/js/components.js` |
+| nav back-button markup                  | every officer page         | `assets/js/components.js` |
 
 ---
 
@@ -130,18 +132,18 @@ RATS/
 
 Before any CSS/JS extraction, rename every HTML file into its own directory.
 
-- `addons.html`          → `addons/index.html`
-- `gallery.html`         → `gallery/index.html`
-- `vacations.html`       → `vacations/index.html`
-- `rankings.html`        → `rankings/index.html`
-- `officer/guild.html`   → `officer/guild/index.html`
-- `officer/comp.html`    → `officer/comp/index.html`
+- `addons.html` → `addons/index.html`
+- `gallery.html` → `gallery/index.html`
+- `vacations.html` → `vacations/index.html`
+- `rankings.html` → `rankings/index.html`
+- `officer/guild.html` → `officer/guild/index.html`
+- `officer/comp.html` → `officer/comp/index.html`
 - `officer/history.html` → `officer/history/index.html`
 - `officer/vacations.html` → `officer/vacations/index.html`
 - `officer/changelog.html` → `officer/changelog/index.html`
-- `officer/lore.html`    → `officer/lore/index.html`
-- `officer/files.html`   → `officer/files/index.html`
-- `officer/admin.html`   → `officer/admin/index.html`
+- `officer/lore.html` → `officer/lore/index.html`
+- `officer/files.html` → `officer/files/index.html`
+- `officer/admin.html` → `officer/admin/index.html`
 
 Update every internal `href` and `src` in the moved files to use the new relative depth
 (one `../` for root sub-pages, two `../../` for officer sub-pages — see Rules below).
@@ -281,20 +283,20 @@ Move each page's `<script>` block to its own `.js` file.
 
 ## Migration order (full sequence)
 
-| Step | Files | Phase(s) |
-|---|---|---|
-| 0 | All pages | Phase 0 (restructure into folders) |
-| 1 | All pages (CSS only) | Phase 1 |
-| 2 | gallery | Phase 2 + 4 |
-| 3 | addons | Phase 2 + 4 |
-| 4 | officer/files | Phase 2 + 4 |
-| 5 | index | Phase 2 + 4 |
-| 6 | vacations (public) | Phase 2 + 4 |
-| 7 | Shared JS utilities | Phase 3 |
-| 8 | officer/lore | Phase 2 + 4 |
-| 9 | officer/changelog | Phase 2 + 4 |
-| 10 | officer/admin | Phase 2 + 4 |
-| 11 | officer/vacations | Phase 2 + 4 |
-| 12 | officer/comp | Phase 2 + 4 |
-| 13 | officer/history | Phase 2 + 4 |
-| 14 | officer/guild | Phase 2 + 4 |
+| Step | Files                | Phase(s)                           |
+| ---- | -------------------- | ---------------------------------- |
+| 0    | All pages            | Phase 0 (restructure into folders) |
+| 1    | All pages (CSS only) | Phase 1                            |
+| 2    | gallery              | Phase 2 + 4                        |
+| 3    | addons               | Phase 2 + 4                        |
+| 4    | officer/files        | Phase 2 + 4                        |
+| 5    | index                | Phase 2 + 4                        |
+| 6    | vacations (public)   | Phase 2 + 4                        |
+| 7    | Shared JS utilities  | Phase 3                            |
+| 8    | officer/lore         | Phase 2 + 4                        |
+| 9    | officer/changelog    | Phase 2 + 4                        |
+| 10   | officer/admin        | Phase 2 + 4                        |
+| 11   | officer/vacations    | Phase 2 + 4                        |
+| 12   | officer/comp         | Phase 2 + 4                        |
+| 13   | officer/history      | Phase 2 + 4                        |
+| 14   | officer/guild        | Phase 2 + 4                        |

@@ -10,7 +10,7 @@
 
 - Plain **HTML + vanilla JS**, no build step, no framework. Hosted on **GitHub Pages**.
 - Deployed via the **Fork GUI** (no `gh` CLI, no CI build). Repo kept commit-ready; don't push unless asked.
-- One folder `rats/` = public hub (root) + officer tools (`officer/`), sharing `assets/data.js`.
+- One folder `rats/` = public hub (root) + officer tools (`officer/`), sharing `assets/js/data.js`.
 - **Design system:** every page is `folder/index.html` + co-located `pagename.css`/`pagename.js` (no inline
   `<style>`/`<script>`). Shared `assets/css/theme.css` (tokens + base) + `ui.css` (components) — see §2/§CLAUDE.
 - **Firebase Realtime DB** is the live data store (REST, no SDK). Cost-sensitive — see §5.
@@ -22,10 +22,11 @@ links point at explicit `index.html` so routing works on `file://`, any local se
 
 ```
 index.html · index.css · index.js   hub landing + public changelog drawer
-addons/      mandatory/recommended addons + NEW badge + update notifier preview
-gallery/     art/lore gallery (gallery.json manifest; .tile masonry, not .card)
-vacations/   shared vacations — role-aware (guildie vs officer) via the guild key, see §3
-rankings/    (planned) PUBLIC rankings & hall of fame — not built yet
+public/      PUBLIC pages (everyone) — keeps the root clean
+  addons/    mandatory/recommended addons + NEW badge + update notifier preview
+  gallery/   art/lore gallery (gallery.json manifest; .tile masonry, not .card)
+  vacations/ shared vacations — role-aware (guildie vs officer) via the guild key, see §3
+  rankings/  (planned) PUBLIC rankings & hall of fame — not built yet
 officer/
   index.*    officer landing + access gate
   guild/     roster browser (armory links, fangs, join dates, low-level group, stale alert)
@@ -48,7 +49,7 @@ gallery.json                              gallery manifest (built by the Action)
 docs/               THIS folder (gitignored)
 ```
 
-> NOTE: officer **vacations is no longer a separate page** — it merged into the single root `vacations/`
+> NOTE: officer **vacations is no longer a separate page** — it merged into the single `public/vacations/`
 > (one file, role-aware). The masonry tile and file-tree row were renamed (`.tile`, `.ftree`) so they don't
 > collide with the shared `.card`/`.frow` components.
 
@@ -81,14 +82,14 @@ docs/               THIS folder (gitignored)
 - **history.html** — attendance. Each raid = one mandatory day; attendance = days present ÷ raids run **since that
   raider's first logged raid**. **Size-aware**: 25-man counts for everyone, 10-man counts for Fangs (+ who played).
   Per-card **Optional toggle** (auto-saves), badges MANDATORY / 💀 FANGS / ⚪ OPTIONAL. Log scrolls after ~7 rows.
-  (Officer vacations is the same root `vacations/` page above — it just shows more once the guild key is present.)
+  (Officer vacations is the same `public/vacations/` page above — it just shows more once the guild key is present.)
 - **changelog.html** — authors entries to `changelog`; default posts to #okanor-logs; tick **🌐** to also show on
   the public hub. Officer drawer shows all entries.
 - **lore.html** — post raid stories (markdown + image attachments, multipart) to a chosen webhook.
 - **files.html** — links to the officer Google Drive sheets (new tab).
 - **admin.html** — maintainer console: set keys, webhooks, roster/history, backup. Self-gates with the admin password.
 
-## 4. Data layer — `assets/data.js` (`RatsData`)
+## 4. Data layer — `assets/js/data.js` (`RatsData`)
 
 Single shared module. `FIREBASE_URL` is set; when empty it falls back to committed files + downloads.
 

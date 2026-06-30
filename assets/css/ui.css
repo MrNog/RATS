@@ -7,6 +7,10 @@
 .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
 .frow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
 
+/* ---- page title + gold line-SVG icon (matches the hub tiles; SVG uses stroke="currentColor") ---- */
+h1 { display: inline-flex; align-items: center; gap: 9px }
+h1 .hicon { width: 22px; height: 22px; flex: 0 0 auto; color: var(--accent) }
+
 /* ---- buttons ----
    <button>            primary, gold
    <button class=dark> dark fill

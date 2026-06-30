@@ -44,9 +44,13 @@ window.RatsData = (function () {
     if (!d) return "";
     const key = raidKeyOf(d), c = key && RAID_COLORS[key];
     if (!c) return '<span style="color:#9aa0a6;font-size:13px">' + escHtml(d) + '</span>';
+    // normalize the label to the canonical raid name (+ HM) so any desc renders the same,
+    // e.g. "ULDUAR 25 HM" and "Ulduar HM" both -> "Ulduar HM" (size is already on the "25-man" pill)
+    const hm = /\bhm\b|heroic|hard\s*mode/i.test(d);
+    const label = key + (hm ? " HM" : "");
     return '<span style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;'
       + 'border-radius:10px;padding:2px 9px;border:1px solid ' + c + '66;background:' + c + '22;color:' + c + '">'
-      + escHtml(d) + '</span>';
+      + escHtml(label) + '</span>';
   }
 
   function getPass() {

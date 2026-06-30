@@ -109,7 +109,7 @@
     }
     function contBadge(r) {
       if (!isContinuation(r)) return "";
-      return '<span title="Same weekly lockout as an earlier run (≥50% same toons)" style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:2px 8px;border:1px solid #6e5326;background:#3a3016;color:#e0b860"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;flex:0 0 auto"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>CONTINUATION</span>';
+      return '<span title="Same weekly lockout as an earlier run (≥50% same toons)" style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:2px 8px;border:1px solid #2e5a52;background:#13302b;color:#5bd6c0"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;flex:0 0 auto"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>CONTINUATION</span>';
     }
 
     // The per-raid toggle: ⚪ Optional = log-only (history, counts for nobody). Default OFF.
@@ -315,61 +315,119 @@
       saveCollapsed(); renderAttendance();
     }
 
+    // ---- WoW lockout grouping: runs of the same instance + size in one Wed→Wed week = one lockout ----
+    function lockoutWed(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      if (isNaN(d)) return dateStr;
+      d.setDate(d.getDate() - ((d.getDay() - 3 + 7) % 7)); // back to the Wednesday on/before
+      const z = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
+    }
+    function lockoutKey(r) {
+      const inst = (window.RatsData && RatsData.raidKeyOf) ? (RatsData.raidKeyOf(r.desc || "") || "?") : "?";
+      return inst + "|" + raidSize(r) + "|" + lockoutWed(r.date);
+    }
+    function raiderCount(r) { return (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0); }
+    function metaHtml(r) {
+      const ns = (r.noshows || []).length;
+      return `<span class="meta">${raiderCount(r)} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>`;
+    }
+    function editHeadHtml(r) {
+      return `<div class="head editing">
+        <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
+        <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
+        <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
+        <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
+      </div>`;
+    }
+    // the roster + no-shows grid + actions for ONE run (shared by standalone & grouped runs)
+    function runBodyHtml(r) {
+      const groups = (r.groups || []).map(g => {
+        const mem = (g.members || []).map(m => {
+          const icon = m.specEmoteId || m.classEmoteId;
+          const img = icon ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+          const col = CLASS_COLOR[realClass(m)] || "#ddd";
+          return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
+        }).join("");
+        return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
+      }).join("");
+      const ns = (r.noshows || []).length;
+      const nsRows = (r.noshows || []).map(m => {
+        const vac = !!m.vacation;
+        const tag = vac ? ' <span class="vac">vacation</span>' : '';
+        const col = CLASS_COLOR[realClass(m)] || "#ddd";
+        const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
+        const ico = m.specEmoteId || m.classEmoteId;
+        const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
+        return `<div class="mrow"><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
+      }).join("");
+      const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
+      return `<div class="body">
+        <div class="ggrid">${groups}${nsBlock}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(r.date)}')" title="Open this raid in the Comp tool to fix names / move raiders, then Save to overwrite it">✏️ Edit in Comp</button>
+          <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
+          <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
+          <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
+        </div>
+      </div>`;
+    }
+    // standalone run (a lockout with a single run) — full header with size + raid + continuation badge
+    function runCard(r, id) {
+      const head = editDate === r.date ? editHeadHtml(r)
+        : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+            <span class="date">${esc(r.title || r.date)}</span>
+            <span class="szbadge">${raidSize(r)}-man</span>
+            ${kindBadge(r)}
+            ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+            ${contBadge(r)}
+            ${metaHtml(r)}
+            ${optSwitch(r)}
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+          </div>`;
+      return `<div class="raid" id="${id}">${head}${runBodyHtml(r)}</div>`;
+    }
+    // a run INSIDE a lockout group — size + raid live on the group header, so omit them here
+    function subRunCard(r, id) {
+      const head = editDate === r.date ? editHeadHtml(r)
+        : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+            <span class="date">${esc(r.title || r.date)}</span>
+            ${kindBadge(r)}
+            ${metaHtml(r)}
+            ${optSwitch(r)}
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+          </div>`;
+      return `<div class="raid subraid" id="${id}">${head}${runBodyHtml(r)}</div>`;
+    }
+    // a lockout with 2+ runs → one group card; expand to see each run; each run expands to its roster
+    function groupCard(runs, gid) {
+      const ordered = runs.slice().sort((a, b) => (a.date < b.date ? -1 : 1)); // oldest -> newest inside
+      const r0 = ordered[0], rN = ordered[ordered.length - 1];
+      // UNIQUE raiders across the lockout (don't sum 25+25 — count each person once)
+      const uniq = new Set();
+      ordered.forEach(r => (r.groups || []).forEach(g => (g.members || []).forEach(m => uniq.add((m.name || "").trim().toLowerCase()))));
+      const total = uniq.size;
+      const subs = ordered.map((r, j) => subRunCard(r, "run" + gid + "_" + j)).join("");
+      const head = `<div class="head" onclick="document.getElementById('grp${gid}').classList.toggle('open')">
+        <span class="date">${esc(r0.title || r0.date)} <span style="color:var(--text-dim-2)">→</span> ${esc(rN.title || rN.date)}</span>
+        <span class="szbadge">${raidSize(r0)}-man</span>
+        ${kindBadge(r0)}
+        ${RatsData.raidBadge((r0.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+        <span class="runs-chip" title="Same lockout — ${ordered.length} runs">⛓ ${ordered.length} runs</span>
+        <span class="meta">${total} raider${total !== 1 ? "s" : ""}</span>
+      </div>`;
+      return `<div class="raid grp" id="grp${gid}">${head}<div class="body">${subs}</div></div>`;
+    }
     function renderLog() {
       const raids = filteredRaids();
       const el = document.getElementById("log");
       if (!raids.length) { el.innerHTML = '<div class="empty">No raids in this range.</div>'; return; }
-      el.innerHTML = raids.map((r, i) => {
-        const count = (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0);
-        const ns = (r.noshows || []).length;
-        const groups = (r.groups || []).map(g => {
-          const mem = (g.members || []).map(m => {
-            const icon = m.specEmoteId || m.classEmoteId;
-            const img = icon ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
-            const col = CLASS_COLOR[realClass(m)] || "#ddd";
-            return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
-          }).join("");
-          return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
-        }).join("");
-        const nsRows = (r.noshows || []).map((m, idx) => {
-          const vac = !!m.vacation;
-          const tag = vac ? ' <span class="vac">vacation</span>' : '';
-          const col = CLASS_COLOR[realClass(m)] || "#ddd";
-          const nameStyle = vac ? "color:#7CFC8A" : ("color:" + col);
-          const ico = m.specEmoteId || m.classEmoteId;
-          const img = ico ? `<img class="ic" src="${CDN(ico)}" onerror="this.style.visibility='hidden'">` : `<span class="ic"></span>`;
-          return `<div class="mrow"><span style="font-size:11px;flex:0 0 auto">${vac ? "🏖️" : "❌"}</span>${img}<span style="${nameStyle}">${esc(m.name)}</span>${tag}</div>`;
-        }).join("");
-        const nsBlock = ns ? `<div><div class="ghead" style="color:#ff6b6b">❌ No-shows (${ns})</div>${nsRows}</div>` : "";
-        const head = editDate === r.date
-          ? `<div class="head editing">
-              <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
-              <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
-              <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
-              <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
-            </div>`
-          : `<div class="head" onclick="document.getElementById('raid${i}').classList.toggle('open')">
-              <span class="date">${esc(r.title || r.date)}</span>
-              <span class="szbadge">${raidSize(r)}-man</span>
-              ${kindBadge(r)}
-              ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
-              ${contBadge(r)}
-              <span class="meta">${count} raiders${ns ? " · " + ns + " no-show" + (ns != 1 ? "s" : "") : ""}</span>
-              ${optSwitch(r)}
-              <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
-            </div>`;
-        return `<div class="raid" id="raid${i}">
-          ${head}
-          <div class="body">
-            <div class="ggrid">${groups}${nsBlock}</div>
-            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(r.date)}')" title="Open this raid in the Comp tool to fix names / move raiders, then Save to overwrite it">✏️ Edit in Comp</button>
-              <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
-              <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
-              <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
-            </div>
-          </div>
-        </div>`;
+      // group by lockout, keeping the (newest-first) order of first appearance
+      const order = [], byKey = {};
+      raids.forEach(r => { const k = lockoutKey(r); if (!byKey[k]) { byKey[k] = []; order.push(k); } byKey[k].push(r); });
+      el.innerHTML = order.map((k, gi) => {
+        const runs = byKey[k];
+        return runs.length > 1 ? groupCard(runs, gi) : runCard(runs[0], "raid" + gi);
       }).join("");
     }
 
@@ -499,7 +557,7 @@
     function kindBadge(r) {
       const k = raidKind(r);
       const s = "font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;border:1px solid";
-      if (k === "mando") return `<span style="${s} #6e5326;background:#3a3016;color:#e0b860" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
+      if (k === "mando") return `<span style="${s} #6e2e2e;background:#3a1c1c;color:#ff8a8a" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
       if (k === "fang") return `<span style="${s} #5a2e5a;background:#2e1f33;color:#e09ad0" title="Fang run — counts for Warchief's Fangs">💀 FANGS</span>`;
       return `<span style="${s} #3a3d44;background:#26282d;color:#9aa0a6" title="Optional — log only, counts for nobody">⚪ OPTIONAL</span>`;
     }

@@ -113,7 +113,7 @@ document.addEventListener("keydown", e => {
 });
 
 // --- load manifest ---
-fetch("../gallery.json", { cache: "no-cache" })
+fetch("../../gallery.json", { cache: "no-cache" })
   .then(r => r.ok ? r.json() : [])
-  .then(d => { ITEMS = (Array.isArray(d) ? d : []).map(it => ({ ...it, file: "../" + it.file })); render(); })
+  .then(d => { ITEMS = (Array.isArray(d) ? d : []).map(it => ({ ...it, file: "../../" + it.file })); render(); })
   .catch(() => { ITEMS = []; render(); });

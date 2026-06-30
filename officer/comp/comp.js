@@ -382,7 +382,7 @@
     let OPT = false;
     function toggleOpt(b) { OPT = !OPT; b.classList.toggle("active", OPT); }
 
-    // date input uses the shared dark calendar (assets/datepicker.js); we just react to changes
+    // date input uses the shared dark calendar (assets/js/datepicker.js); we just react to changes
     document.getElementById("dateIn").addEventListener("change", function () {
       try { localStorage.setItem("ratsDate", this.value); } catch (e) { }
       render();

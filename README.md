@@ -9,15 +9,15 @@ Every page lives in its own folder as `index.html` with co-located `pagename.css
 (no inline `<style>`/`<script>`). Shared styling is a small design system in `assets/css/`.
 
 ```
-index.html  index.css  index.js     Public hub (landing) — Officer Tools card → officer/
-addons/     gallery/   vacations/    Public pages (each is index.html + .css + .js)
+index.html  index.css  index.js     Hub (landing) — Officer Tools card → officer/
+public/     addons/ gallery/ vacations/   Public pages (each is index.html + .css + .js)
 gallery.json  images/                Public gallery data + art
 assets/
   css/theme.css                      Design tokens (:root vars) + base reset — linked on EVERY page
   css/ui.css                         Components (button, .card, .frow, inputs, .seclist, .tbtn, .del…)
   js/utils.js                        Optional RatsUtils helpers for new pages
-  data.js                            Shared data layer (RatsData): gate, Firebase, vacations/members
-  datepicker.js                      RatsCal dark calendar
+  js/data.js                            Shared data layer (RatsData): gate, Firebase, vacations/members
+  js/datepicker.js                      RatsCal dark calendar
 officer/    index.html index.css index.js   Officer tools menu (← Back to Hub)
   guild/ comp/ history/ lore/ files/ admin/ changelog/   Each: index.html + .css + .js
 .github/workflows/
@@ -46,6 +46,6 @@ Internal links point at explicit `index.html` so routing works on `file://`, any
 ## ⭐ Release notifier — setup
 1. Push as a GitHub repo with Pages enabled.
 2. Repo **Settings → Secrets → Actions** → add `LOG_WEBHOOK` = the "Logs" Discord webhook URL.
-3. Edit **releases.json**: confirm `hubUrl` (the live addons page, `…/rats/addons/`) and the watched `addons` list.
+3. Edit **releases.json**: confirm `hubUrl` (the live addons page, `…/rats/public/addons/`) and the watched `addons` list.
 - First run records current versions (no spam); after that any new release pings Discord. Runs every 30 min
   (and on-demand from the Actions tab).

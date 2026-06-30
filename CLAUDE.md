@@ -14,15 +14,16 @@ re-derive the conventions.
 
 - **One folder per page**, served as `index.html` at a clean URL. Each page folder also holds its own
   `pagename.css` + `pagename.js` (no inline `<style>`/`<script>`).
-- Root = **public hub** (everyone): `index.*`, `addons/`, `gallery/`, `vacations/` (and `rankings/` when built).
+- Root = the **hub** (`index.*`, the public landing). **Public pages** live in `public/`: `public/addons/`,
+  `public/gallery/`, `public/vacations/` (and `public/rankings/` when built). The root stays clean: hub · `public/` · `officer/` · `assets/`.
 - `officer/` = **officer tools**, gated by the guild key: `index.*`, `guild/`, `comp/`,
-  `history/`, `lore/`, `files/`, `admin/`, `changelog/`. (Vacations is **one shared page** at root `vacations/`
+  `history/`, `lore/`, `files/`, `admin/`, `changelog/`. (Vacations is **one shared page** at `public/vacations/`
   that reveals officer controls when the guild key is present — see Vacations rules.)
 - `assets/css/theme.css` + `assets/css/ui.css` = the **design system** (see below) — linked by every page.
-- `assets/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
-- `assets/datepicker.js` = `RatsCal` dark calendar.
+- `assets/js/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
+- `assets/js/datepicker.js` = `RatsCal` dark calendar.
 - `images/<category>/`, `downloads/` (patch-y.mpq), `files/` (officer sheets), `scripts/` (gallery builder).
-- `docs/` = maintainer notes (`ARCHITECTURE.md`, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`, `PROMPTS.md`), tracked in git.
+- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`, `PROMPTS.md`), tracked in git.
 - **Run locally with a server** — `file://` blocks fetch/crypto/webhooks. Use VS Code Live Server or `python -m http.server 8000`.
 
 ## Design system (`assets/css/theme.css` + `ui.css`)
@@ -61,7 +62,7 @@ re-derive the conventions.
 - **Read only the node you need** — never read the whole tree; per-feature nodes only.
 - Public pages must not read big encrypted nodes (`roster`, `history`).
 
-## `RatsData` key functions (`assets/data.js`)
+## `RatsData` key functions (`assets/js/data.js`)
 
 `gate()`, `loadRoster/saveRoster`, `loadHistory/saveHistory`, `cachedHistory()`,
 `loadVacations/addVacation/updateVacation/removeVacation`, `publishMembers/loadMembers`,
@@ -74,7 +75,7 @@ re-derive the conventions.
 ## Formatting rules
 
 - **Dates display as `26 Jul 2026`** everywhere (helper `fmtDate`, accepts ISO or dd-mm-yyyy).
-- **Date pickers use the shared dark calendar** `assets/datepicker.js` — it auto-enhances every
+- **Date pickers use the shared dark calendar** `assets/js/datepicker.js` — it auto-enhances every
   `<input type="date">` into a themed button + popup (keeping the input as the value holder, so
   `.value` reads and `input`/`change` listeners still work). After rendering inputs dynamically call
   `RatsCal.enhanceAll()`; after a programmatic `.value` reset call `RatsCal.sync()`. Opt into the raid
@@ -107,7 +108,7 @@ re-derive the conventions.
   - whoever actually played). **Vacations are excused.** New members protected by join date.
 - **On +add** → post the "will be away" card. **Day before start** → post a reminder. Each flagged so it posts once.
 - **Ended vacations auto-delete** as soon as they're over (keeps the DB tidy).
-- **One shared page** at root `vacations/` for everyone (no separate officer copy). It detects officer mode by
+- **One shared page** at `public/vacations/` for everyone (no separate officer copy). It detects officer mode by
   `localStorage.ratsGuildKey` (`const isOfficer` in `vacations.js`): guildies get add + live preview + **read-only**
   lists (picker from the public `members` node); officers additionally get **edit/remove/repost**, the **month
   calendar**, the day-before reminder preview, and the **auto-announce + purge poll** (picker from the decrypted
