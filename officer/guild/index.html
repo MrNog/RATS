@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Guild Roster</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="guild.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <a class="btn" href="../index.html">← Back to Tools</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> RATS — Guild Roster</h1>
+    </div>
+    <p class="sub" id="metaLine">Import your guild roster JSON (from the in-game export) to build the database.</p>
+
+    <div class="controls">
+      <button onclick="openModal()">📥 Import roster</button>
+      <button class="alt" onclick="exportRoster()"
+        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save roster</button>
+      <input type="text" id="search" placeholder="Search name / spec / profession…" oninput="paint()"
+        style="flex:1;min-width:200px" />
+      <select id="rankSel" onchange="paint()">
+        <option value="">All ranks</option>
+      </select>
+      <select id="sortSel" onchange="paint()">
+        <option value="class" selected>Sort: Class</option>
+        <option value="name">Sort: Name</option>
+        <option value="level">Sort: Level</option>
+      </select>
+      <button type="button" class="tbtn active" onclick="toggleChk('hideAlts', this)">hide alts</button>
+      <input type="checkbox" id="hideAlts" checked hidden>
+      <button type="button" class="tbtn" onclick="toggleChk('fangsOnly', this)">💀 fangs only</button>
+      <input type="checkbox" id="fangsOnly" hidden>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div id="staleWrap" style="background:#1b1d21;border:1px solid #3a4a5b;border-radius:10px;padding:12px 14px;margin:6px 0 0">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+        <b style="font-size:12px;color:#9ad0ff;text-transform:uppercase;letter-spacing:.5px">🔔 Stale-roster alert</b>
+        <span class="sub" id="staleNote" style="margin:0"></span>
+        <button class="alt" id="staleSend" onclick="sendStaleAlert(true)" style="margin-left:auto;padding:6px 12px;display:none">📣 Post to #okanor-logs</button>
+      </div>
+      <div id="staleCard"></div>
+    </div>
+
+    <div class="err" id="err"></div>
+    <div id="roster"></div>
+  </div>
+
+  <!-- import modal -->
+  <div id="modal" onclick="if(event.target===this) closeModal()">
+    <div class="box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <h2 style="margin:0;color:#fff;font-size:18px">📥 Paste guild roster JSON</h2>
+        <button class="alt" onclick="closeModal()" style="padding:6px 11px">✕</button>
+      </div>
+      <p class="sub" style="margin:0 0 10px">Run your in-game roster export addon, copy its JSON, and paste it below.
+        It <b>merges</b> with the current data — your <b>💀 Fangs</b> and <b>join dates</b> are kept; names, ranks &amp; new members update.</p>
+      <textarea id="jsonIn" placeholder="Paste the guild roster JSON here…"></textarea>
+      <div class="err" id="modalErr"></div>
+      <div class="controls">
+        <button onclick="importRoster()">🔍 Compare changes</button>
+        <button id="confirmBtn" onclick="confirmImport()" style="display:none">✅ Confirm &amp; merge</button>
+        <button class="alt" onclick="closeModal()">Cancel</button>
+      </div>
+      <div id="diff"></div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/data.js"></script>
+  <script src="guild.js"></script>
+</body>
+
+</html>

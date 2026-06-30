@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Attendance &amp; History</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="history.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <a class="btn" href="../index.html">← Back to Tools</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> RATS — Attendance &amp; History</h1>
+      <a class="btn" href="../../public/vacations/index.html" style="margin-left:auto">🏖️ Vacations →</a>
+      <a class="btn" href="../comp/index.html">🗓 Raid Comp →</a>
+    </div>
+    <details class="explain">
+      <summary>📊 How attendance works — and why <span style="color:var(--accent);font-weight:600">(click)</span></summary>
+      <div class="exbody">
+        <p>Attendance is <b>not a punishment</b> — it shows <b>who's the most reliable</b>, so raid spots,
+          <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.</p>
+        <p><b>What counts as a "miss":</b> you <b>signed up &amp; didn't show</b>, or you were <b>expected</b>
+          for a mandatory raid and weren't there. 🏖️ <b>On vacation = excused.</b> New members are protected —
+          raids before their join date don't count. An <b>alt counts for its main</b>.</p>
+        <p><b>Which raids count:</b></p>
+        <ul>
+          <li>🔴 <b>25-man — Mandatory.</b> Counts for <b>everyone</b> from their join date.</li>
+          <li>💀 <b>10-man — Fang run.</b> Counts for <b>Warchief's Fangs</b> only (and anyone who actually played it).</li>
+          <li>⚪ <b>Optional — log-only.</b> Alt 25 runs, casual/pug 10-mans: saved as <b>history only</b>, counts for nobody.</li>
+        </ul>
+        <p>Flip any run with the <b>Optional</b> switch on its card in the log — it saves instantly.</p>
+      </div>
+    </details>
+
+    <div class="controls">
+      <div class="frow">
+        <span class="flbl">Raid</span>
+        <div class="segs" id="sizeSegs">
+          <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
+          <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
+          <button class="seg" data-s="all" onclick="setSize(this)">All</button>
+        </div>
+        <div class="segs grow" id="rangeSegs">
+          <button class="seg active" data-d="0" onclick="setRange(this)">All time</button>
+          <button class="seg" data-d="14" onclick="setRange(this)">14d</button>
+          <button class="seg" data-d="30" onclick="setRange(this)">30d</button>
+          <button class="seg" data-d="60" onclick="setRange(this)">60d</button>
+          <button class="seg" data-d="90" onclick="setRange(this)">90d</button>
+        </div>
+      </div>
+      <div class="frow">
+        <span class="flbl">Sort</span>
+        <div class="segs grow" id="sortSegs" title="Sort raiders by">
+          <button class="seg active" data-v="rank" onclick="setSort('rank')">Guild rank</button>
+          <button class="seg" data-v="pct" onclick="setSort('pct')">Attendance %</button>
+          <button class="seg" data-v="present" onclick="setSort('present')">Days present</button>
+          <button class="seg" data-v="name" onclick="setSort('name')">Name</button>
+          <button class="seg" data-v="class" onclick="setSort('class')">Class</button>
+        </div>
+      </div>
+      <div class="frow">
+        <span class="flbl">Find</span>
+        <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
+        <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
+      </div>
+    </div>
+    <div class="msg" id="msg"></div>
+
+    <h2 id="attHead">📊 Attendance</h2>
+    <div id="legend" class="sub" style="margin:-4px 0 10px;line-height:1.5"></div>
+    <div id="attendance"></div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:26px 0 10px">
+      <h2 style="margin:0">🗒 Raid log</h2>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <script src="../../assets/js/data.js"></script>
+  <script src="history.js"></script>
+</body>
+
+</html>

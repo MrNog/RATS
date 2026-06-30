@@ -1,0 +1,74 @@
+:root { --panel: #26282d; --row: #2f3137; --rowhover: #3a3d44; --muted: #8a8d93; --header: #9aa0a6 }
+
+/* the raid grid genuinely needs the room — page-level width exception */
+.wrap { max-width: 1280px }
+
+h1 { margin: 0 0 4px }
+.sub { margin: 0 0 16px }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px }
+
+textarea { width: 100%; height: 120px; color: #cfd2d6; padding: 10px; font-family: Consolas, monospace; font-size: 12px; resize: vertical }
+input[type=text], input[type=password] { min-width: 280px }
+
+.segs { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px }
+.seg {
+  background: transparent; border: 0; color: var(--text-dim); font-size: 13px; font-weight: 700;
+  padding: 0 11px; height: 24px; border-radius: var(--radius); cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.seg:hover { color: var(--white) }
+.seg.active { background: var(--accent); color: var(--surface-2) }
+.sug:hover { background: var(--row) }
+
+button.alt { background: var(--rowhover); color: var(--white) }
+
+.slot .acts { display: none; margin-left: auto; align-items: center; gap: 3px }
+.slot:hover .acts { display: flex }
+.acts select.mv { min-width: 50px; height: 22px; padding: 0 16px 0 6px; font-size: 11px; background-position: right 4px center; background-size: 9px }
+.acts button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 13px; line-height: 1; height: auto; padding: 2px 5px; border-radius: 4px }
+.acts button:hover { color: var(--white); background: var(--rowhover) }
+
+.err { color: #ff6b6b; margin: 8px 0; min-height: 18px; font-size: 13px }
+
+/* ---- the board that gets screenshotted ---- */
+#board { background: var(--surface-2); border: 1px solid #2a2c31; border-radius: var(--radius-lg); padding: 20px; margin-top: 8px }
+#boardTitle { font-size: 20px; font-weight: 800; color: var(--accent); margin: 0 0 4px; letter-spacing: .5px }
+#boardDesc { color: var(--muted); margin: 0 0 18px; font-size: 13px; white-space: pre-wrap }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px }
+.group { background: transparent }
+.ghead { color: var(--header); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .6px; padding: 4px 8px; margin-bottom: 6px; border-bottom: 1px solid var(--border-2) }
+.slot { display: flex; align-items: center; gap: 9px; background: var(--row); border-radius: 5px; padding: 6px 9px; margin-bottom: 5px; min-height: 34px }
+.slot:hover { background: var(--rowhover) }
+.slot[draggable=true] { cursor: grab }
+.slot[draggable=true]:active { cursor: grabbing }
+
+/* while dragging, make every group a visible drop zone */
+body.dragging .group { outline: 1px dashed rgba(192, 148, 58, .45); outline-offset: 3px; border-radius: 8px; min-height: 64px }
+body.dragging .group:hover { outline-color: var(--accent); background: rgba(192, 148, 58, .10) }
+body.dragging .nsbox:hover { outline-color: #ff6b6b; background: rgba(255, 107, 107, .08) }
+.nsbox.nsempty { display: none }
+body.dragging .nsbox.nsempty { display: block }
+.slot.empty { opacity: .35; font-style: italic; color: var(--muted) }
+.ic { width: 22px; height: 22px; flex: 0 0 22px; image-rendering: auto }
+.nm { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.foot { margin-top: 16px; color: var(--muted); font-size: 12px; border-top: 1px solid #2a2c31; padding-top: 10px }
+
+@media (max-width: 820px) { .grid { grid-template-columns: repeat(2, 1fr) } }
+
+/* Add-raider row stacks cleanly on small screens */
+@media (max-width: 680px) {
+  .arRow .arName-wrap { flex: 1 1 100% !important }
+  .arRow select { min-width: 0; flex: 1 1 28% }
+  .arRow button { flex: 1 1 auto }
+}
+
+/* Post to Discord — dark Discord-blue, same as the attendance log's post button */
+#postBtn { background: #3b4178; border: 1px solid #5865f2; color: #dfe2ff }
+#postBtn:hover:not(:disabled) { filter: brightness(1.12); color: #fff }
+
+.tbtn .tsub { font-weight: 600; opacity: .65 }
+
+/* flat action rows + clean tip list */
+.barrow { display: flex; gap: 10px; flex-wrap: wrap; align-items: center }
+.tips { list-style: none; margin: 14px 0 0; padding: 0; color: var(--muted); font-size: 12.5px; line-height: 1.75 }
+.tips li { margin: 0 }

@@ -1,0 +1,15 @@
+/* section titles inside cards — not the uppercase theme h2 */
+h2 { font-size: 15px; margin: 0 0 4px; text-transform: none }
+
+/* full-width settings fields (base styling from ui.css) */
+input[type=text], input[type=password] { flex: 1; min-width: 180px }
+textarea { width: 100%; min-height: 110px; height: auto; padding: 8px 10px; font-family: Consolas, monospace; font-size: 12px; resize: vertical }
+
+/* webhook rows */
+.hookRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px }
+.hookRow .hlbl { flex: 0 0 120px; min-width: 100px }
+.hookRow .hlbl strong { display: block; color: var(--white); font-size: 13px }
+.hookRow .hlbl span { display: block; color: var(--text-dim-2); font-size: 11px; margin-top: 1px }
+.hookRow input { flex: 1; min-width: 200px }
+
+.msg { min-height: 18px }

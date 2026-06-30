@@ -12,13 +12,37 @@ re-derive the conventions.
 
 ## Layout
 
-- Root = **public hub** (everyone): `index.html`, `addons.html`, `gallery.html`, `vacations.html`, `rankings.html`.
-- `officer/` = **officer tools**, gated by the guild key: `index.html`, `guild.html`, `comp.html`,
-  `history.html`, `vacations.html`, `lore.html`, `files.html`, `admin.html`, `changelog.html`.
-- `assets/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
+- **One folder per page**, served as `index.html` at a clean URL. Each page folder also holds its own
+  `pagename.css` + `pagename.js` (no inline `<style>`/`<script>`).
+- Root = the **hub** (`index.*`, the public landing). **Public pages** live in `public/`: `public/addons/`,
+  `public/gallery/`, `public/vacations/` (and `public/rankings/` when built). The root stays clean: hub · `public/` · `officer/` · `assets/`.
+- `officer/` = **officer tools**, gated by the guild key: `index.*`, `guild/`, `comp/`,
+  `history/`, `lore/`, `files/`, `admin/`, `changelog/`. (Vacations is **one shared page** at `public/vacations/`
+  that reveals officer controls when the guild key is present — see Vacations rules.)
+- `assets/css/theme.css` + `assets/css/ui.css` = the **design system** (see below) — linked by every page.
+- `assets/js/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
+- `assets/js/datepicker.js` = `RatsCal` dark calendar.
 - `images/<category>/`, `downloads/` (patch-y.mpq), `files/` (officer sheets), `scripts/` (gallery builder).
-- `docs/` = maintainer notes (`ARCHITECTURE.md`, `RANKINGS_API_REQUEST.md`, `PROMPTS.md`), tracked in git.
+- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`, `PROMPTS.md`), tracked in git.
 - **Run locally with a server** — `file://` blocks fetch/crypto/webhooks. Use VS Code Live Server or `python -m http.server 8000`.
+
+## Design system (`assets/css/theme.css` + `ui.css`)
+
+- **`theme.css`** = design tokens (`:root` CSS vars) + base reset (`body`, `.wrap`/`.wrap.wide`, `h1`/`h2`,
+  `code`, gold scrollbar). Linked on **every** page. Change a token here → the whole site follows.
+  Key tokens: `--accent`, surfaces (`--surface`/`--surface-2`/`--surface-3`/`--field`), `--border`,
+  text (`--text`/`--text-dim`/`--text-dim-2`/`--text-faint`/`--white`), `--ok`, `--wrap` (960) / `--wrap-wide` (1180),
+  `--ctl-h` (control height, 30px), `--radius`/`--radius-lg`/`--radius-xl`.
+- **`ui.css`** = reusable components: `button` (gold primary) / `button.dark` / `a.btn`·`button.btn` (secondary) /
+  `.icon-btn` / `.tbtn` (on-off toggle) / `.del` (danger), `.row`/`.frow`, dark `input`/`select`/`textarea`,
+  `.msg`, `.card` (panel), `.pill`, `.seclist`, `h2.sec`/`.caret`/`.cnt` (collapsible header). Linked on all
+  content/form pages; the two **landing hubs** link `theme.css` only (they keep a centered splash layout).
+- **New page recipe:** make `folder/index.html`, link `theme.css` + `ui.css` + `pagename.css`, write structure
+  with the component classes, drop a `pagename.js`. Style everything through tokens — never hard-code the gold,
+  a width, or a control height; use the var so one change propagates.
+- **Don't reuse a component class name for a different thing.** `.card` is the padded panel; gallery's masonry
+  tile is `.tile`, the file tree row is `.ftree` (renamed to avoid colliding with shared components).
+- Wide data pages use `<div class="wrap wide">` (1180). `comp/` is the one width exception (1280, set in `comp.css`).
 
 ## Data — Firebase is the source of truth
 
@@ -38,7 +62,7 @@ re-derive the conventions.
 - **Read only the node you need** — never read the whole tree; per-feature nodes only.
 - Public pages must not read big encrypted nodes (`roster`, `history`).
 
-## `RatsData` key functions (`assets/data.js`)
+## `RatsData` key functions (`assets/js/data.js`)
 
 `gate()`, `loadRoster/saveRoster`, `loadHistory/saveHistory`, `cachedHistory()`,
 `loadVacations/addVacation/updateVacation/removeVacation`, `publishMembers/loadMembers`,
@@ -51,7 +75,7 @@ re-derive the conventions.
 ## Formatting rules
 
 - **Dates display as `26 Jul 2026`** everywhere (helper `fmtDate`, accepts ISO or dd-mm-yyyy).
-- **Date pickers use the shared dark calendar** `assets/datepicker.js` — it auto-enhances every
+- **Date pickers use the shared dark calendar** `assets/js/datepicker.js` — it auto-enhances every
   `<input type="date">` into a themed button + popup (keeping the input as the value holder, so
   `.value` reads and `input`/`change` listeners still work). After rendering inputs dynamically call
   `RatsCal.enhanceAll()`; after a programmatic `.value` reset call `RatsCal.sync()`. Opt into the raid
@@ -84,19 +108,22 @@ re-derive the conventions.
   - whoever actually played). **Vacations are excused.** New members protected by join date.
 - **On +add** → post the "will be away" card. **Day before start** → post a reminder. Each flagged so it posts once.
 - **Ended vacations auto-delete** as soon as they're over (keeps the DB tidy).
-- **Public (guildies) vacations page**: can add + see a live preview, **no remove, no calendar**.
-- **Officer vacations page**: edit/remove/repost + the **month calendar** (calendar is officers-only).
+- **One shared page** at `public/vacations/` for everyone (no separate officer copy). It detects officer mode by
+  `localStorage.ratsGuildKey` (`const isOfficer` in `vacations.js`): guildies get add + live preview + **read-only**
+  lists (picker from the public `members` node); officers additionally get **edit/remove/repost**, the **month
+  calendar**, the day-before reminder preview, and the **auto-announce + purge poll** (picker from the decrypted
+  roster). The `vacations` node is plain/world-readable, so this is a UI split, not a security boundary.
 - "Currently away" shows a **progress bar** (day X/N · %). Lists are **boxed collapsible sections**
   (`.seclist`, scroll, sticky header), ordered **chronologically by start date**.
 
 ## Changelog / dev-log
 
-- Authored in `officer/changelog.html` → writes to the `changelog` node.
+- Authored in `officer/changelog/` → writes to the `changelog` node.
 - Default: posts to **#okanor-logs** (the detailed dev log). Tick **🌐 show on public hub** only for **major** updates.
 - **Public hub** drawer shows only `pub` entries (clean, major) + a **notification badge** (unseen count,
   clears on open). **Officer drawer** shows **all** entries (🌐 marks public ones).
 
-## Roster (officer/guild.html)
+## Roster (officer/guild/)
 
 - **Fangs** marked with 💀 (`data.fangs`); **join dates** (`data.joined`); import is a **merge** that
   preserves fangs + join dates and auto-dates new members.
@@ -109,7 +136,7 @@ re-derive the conventions.
 
 - Horde faction (use Horde spell/term names). Rat/cheese flavor. **Never** the word "colleagues".
 
-## Rankings (rankings.html) — logs-fed, public
+## Rankings (rankings/) — logs-fed, public
 
 No attendance here — absences show naturally in the stats. Tabs: **🏆 Leaderboards** (MVP, Top DPS/HPS,
 Most improved, Records), **📊 Guild progress** (week-over-week verdicts, per-boss kill times),

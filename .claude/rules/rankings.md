@@ -1,8 +1,8 @@
 ---
-globs: ['rankings.html']
+globs: ['rankings/**']
 ---
 
-# rankings.html — design spec & API contract
+# rankings/ — design spec & API contract
 
 Public page, no guild-key required. Officer's **🔄 Fetch** button (gold, visible only with guild key) pulls
 the API, computes the snapshot, writes to Firebase `rankings` node. Visitors read once per visit (TTL 30 min),

@@ -225,8 +225,22 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Razor Achiv.png",
+    "title": "Razor Achiv",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/The paladin Fight.png",
     "title": "The Paladin Fight",
+    "caption": "",
+    "date": "2026-06"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/Yogg Sanity.png",
+    "title": "Yogg Sanity",
     "caption": "",
     "date": "2026-06"
   },

@@ -5,7 +5,7 @@ globs: ['officer/**']
 # Officer tools
 
 - Every page is gated by `RatsData.gate()` (guild key in `localStorage.ratsGuildKey`). Never expose key in output.
-- `admin.html` has a second layer: admin password (`localStorage.ratsAdminKey`) + `admin.json`.
+- The admin console (`officer/admin/`) has a second layer: admin password (`localStorage.ratsAdminKey`) + `admin.json`.
 - Roster + history are AES-encrypted (PBKDF2). Always decrypt before display; never log raw ciphertext blobs.
 - Firebase REST base: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
   - Encrypted nodes: `roster`, `history`

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%A7%80%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Admin Console</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="row">
+      <a class="btn" href="../index.html">&#8592; Back to Tools</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> RATS &#8212; Admin Console</h1>
+    </div>
+    <p class="sub" id="banner" style="margin:8px 0 0">Manage the guild key, the lock, and webhooks. Officers / GM only.</p>
+
+    <div id="console" style="display:none">
+
+      <div class="card">
+        <h2>&#128273; Guild key &amp; lock</h2>
+        <p class="sub">The key officers type to unlock the tools. Arm the lock &#8212; works with no roster needed.</p>
+        <div class="frow">
+          <input type="text" id="guildKey" placeholder="Guild key (the password officers will use)">
+          <button class="btn" onclick="armLock()">&#128274; Arm lock &#8212; download gate.json</button>
+        </div>
+        <p class="sub">Commit the downloaded <code>gate.json</code> &#8594; the index lock turns on. Share the key in the officer channel.</p>
+      </div>
+
+      <div class="card">
+        <h2>&#128190; Backup</h2>
+        <p class="sub">Download the current encrypted <code>roster.json</code> + <code>history.json</code> and commit via Fork. Each commit is an unchangeable snapshot &#8212; restores automatically if live data is wiped.</p>
+        <div class="frow">
+          <button onclick="doBackup()">&#11015; Download backup (roster.json + history.json)</button>
+        </div>
+        <p class="sub">Tip: do this after big roster/raid changes. Your browser may ask to allow multiple downloads &#8212; say yes.</p>
+      </div>
+
+      <div class="card">
+        <h2>&#128227; Discord webhooks</h2>
+        <p class="sub">Names are <strong style="color:#fff">fixed</strong> &#8212; tools find the right hook by name. Only paste/edit the URL. Leave blank to disable. Stored only in your browser &#8212; never committed.</p>
+        <div id="hookList"></div>
+        <div class="frow">
+          <button onclick="saveHooks()">&#128190; Save webhooks</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>&#128295; Admin password</h2>
+        <p class="sub">Locks this console (separate from the guild key &#8212; only you should know it).</p>
+        <div class="frow">
+          <input type="password" id="adminPass" placeholder="Set / change admin password">
+          <button onclick="setAdmin()">Set admin password &#8212; download admin.json</button>
+        </div>
+        <p class="sub">Commit the downloaded <code>admin.json</code> &#8594; this console requires that password.</p>
+      </div>
+
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script src="../../assets/js/data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

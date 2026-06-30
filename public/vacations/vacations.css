@@ -1,0 +1,51 @@
+.form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+
+/* segmented vacation/personal toggle */
+.segs { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px }
+.seg {
+  background: transparent; border: 0; color: var(--text-dim); font-size: 13px; font-weight: 700;
+  padding: 0 12px; height: 26px; border-radius: var(--radius); cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.seg:hover { color: var(--white) }
+.seg.active { background: var(--accent); color: var(--surface-2) }
+
+/* typeahead character picker */
+.ac {
+  position: absolute; top: 42px; left: 0; right: 0; z-index: 10;
+  background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px;
+  max-height: 260px; overflow: auto; box-shadow: 0 12px 34px rgba(0, 0, 0, .55);
+}
+.ac .opt { padding: 7px 11px; cursor: pointer; font-weight: 600; font-size: 14px }
+.ac .opt:hover { background: #23262b }
+.ac .none { padding: 8px 11px; color: var(--text-dim-2); font-style: italic; font-size: 13px }
+
+/* table */
+table { width: 100%; border-collapse: collapse; margin-top: 4px }
+th { text-align: left; color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; padding: 6px 10px; border-bottom: 1px solid var(--border-2) }
+td { padding: 8px 10px; border-bottom: 1px solid #232529 }
+tr:hover td { background: var(--surface) }
+.nm { font-weight: 800 }
+
+/* status pills (base .pill in ui.css) */
+.pill.active { background: #23362a; color: #8fdf9f; border: 1px solid #3a5b42 }
+.pill.soon { background: #2a2f3a; color: #9ad0ff; border: 1px solid #3f5a6a }
+.pill.past { background: #2a2c31; color: var(--text-dim-2); border: 1px solid #3a3d44 }
+
+.empty { color: var(--text-dim-2); font-style: italic; padding: 10px 2px }
+
+/* month calendar (officers only — revealed by JS) */
+.calnav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 26px 0 8px }
+.calnav .del { padding: 5px 11px }
+.calgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px }
+.caldow { text-align: center; color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; padding: 4px 0; font-weight: 700 }
+.calcell { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); min-height: 80px; padding: 4px 5px; overflow: hidden }
+.calcell.out { background: #131416; border-color: #232529 }
+.calcell.today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }
+.calcell.wknd { background: #181a1f }
+.caldate { font-size: 11px; color: var(--text-dim-2); font-weight: 700; margin-bottom: 3px }
+.calcell.today .caldate { color: var(--accent) }
+.calchip {
+  display: block; font-size: 10px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: rgba(255, 255, 255, .05);
+}
