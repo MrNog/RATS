@@ -19,8 +19,20 @@
   <div class="wrap">
     <div class="row">
       <a class="btn" id="backLink" href="../../index.html">← Back</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg> RATS — Vacations</h1>
-      <a class="btn" id="attLink" href="../../officer/history/index.html" style="display:none;margin-left:auto">📊 Attendance →</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" />
+          <path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" />
+          <path d="m19.07 4.93-1.41 1.41" />
+        </svg> RATS — Vacations</h1>
+      <a class="btn" id="attLink" href="../../officer/history/index.html" style="display:none;margin-left:auto">📊
+        Attendance →</a>
     </div>
     <p class="sub">Going away? Mark your dates so you're <b>not counted as a miss</b> on raid attendance. Pick your
       character, set the dates — single day? Fill <b>From</b> only.</p>
@@ -32,13 +44,15 @@
             onfocus="acFilter()" style="width:100%">
           <div id="vList" class="ac" style="display:none"></div>
         </div>
-        <div class="segs" id="typeSegs" title="Vacation = playful away card. Personal = soft, low-key note (no dates/countdown)">
+        <div class="segs" id="typeSegs"
+          title="Vacation = playful away card. Personal = soft, low-key note (no dates/countdown)">
           <button type="button" class="seg active" data-t="vacation" onclick="setType(this)">🏖️ Vacation</button>
           <button type="button" class="seg" data-t="personal" onclick="setType(this)">💤 Personal</button>
         </div>
         <input type="date" id="vStart" lang="en-GB" title="From">
         <input type="date" id="vEnd" lang="en-GB" title="To (optional)">
-        <input type="text" id="vNote" placeholder="note for officers (optional)" maxlength="120" style="flex:1;min-width:140px">
+        <input type="text" id="vNote" placeholder="note for officers (optional)" maxlength="120"
+          style="flex:1;min-width:140px">
         <button onclick="addVac()">+ Add</button>
       </div>
       <div class="msg" id="msg"></div>
@@ -47,16 +61,23 @@
     <div id="previewWrap" class="card" style="display:none;border-color:#3a4a5b">
       <div
         style="font-size:12px;color:#9ad0ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
-        👁 Live preview <span style="color:#6e7178;font-weight:600;text-transform:none;letter-spacing:0"> · how your away
+        👁 Live preview <span style="color:#6e7178;font-weight:600;text-transform:none;letter-spacing:0"> · how your
+          away
           card will look</span>
       </div>
       <div id="devCard"></div>
     </div>
 
-    <h2 class="sec" onclick="toggleSec('active')"><span class="caret" id="caretactive">▼</span> 🟢 Away now <span class="cnt" id="cntactive"></span></h2>
-    <div id="activeWrap" class="seclist"><div id="active"></div></div>
-    <h2 class="sec" onclick="toggleSec('all')"><span class="caret" id="caretall">▶</span> 📅 All vacations <span class="cnt" id="cntall"></span></h2>
-    <div id="allWrap" class="seclist" style="display:none"><div id="all"></div></div>
+    <h2 class="sec" onclick="toggleSec('active')"><span class="caret" id="caretactive">▼</span> 🟢 Away now <span
+        class="cnt" id="cntactive"></span></h2>
+    <div id="activeWrap" class="seclist">
+      <div id="active"></div>
+    </div>
+    <h2 class="sec" onclick="toggleSec('all')"><span class="caret" id="caretall">▶</span> 📅 All vacations <span
+        class="cnt" id="cntall"></span></h2>
+    <div id="allWrap" class="seclist" style="display:none">
+      <div id="all"></div>
+    </div>
 
     <!-- officers only: month calendar of who's away (revealed by vacations.js when the guild key is present) -->
     <div id="calSection" class="officer-only" style="display:none">

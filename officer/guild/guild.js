@@ -35,6 +35,49 @@
       paint();
     }
 
+    // ---- profile keys (Path B): which mains have a published profile-page key (hash in `profiles`) ----
+    let PROFILE_KEYS = {};   // { charKey: true } — populated on boot from the plain `profiles` node
+    function hasProfileKey(name) { return !!PROFILE_KEYS[RatsData.profKey(name)]; }
+    async function loadProfileKeys() { try { PROFILE_KEYS = await RatsData.loadProfiles() || {}; } catch (e) { PROFILE_KEYS = {}; } }
+    async function genProfileKeyFor(name, cls) {
+      const had = hasProfileKey(name);
+      if (had && !confirm("Regenerate the profile key for " + name + "?\nThe old key stops working immediately.")) return;
+      try {
+        const key = await RatsData.setProfileKey(name, cls);
+        PROFILE_KEYS[RatsData.profKey(name)] = true;
+        try { await RatsData.clearKeyRequest(name); } catch (e) {}   // resolve any pending request
+        paint();
+        // show the raw key once so the officer can DM it — it's never stored, only its hash.
+        window.prompt("🔑 Profile key for " + name + " — copy and DM it to them (shown once):", key);
+        setMsgOk("🔑 Profile key " + (had ? "regenerated" : "generated") + " for " + name + " — DM it to them. They unlock at /public/profile/.");
+      } catch (e) { const el = document.getElementById("err"); if (el) { el.style.color = "#ff6b6b"; el.textContent = "❌ Key publish failed: " + e.message; } }
+    }
+
+    // ---- profile-key REQUESTS: poll the plain node, ping #okanor-logs for new ones (poll+announce) ----
+    // Discord forces title/description text white — only the left bar carries color, so we color it by class.
+    function buildKeyReqEmbed(name, cls) {
+      const hex = (CLASS_COLOR[cls] || "#c0943a");
+      return {
+        author: { name: "RATS • Profile keys" },
+        title: "🔑 " + name + " requested a profile-key",
+        color: parseInt(hex.slice(1), 16),
+        description: "**" + name + "**" + (cls ? " · " + cls : "") + " wants their Raider Profile page.\n"
+          + "Generate a key in the roster (🔑) and DM it to them. 🐀🧀"
+      };
+    }
+    async function announceKeyRequests() {
+      const url = logWebhook(); if (!url) return;     // no webhook saved -> nothing to do
+      let reqs; try { reqs = await RatsData.loadKeyRequests(); } catch (e) { return; }
+      for (const ckey of Object.keys(reqs || {})) {
+        const r = reqs[ckey];
+        if (!r || r.announced || hasProfileKey(r.name)) continue;   // already pinged, or key already exists
+        try {
+          await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [buildKeyReqEmbed(r.name, r.class)] }) });
+          await RatsData.markKeyRequestAnnounced(ckey, r);
+        } catch (e) { /* leave un-announced; retry next poll */ }
+      }
+    }
+
     let pendingImport = null;
     function openModal() {
       document.getElementById("modal").style.display = "flex";
@@ -299,7 +342,8 @@
         <span class="lv">${m.level}</span>
         ${main ? `<span class="altof">↳ ${esc(main)}</span>` : ""}
         ${joinedOf(m) ? `<span class="joined" title="Joined the guild">📅 ${esc(joinedOf(m))}</span>` : ""}
-        <a class="armory" href="https://armory.warmane.com/character/${encodeURIComponent(m.name)}/Onyxia/summary" target="_blank" rel="noopener" title="Open ${esc(m.name)} on Warmane Armory" onclick="event.stopPropagation()">🔗</a>
+        ${isAlt(m) ? "" : `<span class="pkey${hasProfileKey(m.name) ? ' on' : ''}" data-name="${esc(m.name)}" data-class="${esc(m.class || "")}" title="${hasProfileKey(m.name) ? 'Profile key set — click to regenerate' : 'Generate a profile-page key for this raider'}" style="margin-left:auto">🔑</span>`}
+        <a class="armory" href="https://armory.warmane.com/character/${encodeURIComponent(m.name)}/Onyxia/summary" target="_blank" rel="noopener" title="Open ${esc(m.name)} on Warmane Armory" onclick="event.stopPropagation()"${isAlt(m) ? ' style="margin-left:auto"' : ''}>🔗</a>
       </div>`;
     }
 
@@ -335,13 +379,18 @@
       buildRankFilter(data);
       paint();
       sendStaleAlert(false);   // auto-post to #okanor-logs if it's been too long (once/day)
+      announceKeyRequests();   // ping #okanor-logs for any pending profile-key requests
+      setInterval(announceKeyRequests, 60000);   // keep picking up new requests while the page is open
     }
     // click a 💀 to toggle that member as a Fang (delegated; #roster persists across repaints)
     document.getElementById("roster").addEventListener("click", e => {
-      const f = e.target.closest(".fang"); if (!f) return;
-      e.stopPropagation();
-      toggleFang(f.getAttribute("data-name"));
+      const f = e.target.closest(".fang");
+      if (f) { e.stopPropagation(); toggleFang(f.getAttribute("data-name")); return; }
+      const k = e.target.closest(".pkey");
+      if (k) { e.stopPropagation(); genProfileKeyFor(k.getAttribute("data-name"), k.getAttribute("data-class")); return; }
     });
 
-    // load the shared (possibly encrypted) roster.json, then render; falls back to local import
-    if (window.RatsData) { RatsData.loadRoster({ interactive: false }).then(boot); } else { boot(); }
+    // load the shared (possibly encrypted) roster.json + the published profile keys, then render
+    if (window.RatsData) {
+      Promise.all([loadProfileKeys(), RatsData.loadRoster({ interactive: false })]).then(boot);
+    } else { boot(); }
