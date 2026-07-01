@@ -39,18 +39,51 @@
     let PROFILE_KEYS = {};   // { charKey: true } — populated on boot from the plain `profiles` node
     function hasProfileKey(name) { return !!PROFILE_KEYS[RatsData.profKey(name)]; }
     async function loadProfileKeys() { try { PROFILE_KEYS = await RatsData.loadProfiles() || {}; } catch (e) { PROFILE_KEYS = {}; } }
-    async function genProfileKeyFor(name, cls) {
-      const had = hasProfileKey(name);
-      if (had && !confirm("Regenerate the profile key for " + name + "?\nThe old key stops working immediately.")) return;
+    // ---- profile-key modal (open from the roster 🔑) ----
+    let KM = { name: "", cls: "" };   // the raider the key modal is currently about
+    function openKeyModal(name, cls) {
+      KM = { name: name, cls: cls || "" };
+      const has = hasProfileKey(name);
+      document.getElementById("kmName").textContent = name;
+      document.getElementById("kmGen").textContent = has ? "Regenerate" : "Generate";
+      document.getElementById("kmRevoke").classList.toggle("hidden", !has);
+      document.getElementById("kmKey").value = "";
+      document.getElementById("kmCopy").textContent = "Copy";
+      document.getElementById("kmErr").textContent = "";
+      document.getElementById("keyModal").style.display = "flex";
+    }
+    function closeKeyModal() { document.getElementById("keyModal").style.display = "none"; }
+
+    async function kmGenerate() {
       try {
-        const key = await RatsData.setProfileKey(name, cls);
-        PROFILE_KEYS[RatsData.profKey(name)] = true;
-        try { await RatsData.clearKeyRequest(name); } catch (e) {}   // resolve any pending request
+        const key = await RatsData.setProfileKey(KM.name, KM.cls);
+        PROFILE_KEYS[RatsData.profKey(KM.name)] = true;
+        try { await RatsData.clearKeyRequest(KM.name); } catch (e) {}   // resolve any pending request
         paint();
-        // show the raw key once so the officer can DM it — it's never stored, only its hash.
-        window.prompt("🔑 Profile key for " + name + " — copy and DM it to them (shown once):", key);
-        setMsgOk("🔑 Profile key " + (had ? "regenerated" : "generated") + " for " + name + " — DM it to them. They unlock at /public/profile/.");
-      } catch (e) { const el = document.getElementById("err"); if (el) { el.style.color = "#ff6b6b"; el.textContent = "❌ Key publish failed: " + e.message; } }
+        // reveal the raw key once (never stored, only its hash)
+        document.getElementById("kmKey").value = key;
+        document.getElementById("kmRevoke").classList.remove("hidden");
+        document.getElementById("kmGen").textContent = "Regenerate";
+      } catch (e) { document.getElementById("kmErr").textContent = "Failed: " + e.message; }
+    }
+
+    async function kmRevoke() {
+      if (!confirm("Revoke the profile key for " + KM.name + "?")) return;
+      try {
+        await RatsData.clearProfileKey(KM.name);
+        delete PROFILE_KEYS[RatsData.profKey(KM.name)];
+        paint();
+        closeKeyModal();
+      } catch (e) { document.getElementById("kmErr").textContent = "Failed: " + e.message; }
+    }
+
+    async function copyKmKey() {
+      const v = document.getElementById("kmKey").value;
+      if (!v) return;   // nothing generated yet
+      try { await navigator.clipboard.writeText(v); }
+      catch (e) { const i = document.getElementById("kmKey"); i.select(); document.execCommand && document.execCommand("copy"); }
+      document.getElementById("kmCopy").textContent = "Copied";
+      setTimeout(() => { const b = document.getElementById("kmCopy"); if (b) b.textContent = "Copy"; }, 1500);
     }
 
     // ---- profile-key REQUESTS: poll the plain node, ping #okanor-logs for new ones (poll+announce) ----
@@ -387,7 +420,7 @@
       const f = e.target.closest(".fang");
       if (f) { e.stopPropagation(); toggleFang(f.getAttribute("data-name")); return; }
       const k = e.target.closest(".pkey");
-      if (k) { e.stopPropagation(); genProfileKeyFor(k.getAttribute("data-name"), k.getAttribute("data-class")); return; }
+      if (k) { e.stopPropagation(); openKeyModal(k.getAttribute("data-name"), k.getAttribute("data-class")); return; }
     });
 
     // load the shared (possibly encrypted) roster.json + the published profile keys, then render

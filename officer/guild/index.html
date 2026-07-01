@@ -78,6 +78,25 @@
     </div>
   </div>
 
+  <!-- profile-key modal (per-raider) -->
+  <div id="keyModal" onclick="if(event.target===this) closeKeyModal()">
+    <div class="box keybox">
+      <button class="kmx" onclick="closeKeyModal()" aria-label="Close">✕</button>
+      <h2 class="kmttl">🔑 <span id="kmName" class="gold"></span></h2>
+
+      <div class="keyrow">
+        <input id="kmKey" type="text" readonly onclick="this.select()" placeholder="— generate to reveal —">
+        <button id="kmCopy" class="alt" onclick="copyKmKey()">Copy</button>
+      </div>
+
+      <div class="err" id="kmErr"></div>
+      <div class="controls" id="kmControls">
+        <button id="kmGen" onclick="kmGenerate()"></button>
+        <button id="kmRevoke" class="del hidden" onclick="kmRevoke()">Revoke key</button>
+      </div>
+    </div>
+  </div>
+
   <script src="../../assets/js/data.js"></script>
   <script src="guild.js"></script>
 </body>
