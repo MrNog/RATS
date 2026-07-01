@@ -114,6 +114,9 @@ h2.sec:hover { color: var(--accent-hi) }
 .caret { font-size: 11px; color: var(--text-dim-2) }
 .cnt { color: #6e7178; font-size: 12px; font-weight: 600; text-transform: none; letter-spacing: 0 }
 
+/* gold accent text — emphasize a keyword/hint in gold (matches the hub) */
+.gold { color: var(--accent) }
+
 /* ---- pill ---- */
 .pill {
   font-size: 10px;

@@ -49,6 +49,28 @@ a.card:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
 }
+
+/* featured card — the one people should see first (Addons: you need it to raid) */
+a.card.featured {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(192, 148, 58, 0.14), var(--surface) 60%);
+  box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.25), 0 8px 28px rgba(192, 148, 58, 0.08);
+}
+a.card.featured:hover {
+  box-shadow: 0 0 0 1px var(--accent), 0 10px 32px rgba(192, 148, 58, 0.14);
+}
+a.card .badge {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: 2px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--surface-2);
+  background: var(--accent);
+  border-radius: 9px;
+  padding: 2px 8px;
+}
 a.card .t {
   color: var(--accent);
   font-weight: 800;

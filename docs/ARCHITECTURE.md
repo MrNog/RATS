@@ -2,7 +2,7 @@
 
 > Maintainer-only, gitignored. The single source of truth for the app's structure & features.
 > Conventions (colors, dates, voice, icons) live in `../CLAUDE.md`. The logs API request sent to the
-> wow-logs dev is in `RANKINGS_API_REQUEST.md`; image prompts in `PROMPTS.md`.
+> wow-logs dev is in `RANKINGS_API_REQUEST.md`; hero-art style + per-rat sheets in `art/` (`STYLE.md` + `characters/`).
 
 ---
 
@@ -137,7 +137,7 @@ REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<n
   EXTERNAL mandatory addons in `releases.json` (release or default-branch commit) → posts to `LOGS_WEBHOOK`
   (#okanor-logs), state in `release-state.json`.
 
-## 7. Rankings (rankings.html) — logs-fed
+## 7. Rankings (public/rankings/) — logs-fed
 
 Public page; **no attendance** (ranking reflects absence naturally). Tabs: **🏆 Leaderboards** (personal: MVP,
 Top DPS/HPS, Most improved, Needs work, Records), **📊 Guild progress** (collective: week-over-week verdict +

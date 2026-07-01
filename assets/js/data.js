@@ -137,6 +137,54 @@ window.RatsData = (function () {
   function publishMembers(list) { return fbOn() ? fbPut("members", list) : Promise.resolve(); }
   async function loadMembers() { return (fbOn() ? await fbGet("members") : null) || []; }
 
+  // ---- per-main PROFILE keys (Path B) — soft login for the raider profile page ----
+  // We NEVER store the raw key, only salt + SHA-256(salt + key) in the plain `profiles` node,
+  // so reading the node leaks nothing. A char key is the lowercased a-z0-9 form of the name.
+  function profKey(name) { return String(name || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  async function sha256Hex(s) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+  // generate a short, readable random key (officer reads it out / DMs it to the raider)
+  function genProfileKey() {
+    const a = crypto.getRandomValues(new Uint8Array(8));
+    const cs = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no look-alikes (0/O, 1/I/L)
+    let s = ""; for (let i = 0; i < a.length; i++) s += cs[a[i] % cs.length];
+    return s.slice(0, 4) + "-" + s.slice(4); // e.g. "K7QP-N2RF"
+  }
+  // Officer: publish (or replace) the hash for a main. Returns the raw key to hand over.
+  async function setProfileKey(name, cls) {
+    if (!fbOn()) throw new Error("Firebase off — can't publish a profile key.");
+    const key = genProfileKey();
+    const salt = ab2b64(crypto.getRandomValues(new Uint8Array(12)));
+    const hash = await sha256Hex(salt + key);
+    await fbPut("profiles/" + profKey(name), { name: name, class: cls || "", salt, hash });
+    return key;
+  }
+  async function clearProfileKey(name) { return fbOn() ? fbDelete("profiles/" + profKey(name)) : Promise.resolve(); }
+  async function loadProfiles() { return (fbOn() ? await fbGet("profiles") : null) || {}; }
+
+  // ---- profile-key REQUESTS (plain node) — a guildie asks for a key; the officer page polls + pings ----
+  // poll+announce pattern: the public profile page can't reach the webhook, so it just writes a request
+  // here; the officer/guild page picks it up, posts to #okanor-logs, and flips `announced`.
+  async function requestProfileKey(name, cls) {
+    if (!fbOn()) throw new Error("Firebase off — can't send a request.");
+    await fbPut("keyRequests/" + profKey(name), { name: name, class: cls || "", at: Date.now(), announced: false });
+    return true;
+  }
+  async function loadKeyRequests() { return (fbOn() ? await fbGet("keyRequests") : null) || {}; }
+  async function markKeyRequestAnnounced(charKey, rec) { return fbPut("keyRequests/" + charKey, Object.assign({}, rec, { announced: true })); }
+  async function clearKeyRequest(name) { return fbOn() ? fbDelete("keyRequests/" + profKey(name)) : Promise.resolve(); }
+
+  // Raider: verify an entered (name, key) against the published hash. Returns the charKey on success, else "".
+  async function verifyProfileKey(name, key) {
+    const ck = profKey(name);
+    const rec = fbOn() ? await fbGet("profiles/" + ck) : null;
+    if (!rec || !rec.salt || !rec.hash) return "";
+    const h = await sha256Hex(rec.salt + String(key || "").trim().toUpperCase());
+    return h === rec.hash ? ck : "";
+  }
+
   // download a json file (manual-commit fallback when Firebase is off)
   function download(name, obj) {
     const a = document.createElement("a");
@@ -453,6 +501,8 @@ window.RatsData = (function () {
     aliasFor,
     loadVacations, addVacation, updateVacation, removeVacation,
     publishMembers, loadMembers,
+    profKey, genProfileKey, setProfileKey, clearProfileKey, loadProfiles, verifyProfileKey,
+    requestProfileKey, loadKeyRequests, markKeyRequestAnnounced, clearKeyRequest,
     loadRoster,
     loadHistory,
     cachedHistory,

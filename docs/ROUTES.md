@@ -13,6 +13,8 @@ public/                             PUBLIC pages (everyone)
   addons/index.html                 addons · WeakAuras · patch        (+ addons.css/.js)
   gallery/index.html                art/lore gallery                   (+ gallery.css/.js)
   vacations/index.html              vacations — role-aware (see note)  (+ vacations.css/.js)
+  profile/index.html                raider profile — armory + badges   (+ profile.css/.js)
+  rankings/index.html               rankings & hall of fame (public)   (+ rankings.css/.js)
 officer/                            PRIVATE tools (gated by guild key)
   index.html                        officer landing / menu
   guild/index.html                  roster browser                     (+ guild.css/.js)
@@ -25,7 +27,7 @@ officer/                            PRIVATE tools (gated by guild key)
 assets/                             SHARED
   css/theme.css                     tokens + base (EVERY page)
   css/ui.css                        components (every page except the 2 hubs)
-  js/data.js                        RatsData (Firebase, gate, vacations/members)
+  js/data.js                        RatsData (Firebase, gate, vacations/members/profile-keys)
   js/datepicker.js                  RatsCal
   js/utils.js                       optional RatsUtils helpers
 ```
@@ -33,6 +35,17 @@ assets/                             SHARED
 > **Vacations is ONE page** at `public/vacations/`. It detects officer mode by `localStorage.ratsGuildKey`
 > and reveals remove/edit/repost + the month calendar; guildies get add + preview only. Both hubs link to it.
 > `rankings/` is planned (public), not built yet.
+>
+> **Profile is ONE page** at `public/profile/`. Public armory view for anyone (picker from `members`,
+> stats from the `rankings` snapshot — SAMPLE fallback until the API is live). Private cards (Barracks alts,
+> attendance link) reveal for officers (`ratsGuildKey`) or a raider who unlocks their main with a
+> **profile key** (`ratsProfileUnlock`). Officers generate per-main keys with the 🔑 button in `officer/guild/`;
+> only `salt + SHA-256(salt+key)` is published to the plain `profiles` node — the raw key is never stored.
+>
+> **Rankings is a public page** at `public/rankings/`. Reads ONE `rankings` snapshot (TTL 30 min, cached);
+> raid/size/period toggles filter client-side (no extra reads). The gold **Fetch** button shows only with the
+> guild key — it pulls the wow-logs API, computes, and writes the snapshot. `RANKINGS_URL` is empty until the
+> API is live, so it renders the bundled `SAMPLE`. Full spec in `.claude/rules/rankings.md`.
 
 ## Cross-page links (the ones to keep in sync on a move)
 
