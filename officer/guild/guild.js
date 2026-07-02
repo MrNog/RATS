@@ -101,6 +101,31 @@ function isAlt(m) {
   return m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m);
 }
 
+// ---- auto-save: push the current local roster straight to Firebase (plain, no key) ----
+// Fire-and-forget: the local copy is already saved; this shares it with the other officers.
+async function autoShare(note) {
+  const data = load();
+  if (!data || !data.roster || !window.RatsData) return;
+  try {
+    const res = await RatsData.saveRoster(data);
+    if (res.mode === "firebase") {
+      // keep the public vacation picker in sync too
+      try {
+        const members = data.roster
+          .filter((m) => !isAlt(m) && !/pug/i.test(m.rankName || ""))
+          .map((m) => ({ name: m.name, class: m.class || "" }));
+        await RatsData.publishMembers(members);
+      } catch (e) {}
+      if (note) setMsgOk(note + " · ☁️ shared with officers");
+    } else if (note) {
+      setMsgOk(note + " · 💾 saved locally (download to commit)");
+    }
+  } catch (e) {
+    const el = document.getElementById("err");
+    if (el) { el.style.color = "#ff6b6b"; el.textContent = "⚠️ Saved locally but sharing failed: " + e.message; }
+  }
+}
+
 // ---- Fangs (10-man squad) — stored as a list of names in data.fangs, survives re-imports ----
 function normNm(s) {
   return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -125,8 +150,8 @@ function toggleFang(name) {
   if (i >= 0) d.fangs.splice(i, 1);
   else d.fangs.push(name);
   localStorage.setItem(LS, JSON.stringify(d));
-  setMsgOk("💀 Fangs updated locally — click 💾 Save roster to share with the officers.");
   paint();
+  autoShare("💀 Fangs updated");
 }
 
 // ---- Spec — stored in data.specs { name: specLabel }, survives re-imports (like fangs/joined) ----
@@ -136,8 +161,8 @@ function setSpec(name, spec) {
   d.specs = d.specs || {};
   if (spec) d.specs[name] = spec; else delete d.specs[name];
   localStorage.setItem(LS, JSON.stringify(d));
-  setMsgOk("🎯 Spec updated locally — click 💾 Save roster to share with the officers.");
   paint();
+  autoShare("🎯 " + esc(name) + " → " + (spec || "no spec"));
 }
 // close any open spec picker
 function closeSpecMenu() { const m = document.getElementById("specMenu"); if (m) m.remove(); }
@@ -503,9 +528,8 @@ function confirmImport() {
   boot();
   let logNote = "";
   if (hadOld) logNote = postRosterChanges(diff, importDate);
-  setMsgOk(
-    `✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}. Click 💾 Save roster to share.${logNote}`
-  );
+  // share the merged roster with the officers immediately — no separate 💾 Save step
+  autoShare(`✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}.${logNote}`);
 }
 
 // fire-and-forget post of the roster diff to the Logs webhook; returns a short status suffix for the toast
@@ -786,39 +810,15 @@ function memberRow(m) {
       </div>`;
 }
 
+// Manual "💾 Save roster" — a re-share button. Everything already auto-shares on change,
+// so this is just a belt-and-braces push (no password: the roster is stored plain now).
 async function exportRoster() {
   const data = load();
   if (!data || !data.roster) {
     alert("Import a roster first (📥 Import roster).");
     return;
   }
-  let pass = RatsData.getPass();
-  if (!pass) {
-    pass = prompt("Set the guild password (officers enter this once to unlock the roster):");
-    if (!pass) return;
-    RatsData.setPass(pass);
-  }
-  try {
-    const res = await RatsData.saveRoster(data, pass);
-    // publish a plain names+class list (mains only) so the public vacation page has a picker (no roster decryption needed)
-    try {
-      const members = data.roster
-        .filter((m) => !isAlt(m) && !/pug/i.test(m.rankName || ""))
-        .map((m) => ({ name: m.name, class: m.class || "" }));
-      await RatsData.publishMembers(members);
-    } catch (e) {}
-    setMsgOk(
-      res.mode === "firebase"
-        ? "✅ Roster saved & shared instantly — officers see it on refresh. Member list published for self-service vacations."
-        : "✅ roster.json downloaded — commit it to the repo. Officers unlock with the same password."
-    );
-  } catch (e) {
-    const el = document.getElementById("err");
-    if (el) {
-      el.style.color = "#ff6b6b";
-      el.textContent = "❌ Save failed: " + e.message;
-    }
-  }
+  await autoShare("✅ Roster re-shared with the officers");
 }
 function setMsgOk(t) {
   const e = document.getElementById("err");

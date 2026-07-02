@@ -367,28 +367,29 @@ window.RatsData = (function () {
   }
 
   // Save the history. Firebase (instant, shared) when on; else download for manual commit.
+  // Stored in PLAIN (no encryption) — officer tools are gated by the guild key, and a guildie
+  // never opens these pages. `pass` is accepted for signature-compat but unused.
   // Returns { mode: "firebase" | "download" }.
   async function saveHistory(obj, pass) {
     const data = obj && Array.isArray(obj.raids) ? obj : { raids: [] };
     cacheHistory(data);
-    const blob = await encrypt(data, pass);
     if (fbOn()) {
-      await fbPut("history", blob);
+      await fbPut("history", data);
       return { mode: "firebase" };
     }
-    download("history.json", blob);
+    download("history.json", data);
     return { mode: "download" };
   }
 
   // Save the roster. Firebase (instant, shared) when on; else download for manual commit.
+  // Stored in PLAIN — see saveHistory note. `pass` unused.
   async function saveRoster(obj, pass) {
     cache(obj);
-    const blob = await encrypt(obj, pass);
     if (fbOn()) {
-      await fbPut("roster", blob);
+      await fbPut("roster", obj);
       return { mode: "firebase" };
     }
-    download("roster.json", blob);
+    download("roster.json", obj);
     return { mode: "download" };
   }
 
@@ -462,14 +463,20 @@ window.RatsData = (function () {
     if (_unlocked) return true;
     const ov = _makeOverlay();   // block the page right away, before any async check
     let blob = null;
-    const checks = opts.checks || ["gate.json", "roster.json"];
-    for (let i = 0; i < checks.length; i++) {
-      try { const r = await fetch(checks[i], { cache: "no-store" }); if (r.ok) { const j = await r.json(); if (j && (j.enc || j.ct)) { blob = j; break; } } } catch (e) { }
-    }
-    // unified site: the encrypted lock lives in the shared Firebase (gate token, else the roster)
-    if (!blob && fbOn()) {
+    // Unified site: the encrypted lock lives in shared Firebase (gate token, else the roster).
+    // Check Firebase FIRST when it's configured, so we never fetch the local gate.json/roster.json
+    // that don't exist on the live site (those 404s are harmless but spam the console).
+    if (fbOn()) {
       try { const g = await fbGet("gate"); if (g && (g.enc || g.ct)) blob = g; } catch (e) { }
       if (!blob) { try { const r = await fbGet("roster"); if (r && (r.enc || r.ct)) blob = r; } catch (e) { } }
+    }
+    // Fallback (no Firebase, e.g. a static/committed-JSON deploy or local file://): the encrypted
+    // check files sit next to the page. Only tried when Firebase didn't already arm the lock.
+    if (!blob) {
+      const checks = opts.checks || ["gate.json", "roster.json"];
+      for (let i = 0; i < checks.length; i++) {
+        try { const r = await fetch(checks[i], { cache: "no-store" }); if (r.ok) { const j = await r.json(); if (j && (j.enc || j.ct)) { blob = j; break; } } } catch (e) { }
+      }
     }
     if (!blob) { ov.remove(); _unlocked = true; return true; }   // no lock armed -> open
     const verify = async function (pass) { const obj = await decrypt(blob, pass); if (obj && obj.roster) cache(obj); setPass(pass); _unlocked = true; return true; };
