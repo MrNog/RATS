@@ -28,9 +28,19 @@
       <div class="exbody">
         <p>Attendance is <b>not a punishment</b> — it shows <b>who's the most reliable</b>, so raid spots,
           <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.</p>
-        <p><b>What counts as a "miss":</b> you <b>signed up &amp; didn't show</b>, or you were <b>expected</b>
-          for a mandatory raid and weren't there. 🏖️ <b>On vacation = excused.</b> New members are protected —
-          raids before their join date don't count. An <b>alt counts for its main</b>.</p>
+        <p><b>One lockout = one obligation</b>, however many <b>nights</b> it took. A run split over 2–3 nights
+          (couldn't full-clear in one sitting) still counts <b>once</b>. Your <b>%</b> = how much of the run you
+          actually did — came to <b>1 of 2 nights = 50%</b>, every night = 100%. This is what feeds loot council.
+          <b>Runs</b> = how many lockouts you showed up to.</p>
+        <p><b>Two kinds of miss</b> (both shown as pills, so you can see who's flaky):</p>
+        <ul>
+          <li>🔴 <b>signup and ghosted</b> — you signed up and never showed. Marked by an officer.</li>
+          <li>🟡 <b>didnt show 2nd day</b> — you came the first night then didn't return for a later night of the
+            same run. Detected automatically. (Coming <i>late</i> to help finish is <b>not</b> this — that just
+            counts as the partial you did.)</li>
+        </ul>
+        <p>🏖️ <b>On vacation = excused.</b> New members are protected — raids before their join date don't count.
+          An <b>alt counts for its main</b>.</p>
         <p><b>Which raids count:</b></p>
         <ul>
           <li>🔴 <b>25-man — Mandatory.</b> Counts for <b>everyone</b> from their join date.</li>
@@ -49,6 +59,15 @@
           <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
           <button class="seg" data-s="all" onclick="setSize(this)">All</button>
         </div>
+        <div class="segs" id="raidSegs" title="Instance">
+          <button class="seg active" data-r="all" onclick="setRaid(this)">All</button>
+          <button class="seg" data-r="Naxx" onclick="setRaid(this)">Naxx</button>
+          <button class="seg" data-r="Ony" onclick="setRaid(this)">Ony</button>
+          <button class="seg" data-r="Ulduar" onclick="setRaid(this)">Ulduar</button>
+          <button class="seg" data-r="ToC" onclick="setRaid(this)">ToC</button>
+          <button class="seg" data-r="ICC" onclick="setRaid(this)">ICC</button>
+          <button class="seg" data-r="RS" onclick="setRaid(this)">RS</button>
+        </div>
         <div class="segs grow" id="rangeSegs">
           <button class="seg active" data-d="0" onclick="setRange(this)">All time</button>
           <button class="seg" data-d="14" onclick="setRange(this)">14d</button>
@@ -62,7 +81,7 @@
         <div class="segs grow" id="sortSegs" title="Sort raiders by">
           <button class="seg active" data-v="rank" onclick="setSort('rank')">Guild rank</button>
           <button class="seg" data-v="pct" onclick="setSort('pct')">Attendance %</button>
-          <button class="seg" data-v="present" onclick="setSort('present')">Days present</button>
+          <button class="seg" data-v="present" onclick="setSort('present')">Runs</button>
           <button class="seg" data-v="name" onclick="setSort('name')">Name</button>
           <button class="seg" data-v="class" onclick="setSort('class')">Class</button>
         </div>

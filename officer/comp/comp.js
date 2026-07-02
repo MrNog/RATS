@@ -496,11 +496,11 @@
     // ---- webhook persistence + posting ----
     (function () {
       try {
-        // remember date across sessions (date defaults to today); the shared calendar renders the label
+        // date always defaults to TODAY on open (not the last-used date); the shared calendar renders the label
         const di = document.getElementById("dateIn");
         const z = n => String(n).padStart(2, "0"), now = new Date();
         const today = now.getFullYear() + "-" + z(now.getMonth() + 1) + "-" + z(now.getDate());
-        di.value = localStorage.getItem("ratsDate") || today;
+        di.value = today;
         if (window.RatsCal) RatsCal.sync();
         // raid size (25/10) — remembered; changing it re-templates the empty board
         SIZE = localStorage.getItem("ratsSize") || "25";

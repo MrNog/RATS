@@ -122,10 +122,13 @@
       const vs = VAC || [], n = normName(name);
       return vs.some(v => v.start && normName(v.name) === n && date >= v.start && date <= (v.end || v.start));
     }
+    function raidInstOf(r) { return (window.RatsData && RatsData.raidKeyOf) ? (RatsData.raidKeyOf(r.desc) || "Other") : "Other"; }
     function filteredRaids() {
       const sf = SIZE;
       return (HIST.raids || [])
-        .filter(r => r.date && inRange(r.date) && (sf === "all" || String(raidSize(r)) === sf))
+        .filter(r => r.date && inRange(r.date)
+          && (sf === "all" || String(raidSize(r)) === sf)
+          && (RAID === "all" || raidInstOf(r) === RAID))
         .sort((a, b) => (a.date < b.date ? 1 : -1));
     }
 
@@ -167,53 +170,84 @@
         });
       }
       const total = raids.length;
-      // Group non-optional 10-man raids by (lockout week + instance) so that multiple runs
-      // in the same weekly reset count as ONE obligation — no double-strike for missing one of
-      // two same-week runs, and an alt appearance in a second run doesn't add an extra "present"
-      // for the same main.
-      const lockout10Groups = {};
+      // Group non-optional raids into LOCKOUT CHAINS by (lockout week + instance + size). A chain =
+      // one weekly obligation, however many NIGHTS it took to complete. Multi-night runs (couldn't
+      // full-clear in one sitting, esp. hardmodes) belong to the same chain, so they count ONCE.
+      const chains = {};
       raids.forEach(r => {
-        if (isLogOnly(r) || raidSize(r) !== 10) return;
+        if (isLogOnly(r)) return;
         const inst = window.RatsData ? RatsData.raidKeyOf(r.desc) : (r.desc || "");
-        const gk = lockoutStart(r.date) + "|" + inst;
-        if (!lockout10Groups[gk]) lockout10Groups[gk] = [];
-        lockout10Groups[gk].push(r);
+        const gk = raidSize(r) + "|" + lockoutStart(r.date) + "|" + inst;
+        if (!chains[gk]) chains[gk] = [];
+        chains[gk].push(r);
       });
+      const chainList = Object.values(chains);
       const rows = Object.values(map).map(o => {
         const joinD = joinDateOf(o.name), fang = isFangName(o.name);
-        // 25-man: each run is its own obligation (mandatory for everyone since join date).
-        // 10-man: grouped by lockout week — attending ANY run in the week fulfils the obligation
-        //   for that week. An alt mapping to the same main doesn't create a second "present".
-        //   Missing ALL runs in a lockout = one strike, not one per run.
-        // ⚪ Optional (log-only): never counts for either size.
-        let denom = 0, present = 0;
+        // ONE obligation per lockout chain (per weekly reset + instance), worth 1 in the denominator
+        // however many nights it took. Credit = nights you attended / nights the run ran — this feeds
+        // LOOT COUNCIL, so it measures how much of the run you actually did:
+        //   1) came to every night (1/2/3 nights) → 100%.
+        //   2) came 1 of 2 nights → 50% — for everyone, whatever the reason.
+        // The % carries this (rounded to a whole number); the Runs column shows whole lockouts.
+        //   25-man: obligation for EVERYONE since join date.  10-man: obligation for 💀 Fangs.
+        //   Joined the guild MID-chain (after night 1) → skip the whole chain, no credit/no fault.
+        //   ⚪ Optional (log-only): never counts.
+        let denom = 0, present = 0, attendedLockouts = 0, halves = 0;
 
-        raids.forEach(r => {
-          if (isLogOnly(r) || raidSize(r) !== 25) return;
-          const d = r.date;
-          const isPresent = o.presentDates.has(d);
-          if (!isPresent && (o.excused.has(d) || onVacation(o.name, d))) return;
-          const inv = o.involved.has(d);
-          if (isPresent || inv || !joinD || d >= joinD) { denom++; if (isPresent) present++; }
+        chainList.forEach(nights => {
+          const size = raidSize(nights[0]);
+          const firstDate = nights.map(r => r.date).sort()[0];
+          if (joinD && firstDate < joinD) return;                    // whole chain predates them
+          if (joinD && nights.some(r => r.date < joinD) && nights.some(r => r.date >= joinD)) return; // joined mid-chain → skip
+
+          const ordered = nights.slice().sort((a, b) => a.date < b.date ? -1 : 1);   // chronological
+          const wasPresent = r => o.presentDates.has(r.date);
+          const isExcused  = r => !wasPresent(r) && (o.excused.has(r.date) || onVacation(o.name, r.date));
+          const nAttended = ordered.filter(wasPresent).length;
+          const nExcused  = ordered.filter(isExcused).length;
+
+          // is this chain an obligation for this person?
+          const obligated = size === 25
+            ? (nAttended > 0 || o.involved.has(firstDate) || fang || !joinD || firstDate >= joinD)
+            : (nAttended > 0 || fang);                                // 10-man → Fangs (or anyone who showed)
+          if (!obligated) return;
+
+          if (nAttended === 0 && nExcused === nights.length) return;  // 🏖️ excused from every night
+
+          denom++;                                                    // one obligation
+          if (nAttended > 0) {
+            attendedLockouts++;                                       // showed up to this lockout at all
+            const counting = nights.length - nExcused;               // nights that actually counted
+            present += counting > 0 ? nAttended / counting : 1;       // fractional credit → % (loot council)
+            // HALF = came the FIRST night then vanished: present on the first attended night, but
+            // absent (not excused) a LATER night. A latecomer (missed the first night, came later
+            // to help) has no missed night AFTER their first appearance → not a half.
+            const firstIdx = ordered.findIndex(wasPresent);
+            const missedLater = ordered.slice(firstIdx + 1).some(r => !wasPresent(r) && !isExcused(r));
+            if (missedLater) halves++;
+          }
         });
 
-        Object.values(lockout10Groups).forEach(lRaids => {
-          const firstDate = lRaids.map(r => r.date).sort()[0];
-          if (joinD && firstDate < joinD) return;                    // not yet a member
-          const presentInLockout = lRaids.some(r => o.presentDates.has(r.date));
-          const allExcused = !presentInLockout && lRaids.every(r =>
-            o.excused.has(r.date) || onVacation(o.name, r.date));
-          if (allExcused) return;                                     // 🏖️ excused from every run
-          const involvedInLockout = lRaids.some(r => o.involved.has(r.date));
-          if (presentInLockout || involvedInLockout || fang) { denom++; if (presentInLockout) present++; }
-        });
-
-        return { ...o, present, total: denom, pct: denom ? Math.round(present / denom * 100) : 0 };
+        const pct = denom ? Math.round(present / denom * 100) : 0;
+        return { ...o, lockouts: attendedLockouts, halves, total: denom, pct };
       });
       return { rows, total };
     }
 
-    function barColor(p) { return p >= 80 ? "#43b581" : p >= 50 ? "#c0943a" : "#d9534f"; }
+    // 10 stepped tiers (every 10%) — softened but still colorful, green → red
+    function barColor(p) {
+      return p >= 90 ? "#4fb573"   // green
+        :    p >= 80 ? "#82bd5b"   // lime
+        :    p >= 70 ? "#b3c24d"   // yellow-green
+        :    p >= 60 ? "#d4bc48"   // yellow
+        :    p >= 50 ? "#d9a648"   // gold
+        :    p >= 40 ? "#d68946"   // orange
+        :    p >= 30 ? "#d16d46"   // dark orange
+        :    p >= 20 ? "#cd5a4c"   // red-orange
+        :    p >= 10 ? "#c74d55"   // red
+        :              "#b8454f";  // deep red
+    }
 
     function renderAttendance() {
       const raids = filteredRaids();
@@ -223,24 +257,21 @@
       document.getElementById("attHead").textContent = "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
 
       const lg = document.getElementById("legend");
-      const fmt = '<b>Days</b> = times present <b>/</b> raids that counted. ⚪ Optional runs never count.';
-      if (sf === "10") {
-        lg.innerHTML = '💀 <b>Fang runs</b> (10-man) grouped by <b>lockout week</b> — multiple runs in the same reset count as <b>one obligation</b>. Attending any one run clears the whole week; missing all = one strike. '
-          + 'Non-Fangs only count for lockouts they actually joined. ' + fmt;
-      } else if (sf === "25") {
-        lg.innerHTML = '🔴 <b>25-mans are mandatory</b> — every 25-man counts for everyone since they joined. ' + fmt;
-      } else {
-        lg.innerHTML = 'Combined: 🔴 25-mans count for everyone; 💀 10-man Fang runs count for Fangs. 🏖️ Vacations excused. ' + fmt;
-      }
+      // key with context — the full rules live in the "How attendance works" panel above.
+      const scope = sf === "10" ? '💀 <b>10-man</b> counts for Fangs' : sf === "25" ? '🔴 <b>25-man</b> counts for everyone' : '🔴 25-man = everyone · 💀 10-man = Fangs';
+      lg.innerHTML = scope
+        + '. <b>%</b> = share of the run you did (1 of 2 nights = 50%). '
+        + '<span class="pill">ghost</span> = signed up but never showed; '
+        + '<span class="pill half">2nd day</span> = came night 1, skipped a later night.';
 
       const q = (document.getElementById("search").value || "").toLowerCase().trim();
       let list = q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
       const sort = SORT;
       list = list.slice().sort((a, b) => {
         if (sort === "name") return a.name.localeCompare(b.name);
-        if (sort === "class") return (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct;
-        if (sort === "present") return b.present - a.present || b.pct - a.pct;
-        if (sort === "pct") return b.pct - a.pct || b.present - a.present || a.name.localeCompare(b.name);
+        if (sort === "class") return (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct || a.name.localeCompare(b.name);
+        if (sort === "present") return b.lockouts - a.lockouts || b.pct - a.pct;
+        if (sort === "pct") return b.pct - a.pct || b.lockouts - a.lockouts || a.name.localeCompare(b.name);
         // default: guild rank (GM → Officer → Raider → Sewer), then class, then alphabetical
         return (a.rankIndex - b.rankIndex) || (a.cls || "").localeCompare(b.cls || "") || a.name.localeCompare(b.name);
       });
@@ -253,10 +284,9 @@
       const tc = s => sort === s ? ' style="color:#fff"' : '';
       let html = '<table><thead><tr>'
         + `<th onclick="setSort('name')"${tc('name')}>Raider${ar('name')}</th>`
-        + `<th onclick="setSort('class')"${tc('class')}>Class${ar('class')}</th>`
-        + '<th>Attendance</th>'
-        + `<th onclick="setSort('present')"${tc('present')}>Days${ar('present')}</th>`
-        + `<th onclick="setSort('pct')"${tc('pct')}>%${ar('pct')}</th>`
+        + '<th class="attcol">Attendance</th>'
+        + `<th class="runcol" onclick="setSort('present')"${tc('present')} title="Lockouts attended / lockouts that counted">Runs${ar('present')}</th>`
+        + `<th class="pctcol" onclick="setSort('pct')"${tc('pct')}>%${ar('pct')}</th>`
         + '</tr></thead><tbody>';
       const byRank = (sort === "rank"); // collapsible rank groups only when sorted by rank
       // seed defaults once: Sewer Rats collapsed (less important)
@@ -274,25 +304,21 @@
           const rk = r.rankName || "Unranked / Pug";
           if (rk !== curRank) {
             curRank = rk; curCollapsed = collapsed.has(rk);
-            html += `<tr class="rankrow"><td colspan="5" data-rk="${esc(rk).replace(/"/g, "&quot;")}" onclick="toggleRank(this.dataset.rk)" style="cursor:pointer;user-select:none">${curCollapsed ? "▸" : "▾"} ${esc(rk)} <span style="color:#6e7178;font-weight:600">(${rankCounts[rk]})</span></td></tr>`;
+            html += `<tr class="rankrow"><td colspan="4" data-rk="${esc(rk).replace(/"/g, "&quot;")}" onclick="toggleRank(this.dataset.rk)" style="cursor:pointer;user-select:none">${curCollapsed ? "▸" : "▾"} ${esc(rk)} <span style="color:#6e7178;font-weight:600">(${rankCounts[rk]})</span></td></tr>`;
           }
         }
         const hidden = (byRank && curCollapsed) ? ' style="display:none"' : '';
         const col = CLASS_COLOR[r.cls] || "#ddd";
-        const ns = r.noShow ? `<span class="pill" title="explicit no-shows">${r.noShow} no-show${r.noShow != 1 ? "s" : ""}</span>` : "";
+        const ghost = r.noShow ? `<span class="pill" title="Signed up but never showed">${r.noShow}&times; ghost</span>` : "";
+        const half = r.halves ? `<span class="pill half" title="Came the first night but didn't return for a later night of the same run">${r.halves}&times; 2nd day</span>` : "";
         const fang = isFangName(r.name);
         const fangMark = fang ? `<span title="Fang — expected at all 10-mans" style="cursor:help">💀 </span>` : "";
-        const sfNow = SIZE;
-        const why = sfNow === "10"
-          ? (fang ? `Fang: ${r.total} lockout week${r.total != 1 ? "s" : ""} counted — attended ${r.present}.`
-                  : `Attended ${r.present} of ${r.total} lockout week${r.total != 1 ? "s" : ""} that counted.`)
-          : `${r.present} present out of ${r.total} raid${r.total != 1 ? "s" : ""} that counted.`;
+        const why = `Showed up to ${r.lockouts} of ${r.total} lockout${r.total != 1 ? "s" : ""} that counted. The % reflects how much of each run you did.`;
         html += `<tr${hidden}>
           <td class="nm" style="color:${col}">${fangMark}${esc(r.name)}</td>
-          <td style="color:${col}">${esc(r.cls || "—")}</td>
-          <td><div class="bar"><i style="width:${r.pct}%;background:${barColor(r.pct)}"></i></div></td>
-          <td title="${esc(why)}" style="cursor:help">${r.present} / ${r.total}${ns}</td>
-          <td class="pct" style="color:${barColor(r.pct)}">${r.pct}%</td>
+          <td class="attcol"><div class="bar"><i style="width:${r.pct}%;background:${barColor(r.pct)}"></i></div></td>
+          <td class="runcol" title="${esc(why)}" style="cursor:help">${r.lockouts} / ${r.total}${ghost}${half}</td>
+          <td class="pctcol pct" style="color:${barColor(r.pct)}">${r.pct}%</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -302,9 +328,10 @@
     function setSort(v) { SORT = v; document.querySelectorAll("#sortSegs .seg").forEach(s => s.classList.toggle("active", s.dataset.v === SORT)); renderAttendance(); }
 
     // segmented filters (raid size + quick date range + sort) — same style as the rankings page
-    let SIZE = "25", RANGE_DAYS = 0, SORT = "rank";
+    let SIZE = "25", RANGE_DAYS = 0, SORT = "rank", RAID = "all";
     function setSize(b) { SIZE = b.dataset.s; document.querySelectorAll("#sizeSegs .seg").forEach(s => s.classList.toggle("active", s === b)); rerender(); }
     function setRange(b) { RANGE_DAYS = parseInt(b.dataset.d) || 0; document.querySelectorAll("#rangeSegs .seg").forEach(s => s.classList.toggle("active", s === b)); rerender(); }
+    function setRaid(b) { RAID = b.dataset.r; document.querySelectorAll("#raidSegs .seg").forEach(s => s.classList.toggle("active", s === b)); rerender(); }
 
     // collapsible rank sections (state persisted; Sewer Rats collapsed by default)
     let collapsedRanks = (function () { try { const a = JSON.parse(localStorage.getItem("ratsAttCollapsed") || "null"); return Array.isArray(a) ? new Set(a) : null; } catch (e) { return null; } })();
