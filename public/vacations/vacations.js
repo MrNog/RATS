@@ -624,23 +624,26 @@ async function purgeExpired() {
   VACS = VACS.filter((v) => !dead.has(v.key));
 }
 
+// Load the shared vacations. THROWS on a real read failure (so reload can keep the current list
+// visible instead of blanking it). RatsData.loadVacations already times out + retries once.
 async function loadVacs() {
   if (window.RatsData && RatsData.loadVacations) {
-    try {
-      const a = await RatsData.loadVacations();
-      return Array.isArray(a) ? a : [];
-    } catch (e) {}
+    const a = await RatsData.loadVacations();
+    return Array.isArray(a) ? a : [];
   }
-  try {
-    const r = await fetch(FB + "vacations.json", { cache: "no-store" });
-    const o = r.ok ? await r.json() : null;
-    return o ? Object.keys(o).map((k) => Object.assign({ key: k }, o[k])) : [];
-  } catch (e) {
-    return [];
-  }
+  const r = await fetch(FB + "vacations.json", { cache: "no-store" });
+  const o = r.ok ? await r.json() : null;
+  return o ? Object.keys(o).map((k) => Object.assign({ key: k }, o[k])) : [];
 }
 async function reload() {
-  VACS = await loadVacs();
+  try {
+    VACS = await loadVacs();
+  } catch (e) {
+    // keep the list already on screen rather than wiping it to empty on a transient blip
+    msg("⚠️ Couldn't refresh the vacation list — showing the last loaded copy.", "#e0a13e");
+    render();
+    return;
+  }
   if (isOfficer) await purgeExpired();
   render();
   if (isOfficer) {

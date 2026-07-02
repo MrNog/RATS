@@ -19,19 +19,27 @@
   <div class="wrap wide">
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <a class="btn" href="../index.html">← Back to Tools</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> RATS — Attendance &amp; History</h1>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg> RATS — Attendance &amp; History</h1>
       <a class="btn" href="../../public/vacations/index.html" style="margin-left:auto">🏖️ Vacations →</a>
       <a class="btn" href="../comp/index.html">🗓 Raid Comp →</a>
     </div>
     <details class="explain">
-      <summary>📊 How attendance works — and why <span style="color:var(--accent);font-weight:600">(click)</span></summary>
+      <summary>📊 How attendance works — and why <span style="color:var(--accent);font-weight:600">(click)</span>
+      </summary>
       <div class="exbody">
         <p>Attendance is <b>not a punishment</b> — it shows <b>who's the most reliable</b>, so raid spots,
-          <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.</p>
+          <b>loot priority</b> and 💀 <b>Fang</b> promotions are fair. A miss is just data.
+        </p>
         <p><b>One lockout = one obligation</b>, however many <b>nights</b> it took. A run split over 2–3 nights
           (couldn't full-clear in one sitting) still counts <b>once</b>. Your <b>%</b> = how much of the run you
           actually did — came to <b>1 of 2 nights = 50%</b>, every night = 100%. This is what feeds loot council.
-          <b>Runs</b> = how many lockouts you showed up to.</p>
+          <b>Runs</b> = how many lockouts you showed up to.
+        </p>
         <p><b>Two kinds of miss</b> (both shown as pills, so you can see who's flaky):</p>
         <ul>
           <li>🔴 <b>signup and ghosted</b> — you signed up and never showed. Marked by an officer.</li>
@@ -44,8 +52,10 @@
         <p><b>Which raids count:</b></p>
         <ul>
           <li>🔴 <b>25-man — Mandatory.</b> Counts for <b>everyone</b> from their join date.</li>
-          <li>💀 <b>10-man — Fang run.</b> Counts for <b>Warchief's Fangs</b> only (and anyone who actually played it).</li>
-          <li>⚪ <b>Optional — log-only.</b> Alt 25 runs, casual/pug 10-mans: saved as <b>history only</b>, counts for nobody.</li>
+          <li>💀 <b>10-man — Fang run.</b> Counts for <b>Warchief's Fangs</b> only (and anyone who actually played it).
+          </li>
+          <li>⚪ <b>Optional — log-only.</b> Alt 25 runs, casual/pug 10-mans: saved as <b>history only</b>, counts for
+            nobody.</li>
         </ul>
         <p>Flip any run with the <b>Optional</b> switch on its card in the log — it saves instantly.</p>
       </div>
@@ -89,7 +99,8 @@
       <div class="frow">
         <span class="flbl">Find</span>
         <input type="text" id="search" placeholder="Search raider…" oninput="rerender()">
-        <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0 raids</label>
+        <label class="chk"><input type="checkbox" id="incRoster" onchange="rerender()"> show roster raiders with 0
+          raids</label>
       </div>
     </div>
     <div class="msg" id="msg"></div>

@@ -20,19 +20,62 @@ function esc(s) {
 const CDN = (id) => "https://cdn.discordapp.com/emojis/" + id + ".png?size=44";
 // per WoW class: [specLabel, emoteId, ...matchWords]. First word is what we store/show.
 const SPECS = {
-  "Death Knight": [["Blood", "1013371105874018405", "blood", "bdk"], ["Frost", "1013371107610468445", "frost"], ["Unholy", "1013371108575162419", "unholy", "uh"]],
-  Druid: [["Balance", "637564171994529798", "balance", "boomkin", "boom", "moonkin", "bala"], ["Feral", "637564172061900820", "feral", "cat", "ferals"], ["Guardian", "637564171696734209", "guardian", "bear", "tank"], ["Restoration", "637564172007112723", "resto", "restoration", "restro", "rdudu", "healer", "heal"]],
-  Hunter: [["Beastmastery", "637564202021814277", "bm", "beast"], ["Marksmanship", "637564202084466708", "mm", "marks", "marksman"], ["Survival", "637564202130866186", "surv", "survival"]],
-  Mage: [["Arcane", "637564231545389056", "arcane"], ["Fire", "637564231239073802", "fire"], ["Frost", "637564231469891594", "frost"]],
-  Paladin: [["Holy", "637564297622454272", "holy", "holylate", "preg"], ["Protection", "637564297647489034", "prot", "protection"], ["Retribution", "637564297953673216", "ret", "retri", "retribution"]],
-  Priest: [["Discipline", "637564323442720768", "disc", "disco", "discipline"], ["Holy", "637564323530539019", "holy"], ["Shadow", "637564323291725825", "shadow"]],
-  Rogue: [["Assassination", "637564351707873324", "sin", "assa", "assassination", "ass"], ["Combat", "637564352333086720", "combat"], ["Subtlety", "637564352169508892", "sub", "subtlety"]],
-  Shaman: [["Elemental", "637564379595931649", "ele", "elem", "elemental", "spellhance"], ["Enhancement", "637564379772223489", "enh", "enha", "enhancement"], ["Restoration", "637564379847458846", "resto", "restoration", "healer", "heal"]],
-  Warlock: [["Affliction", "637564406984867861", "affli", "affliction"], ["Demonology", "637564407001513984", "demo", "demonology"], ["Destruction", "637564406682877964", "destro", "destruction"]],
-  Warrior: [["Arms", "637564445031399474", "arms"], ["Fury", "637564445215948810", "fury"], ["Protection", "637564444834136065", "prot", "protection", "tank"]],
+  "Death Knight": [
+    ["Blood", "1013371105874018405", "blood", "bdk"],
+    ["Frost", "1013371107610468445", "frost"],
+    ["Unholy", "1013371108575162419", "unholy", "uh"],
+  ],
+  Druid: [
+    ["Balance", "637564171994529798", "balance", "boomkin", "boom", "moonkin", "bala"],
+    ["Feral", "637564172061900820", "feral", "cat", "ferals"],
+    ["Guardian", "637564171696734209", "guardian", "bear", "tank"],
+    ["Restoration", "637564172007112723", "resto", "restoration", "restro", "rdudu", "healer", "heal"],
+  ],
+  Hunter: [
+    ["Beastmastery", "637564202021814277", "bm", "beast"],
+    ["Marksmanship", "637564202084466708", "mm", "marks", "marksman"],
+    ["Survival", "637564202130866186", "surv", "survival"],
+  ],
+  Mage: [
+    ["Arcane", "637564231545389056", "arcane"],
+    ["Fire", "637564231239073802", "fire"],
+    ["Frost", "637564231469891594", "frost"],
+  ],
+  Paladin: [
+    ["Holy", "637564297622454272", "holy", "holylate", "preg"],
+    ["Protection", "637564297647489034", "prot", "protection"],
+    ["Retribution", "637564297953673216", "ret", "retri", "retribution"],
+  ],
+  Priest: [
+    ["Discipline", "637564323442720768", "disc", "disco", "discipline"],
+    ["Holy", "637564323530539019", "holy"],
+    ["Shadow", "637564323291725825", "shadow"],
+  ],
+  Rogue: [
+    ["Assassination", "637564351707873324", "sin", "assa", "assassination", "ass"],
+    ["Combat", "637564352333086720", "combat"],
+    ["Subtlety", "637564352169508892", "sub", "subtlety"],
+  ],
+  Shaman: [
+    ["Elemental", "637564379595931649", "ele", "elem", "elemental", "spellhance"],
+    ["Enhancement", "637564379772223489", "enh", "enha", "enhancement"],
+    ["Restoration", "637564379847458846", "resto", "restoration", "healer", "heal"],
+  ],
+  Warlock: [
+    ["Affliction", "637564406984867861", "affli", "affliction"],
+    ["Demonology", "637564407001513984", "demo", "demonology"],
+    ["Destruction", "637564406682877964", "destro", "destruction"],
+  ],
+  Warrior: [
+    ["Arms", "637564445031399474", "arms"],
+    ["Fury", "637564445215948810", "fury"],
+    ["Protection", "637564444834136065", "prot", "protection", "tank"],
+  ],
 };
 // list of spec labels available for a class (for the editor dropdown)
-function specsFor(cls) { return (SPECS[cls] || []).map((s) => s[0]); }
+function specsFor(cls) {
+  return (SPECS[cls] || []).map((s) => s[0]);
+}
 // find the emote id for a stored spec label under a class
 function specEmote(cls, label) {
   const row = (SPECS[cls] || []).find((s) => s[0].toLowerCase() === String(label || "").toLowerCase());
@@ -41,13 +84,18 @@ function specEmote(cls, label) {
 // guess a spec from the free-text publicNote — the spec whose keyword appears
 // EARLIEST in the note wins (so "Shadow/Disco" -> Shadow, "Frost/Blood" -> Frost).
 function guessSpec(m) {
-  const rows = SPECS[m.class]; if (!rows) return "";
+  const rows = SPECS[m.class];
+  if (!rows) return "";
   const note = " " + String(m.publicNote || "").toLowerCase() + " ";
-  let best = "", bestPos = Infinity;
+  let best = "",
+    bestPos = Infinity;
   for (const row of rows) {
     for (let i = 2; i < row.length; i++) {
       const pos = note.search(new RegExp("[^a-z]" + row[i] + "[^a-z]"));
-      if (pos >= 0 && pos < bestPos) { bestPos = pos; best = row[0]; }
+      if (pos >= 0 && pos < bestPos) {
+        bestPos = pos;
+        best = row[0];
+      }
     }
   }
   return best;
@@ -59,8 +107,10 @@ function specOf(m) {
   return saved || guessSpec(m);
 }
 function specIconHtml(m) {
-  const sp = specOf(m); if (!sp) return "";
-  const id = specEmote(m.class, sp); if (!id) return "";
+  const sp = specOf(m);
+  if (!sp) return "";
+  const id = specEmote(m.class, sp);
+  if (!id) return "";
   return `<img class="spici" src="${CDN(id)}" alt="${esc(sp)}" title="${esc(sp)} ${esc(m.class)}" loading="lazy">`;
 }
 function load() {
@@ -122,7 +172,10 @@ async function autoShare(note) {
     }
   } catch (e) {
     const el = document.getElementById("err");
-    if (el) { el.style.color = "#ff6b6b"; el.textContent = "⚠️ Saved locally but sharing failed: " + e.message; }
+    if (el) {
+      el.style.color = "#ff6b6b";
+      el.textContent = "⚠️ Saved locally but sharing failed: " + e.message;
+    }
   }
 }
 
@@ -159,29 +212,44 @@ function setSpec(name, spec) {
   const d = load();
   if (!d) return;
   d.specs = d.specs || {};
-  if (spec) d.specs[name] = spec; else delete d.specs[name];
+  if (spec) d.specs[name] = spec;
+  else delete d.specs[name];
   localStorage.setItem(LS, JSON.stringify(d));
   paint();
   autoShare("🎯 " + esc(name) + " → " + (spec || "no spec"));
 }
 // close any open spec picker
-function closeSpecMenu() { const m = document.getElementById("specMenu"); if (m) m.remove(); }
+function closeSpecMenu() {
+  const m = document.getElementById("specMenu");
+  if (m) m.remove();
+}
 // open a small spec picker anchored to the clicked icon
 function openSpecMenu(anchor, name, cls) {
   closeSpecMenu();
   const specs = specsFor(cls);
-  if (!specs.length) { setMsgOk("No specs for " + cls + "."); return; }
+  if (!specs.length) {
+    setMsgOk("No specs for " + cls + ".");
+    return;
+  }
   const cur = specOf({ name, class: cls, publicNote: "" });
   const menu = document.createElement("div");
   menu.id = "specMenu";
   menu.className = "specmenu";
-  menu.innerHTML = specs.map((s) => {
-    const id = specEmote(cls, s);
-    return `<button class="specopt${s === cur ? " on" : ""}" data-spec="${esc(s)}">`
-      + (id ? `<img src="${CDN(id)}" alt="">` : "") + esc(s) + `</button>`;
-  }).join("") + `<button class="specopt clear" data-spec="">✕ clear</button>`;
+  menu.innerHTML =
+    specs
+      .map((s) => {
+        const id = specEmote(cls, s);
+        return (
+          `<button class="specopt${s === cur ? " on" : ""}" data-spec="${esc(s)}">` +
+          (id ? `<img src="${CDN(id)}" alt="">` : "") +
+          esc(s) +
+          `</button>`
+        );
+      })
+      .join("") + `<button class="specopt clear" data-spec="">✕ clear</button>`;
   menu.addEventListener("click", (e) => {
-    const b = e.target.closest(".specopt"); if (!b) return;
+    const b = e.target.closest(".specopt");
+    if (!b) return;
     e.stopPropagation();
     setSpec(name, b.getAttribute("data-spec"));
     closeSpecMenu();
@@ -190,15 +258,15 @@ function openSpecMenu(anchor, name, cls) {
   document.body.appendChild(menu);
   // measure AFTER it's in the DOM, then clamp to the viewport
   const r = anchor.getBoundingClientRect();
-  const mw = menu.offsetWidth, mh = menu.offsetHeight;
+  const mw = menu.offsetWidth,
+    mh = menu.offsetHeight;
   let left = r.left + window.scrollX;
   let top = r.bottom + window.scrollY + 4;
   if (left + mw > window.scrollX + document.documentElement.clientWidth - 8)
     left = window.scrollX + document.documentElement.clientWidth - mw - 8;
   if (left < window.scrollX + 8) left = window.scrollX + 8;
   // if it would drop below the viewport, flip above the icon
-  if (r.bottom + mh + 8 > document.documentElement.clientHeight)
-    top = r.top + window.scrollY - mh - 4;
+  if (r.bottom + mh + 8 > document.documentElement.clientHeight) top = r.top + window.scrollY - mh - 4;
   menu.style.left = left + "px";
   menu.style.top = top + "px";
   menu.style.visibility = "";
@@ -515,8 +583,11 @@ function confirmImport() {
   if (Object.keys(keptJoined).length) data.joined = keptJoined;
 
   // keep saved specs for members still present (survives re-import, like fangs/joined)
-  const specs = oldData.specs || {}, keptSpecs = {};
-  Object.keys(specs).forEach((n) => { if (newBy[lc(n)]) keptSpecs[n] = specs[n]; });
+  const specs = oldData.specs || {},
+    keptSpecs = {};
+  Object.keys(specs).forEach((n) => {
+    if (newBy[lc(n)]) keptSpecs[n] = specs[n];
+  });
   if (Object.keys(keptSpecs).length) data.specs = keptSpecs;
 
   data.lastImport = Date.now(); // when the roster was last pulled from in-game into the hub
@@ -529,7 +600,9 @@ function confirmImport() {
   let logNote = "";
   if (hadOld) logNote = postRosterChanges(diff, importDate);
   // share the merged roster with the officers immediately — no separate 💾 Save step
-  autoShare(`✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}.${logNote}`);
+  autoShare(
+    `✅ Roster merged — 💀 Fangs kept, ${added} new member${added !== 1 ? "s" : ""} dated ${hadOld ? importDate : "(baseline)"}.${logNote}`
+  );
 }
 
 // fire-and-forget post of the roster diff to the Logs webhook; returns a short status suffix for the toast
@@ -869,7 +942,9 @@ document.getElementById("roster").addEventListener("click", (e) => {
   }
 });
 // click anywhere else closes the spec picker
-document.addEventListener("click", (e) => { if (!e.target.closest("#specMenu") && !e.target.closest(".spic")) closeSpecMenu(); });
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#specMenu") && !e.target.closest(".spic")) closeSpecMenu();
+});
 
 // load the shared (possibly encrypted) roster.json + the published profile keys, then render
 if (window.RatsData) {

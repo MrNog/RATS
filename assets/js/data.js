@@ -15,14 +15,14 @@ window.RatsData = (function () {
 
   // ---- raid color badges (shared so every tool uses the same palette) ----
   const RAID_COLORS = {
-    ICC: "#5bc0eb",     // Icecrown — frost blue
-    Ulduar: "#e0a13e",  // Ulduar — titan bronze
-    ToC: "#d9534f",     // Trial of the Crusader — coliseum red
-    Ony: "#b76fe0",     // Onyxia — dragon purple
-    Naxx: "#6fce5a",    // Naxxramas — necro green
-    RS: "#ff6b81",      // Ruby Sanctum — ruby pink
-    VoA: "#8ab4f8",     // Vault of Archavon
-    EoE: "#49d6c4",     // Eye of Eternity
+    ICC: "#5bc0eb", // Icecrown — frost blue
+    Ulduar: "#e0a13e", // Ulduar — titan bronze
+    ToC: "#d9534f", // Trial of the Crusader — coliseum red
+    Ony: "#b76fe0", // Onyxia — dragon purple
+    Naxx: "#6fce5a", // Naxxramas — necro green
+    RS: "#ff6b81", // Ruby Sanctum — ruby pink
+    VoA: "#8ab4f8", // Vault of Archavon
+    EoE: "#49d6c4", // Eye of Eternity
   };
   // pull a raid key out of a free-text subtitle ("ULDUAR 25 HM", "Ulduar HM", "ICC"…)
   function raidKeyOf(desc) {
@@ -37,20 +37,32 @@ window.RatsData = (function () {
     if (/eoe|eternity|malygos/.test(s)) return "EoE";
     return null;
   }
-  function escHtml(s) { return String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+  function escHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  }
   // a colored pill for a raid subtitle; self-contained styles (no CSS needed), muted fallback
   function raidBadge(desc) {
     const d = String(desc || "").trim();
     if (!d) return "";
-    const key = raidKeyOf(d), c = key && RAID_COLORS[key];
-    if (!c) return '<span style="color:#9aa0a6;font-size:13px">' + escHtml(d) + '</span>';
+    const key = raidKeyOf(d),
+      c = key && RAID_COLORS[key];
+    if (!c) return '<span style="color:#9aa0a6;font-size:13px">' + escHtml(d) + "</span>";
     // normalize the label to the canonical raid name (+ HM) so any desc renders the same,
     // e.g. "ULDUAR 25 HM" and "Ulduar HM" both -> "Ulduar HM" (size is already on the "25-man" pill)
     const hm = /\bhm\b|heroic|hard\s*mode/i.test(d);
     const label = key + (hm ? " HM" : "");
-    return '<span style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;'
-      + 'border-radius:10px;padding:2px 9px;border:1px solid ' + c + '66;background:' + c + '22;color:' + c + '">'
-      + escHtml(label) + '</span>';
+    return (
+      '<span style="display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.4px;' +
+      "border-radius:10px;padding:2px 9px;border:1px solid " +
+      c +
+      "66;background:" +
+      c +
+      "22;color:" +
+      c +
+      '">' +
+      escHtml(label) +
+      "</span>"
+    );
   }
 
   function getPass() {
@@ -94,17 +106,61 @@ window.RatsData = (function () {
   function fbUrl(path) {
     return FIREBASE_URL.replace(/\/+$/, "") + "/rats/" + path + ".json";
   }
-  async function fbGet(path) {
+
+  // fetch with a hard timeout so a hung connection rejects instead of spinning forever.
+  // Firebase (or a captive wifi portal) can accept the socket then never answer; without this
+  // the caller's await never settles and the page sits on "⏳ Saving…" with no error path.
+  const FB_TIMEOUT_MS = 12000;
+  async function fbFetch(path, init) {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), FB_TIMEOUT_MS);
     try {
-      const r = await fetch(fbUrl(path), { cache: "no-store" });
-      if (!r.ok) return null;
+      return await fetch(fbUrl(path), Object.assign({ cache: "no-store", signal: ctl.signal }, init || {}));
+    } catch (e) {
+      // normalize an abort into a clear, user-readable message
+      if (e && e.name === "AbortError") throw new Error("Firebase timed out — check your connection.");
+      throw e;
+    } finally {
+      clearTimeout(t);
+    }
+  }
+  // one retry on a transient failure (network blip / 5xx / 429), short backoff. Reads use this
+  // so a single hiccup doesn't surface as "no data"; a 4xx (client error) is NOT retried.
+  async function withRetry(fn) {
+    try {
+      return await fn();
+    } catch (e) {
+      const transient =
+        !e ||
+        e.name === "AbortError" ||
+        /HTTP 5\d\d|HTTP 429|Failed to fetch|NetworkError|timed out/i.test(e.message || "");
+      if (!transient) throw e;
+      await new Promise((r) => setTimeout(r, 600));
+      return await fn(); // second (and last) attempt — let it throw if it fails again
+    }
+  }
+
+  // Read a node. THROWS on a real failure (network/timeout/HTTP error) so the caller can tell a
+  // transient blip apart from a genuinely empty node (which resolves to `null`). Callers that want
+  // the old "swallow to null" behavior should use fbGetSafe.
+  async function fbGet(path) {
+    return withRetry(async () => {
+      const r = await fbFetch(path);
+      if (!r.ok) throw new Error("Firebase read failed (HTTP " + r.status + ")");
       return await r.json(); // null if the path is empty
+    });
+  }
+  // Read a node, swallowing failure to `null` (indistinguishable from empty). Use only where a
+  // failed read should degrade to "no data" rather than surface an error to the user.
+  async function fbGetSafe(path) {
+    try {
+      return await fbGet(path);
     } catch (e) {
       return null;
     }
   }
   async function fbPut(path, obj) {
-    const r = await fetch(fbUrl(path), {
+    const r = await fbFetch(path, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(obj),
@@ -112,13 +168,19 @@ window.RatsData = (function () {
     if (!r.ok) throw new Error("Firebase write failed (HTTP " + r.status + ")");
     return true;
   }
-  async function fbPost(path, obj) { // append with an auto key -> returns the key
-    const r = await fetch(fbUrl(path), { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) });
+  async function fbPost(path, obj) {
+    // append with an auto key -> returns the key
+    const r = await fbFetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(obj),
+    });
     if (!r.ok) throw new Error("Firebase push failed (HTTP " + r.status + ")");
-    const j = await r.json(); return j && j.name;
+    const j = await r.json();
+    return j && j.name;
   }
   async function fbDelete(path) {
-    const r = await fetch(fbUrl(path), { method: "DELETE" });
+    const r = await fbFetch(path, { method: "DELETE" });
     if (!r.ok) throw new Error("Firebase delete failed (HTTP " + r.status + ")");
     return true;
   }
@@ -127,29 +189,46 @@ window.RatsData = (function () {
   async function loadVacations() {
     if (!fbOn()) return [];
     const o = await fbGet("vacations");
-    return o ? Object.keys(o).map(k => Object.assign({ key: k }, o[k])) : [];
+    return o ? Object.keys(o).map((k) => Object.assign({ key: k }, o[k])) : [];
   }
-  function addVacation(entry) { return fbPost("vacations", entry); }
-  function updateVacation(key, entry) { return fbPut("vacations/" + key, entry); }
-  function removeVacation(key) { return fbDelete("vacations/" + key); }
+  function addVacation(entry) {
+    return fbPost("vacations", entry);
+  }
+  function updateVacation(key, entry) {
+    return fbPut("vacations/" + key, entry);
+  }
+  function removeVacation(key) {
+    return fbDelete("vacations/" + key);
+  }
 
   // ---- shared MEMBER directory (plain names+class for the public vacation picker) ----
-  function publishMembers(list) { return fbOn() ? fbPut("members", list) : Promise.resolve(); }
-  async function loadMembers() { return (fbOn() ? await fbGet("members") : null) || []; }
+  function publishMembers(list) {
+    return fbOn() ? fbPut("members", list) : Promise.resolve();
+  }
+  async function loadMembers() {
+    return (fbOn() ? await fbGetSafe("members") : null) || [];
+  }
 
   // ---- per-main PROFILE keys (Path B) — soft login for the raider profile page ----
   // We NEVER store the raw key, only salt + SHA-256(salt + key) in the plain `profiles` node,
   // so reading the node leaks nothing. A char key is the lowercased a-z0-9 form of the name.
-  function profKey(name) { return String(name || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function profKey(name) {
+    return String(name || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+  }
   async function sha256Hex(s) {
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
   }
   // generate a short, readable random key (officer reads it out / DMs it to the raider)
   function genProfileKey() {
     const a = crypto.getRandomValues(new Uint8Array(8));
     const cs = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no look-alikes (0/O, 1/I/L)
-    let s = ""; for (let i = 0; i < a.length; i++) s += cs[a[i] % cs.length];
+    let s = "";
+    for (let i = 0; i < a.length; i++) s += cs[a[i] % cs.length];
     return s.slice(0, 4) + "-" + s.slice(4); // e.g. "K7QP-N2RF"
   }
   // Officer: publish (or replace) the hash for a main. Returns the raw key to hand over.
@@ -161,8 +240,12 @@ window.RatsData = (function () {
     await fbPut("profiles/" + profKey(name), { name: name, class: cls || "", salt, hash });
     return key;
   }
-  async function clearProfileKey(name) { return fbOn() ? fbDelete("profiles/" + profKey(name)) : Promise.resolve(); }
-  async function loadProfiles() { return (fbOn() ? await fbGet("profiles") : null) || {}; }
+  async function clearProfileKey(name) {
+    return fbOn() ? fbDelete("profiles/" + profKey(name)) : Promise.resolve();
+  }
+  async function loadProfiles() {
+    return (fbOn() ? await fbGetSafe("profiles") : null) || {};
+  }
 
   // ---- profile-key REQUESTS (plain node) — a guildie asks for a key; the officer page polls + pings ----
   // poll+announce pattern: the public profile page can't reach the webhook, so it just writes a request
@@ -172,16 +255,27 @@ window.RatsData = (function () {
     await fbPut("keyRequests/" + profKey(name), { name: name, class: cls || "", at: Date.now(), announced: false });
     return true;
   }
-  async function loadKeyRequests() { return (fbOn() ? await fbGet("keyRequests") : null) || {}; }
-  async function markKeyRequestAnnounced(charKey, rec) { return fbPut("keyRequests/" + charKey, Object.assign({}, rec, { announced: true })); }
-  async function clearKeyRequest(name) { return fbOn() ? fbDelete("keyRequests/" + profKey(name)) : Promise.resolve(); }
+  async function loadKeyRequests() {
+    return (fbOn() ? await fbGetSafe("keyRequests") : null) || {};
+  }
+  async function markKeyRequestAnnounced(charKey, rec) {
+    return fbPut("keyRequests/" + charKey, Object.assign({}, rec, { announced: true }));
+  }
+  async function clearKeyRequest(name) {
+    return fbOn() ? fbDelete("keyRequests/" + profKey(name)) : Promise.resolve();
+  }
 
   // Raider: verify an entered (name, key) against the published hash. Returns the charKey on success, else "".
   async function verifyProfileKey(name, key) {
     const ck = profKey(name);
     const rec = fbOn() ? await fbGet("profiles/" + ck) : null;
     if (!rec || !rec.salt || !rec.hash) return "";
-    const h = await sha256Hex(rec.salt + String(key || "").trim().toUpperCase());
+    const h = await sha256Hex(
+      rec.salt +
+        String(key || "")
+          .trim()
+          .toUpperCase()
+    );
     return h === rec.hash ? ck : "";
   }
 
@@ -189,9 +283,7 @@ window.RatsData = (function () {
   function download(name, obj) {
     const a = document.createElement("a");
     a.download = name;
-    a.href = URL.createObjectURL(
-      new Blob([JSON.stringify(obj)], { type: "application/json" }),
-    );
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(obj)], { type: "application/json" }));
     a.click();
   }
 
@@ -210,19 +302,13 @@ window.RatsData = (function () {
   }
 
   async function deriveKey(pass, salt) {
-    const base = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(pass),
-      "PBKDF2",
-      false,
-      ["deriveKey"],
-    );
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
     return crypto.subtle.deriveKey(
       { name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" },
       base,
       { name: "AES-GCM", length: 256 },
       false,
-      ["encrypt", "decrypt"],
+      ["encrypt", "decrypt"]
     );
   }
 
@@ -230,11 +316,7 @@ window.RatsData = (function () {
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const key = await deriveKey(pass, salt);
-    const ct = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
-      key,
-      new TextEncoder().encode(JSON.stringify(obj)),
-    );
+    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
     return {
       v: 1,
       enc: true,
@@ -246,11 +328,7 @@ window.RatsData = (function () {
 
   async function decrypt(blob, pass) {
     const key = await deriveKey(pass, b642u8(blob.salt));
-    const pt = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv: b642u8(blob.iv) },
-      key,
-      b642u8(blob.ct),
-    );
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b642u8(blob.iv) }, key, b642u8(blob.ct));
     return JSON.parse(new TextDecoder().decode(pt));
   }
 
@@ -261,7 +339,7 @@ window.RatsData = (function () {
     const interactive = opts.interactive !== false;
     const url = opts.url || "roster.json";
     let blob = null;
-    if (fbOn()) blob = await fbGet("roster"); // live shared copy
+    if (fbOn()) blob = await fbGetSafe("roster"); // live shared copy (fall through to file/cache on failure)
     if (!blob) {
       // Firebase off, or empty/wiped -> restore from the committed backup file
       try {
@@ -281,9 +359,7 @@ window.RatsData = (function () {
       for (let tries = 0; tries < 4; tries++) {
         if (!pass) {
           if (!interactive) break;
-          pass = window.prompt(
-            "🔒 Enter the RATS guild password to unlock the roster:",
-          );
+          pass = window.prompt("🔒 Enter the RATS guild password to unlock the roster:");
           if (pass == null) break;
         }
         try {
@@ -326,7 +402,7 @@ window.RatsData = (function () {
     const interactive = opts.interactive === true;
     const url = opts.url || "history.json";
     let blob = null;
-    if (fbOn()) blob = await fbGet("history"); // live shared copy
+    if (fbOn()) blob = await fbGetSafe("history"); // live shared copy (fall through to file/cache on failure)
     if (!blob) {
       // Firebase off, or empty/wiped -> restore from the committed backup file
       try {
@@ -399,13 +475,19 @@ window.RatsData = (function () {
   // restore from these committed files automatically.
   async function backup() {
     const done = [];
-    let roster = fbOn() ? await fbGet("roster") : null;
+    let roster = fbOn() ? await fbGetSafe("roster") : null;
     if (!roster && cached()) roster = await encrypt(cached(), getPass());
-    if (roster) { download("roster.json", roster); done.push("roster.json"); }
+    if (roster) {
+      download("roster.json", roster);
+      done.push("roster.json");
+    }
     await new Promise((r) => setTimeout(r, 500)); // stagger so the browser allows both downloads
-    let history = fbOn() ? await fbGet("history") : null;
+    let history = fbOn() ? await fbGetSafe("history") : null;
     if (!history && cachedHistory().raids.length) history = await encrypt(cachedHistory(), getPass());
-    if (history) { download("history.json", history); done.push("history.json"); }
+    if (history) {
+      download("history.json", history);
+      done.push("history.json");
+    }
     return done;
   }
 
@@ -426,7 +508,8 @@ window.RatsData = (function () {
   function _makeOverlay() {
     const ov = document.createElement("div");
     ov.id = "ratsGate";
-    ov.style.cssText = "position:fixed;inset:0;z-index:99999;background:#0f1012;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#8a8d93";
+    ov.style.cssText =
+      "position:fixed;inset:0;z-index:99999;background:#0f1012;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#8a8d93";
     ov.innerHTML = '<div style="font-size:40px;line-height:1">🧀🔒</div>';
     (document.body || document.documentElement).appendChild(ov);
     return ov;
@@ -434,25 +517,42 @@ window.RatsData = (function () {
 
   function _lockUI(ov, resolve, verify) {
     ov.innerHTML =
-      '<div style="background:#1b1d21;border:1px solid #34373d;border-radius:12px;padding:30px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,.6)">'
-      + '<div style="font-size:46px;line-height:1;margin-bottom:8px">🧀🔒</div>'
-      + '<div style="color:#fff;font-weight:800;font-size:18px;letter-spacing:.5px">No cheese without a key!</div>'
-      + '<div style="color:#8a8d93;font-size:13px;margin:6px 0 16px">Officers only — enter the guild key to access the RATS tools.</div>'
-      + '<input id="ratsGatePass" type="password" placeholder="Guild key" autocomplete="current-password" style="width:100%;height:40px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:8px;padding:0 12px;font-size:14px;text-align:center;color-scheme:dark">'
-      + '<div id="ratsGateErr" style="color:#ff6b6b;font-size:12px;min-height:16px;margin:8px 0"></div>'
-      + '<button id="ratsGateBtn" style="width:100%;height:40px;background:#c0943a;color:#1b1d21;border:0;border-radius:8px;font-weight:800;cursor:pointer;font-size:14px">Unlock 🐀</button>'
-      + '</div>';
+      '<div style="background:#1b1d21;border:1px solid #34373d;border-radius:12px;padding:30px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,.6)">' +
+      '<div style="font-size:46px;line-height:1;margin-bottom:8px">🧀🔒</div>' +
+      '<div style="color:#fff;font-weight:800;font-size:18px;letter-spacing:.5px">No cheese without a key!</div>' +
+      '<div style="color:#8a8d93;font-size:13px;margin:6px 0 16px">Officers only — enter the guild key to access the RATS tools.</div>' +
+      '<input id="ratsGatePass" type="password" placeholder="Guild key" autocomplete="current-password" style="width:100%;height:40px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:8px;padding:0 12px;font-size:14px;text-align:center;color-scheme:dark">' +
+      '<div id="ratsGateErr" style="color:#ff6b6b;font-size:12px;min-height:16px;margin:8px 0"></div>' +
+      '<button id="ratsGateBtn" style="width:100%;height:40px;background:#c0943a;color:#1b1d21;border:0;border-radius:8px;font-weight:800;cursor:pointer;font-size:14px">Unlock 🐀</button>' +
+      "</div>";
     document.body.appendChild(ov);
-    const inp = ov.querySelector("#ratsGatePass"), err = ov.querySelector("#ratsGateErr"), btn = ov.querySelector("#ratsGateBtn");
-    setTimeout(function () { inp.focus(); }, 50);
+    const inp = ov.querySelector("#ratsGatePass"),
+      err = ov.querySelector("#ratsGateErr"),
+      btn = ov.querySelector("#ratsGateBtn");
+    setTimeout(function () {
+      inp.focus();
+    }, 50);
     async function tryUnlock() {
-      const pass = inp.value; if (!pass) return;
-      btn.disabled = true; err.style.color = "#8a8d93"; err.textContent = "Checking…";
-      try { await verify(pass); ov.remove(); resolve(true); }
-      catch (e) { err.style.color = "#ff6b6b"; err.textContent = "Wrong key — try again."; btn.disabled = false; inp.select(); }
+      const pass = inp.value;
+      if (!pass) return;
+      btn.disabled = true;
+      err.style.color = "#8a8d93";
+      err.textContent = "Checking…";
+      try {
+        await verify(pass);
+        ov.remove();
+        resolve(true);
+      } catch (e) {
+        err.style.color = "#ff6b6b";
+        err.textContent = "Wrong key — try again.";
+        btn.disabled = false;
+        inp.select();
+      }
     }
     btn.onclick = tryUnlock;
-    inp.onkeydown = function (e) { if (e.key === "Enter") tryUnlock(); };
+    inp.onkeydown = function (e) {
+      if (e.key === "Enter") tryUnlock();
+    };
   }
 
   // Resolves true once unlocked. Verified by decrypting an encrypted check file.
@@ -461,28 +561,67 @@ window.RatsData = (function () {
   async function gate(opts) {
     opts = opts || {};
     if (_unlocked) return true;
-    const ov = _makeOverlay();   // block the page right away, before any async check
+    const ov = _makeOverlay(); // block the page right away, before any async check
     let blob = null;
     // Unified site: the encrypted lock lives in shared Firebase (gate token, else the roster).
     // Check Firebase FIRST when it's configured, so we never fetch the local gate.json/roster.json
     // that don't exist on the live site (those 404s are harmless but spam the console).
     if (fbOn()) {
-      try { const g = await fbGet("gate"); if (g && (g.enc || g.ct)) blob = g; } catch (e) { }
-      if (!blob) { try { const r = await fbGet("roster"); if (r && (r.enc || r.ct)) blob = r; } catch (e) { } }
+      try {
+        const g = await fbGet("gate");
+        if (g && (g.enc || g.ct)) blob = g;
+      } catch (e) {}
+      if (!blob) {
+        try {
+          const r = await fbGet("roster");
+          if (r && (r.enc || r.ct)) blob = r;
+        } catch (e) {}
+      }
     }
     // Fallback (no Firebase, e.g. a static/committed-JSON deploy or local file://): the encrypted
     // check files sit next to the page. Only tried when Firebase didn't already arm the lock.
     if (!blob) {
       const checks = opts.checks || ["gate.json", "roster.json"];
       for (let i = 0; i < checks.length; i++) {
-        try { const r = await fetch(checks[i], { cache: "no-store" }); if (r.ok) { const j = await r.json(); if (j && (j.enc || j.ct)) { blob = j; break; } } } catch (e) { }
+        try {
+          const r = await fetch(checks[i], { cache: "no-store" });
+          if (r.ok) {
+            const j = await r.json();
+            if (j && (j.enc || j.ct)) {
+              blob = j;
+              break;
+            }
+          }
+        } catch (e) {}
       }
     }
-    if (!blob) { ov.remove(); _unlocked = true; return true; }   // no lock armed -> open
-    const verify = async function (pass) { const obj = await decrypt(blob, pass); if (obj && obj.roster) cache(obj); setPass(pass); _unlocked = true; return true; };
+    if (!blob) {
+      ov.remove();
+      _unlocked = true;
+      return true;
+    } // no lock armed -> open
+    const verify = async function (pass) {
+      const obj = await decrypt(blob, pass);
+      if (obj && obj.roster) cache(obj);
+      setPass(pass);
+      _unlocked = true;
+      return true;
+    };
     const cp = getPass();
-    if (cp) { try { await verify(cp); ov.remove(); return true; } catch (e) { clearPass(); } }
-    return new Promise(function (res) { _lockUI(ov, res, function (p) { return verify(p); }); });
+    if (cp) {
+      try {
+        await verify(cp);
+        ov.remove();
+        return true;
+      } catch (e) {
+        clearPass();
+      }
+    }
+    return new Promise(function (res) {
+      _lockUI(ov, res, function (p) {
+        return verify(p);
+      });
+    });
   }
 
   // ---- Discord-name -> in-game name aliases ----
@@ -491,25 +630,44 @@ window.RatsData = (function () {
   // own alt->main note resolves the rest. Keys are matched loosely (case/space/[tags] ignored).
   // Add a line per raider that shows up as "Unranked / Pug":   "discordnick": "IngameName",
   const NAME_ALIASES = {
-    "kobe": "Kobee",        // Discord "Kobe" -> in-game "Kobee"
-    "mojo": "Mojobimbo",    // Discord "Mojo" -> one of his toons; roster alt->main does the rest
-    "foug": "Fouug",        // Discord "Foug" -> in-game "Fouug" (Hunter)
-    "solanar": "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
+    kobe: "Kobee", // Discord "Kobe" -> in-game "Kobee"
+    mojo: "Mojobimbo", // Discord "Mojo" -> one of his toons; roster alt->main does the rest
+    foug: "Fouug", // Discord "Foug" -> in-game "Fouug" (Hunter)
+    solanar: "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
     // add more Discord-nick -> in-game pairs here as needed:
     // "shockaa": "Shockaa",
   };
   function _normAlias(s) {
-    return (s || "").toLowerCase().replace(/\[.*?\]/g, "").replace(/\(.*?\)/g, "")
-      .split(/[\/|,]/)[0].replace(/[^a-z0-9]/g, "").trim();
+    return (s || "")
+      .toLowerCase()
+      .replace(/\[.*?\]/g, "")
+      .replace(/\(.*?\)/g, "")
+      .split(/[\/|,]/)[0]
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
   }
-  function aliasFor(name) { return NAME_ALIASES[_normAlias(name)] || null; }
+  function aliasFor(name) {
+    return NAME_ALIASES[_normAlias(name)] || null;
+  }
 
   return {
     aliasFor,
-    loadVacations, addVacation, updateVacation, removeVacation,
-    publishMembers, loadMembers,
-    profKey, genProfileKey, setProfileKey, clearProfileKey, loadProfiles, verifyProfileKey,
-    requestProfileKey, loadKeyRequests, markKeyRequestAnnounced, clearKeyRequest,
+    loadVacations,
+    addVacation,
+    updateVacation,
+    removeVacation,
+    publishMembers,
+    loadMembers,
+    profKey,
+    genProfileKey,
+    setProfileKey,
+    clearProfileKey,
+    loadProfiles,
+    verifyProfileKey,
+    requestProfileKey,
+    loadKeyRequests,
+    markKeyRequestAnnounced,
+    clearKeyRequest,
     loadRoster,
     loadHistory,
     cachedHistory,

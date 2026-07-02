@@ -193,9 +193,6 @@ watermark low-center, or fully text-free — ask which. Export tall (e.g. 1179×
 ### E — Lore moment (single hero, 21:9 · army/battle 16:9, NO text)
 Story art for the chronicles. "NO text, NO title, NO watermark, NO logo — pure illustration only." Single
 rat hero (or 2–4), dramatic focal action, epic environment. Apply the **content-safety** rules above.
-Done examples: Okanor **reforging Val'anyr** in Ulduar's titan forge; Okanor over the fallen Yogg-Saron as
-the fragments blaze into the mace. *(Val'anyr lore: 30 Fragments from Ulduar bosses → Reforged Hammer →
-carried into the Yogg-Saron fight → the released titanic energy restores the legendary healer mace.)*
 
 ### F — Raid banner (Raid-Helper header, 16:9) — *reference: `images/banners/ICC 10.png`*
 The **locked look** (matches ICC 10). The **instance itself is the frame**; a lone rat hero walks into it.
