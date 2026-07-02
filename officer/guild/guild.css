@@ -35,16 +35,40 @@ textarea { width: 100%; height: 220px; color: #cfd2d6; padding: 10px; font-famil
 .note { color: var(--text-dim-2); font-size: 12px; margin-left: auto; max-width: 48%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .altof { color: #7aa2c9; font-size: 11px; font-style: italic }
 .joined { color: #6e7178; font-size: 11px; flex: 0 0 auto }
-.armory { flex: 0 0 auto; text-decoration: none; font-size: 13px; opacity: .55; margin-left: auto }
+.armory { flex: 0 0 auto; text-decoration: none; font-size: 13px; opacity: .55 }
 .armory:hover { opacity: 1 }
+.pkey { cursor: pointer; font-size: 13px; flex: 0 0 auto; opacity: .3; user-select: none; filter: grayscale(1) }
+.pkey.on { opacity: 1; filter: none }
+.pkey:hover { opacity: .8 }
 
-/* import modal */
-#modal {
+/* modals (import + profile-key) */
+#modal, #keyModal {
   display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, .65); z-index: 100;
   align-items: flex-start; justify-content: center; padding: 60px 16px; overflow: auto;
 }
-#modal .box {
+#modal .box, #keyModal .box {
   background: var(--surface-2); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
   max-width: 780px; width: 100%; padding: 20px; box-shadow: 0 14px 44px rgba(0, 0, 0, .55);
 }
+#keyModal .keybox { max-width: 400px; padding: 16px 18px; position: relative; }
+.kmttl { margin: 0 0 12px; color: #fff; font-size: 17px; }
+/* small, coloured close button in the corner */
+.kmx {
+  position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; padding: 0;
+  background: transparent; color: var(--text-dim); font-size: 14px; line-height: 1;
+}
+.kmx:hover { color: var(--accent); background: transparent; filter: none; }
+.keyrow { display: flex; gap: 8px; align-items: center; }
+.keyrow #kmKey {
+  flex: 1; font-family: ui-monospace, monospace; font-size: 18px; font-weight: 800;
+  letter-spacing: 2px; text-align: center; color: var(--accent);
+}
+#keyModal .controls { margin: 12px 0 0; }
+/* keep EVERY button in the key modal identical: same height, padding, font (overrides .del/.alt quirks) */
+#keyModal button {
+  height: var(--ctl-h); padding: 0 14px; font-size: 13px; font-weight: 700; border-radius: var(--radius);
+}
+#keyModal .kmx { width: 24px; height: 24px; padding: 0; }   /* the corner close stays small */
+#keyModal #kmErr { min-height: 0; margin: 0; }
+#keyModal #kmErr:not(:empty) { margin: 8px 0 0; }
 .hidden { display: none !important }

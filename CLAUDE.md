@@ -23,7 +23,8 @@ re-derive the conventions.
 - `assets/js/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
 - `assets/js/datepicker.js` = `RatsCal` dark calendar.
 - `images/<category>/`, `downloads/` (patch-y.mpq), `files/` (officer sheets), `scripts/` (gallery builder).
-- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`, `PROMPTS.md`), tracked in git.
+- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`), tracked in git.
+- `docs/art/` = the hero-art system: `STYLE.md` (locked style tokens + a template per format — card, profile banner, Discord icon, iPhone wallpaper, lore, raid, Warchiefs, Fangs) and `characters/<main>/<name>.md` (one saved sheet per rat, **grouped one folder per main** — a main's alts share its folder, e.g. `okanor/okanata.md`; recalled by name via a recursive search `characters/**/<name>.md`). New commission = new sheet from `_TEMPLATE.md` into the main's folder (new main = new folder). The `/rat-art` + `/rats loremaster` skills read these.
 - **Run locally with a server** — `file://` blocks fetch/crypto/webhooks. Use VS Code Live Server or `python -m http.server 8000`.
 
 ## Design system (`assets/css/theme.css` + `ui.css`)

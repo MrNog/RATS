@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Rankings &amp; Hall of Fame</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="rankings.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div class="row">
+      <a class="btn" href="../../index.html">← Back</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+          <path d="M4 22h16" />
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+        </svg> RATS — Rankings &amp; Hall of Fame</h1>
+      <button id="fetchBtn" onclick="fetchData()" hidden style="margin-left:auto">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10" />
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+        </svg>
+        <span>Fetch data</span>
+      </button>
+    </div>
+
+    <div class="row ctrls">
+      <span id="raidRow" style="display:inline-flex">
+        <div class="segs" id="raidSegs"></div>
+      </span>
+      <div class="segs" id="sizeSegs" style="margin-left:auto">
+        <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
+        <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
+      </div>
+      <div class="segs" id="periodSegs">
+        <button class="seg active" data-p="week" onclick="setPeriod(this)">Week</button>
+        <button class="seg" data-p="month" onclick="setPeriod(this)">Month</button>
+        <button class="seg" data-p="all" onclick="setPeriod(this)">All time</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-t="board" onclick="setTab(this)">🏆 Leaderboards</button>
+      <button class="tab" data-t="boss" onclick="setTab(this)">📊 Guild progress</button>
+      <button class="tab" data-t="fun" onclick="setTab(this)">🎉 Fun &amp; shame</button>
+      <button class="tab" data-t="logs" onclick="setTab(this)">📜 Logs</button>
+    </div>
+
+    <section class="panel" data-panel="board">
+      <div id="mvp"></div>
+      <div class="cols">
+        <div class="card">
+          <h2 class="ch">🥇 Top DPS</h2>
+          <ol class="lb" id="dps"></ol>
+        </div>
+        <div class="card">
+          <h2 class="ch">💚 Top Healing</h2>
+          <ol class="lb" id="hps"></ol>
+        </div>
+      </div>
+      <div class="cols">
+        <div class="card">
+          <h2 class="ch">📈 Most improved</h2>
+          <ol class="lb" id="improved"></ol>
+        </div>
+        <div class="card">
+          <h2 class="ch">📉 Needs work</h2>
+          <ol class="lb" id="bottom"></ol>
+        </div>
+      </div>
+      <h2 class="ch" style="margin:22px 0 10px">🏅 Records broken this week</h2>
+      <div class="card">
+        <ol class="lb" id="records"></ol>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="boss" hidden>
+      <p class="sub" style="margin:0 0 14px"><b class="gold">Faster or slower than last raid?</b> Bosses saved for the
+        next night show <span class="pendtag">⏳ not yet</span> — not a miss.</p>
+      <div id="progress"></div>
+    </section>
+
+    <section class="panel" data-panel="fun" hidden>
+      <div class="card">
+        <h2 class="ch">💀 Hall of Shame — most deaths 🐔</h2>
+        <ol class="lb shame" id="deaths"></ol>
+      </div>
+      <h2 class="ch" style="margin:22px 0 10px">🎖️ Awards</h2>
+      <div class="awards" id="awards"></div>
+      <h2 class="ch" style="margin:22px 0 10px">💥 Fun stats</h2>
+      <div class="awards" id="fun"></div>
+      <h2 class="ch" style="margin:22px 0 10px">🪦 Wipe counter — group deaths per boss</h2>
+      <div class="card">
+        <ol class="lb" id="wipes"></ol>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="logs" hidden>
+      <p class="sub" style="margin:0 0 14px">Our uploaded logs — <b class="gold">click to open on wow-logs</b>.</p>
+      <div id="logs"></div>
+    </section>
+  </div>
+
+  <script src="../../assets/js/utils.js"></script>
+  <script src="rankings.js"></script>
+</body>
+
+</html>

@@ -13,3 +13,8 @@ desktop.ini
 
 # release-notifier state (written by the GitHub Action)
 release-state.json
+
+# temporary planning / scratch notes (not shared)
+docs/*PLAN*.md
+docs/IDEAS.md
+IDEAS.md

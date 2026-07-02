@@ -19,14 +19,21 @@
   <div class="wrap wide">
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <a class="btn" href="../index.html">← Back to Tools</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> RATS — Guild Roster</h1>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg> RATS — Guild Roster</h1>
     </div>
     <p class="sub" id="metaLine">Import your guild roster JSON (from the in-game export) to build the database.</p>
 
     <div class="controls">
       <button onclick="openModal()">📥 Import roster</button>
       <button class="alt" onclick="exportRoster()"
-        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save roster</button>
+        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save
+        roster</button>
       <input type="text" id="search" placeholder="Search name / spec / profession…" oninput="paint()"
         style="flex:1;min-width:200px" />
       <select id="rankSel" onchange="paint()">
@@ -45,11 +52,13 @@
 
     <div class="stats" id="stats"></div>
 
-    <div id="staleWrap" style="background:#1b1d21;border:1px solid #3a4a5b;border-radius:10px;padding:12px 14px;margin:6px 0 0">
+    <div id="staleWrap"
+      style="background:#1b1d21;border:1px solid #3a4a5b;border-radius:10px;padding:12px 14px;margin:6px 0 0">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
         <b style="font-size:12px;color:#9ad0ff;text-transform:uppercase;letter-spacing:.5px">🔔 Stale-roster alert</b>
         <span class="sub" id="staleNote" style="margin:0"></span>
-        <button class="alt" id="staleSend" onclick="sendStaleAlert(true)" style="margin-left:auto;padding:6px 12px;display:none">📣 Post to #okanor-logs</button>
+        <button class="alt" id="staleSend" onclick="sendStaleAlert(true)"
+          style="margin-left:auto;padding:6px 12px;display:none">📣 Post to #okanor-logs</button>
       </div>
       <div id="staleCard"></div>
     </div>
@@ -66,7 +75,8 @@
         <button class="alt" onclick="closeModal()" style="padding:6px 11px">✕</button>
       </div>
       <p class="sub" style="margin:0 0 10px">Run your in-game roster export addon, copy its JSON, and paste it below.
-        It <b>merges</b> with the current data — your <b>💀 Fangs</b> and <b>join dates</b> are kept; names, ranks &amp; new members update.</p>
+        It <b>merges</b> with the current data — your <b>💀 Fangs</b> and <b>join dates</b> are kept; names, ranks &amp;
+        new members update.</p>
       <textarea id="jsonIn" placeholder="Paste the guild roster JSON here…"></textarea>
       <div class="err" id="modalErr"></div>
       <div class="controls">
@@ -74,7 +84,29 @@
         <button id="confirmBtn" onclick="confirmImport()" style="display:none">✅ Confirm &amp; merge</button>
         <button class="alt" onclick="closeModal()">Cancel</button>
       </div>
-      <div id="diff"></div>
+      <div id="diffRow" style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+        <div id="diff" style="flex:1;min-width:240px"></div>
+        <div id="logPreview" style="flex:1;min-width:240px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- profile-key modal (per-raider) -->
+  <div id="keyModal" onclick="if(event.target===this) closeKeyModal()">
+    <div class="box keybox">
+      <button class="kmx" onclick="closeKeyModal()" aria-label="Close">✕</button>
+      <h2 class="kmttl">🔑 <span id="kmName" class="gold"></span></h2>
+
+      <div class="keyrow">
+        <input id="kmKey" type="text" readonly onclick="this.select()" placeholder="— generate to reveal —">
+        <button id="kmCopy" class="alt" onclick="copyKmKey()">Copy</button>
+      </div>
+
+      <div class="err" id="kmErr"></div>
+      <div class="controls" id="kmControls">
+        <button id="kmGen" onclick="kmGenerate()"></button>
+        <button id="kmRevoke" class="del hidden" onclick="kmRevoke()">Revoke key</button>
+      </div>
     </div>
   </div>
 

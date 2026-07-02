@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Raider Profile</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="profile.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div class="row">
+      <a class="btn" href="../../index.html">← Back</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg> RATS — Raider Profile</h1>
+      <span style="margin-left:auto;display:inline-flex;gap:8px">
+        <button class="btn" id="lockBtn" onclick="doLock()" style="display:none"
+          title="Sign out of this profile on this browser">🔒 Log out</button>
+      </span>
+    </div>
+
+    <div id="profile" style="display:none"></div>
+  </div>
+
+  <!-- login gate: pick your raider + enter the key the officer gave you, THEN you're in. -->
+  <div id="loginOv" class="modal-ov" style="display:none">
+    <div class="modal-box">
+      <h2 style="margin:0 0 4px">🔑 Enter your profile</h2>
+      <p class="sub" style="margin:0 0 16px">Pick your raider, then your <b class="gold">key</b>.</p>
+
+      <!-- line 1: select raider -->
+      <label class="ll" for="uName">🐀 Raider</label>
+      <div style="position:relative;margin-bottom:12px">
+        <input type="text" id="uName" placeholder="Type your character…" autocomplete="off" oninput="acFilter()"
+          onfocus="acFilter()" style="width:100%">
+        <div id="uList" class="ac" style="display:none"></div>
+      </div>
+
+      <!-- line 2: key with lock icon -->
+      <label class="ll" for="uKey">🔒 Profile key</label>
+      <div class="keyfield" style="margin-bottom:8px">
+        <svg class="lockic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        <input type="text" id="uKey" placeholder="e.g. K7QP-N2RF" autocomplete="off"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+
+      <div class="msg" id="uMsg" style="min-height:18px"></div>
+      <button onclick="doLogin()" style="width:100%;margin-top:6px">Enter 🐀</button>
+      <p class="sub" style="margin:12px 0 0;font-size:12px">No key?
+        <a href="#" class="gold" id="reqLink" onclick="requestKey();return false"
+          style="font-weight:700;text-decoration:none">📨 Request one</a>
+        — pings an officer in #okanor-logs.
+      </p>
+      <div class="msg" id="reqMsg" style="min-height:16px;font-size:12px"></div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/utils.js"></script>
+  <script src="../../assets/js/data.js"></script>
+  <script src="profile.js"></script>
+</body>
+
+</html>
