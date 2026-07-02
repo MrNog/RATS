@@ -34,13 +34,14 @@ h1 .hicon {
   width: 260px;
   max-width: 100%;
 }
-.gsearch .gs-icon {
+svg.gs-icon {
   position: absolute;
   left: 11px;
   top: 50%;
   transform: translateY(-50%);
   width: 15px;
   height: 15px;
+  flex: 0 0 auto;
   color: var(--text-dim-2);
   pointer-events: none;
 }
