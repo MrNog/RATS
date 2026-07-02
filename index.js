@@ -1,8 +1,31 @@
 // Set your Discord invite here (e.g. "https://discord.gg/xxxxxx"); the button hides until it's set.
 const DISCORD_URL = "https://discord.gg/v7Unzr7tUZ";
+
+// ---- FEATURE FLAGS ----------------------------------------------------------------------------
+// One switch per not-yet-public feature. Set true to ship it to everyone; false = hidden on the live
+// site but still visible in a dev context (a "?dev" URL flag, file://, or localhost) so you can test.
+// Each key matches a hub card's data-feature attribute in index.html.
+const FEATURES = {
+  profile:  false,  // Raider Profile — officer/dev only until profile keys are handed out
+  rankings: false,  // Rankings & Hall of Fame — waiting on the wow-logs API
+};
 (function () {
   var a = document.getElementById("discord");
   if (DISCORD_URL) { a.href = DISCORD_URL; } else { a.style.display = "none"; }
+})();
+
+// Reveal flagged hub cards. A card with [data-feature="x"] shows when FEATURES.x is true (shipped to
+// everyone) OR we're running LOCALLY (file:// or localhost — i.e. your own machine) so unreleased
+// features stay testable in dev but never leak on the live site. Flip the flag above to go public.
+// NOTE: this is deliberately local-only — there is no URL trigger, so a public visitor can't unhide it.
+(function applyFeatureFlags() {
+  var isDev = location.protocol === "file:"
+    || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  var cards = document.querySelectorAll("[data-feature]");
+  for (var i = 0; i < cards.length; i++) {
+    var key = cards[i].getAttribute("data-feature");
+    cards[i].hidden = !(FEATURES[key] || isDev);
+  }
 })();
 var clogNewestTs = 0;   // newest entry timestamp seen this load
 function clogSeen() { try { return parseInt(localStorage.getItem("ratsClogSeen") || "0", 10) || 0; } catch (e) { return 0; } }

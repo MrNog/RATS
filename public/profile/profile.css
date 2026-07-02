@@ -68,9 +68,20 @@
   background: var(--accent);
   color: var(--surface-2);
 }
-/* the size toggle sits at the right end of the Performance header */
+/* the raid + size toggles sit at the right end of the Performance header (raid first, then size).
+   margin-left:auto on the first one floats the whole pair right; the header's gap separates them.
+   .sizetog keeps the auto too for the case where no raid selector is shown (single-raid snapshot). */
+.raidtog,
 .sizetog {
   margin-left: auto;
+}
+.raidtog + .sizetog,
+.raidtog ~ .sizetog {
+  margin-left: 0;
+}
+/* let the header wrap the toggles onto a second line on narrow screens instead of overflowing */
+.psec {
+  flex-wrap: wrap;
 }
 
 /* ============ HERO — full art, whole & uncropped; height follows the art ratio ============ */
@@ -82,7 +93,8 @@
   margin-top: 14px;
   margin-bottom: 16px;
   background: #0c0d0f;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--col, var(--accent)) 18%, transparent),
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--col, var(--accent)) 18%, transparent),
     0 14px 38px rgba(0, 0, 0, 0.45);
 }
 .hero .heroart {
@@ -97,7 +109,13 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(90deg, #0a0b0d 0%, rgba(10, 11, 13, 0.92) 30%, rgba(10, 11, 13, 0.6) 48%, transparent 66%);
+  background: linear-gradient(
+    90deg,
+    #0a0b0d 0%,
+    rgba(10, 11, 13, 0.92) 30%,
+    rgba(10, 11, 13, 0.6) 48%,
+    transparent 66%
+  );
 }
 .hero::after {
   content: "";
@@ -256,7 +274,11 @@
     /* subtle diagonal weave */
     repeating-linear-gradient(115deg, transparent 0 26px, rgba(255, 255, 255, 0.018) 26px 27px),
     /* warm class light from the right */
-    radial-gradient(120% 150% at 88% 25%, color-mix(in srgb, var(--col, var(--accent)) 34%, transparent), transparent 55%),
+    radial-gradient(
+        120% 150% at 88% 25%,
+        color-mix(in srgb, var(--col, var(--accent)) 34%, transparent),
+        transparent 55%
+      ),
     /* deep base gradient */
     linear-gradient(115deg, color-mix(in srgb, var(--col, var(--accent)) 16%, #101216) 0%, #0c0d10 60%, #090a0c 100%);
 }
@@ -301,7 +323,11 @@
   height: 340px;
   z-index: 1;
   pointer-events: none;
-  background: radial-gradient(circle, color-mix(in srgb, var(--col, var(--accent)) 45%, transparent) 0%, transparent 62%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--col, var(--accent)) 45%, transparent) 0%,
+    transparent 62%
+  );
   filter: blur(6px);
 }
 
@@ -448,7 +474,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
-  margin: 4px 0 6px;
+  margin: 0 0 6px; /* top margin 0 so tiles align with the other columns' first card (header owns the gap) */
 }
 .tile-s {
   position: relative;
@@ -555,7 +581,10 @@
 /* clickable alt rows -> jump to that toon's profile */
 .toon[role="button"] {
   cursor: pointer;
-  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+  transition:
+    border-color 0.12s,
+    background 0.12s,
+    transform 0.06s;
 }
 .toon[role="button"]:hover {
   border-color: var(--col, var(--accent));
@@ -568,7 +597,9 @@
 .toon.current {
   border-color: var(--col, var(--accent));
   background: color-mix(in srgb, var(--col, var(--accent)) 12%, var(--surface-2));
-  box-shadow: 0 0 0 1px var(--col, var(--accent)), 0 0 16px -6px var(--col, var(--accent));
+  box-shadow:
+    0 0 0 1px var(--col, var(--accent)),
+    0 0 16px -6px var(--col, var(--accent));
 }
 
 /* ============ per-boss placement bars ============ */
@@ -690,6 +721,46 @@
   font-style: italic;
   font-size: 13px;
 }
+
+/* officer-only header search — "jump to raider". Dark field + magnifier, reuses the .ac dropdown. */
+.psearch {
+  position: relative;
+  width: 210px;
+}
+.psearch .ps-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--text-dim-2);
+  pointer-events: none;
+}
+.psearch input {
+  width: 100%;
+  height: var(--ctl-h);
+  background: var(--field);
+  color: var(--white);
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color-scheme: dark;
+  padding: 0 12px 0 32px;
+}
+.psearch input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+/* the shared .ac dropdown is positioned for the taller login field; re-anchor under this control */
+.psearch .ac {
+  top: calc(var(--ctl-h) + 4px);
+}
+@media (max-width: 620px) {
+  .psearch {
+    width: 150px;
+  }
+}
 .modal-ov {
   position: fixed;
   inset: 0;
@@ -743,9 +814,9 @@
   .pgrid {
     grid-template-columns: 1fr;
   }
-  /* right column is reserved/empty for now — drop it entirely when stacked */
+  /* the right column (Raid Vitality) stacks under the rest when narrow */
   .pgrid .side {
-    display: none;
+    order: -1; /* show the headline vitality first when stacked */
   }
 }
 
@@ -787,4 +858,136 @@
   .plist .bn {
     min-width: 110px;
   }
+}
+
+/* ============ Raid Vitality ("raid HP" bar) ============ */
+/* tone -> the bar/glow colour; set on the .vitality card so the whole panel themes to the band. */
+.vitality {
+  --vt: var(--ok);
+}
+.vitality.fire {
+  --vt: #ffb03a;
+}
+.vitality.ok {
+  --vt: var(--ok);
+}
+.vitality.warn {
+  --vt: #e0a13e;
+}
+.vitality.bad {
+  --vt: #ff6b6b;
+}
+
+/* ---- align the three columns on one grid line ----
+   Each column (.rail / .main / .side) opens with a .psec header, but they carry different content
+   (plain title · title+toggles · title+status). Pin the FIRST .psec of each column to one fixed
+   height so all three headers occupy the same band — then every column's first card starts on the
+   same horizontal line, giving the clean grid cross of gutters. */
+.rail > .psec:first-child,
+.main > .psec:first-child,
+.side > .psec:first-child {
+  min-height: 34px; /* tall enough for the tallest header (Performance toggles) */
+  margin-bottom: 12px;
+  flex-wrap: nowrap; /* keep title + control on one line so height stays fixed */
+  white-space: nowrap;
+}
+/* status word lives in the section header, pushed to the right edge; tone-coloured */
+.psec .vt-status {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+.psec .vt-status.fire {
+  color: #ffb03a;
+}
+.psec .vt-status.ok {
+  color: var(--ok);
+}
+.psec .vt-status.warn {
+  color: #e0a13e;
+}
+.psec .vt-status.bad {
+  color: #ff6b6b;
+}
+
+/* the health bar itself — dark track + tone-coloured fill with a subtle sheen */
+.hpbar {
+  position: relative;
+  height: 22px;
+  border-radius: 999px;
+  background: #17181c;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.hpfill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--vt) 70%, #000 30%), var(--vt));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--vt) 55%, transparent);
+  transition: width 0.5s ease;
+}
+.hplabel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+.vt-blurb {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 10px 2px 2px;
+}
+
+/* soft contributing factors — vibes, not numbers */
+.vfacs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+.vfac {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.vfac small {
+  color: var(--text-dim-2);
+  font-weight: 600;
+}
+.vfac .vf-i {
+  font-size: 12px;
+}
+.vfac.good {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+  color: var(--ok);
+}
+.vfac.warn {
+  border-color: color-mix(in srgb, #e0a13e 50%, var(--border));
+  color: #e0a13e;
+}
+.vfac.bad {
+  border-color: color-mix(in srgb, #ff6b6b 50%, var(--border));
+  color: #ff6b6b;
+}
+.vfac.good small,
+.vfac.warn small,
+.vfac.bad small {
+  color: inherit;
+  opacity: 0.75;
 }

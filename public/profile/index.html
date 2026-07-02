@@ -24,7 +24,18 @@
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
           <circle cx="12" cy="7" r="4" />
         </svg> RATS — Raider Profile</h1>
-      <span style="margin-left:auto;display:inline-flex;gap:8px">
+      <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+        <!-- officer-only: jump to any raider's profile -->
+        <div class="psearch" id="psearch" style="display:none">
+          <svg class="ps-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input type="text" id="pSearchInput" placeholder="Jump to raider…" autocomplete="off" spellcheck="false"
+            aria-label="Jump to a raider's profile" oninput="psFilter()" onfocus="psFilter()" />
+          <div id="pSearchList" class="ac" style="display:none"></div>
+        </div>
         <button class="btn" id="lockBtn" onclick="doLock()" style="display:none"
           title="Sign out of this profile on this browser">🔒 Log out</button>
       </span>
