@@ -23,7 +23,15 @@
     </div>
     <p class="sub">The guild's art &amp; lore — click any piece to view it full size and download. 🐀🧀</p>
 
-    <div class="tabs" id="tabs"></div>
+    <div class="galbar">
+      <div class="tabs" id="tabs"></div>
+      <div class="gsearch">
+        <svg class="gs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="search" type="text" placeholder="Search by name…" autocomplete="off" spellcheck="false" aria-label="Search art by name" />
+        <button id="searchClear" class="gs-clear" title="Clear search" aria-label="Clear search" hidden>✕</button>
+      </div>
+    </div>
+
     <div class="grid" id="grid"></div>
   </div>
 

@@ -2,8 +2,33 @@
 h1 { display: inline-flex; align-items: center; gap: 9px }
 h1 .hicon { width: 23px; height: 23px; flex: 0 0 auto; color: var(--accent) }
 
+/* tabs + search share one row: tabs flow left, search pinned right (wraps under on narrow) */
+.galbar { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; margin: 18px 0 4px }
+.galbar .tabs { margin: 0; flex: 1 1 auto }
+.galbar .gsearch { flex: 0 0 auto; margin: 0 }
+
+/* search bar — dark field with a leading magnifier + trailing clear button */
+.gsearch { position: relative; width: 260px; max-width: 100% }
+.gsearch .gs-icon {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px; color: var(--text-dim-2); pointer-events: none;
+}
+.gsearch input {
+  width: 100%; height: var(--ctl-h);
+  background: var(--field); color: var(--white); border: 1px solid var(--field-border);
+  border-radius: var(--radius); font-size: 13px; color-scheme: dark;
+  padding: 0 32px 0 34px;
+}
+.gsearch input:focus { outline: none; border-color: var(--accent) }
+.gs-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 0; color: var(--text-dim-2); font-size: 13px; cursor: pointer; border-radius: var(--radius);
+}
+.gs-clear:hover { color: var(--white); background: var(--surface) }
+
 /* category tabs */
-.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0 4px }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px }
 .tab {
   cursor: pointer; font-size: 13px; font-weight: 700;
   color: var(--text-dim); background: var(--surface);

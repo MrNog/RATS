@@ -1,7 +1,9 @@
 # Builds gallery.json from the files in images/<category>/  (script lives in scripts/)
 # Run:  powershell -ExecutionPolicy Bypass -File scripts\build-gallery.ps1   (or double-click scripts\build-gallery.bat)
 #
-# - Scans images/classes, images/commissions, images/banners, images/lore
+# - Scans images/classes, images/commissions, images/banners, images/lore, images/wallpaper, images/icons
+# - Also scans images/profile-bg/<main>/<toon>.png recursively (the text-free profile hero banners),
+#   titled by toon name; the _class/ generic-fallback folder is skipped.
 # - Titles are auto-generated from the filename, per category:
 #     banners      "ICC 10"      -> "Icecrown Citadel (10-man)"
 #     commissions  "Bimbo 2"     -> "Bimbo #2"
@@ -64,6 +66,38 @@ $out = New-Object System.Collections.ArrayList
 $count = 0
 $imagesRoot = Join-Path $root "images"
 
+# --- toon -> main alias map, for auto-tagging "people" (who's in the art) ---------------------------
+# Source 1: profile-bg/<main>/<toon>.png folders — every toon in a <main>/ folder belongs to <main>.
+#   This captures all LOCKED alts automatically (the sheets embed the same paths), so new alts just
+#   need their banner dropped in the right folder.
+# Source 2: NICKS — commission/file spellings that differ from the in-game toon name (few, explicit).
+# Result: $alias[<lowercased simplified name>] = <main>. Used to fill "people" from a filename.
+function Simplify([string]$s) { ($s -replace "[^a-zA-Z0-9]", "").ToLower() }
+$alias = @{}
+$pbgScan = Join-Path $imagesRoot "profile-bg"
+if (Test-Path $pbgScan) {
+  Get-ChildItem -Path $pbgScan -Directory | Where-Object { $_.Name -ne "_class" } | ForEach-Object {
+    $main = $_.Name
+    $alias[(Simplify $main)] = $main
+    Get-ChildItem -Path $_.FullName -File | Where-Object { $exts -contains $_.Extension.ToLower() } | ForEach-Object {
+      $alias[(Simplify ([System.IO.Path]::GetFileNameWithoutExtension($_.Name)))] = $main
+    }
+  }
+}
+# hand-kept nicks: commission/file spellings -> the in-game toon (which the map above resolves to a main)
+$NICKS = @{ "bimbo" = "mojo"; "nutella" = "nutelaa"; "nutela" = "nutelaa" }
+foreach ($k in $NICKS.Keys) { $alias[(Simplify $k)] = if ($alias.ContainsKey((Simplify $NICKS[$k]))) { $alias[(Simplify $NICKS[$k])] } else { $NICKS[$k] } }
+
+# Resolve the leading name of a filename to a main via $alias (e.g. "Okanor 1" -> okanor,
+# "Foug 1" -> foug, "Bimbo 2" -> mojo). Returns "" when the name isn't a known rat.
+function Resolve-People([string]$file) {
+  $base = Get-CleanName $file                    # "Okanor 1" / "Warchiefs 3"
+  $lead = ($base -split '\s+')[0]                # first word = the character name
+  $key = Simplify $lead
+  if ($alias.ContainsKey($key)) { return $alias[$key] }
+  return ""
+}
+
 foreach ($cat in $cats) {
   $dir = Join-Path $imagesRoot $cat
   if (-not (Test-Path $dir)) { continue }
@@ -83,7 +117,39 @@ foreach ($cat in $cats) {
         caption = if ($prev -and $prev.caption) { $prev.caption } else { "" }
         date    = if ($prev -and $prev.date) { $prev.date } else { $_.LastWriteTime.ToString("yyyy-MM") }
       }
+      # "people" = who's in the art. A hand-written tag ALWAYS wins. Otherwise we ONLY auto-tag when the
+      # filename's leading name is a known rat (single-character art like "Okanor 1" / "Bimbo 2"). Group
+      # shots (a filename that isn't a rat name, e.g. "Warchiefs 3") get NO auto-tag — the pipeline can't
+      # see who's actually in a group image, so those must be tagged by hand. Raid banners have no people.
+      if ($prev -and $prev.people) { $item.people = $prev.people }
+      elseif ($cat -ne "banners") { $p = Resolve-People $_.Name; if ($p) { $item.people = $p } }
       if ($cat -eq "banners") { $item.wide = $true }
+      [void]$out.Add([pscustomobject]$item)
+      if (-not $prev) { Write-Host "  + new: $rel  ->  $($item.title)" -ForegroundColor Green }
+    }
+}
+
+# profile-bg is nested one folder per main (images/profile-bg/<main>/<toon>.png) and text-free,
+# so scan it recursively as its own category. Skip the _class/ generic-fallback banners.
+$pbgDir = Join-Path $imagesRoot "profile-bg"
+if (Test-Path $pbgDir) {
+  Get-ChildItem -Path $pbgDir -File -Recurse |
+    Where-Object { $exts -contains $_.Extension.ToLower() -and $_.Directory.Name -ne "_class" } |
+    Sort-Object Name |
+    ForEach-Object {
+      $rel = "images/profile-bg/$($_.Directory.Name)/$($_.Name)"
+      $count++
+      $prev = $existing[$rel]
+      $item = [ordered]@{
+        cat     = "profile-bg"
+        file    = $rel
+        title   = ConvertTo-TitleCase (Get-CleanName $_.Name)
+        caption = if ($prev -and $prev.caption) { $prev.caption } else { "" }
+        date    = if ($prev -and $prev.date) { $prev.date } else { $_.LastWriteTime.ToString("yyyy-MM") }
+      }
+      if ($prev -and $prev.people) { $item.people = $prev.people }
+      else { $p = Resolve-People $_.Name; if ($p) { $item.people = $p } }
+      $item.wide = $true  # 4:1 ultra-wide art -> full-row like banners
       [void]$out.Add([pscustomobject]$item)
       if (-not $prev) { Write-Host "  + new: $rel  ->  $($item.title)" -ForegroundColor Green }
     }

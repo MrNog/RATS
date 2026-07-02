@@ -6,6 +6,7 @@ const CATS = [
   { id: "warchief-fangs", label: "Fangs" },
   { id: "warchiefs",      label: "Warchiefs" },
   { id: "banners",        label: "Banners" },
+  { id: "profile-bg",     label: "Hero Banners" },
   { id: "wallpaper",      label: "Wallpapers" },
   { id: "icons",          label: "Icons" }
 ];
@@ -14,7 +15,44 @@ const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&am
 const enc = s => encodeURI(String(s == null ? "" : s)); // URL-safe path (handles spaces in filenames)
 const grid = document.getElementById("grid");
 const tabsEl = document.getElementById("tabs");
-let ITEMS = [], view = [], filter = "all", cur = 0;
+const searchEl = document.getElementById("search");
+const searchClear = document.getElementById("searchClear");
+let ITEMS = [], view = [], filter = "all", q = "", cur = 0;
+
+// normalize for matching: lowercase, strip anything but a-z0-9 so "Val'anyr" ~ "valanyr"
+const norm = s => String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+// searchable part of a file path: drop the "../../" prefix, the leading "images/" folder, and the
+// extension — otherwise the literal "images" makes "mage" match every item (mage in iMAGEs).
+const fileHay = f => norm(String(f || "").replace(/^(\.\.\/)+/, "").replace(/^images\//i, "").replace(/\.[a-z0-9]+$/i, ""));
+
+// alt -> main map: profile-bg art is grouped as profile-bg/<main>/<toon>.png, so every toon in a
+// <main>/ folder belongs to that player. Built from the manifest so "okanata" (an alt) also finds
+// Okanor's art everywhere (Warchief shot, commissions, wallpaper). Populated by buildAltMap().
+let ALT2MAIN = {};
+function buildAltMap(items) {
+  ALT2MAIN = {};
+  for (const it of items) {
+    const m = /profile-bg\/([^/]+)\/([^/]+)\.[a-z0-9]+$/i.exec(String(it.file || ""));
+    if (!m) continue;
+    const main = norm(m[1]).replace(/ /g, ""), toon = norm(m[2]).replace(/ /g, "");
+    if (toon && main && toon !== main) ALT2MAIN[toon] = main; // record the alt's player
+  }
+}
+// expand a query token to also include the player's main when the token is a known alt.
+function expandToken(tok) {
+  const t = tok.replace(/ /g, "");
+  return ALT2MAIN[t] ? [tok, ALT2MAIN[t]] : [tok];
+}
+
+// does an item match the current query? searches title + caption + cleaned filename + the hand-tagged
+// "people" list (who's in the art — makes group shots findable by every member). An alt name also
+// matches its player's art via ALT2MAIN, so each query word matches if the word OR the player's main
+// appears in that haystack.
+function matchesQuery(it) {
+  if (!q) return true;
+  const hay = norm(it.title) + " " + norm(it.caption) + " " + fileHay(it.file) + " " + norm(it.people);
+  return q.split(" ").every(tok => expandToken(tok).some(alias => hay.includes(alias)));
+}
 
 // --- tabs ---
 tabsEl.innerHTML = CATS.map(c => `<div class="tab${c.id === "all" ? " active" : ""}" data-cat="${c.id}">${esc(c.label)}</div>`).join("");
@@ -25,14 +63,36 @@ tabsEl.addEventListener("click", e => {
   render();
 });
 
+// --- search ---
+searchEl.addEventListener("input", () => {
+  q = norm(searchEl.value);
+  searchClear.hidden = !searchEl.value;
+  render();
+});
+searchClear.addEventListener("click", () => {
+  searchEl.value = ""; q = ""; searchClear.hidden = true;
+  searchEl.focus(); render();
+});
+// Esc clears the search (only when the lightbox isn't open, so Esc there still closes it)
+searchEl.addEventListener("keydown", e => {
+  if (e.key === "Escape" && searchEl.value) { e.stopPropagation(); searchEl.value = ""; q = ""; searchClear.hidden = true; render(); }
+});
+
 const GAP = 14, MINCOL = 220;
 
 function render() {
-  view = filter === "all" ? ITEMS : ITEMS.filter(i => i.cat === filter);
+  // "classes" = generic class-rat art (not real characters) — hidden from "All"; only shows on its own tab.
+  view = ITEMS.filter(i => {
+    if (filter === "all") { if (i.cat === "classes") return false; }
+    else if (i.cat !== filter) return false;
+    return matchesQuery(i);
+  });
   if (!view.length) {
     grid.classList.add("empty-state");
     grid.style.height = "";
-    grid.innerHTML = `<div class="empty"><div class="big">🖼🐀</div><p>Nothing here yet — art coming soon.</p></div>`;
+    grid.innerHTML = q
+      ? `<div class="empty"><div class="big">🔍🐀</div><p>No art matches "${esc(searchEl.value.trim())}".</p></div>`
+      : `<div class="empty"><div class="big">🖼🐀</div><p>Nothing here yet — art coming soon.</p></div>`;
     return;
   }
   grid.classList.remove("empty-state");
@@ -59,11 +119,20 @@ function layout() {
   const colW = (W - GAP * (cols - 1)) / cols;
   const heights = new Array(cols).fill(0);
   for (const card of cards) {
-    if (card.classList.contains("wide")) {           // full-row banner
-      const top = Math.max(...heights);
-      card.style.left = "0px"; card.style.top = top + "px"; card.style.width = W + "px";
-      const h = card.offsetHeight;
-      heights.fill(top + h + GAP);
+    if (card.classList.contains("wide")) {           // wide banner: spans 2 columns (full row if only 1 col)
+      const span = Math.min(2, cols);
+      // find the starting column of the span whose tallest column is lowest (keeps banners packed)
+      let best = 0, bestTop = Infinity;
+      for (let s = 0; s <= cols - span; s++) {
+        const top = Math.max(...heights.slice(s, s + span));
+        if (top < bestTop) { bestTop = top; best = s; }
+      }
+      const w = colW * span + GAP * (span - 1);
+      card.style.left = best * (colW + GAP) + "px";
+      card.style.top = bestTop + "px";
+      card.style.width = w + "px";
+      const bottom = bestTop + card.offsetHeight + GAP;
+      for (let k = best; k < best + span; k++) heights[k] = bottom;   // level the spanned columns
     } else {
       card.style.width = colW + "px";
       let c = 0; for (let k = 1; k < cols; k++) if (heights[k] < heights[c]) c = k; // shortest column
@@ -115,5 +184,5 @@ document.addEventListener("keydown", e => {
 // --- load manifest ---
 fetch("../../gallery.json", { cache: "no-cache" })
   .then(r => r.ok ? r.json() : [])
-  .then(d => { ITEMS = (Array.isArray(d) ? d : []).map(it => ({ ...it, file: "../../" + it.file })); render(); })
+  .then(d => { ITEMS = (Array.isArray(d) ? d : []).map(it => ({ ...it, file: "../../" + it.file })); buildAltMap(ITEMS); render(); })
   .catch(() => { ITEMS = []; render(); });

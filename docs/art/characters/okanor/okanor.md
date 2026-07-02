@@ -1,8 +1,10 @@
 # Okanor — "The Lightkeeper"
 
-- **Class / spec:** Holy Paladin (frontline healer)
+- **Class / spec:** Holy Paladin (frontline healer) (MAIN)
 - **Rank:** Warchief
 - **Commissioned:** founding officer
+- **Alts:** Rogue (Okanata) · Blood DK (Okanath) · Elemental Shaman (Okanstorm) · Feral Druid (Okanthorn) —
+  see the **Alts** section at the bottom.
 
 ## Locked look (never changes between images)
 
@@ -78,3 +80,57 @@ Art style: World of Warcraft cinematic concept art, painterly brushwork, ultra-d
 
 Do NOT include: any lettering, title, name, watermark or logo; a floating book / tome / libram; a small round ball-headed mace; two tails or any extra tail, extra or duplicated limbs/arms/heads, extra or duplicated weapons, a weapon and shield in the SAME hand, malformed/fused hands, wrong finger count; cute / pretty / soft / dainty styling, pastel or pink colours, ivory / white / pale armor, chubby / fat / overweight build, angelic soft healer, floating dust/ember particles, speckled noise, heavy haze, oversized/indistinct subject, modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
 ```
+
+---
+
+## Alts
+
+Okanor's pack — same player, other toons. The MAIN look above is the default for any Okanor art; only use
+an alt look when the commission is specifically for that toon. Each alt's profile banner is saved at
+`images/profile-bg/okanor/<name>.png`.
+
+### Okanata — "The Silent Fang" · Rogue (Assassination)
+
+- **Rat:** dark fur, prominent whiskers, sharp fierce eyes — lean, wiry, agile; a cold lethal glare.
+- **Armor:** battle-worn **dark leather** with a hood + pulled-down scarf/mask, black-and-gold Horde trim.
+- **Weapon(s):** **TWO daggers**, ONE per hand, **reverse (ice-pick) grip**, blades dripping sickly green
+  poison. Exactly two — one per hand, never more.
+- **Signature:** the hood + poison-green blade edge; half his body dissolving into shadow-smoke.
+- **Palette / light:** black leather, gold trim, charcoal shadow · venomous yellow-green (`#FFF569`) rimming the blades.
+- **Scenes:** emerge-from-shadow mid-stalk, crouched 3/4, one dagger low one raised (banner DONE); moonlit
+  rooftops / sewer ledge; ambush drop from above — defiant, never slaying.
+
+### Okanath — "The Bloodwarden" · Death Knight (Blood)
+
+- **Rat:** dark fur, prominent whiskers, **glowing pale-blue undead eyes** — lean, powerfully built, grim and cold.
+- **Armor:** heavy battle-worn **dark bone-and-black plate**, jagged pauldrons, **frost-blue runes** on the
+  seams, tattered dark cloak.
+- **Weapon(s):** ONE massive **two-handed RUNEBLADE greatsword**, gripped in **BOTH hands**, wreathed in dark
+  crimson blood-runes. One weapon only — never a spare dagger.
+- **Signature:** crimson blood-runes on the runeblade + frost-blue rune-seams; pale undead eyes.
+- **Palette / light:** blackened bone-plate, iron, frost-blue accents · deep blood-red (`#C41E3A`) pulsing from the runeblade.
+- **Scenes:** wide immovable guard, runeblade forward across the body (banner DONE); frozen-citadel hall;
+  a defiant blood-fueled stand over dark silhouettes — never slaying. **Content-safety:** the "blood" theme
+  is rune-glow, NOT injury/spatter.
+
+### Okanstorm — "The Stormcaller" · Shaman (Elemental)
+
+- **Rat:** dark fur, prominent whiskers, sharp fierce eyes — lean, wiry, storm-charged.
+- **Armor:** battle-worn **dark mail-and-leather** hung with **bone totems, feathers and fetishes**, black-and-gold Horde trim.
+- **Weapon(s):** ONE **totemic storm-mace/staff** in the RIGHT hand, crackling with lightning; the LEFT hand
+  casts (arcs of storm energy between the fingers). One weapon only.
+- **Signature:** storm totems + blue-white lightning leaping around his hand and mace.
+- **Palette / light:** dark mail and leather, bone totems, charcoal shadow · storm blue-white lightning (`#0070DD`).
+- **Scenes:** one-hand storm-cast, arm hurling a bolt, mace raised, mantle snapping (banner DONE); two-hand
+  channel on a storm-lashed peak. Keep him **grounded/striding — NOT the "floating" caster default.**
+
+### Okanthorn — "The Wild Claw" · Druid (Feral / Cat)
+
+- **Rat:** dark bristling fur, prominent whiskers, **fierce glowing amber-green eyes**, claws extended — lean,
+  agile, muscular; a coiled predator, half-shifted to a spectral spirit-cat.
+- **Armor:** minimal **primal armor** of leather, bone and feathers with black-and-gold Horde touches, antler/bone motifs.
+- **Weapon(s):** **NONE** — his **claws ARE the weapon.** Never add a melee weapon.
+- **Signature:** emerald primal energy crackling off the paws; the half-shift to spirit-cat.
+- **Palette / light:** dark leather and fur, bone accents, deep shadow · feral emerald-into-orange (`#FF7C0A`) off the claws.
+- **Scenes:** low predatory feral lunge, half-shifted, claws leading (banner DONE); mid-leap feral roar in an
+  ancient grove / overgrown ruin — defiant, never slaying.
