@@ -7,7 +7,7 @@ h2 { font-size: 15px; color: var(--accent); margin: 26px 0 10px; letter-spacing:
 .flbl { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; flex: 0 0 auto; width: 50px }
 .frow #search { flex: 1 1 220px; height: var(--ctl-h) }
 
-.segs { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px }
+.segs { display: inline-flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 2px }
 .segs.grow { flex: 1 1 auto }
 .segs.grow .seg { flex: 1 1 0 }
 .seg {
@@ -35,16 +35,33 @@ tr.rankrow td {
 }
 tr.rankrow:first-child td { padding-top: 4px }
 
-.bar { position: relative; height: 16px; width: 160px; max-width: 38vw; background: #232529; border-radius: 8px; overflow: hidden }
-.bar > i { position: absolute; inset: 0 auto 0 0; display: block; border-radius: 8px }
-.pct { font-weight: 800; width: 52px; display: inline-block }
+/* column widths — give Attendance the room, keep Raider + Runs + % tight */
+.nm { width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px }
+th:first-child { width: 200px }
+.attcol { width: auto }
+.runcol { width: 82px; white-space: nowrap; color: var(--muted); font-weight: 600 }
+.pctcol { width: 60px; text-align: right }
+th.runcol, th.pctcol { text-align: left }
+th.pctcol { text-align: right }
 
-/* red "missed" pill — reset the shared .pill base */
+.bar {
+  position: relative; height: 16px; width: 100%; min-width: 200px; background: #202226;
+  border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+}
+.bar > i {
+  position: absolute; inset: 0 auto 0 0; display: block; border-radius: 8px;
+  transition: width .3s ease; opacity: .92;
+}
+.pct { font-weight: 800; display: inline-block }
+
+/* red "ghost" pill — signed up but never showed. reset the shared .pill base */
 .pill { font-size: 11px; font-weight: 600; text-transform: none; letter-spacing: 0; color: #ff9b9b; background: #3a2626; border-radius: 10px; padding: 1px 7px; margin-left: 6px }
+/* amber "half" pill — came the first night, didn't return; less severe than a ghost */
+.pill.half { color: #e6b866; background: #3a3016 }
 
 /* raid log */
 .raid { background: var(--row); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden }
-.raid > .head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer }
+.raid > .head { display: flex; align-items: center; gap: 10px; padding: 0 12px; cursor: pointer; height: 42px; box-sizing: border-box }
 .raid > .head:hover { background: var(--rowhover) }
 .raid .date { font-weight: 800; color: var(--accent); min-width: 130px }
 .szbadge { font-size: 11px; font-weight: 800; color: #cfd2d6; background: var(--surface); border: 1px solid var(--border-2); border-radius: 10px; padding: 1px 8px; flex: 0 0 auto }
