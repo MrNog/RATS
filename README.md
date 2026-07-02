@@ -1,51 +1,66 @@
-# 🐀 RATS — guild site
+<div align="center">
 
-Public **hub** + gated **officer tools** in one static site (plain HTML + vanilla JS, no build step).
-Hosted on GitHub Pages; deployed via the Fork GUI.
+<img src="images/icons/Guild%20RATS%201.png" alt="RATS" width="180">
 
-## Structure
+# 🐀 RATS — Guild Hub
 
-Every page lives in its own folder as `index.html` with co-located `pagename.css` + `pagename.js`
-(no inline `<style>`/`<script>`). Shared styling is a small design system in `assets/css/`.
+**A Horde raiding guild on Warmane (WotLK 3.3.5 · Onyxia).**
+Cheese, chaos, and clean kills. 🧀
 
-```
-index.html  index.css  index.js     Hub (landing) — Officer Tools card → officer/
-public/     addons/ gallery/ vacations/   Public pages (each is index.html + .css + .js)
-gallery.json  images/                Public gallery data + art
-assets/
-  css/theme.css                      Design tokens (:root vars) + base reset — linked on EVERY page
-  css/ui.css                         Components (button, .card, .frow, inputs, .seclist, .tbtn, .del…)
-  js/utils.js                        Optional RatsUtils helpers for new pages
-  js/data.js                            Shared data layer (RatsData): gate, Firebase, vacations/members
-  js/datepicker.js                      RatsCal dark calendar
-officer/    index.html index.css index.js   Officer tools menu (← Back to Hub)
-  guild/ comp/ history/ lore/ files/ admin/ changelog/   Each: index.html + .css + .js
-.github/workflows/
-  build-gallery.yml                  Rebuilds gallery.json from images/** on push
-  release-notify.yml                 Discord ping when a watched addon cuts a release
-releases.json  release-state.json    Watched addons + hub link / notifier state
-downloads/  files/  docs/  scripts/
-```
+*One home for our roster, raids, art, and everyone who plays.*
 
-**Vacations is one shared page** at `vacations/` for everyone — it detects officer mode by the guild
-key (`localStorage.ratsGuildKey`): guildies get add + live preview + read-only lists; officers also get
-edit/remove/repost, the month calendar, and the auto-announce poll. Both hubs link to it.
+<br>
 
-Hub ⇄ Officer: the hub has an **Officer Tools** card; the officer menu has **← Back to Hub**. Officer
-pages call `RatsData.gate()` so they unlock with the guild key (public pages don't).
+[![Visit the hub](https://img.shields.io/badge/🏰_Visit_the_Hub-c0943a?style=for-the-badge)](https://mrnog.github.io/RATS/)
+&nbsp;
+[![Warmane](https://img.shields.io/badge/Realm-Onyxia_·_Horde-8b0000?style=for-the-badge)](https://armory.warmane.com/)
 
-**New page recipe:** make `folder/index.html`, link `assets/css/theme.css` + `ui.css` + `pagename.css`,
-write structure with the component classes, drop a `pagename.js`. Style through tokens so one change
-in `theme.css` moves the whole site. See `CLAUDE.md` + `.claude/rules/html.md` for conventions.
+</div>
 
-## Run locally
+<br>
 
-`file://` blocks fetch/crypto/webhooks — use a server: VS Code **Live Server** or `python -m http.server 8000`.
-Internal links point at explicit `index.html` so routing works on `file://`, any local server, and Pages.
+<div align="center">
+<img src="images/wallpaper/warchiefs.jpg" alt="The Warchiefs of RATS" width="88%">
+<br><em>The Warchief Rats — the officers who herd the swarm.</em>
+</div>
 
-## ⭐ Release notifier — setup
-1. Push as a GitHub repo with Pages enabled.
-2. Repo **Settings → Secrets → Actions** → add `LOG_WEBHOOK` = the "Logs" Discord webhook URL.
-3. Edit **releases.json**: confirm `hubUrl` (the live addons page, `…/rats/public/addons/`) and the watched `addons` list.
-- First run records current versions (no spam); after that any new release pings Discord. Runs every 30 min
-  (and on-demand from the Actions tab).
+<br>
+
+## 🧀 What is this?
+
+The **RATS Guild Hub** is our little corner of the web — a place for members and visitors alike to
+find everything the guild has going on, without digging through Discord pins. Recommended addons,
+a wall of raid art, who's on vacation this week, personal raider pages, and the tools the officers
+use to keep the swarm running.
+
+It's open to everyone. The officer-only tools are tucked behind a guild key — everything else is
+yours to explore.
+
+## 🏰 What's inside
+
+| | For everyone | |
+|---|---|---|
+| 📦 | **Addons** | Our recommended addon pack — grab what the raid team runs. |
+| 🖼️ | **Gallery** | A wall of guild art: warchief portraits, raid banners, lore pieces. |
+| 🏖️ | **Vacations** | Heading away? Add your dates so the raid leads know. See who's out. |
+| 👤 | **Profiles** | Your own raider page — look, stats, and story. Unlocked with a personal key. |
+| 📊 | **Rankings** | Logs-fed leaderboards: top DPS/HPS, guild progress, and a wall of shame. |
+
+| | For officers 🔑 | |
+|---|---|---|
+| 🐀 | **Roster** | The guild roster — Fangs, join dates, specs, and armory links. |
+| 🗓️ | **Raid Comp** | Build and share the night's raid composition. |
+| 📈 | **Attendance & History** | Every run, who showed, and a fair reliability score for loot council. |
+| 📜 | **Lore & Files** | Guild chronicles and officer sheets. |
+
+## 💀 The pack
+
+RATS runs a full raid team led by the **Warchief Rats** and their squad of **Warchief's Fangs** —
+the 10-man core. New rats start in the sewers and claw their way up. 🧀
+
+<div align="center">
+<br>
+<sub>🐀 Made with cheese by the RATS officers · Horde · Warmane-Onyxia 🧀</sub>
+<br>
+<sub>Developer? See <a href="CLAUDE.md">CLAUDE.md</a> for conventions and architecture.</sub>
+</div>
