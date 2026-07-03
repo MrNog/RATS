@@ -89,6 +89,32 @@ label.chk {
   cursor: pointer;
 }
 
+/* attendance list: cap the height + scroll inside, so a full roster doesn't push the Raid log
+   miles down the page. The table header stays sticky while scrolling. */
+#attendance {
+  max-height: 48vh;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-3);
+  padding: 0 12px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--surface-3);
+}
+/* shorter still on small screens so the Raid log stays reachable without a long scroll */
+@media (max-height: 800px) {
+  #attendance { max-height: 42vh; }
+}
+@media (max-height: 600px) {
+  #attendance { max-height: 38vh; }
+}
+#attendance thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-3);
+}
+
 /* attendance table */
 table {
   width: 100%;

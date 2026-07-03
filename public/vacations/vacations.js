@@ -2,8 +2,11 @@
 // the month calendar, the day-before reminder preview, and the auto-announce + purge poll.
 // Guildies get add + live preview + read-only lists. The `vacations` node is a plain (world-
 // readable) Firebase node, so this split is convenience only — no secret data is gated here.
-const isOfficer = !!localStorage.getItem("ratsGuildKey");
 const FB = "https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/";
+
+// officer status comes from the shared layer (RatsData.isOfficer folds in the global dev-role
+// override on localhost). Read once at load; the dev panel reloads the page when you flip roles.
+const isOfficer = window.RatsData ? RatsData.isOfficer() : !!localStorage.getItem("ratsGuildKey");
 
 const CLASS_COLOR = {
   "Death Knight": "#C41E3A",
@@ -90,6 +93,9 @@ function status(v) {
   if (t > end) return "past";
   return "active";
 }
+// shared 10% progression colour scale (low % reddish = just started, high % green = almost back).
+// Lives in RatsUtils so vacations, rankings, etc. all read bars the same way.
+const barColor = (p) => (window.RatsUtils ? RatsUtils.progressColor(p) : "#43b581");
 // progress through an active vacation: current day index, total days, % elapsed, days left
 function vacProgress(v) {
   const total = daysBetween(v.start, v.end);
@@ -98,7 +104,7 @@ function vacProgress(v) {
   return { p, idx, total, left: total - idx };
 }
 let editingKey = "";
-function rowHtml(v, editable) {
+function rowHtml(v, editable, grp) {
   const col = CLASS_COLOR[v.class] || "#ddd";
   if (editable && v.key === editingKey) {
     return `<tr>
@@ -115,20 +121,32 @@ function rowHtml(v, editable) {
     lbl = { active: "away now", soon: "upcoming", past: "ended" }[st];
   // the note is "for officers" — only shown in officer mode
   const note = isOfficer && v.note ? ` <span title="${esc(v.note)}" style="cursor:help">📝</span>` : "";
-  const tag = v.type === "personal" ? ` <span title="Personal time off — low-key" style="cursor:help">💤</span>` : "";
+  const tag =
+    v.type === "personal"
+      ? ` <span title="Personal time off — low-key" style="cursor:help">💤</span>`
+      : ` <span title="Vacation" style="cursor:help">🏖️</span>`;
   let statusCell = `<span class="pill ${st}">${lbl}</span>`;
-  if (st === "active" && v.type !== "personal") {
+  // show the progress bar for ANY active absence (vacation OR personal) so progression is easy to see.
+  if (st === "active") {
     const pr = vacProgress(v);
+    const c = barColor(pr.p);
     statusCell = `<div style="min-width:130px" title="${pr.left} day${pr.left !== 1 ? "s" : ""} left">
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d93;margin-bottom:2px"><span>day ${pr.idx}/${pr.total}</span><span style="font-weight:700;color:#8fdf9f">${pr.p}%</span></div>
-      <div style="height:6px;background:#232529;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:${pr.p}%;background:linear-gradient(90deg,#43b581,#8fdf9f)"></i></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#8a8d93;margin-bottom:2px"><span>day ${pr.idx}/${pr.total}</span><span style="font-weight:700;color:${c}">${pr.p}%</span></div>
+      <div style="height:6px;background:#232529;border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:${pr.p}%;background:${c}"></i></div>
     </div>`;
   }
   const actions = editable
     ? `<button class="del" onclick="repostVac('${v.key}')" style="border-color:#c0943a;color:#e0b860;margin-right:6px" title="Re-post this alert to Discord">📣 repost</button><button class="del" onclick="editVac('${v.key}')" style="border-color:#3a4a5b;color:#9ad0ff;margin-right:6px">edit</button><button class="del" onclick="removeVac('${v.key}')">remove</button>`
     : "";
-  return `<tr>
-    <td class="nm" style="color:${col}">${esc(v.name)}${tag}${note}</td>
+  // in "by raider" mode: the first row of a group shows the name (+ a "+N" badge if they have more);
+  // continuation rows blank the name and tuck under it.
+  const countBadge = grp && grp.total > 1 ? ` <span class="grp-count">${grp.total}</span>` : "";
+  const nameCell = grp && grp.cont
+    ? `<td class="nm cont" style="color:${col}"></td>`
+    : `<td class="nm" style="color:${col}">${esc(v.name)}${tag}${note}${countBadge}</td>`;
+  const trClass = grp ? (grp.cont ? "grp-cont" : "grp-first") : "";
+  return `<tr class="${trClass}">
+    ${nameCell}
     <td>${esc(fmtDate(v.start))}</td>
     <td>${esc(v.end ? fmtDate(v.end) : "—")}</td>
     <td>${statusCell}</td>
@@ -140,25 +158,73 @@ function table(list, editable) {
   const head = isOfficer
     ? "<th>Raider</th><th>From</th><th>To</th><th>Status</th><th></th>"
     : "<th>Raider</th><th>From</th><th>To</th><th>Status</th>";
-  return (
-    "<table><thead><tr>" +
-    head +
-    "</tr></thead><tbody>" +
-    list.map((v) => rowHtml(v, editable)).join("") +
-    "</tbody></table>"
-  );
+  // in raider mode, blank the name on consecutive rows for the same person (they're already clustered)
+  const norm = (n) => String(n || "").toLowerCase().trim();
+  const groupable = (v) => sortMode === "raider" && status(v) !== "past"; // don't group ended vacations
+  // count each raider's groupable (non-ended) vacations, so the first row can show a "+N" badge
+  const counts = {};
+  if (sortMode === "raider") list.forEach((v) => { if (groupable(v)) counts[norm(v.name)] = (counts[norm(v.name)] || 0) + 1; });
+  let prev = "";
+  const rows = list
+    .map((v) => {
+      let grp = null;
+      if (groupable(v)) {
+        const k = norm(v.name);
+        grp = { cont: k === prev, total: counts[k] || 1 };
+        prev = k;
+      } else {
+        prev = ""; // an ended row breaks the group chain
+      }
+      return rowHtml(v, editable, grp);
+    })
+    .join("");
+  return "<table><thead><tr>" + head + "</tr></thead><tbody>" + rows + "</tbody></table>";
+}
+const RANK = { active: 0, soon: 1, past: 2 };
+// default order: active first (by progression, most-complete = closest to returning at the top),
+// then upcoming (soonest start), then ended (most recent).
+function byProgression(a, b) {
+  const sa = status(a), sb = status(b);
+  if (RANK[sa] !== RANK[sb]) return RANK[sa] - RANK[sb];
+  if (sa === "active") return vacProgress(b).p - vacProgress(a).p || (a.end || a.start || "").localeCompare(b.end || b.start || "");
+  if (sa === "soon") return (a.start || "").localeCompare(b.start || "");
+  return (b.end || b.start || "").localeCompare(a.end || a.start || "");
+}
+// "By raider" order: cluster each person's vacations together, but order the CLUSTERS by their most
+// relevant status (whoever's away now / soonest at the top) so the status meaning isn't lost. Within
+// a person, entries go in date order. Repeated names are blanked (see rowHtml) so a group reads as one.
+function raiderSorted(list) {
+  const norm = (n) => String(n || "").toLowerCase().trim();
+  // Ended vacations aren't grouped and always sink to the bottom (ordered most-recent first).
+  // Active/upcoming cluster per raider; groups are ordered by each raider's most urgent vacation.
+  const best = {}; // per raider, their most urgent NON-ended vacation
+  list.forEach((v) => {
+    if (status(v) === "past") return;
+    const k = norm(v.name);
+    if (!(k in best) || byProgression(v, best[k]) < 0) best[k] = v;
+  });
+  return list.slice().sort((a, b) => {
+    const pa = status(a) === "past", pb = status(b) === "past";
+    if (pa !== pb) return pa ? 1 : -1;                         // ended always last
+    if (pa && pb) return (b.end || b.start || "").localeCompare(a.end || a.start || ""); // ended: most recent first
+    const ka = norm(a.name), kb = norm(b.name);
+    if (ka !== kb) {
+      const g = byProgression(best[ka], best[kb]);             // order groups by each raider's most urgent vacation
+      if (g !== 0) return g;
+      return (a.name || "").localeCompare(b.name || "");       // tie -> alphabetical
+    }
+    return (a.start || "").localeCompare(b.start || "");       // within a raider: by date
+  });
+}
+let sortMode = "status"; // "status" | "raider"
+function setSort(btn) {
+  sortMode = btn.dataset.sort;
+  btn.parentNode.querySelectorAll(".seg").forEach((b) => b.classList.toggle("active", b === btn));
+  render();
 }
 function render() {
-  // active/upcoming first (by start date), ended pushed to the bottom
-  const vs = VACS.slice().sort((a, b) => {
-    const pa = status(a) === "past" ? 1 : 0,
-      pb = status(b) === "past" ? 1 : 0;
-    return pa - pb || (a.start || "").localeCompare(b.start || "");
-  });
-  const active = vs.filter((v) => status(v) === "active");
-  document.getElementById("active").innerHTML = table(active, false);
+  const vs = sortMode === "raider" ? raiderSorted(VACS) : VACS.slice().sort(byProgression);
   document.getElementById("all").innerHTML = table(vs, isOfficer);
-  document.getElementById("cntactive").textContent = active.length ? "(" + active.length + ")" : "";
   document.getElementById("cntall").textContent = vs.length ? "(" + vs.length + ")" : "";
   if (isOfficer) {
     renderCalendar();
@@ -185,6 +251,7 @@ function calToday() {
   const d = new Date();
   calYear = d.getFullYear();
   calMonth = d.getMonth();
+  selDay = todayStr(); // jump the day-detail back to today too
   renderCalendar();
 }
 function vacsOnDay(dStr) {
@@ -228,14 +295,70 @@ function renderCalendar() {
         chips += `<span class="calchip" style="color:#9aa0a6" title="${vs
           .slice(MAX)
           .map((v) => esc(v.name))
-          .join(", ")}">+${vs.length - MAX} more</span>`;
-      return `<div class="calcell${dStr === today ? " today" : ""}${wknd ? " wknd" : ""}"><div class="caldate">${d}</div>${chips}</div>`;
+          .join(", ")}">+${vs.length - MAX} more (click)</span>`;
+      const sel = dStr === selDay ? " sel" : "";
+      // clickable -> selects the day; the sidebar shows that day's full list (solves "+N more")
+      return `<div class="calcell${dStr === today ? " today" : ""}${sel}${wknd ? " wknd" : ""}" data-day="${dStr}" role="button" tabindex="0" aria-label="Show ${dStr}"><div class="caldate">${d}</div>${chips}</div>`;
     })
     .join("");
   box.innerHTML = `<div class="calgrid">${html}</div>`;
+  renderDayDetail();
 }
-// collapsible sections — closed by default, fixed-height scroll inside
-const secOpen = { active: true, all: false };
+// selected calendar day (defaults to today); the sidebar shows this day's away list in full.
+let selDay = todayStr();
+function selectDay(dStr) {
+  if (!dStr) return;
+  selDay = dStr;
+  renderCalendar(); // re-render to move the .sel highlight + refresh the sidebar
+}
+// right sidebar: everyone away on the SELECTED calendar day (defaults to today), in full — this is
+// what solves the "+N more" truncation in the small cells. Shows notes + edit/repost/remove.
+function renderDayDetail() {
+  const side = document.getElementById("calToday");
+  if (!side) return;
+  const away = vacsOnDay(selDay).sort((a, b) => vacProgress(b).p - vacProgress(a).p);
+  const dt = new Date(selDay + "T00:00:00");
+  const heading = dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+  const isToday = selDay === todayStr();
+  let body;
+  if (!away.length) {
+    body = '<div class="empty" style="padding:12px 2px">No one away this day. 🧀</div>';
+  } else {
+    body = away
+      .map((v) => {
+        const col = CLASS_COLOR[v.class] || "#ddd";
+        const icon = v.type === "personal" ? "💤" : "🏖️";
+        const pr = vacProgress(v);
+        const st = status(v);
+        const meta =
+          st === "active"
+            ? `back ${esc(fmtDate(v.end || v.start))} · ${pr.left} day${pr.left !== 1 ? "s" : ""} left`
+            : st === "soon"
+              ? `starts ${esc(fmtDate(v.start))}`
+              : `ended ${esc(fmtDate(v.end || v.start))}`;
+        // read-only glance — no edit/repost/remove here (those live in the main Vacations list).
+        // Officers still see the note (📝) so they know context at a glance.
+        const note = isOfficer && v.note ? `<span class="ct-note" title="${esc(v.note)}">📝</span>` : "";
+        const bar = st === "active"
+          ? `<div class="ct-bar"><i style="width:${pr.p}%;background:${barColor(pr.p)}"></i></div>`
+          : "";
+        return `<div class="ct-row">
+          <div class="ct-name" style="color:${col}">${icon} ${esc(v.name)}${note}</div>
+          <div class="ct-meta">${meta}</div>
+          ${bar}
+        </div>`;
+      })
+      .join("");
+  }
+  side.innerHTML =
+    `<div class="ct-hd">${isToday ? "Away today" : "Away this day"} <span class="ct-cnt">${away.length}</span></div>` +
+    `<div class="ct-sub">${esc(heading)}${isToday ? "" : ' · <a href="#" onclick="calToday();return false" class="ct-back">today</a>'}</div>` +
+    `<div class="ct-list">${body}</div>`;
+}
+// collapsible sections — the single vacations list, open by default
+// officers get the calendar + "away today" up top, so the full list starts COLLAPSED (expand for
+// history/actions). Guildies have no calendar, so the list is their main view -> open by default.
+const secOpen = { all: !isOfficer };
 function toggleSec(key) {
   secOpen[key] = !secOpen[key];
   document.getElementById(key + "Wrap").style.display = secOpen[key] ? "" : "none";
@@ -554,18 +677,17 @@ function updateDevPreview() {
   }
   const v = { name, class: cls, start, end, note, type };
   const hl = { name, color: CLASS_COLOR[cls] || "#fff" };
-  const lbl = (t) =>
-    `<div style="font-size:11px;color:#6e7178;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px">${t}</div>`;
+  const lbl = (icon, t) => `<div class="pv-lbl"><span class="pv-lbl-i">${icon}</span>${t}</div>`;
   // officers see the extra "reminder · day before" card; guildies just see their away card
-  let html =
-    '<div style="display:flex;gap:22px;flex-wrap:wrap">' +
-    "<div>" +
-    (isOfficer ? lbl(type === "personal" ? "On + add" : "On + add vacation") : "") +
+  let cards =
+    '<div class="pv-card">' +
+    lbl("📣", "Posted when added") +
     renderEmbedCard(buildVacEmbed(v), hl) +
     "</div>";
-  if (isOfficer && type !== "personal")
-    html += "<div>" + lbl("Reminder · day before start") + renderEmbedCard(buildReminderEmbed(v), hl) + "</div>";
-  box.innerHTML = html + "</div>";
+  // everyone sees the day-before reminder card too (not for personal time-off, which has no reminder)
+  if (type !== "personal")
+    cards += '<div class="pv-card">' + lbl("🔔", "Reminder the day before") + renderEmbedCard(buildReminderEmbed(v), hl) + "</div>";
+  box.innerHTML = '<div class="pv-cards">' + cards + "</div>";
 }
 
 // ---- officer-only auto-posting (poll + announce on guildies' behalf) ----
@@ -740,7 +862,25 @@ document.addEventListener("click", (e) => {
     document.getElementById("vList").style.display = "none";
 });
 
+// click (or Enter/Space) a calendar day -> select it, filling the day-detail sidebar in full
+(function wireCalendar() {
+  const box = document.getElementById("calBox");
+  if (!box) return;
+  box.addEventListener("click", (e) => {
+    const cell = e.target.closest(".calcell[data-day]");
+    if (cell) selectDay(cell.dataset.day);
+  });
+  box.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const cell = e.target.closest(".calcell[data-day]");
+    if (cell) { e.preventDefault(); selectDay(cell.dataset.day); }
+  });
+})();
+
 async function boot() {
+  // apply the initial collapsed state of the list (collapsed for officers, open for guildies)
+  document.getElementById("allWrap").style.display = secOpen.all ? "" : "none";
+  document.getElementById("caretall").textContent = secOpen.all ? "▼" : "▶";
   // reveal officer-only UI + retarget the back link
   if (isOfficer) {
     document.body.classList.add("officer");
@@ -763,4 +903,8 @@ async function boot() {
   await reload();
   if (isOfficer) setInterval(reload, 60000); // officers pick up & announce new member-submitted vacations
 }
+
+// global dev role toggle (⚙ Officer/Guildie, localhost only) — rendered by the shared layer
+if (window.RatsData && RatsData.mountDevRole) RatsData.mountDevRole();
+
 boot();

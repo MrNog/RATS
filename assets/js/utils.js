@@ -35,13 +35,35 @@
   function todayStr() { var d = new Date(), z = function (n) { return String(n).padStart(2, "0"); }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
   function classColor(cls) { return CLASS_COLOR[cls] || "#fff"; }
 
+  // Shared progress-bar colour scale, in discrete 10% bands. Low % = reddish (just started, long way
+  // to go), high % = green (almost done). Used by any bar that shows progression over time
+  // (vacations "day x/N", rankings progress, etc.) so the whole app reads bars the same way.
+  var PROGRESS_STEPS = [
+    "#e05252", // 0-10%   just started
+    "#e06b4a", // 10-20%
+    "#e2864a", // 20-30%
+    "#e6a244", // 30-40%
+    "#e6c044", // 40-50%
+    "#d9d24a", // 50-60%
+    "#b8ce50", // 60-70%
+    "#93c95c", // 70-80%
+    "#6cc063", // 80-90%
+    "#43b581"  // 90-100% almost done
+  ];
+  function progressColor(p) {
+    p = Math.max(0, Math.min(100, +p || 0));
+    var i = Math.min(9, Math.floor(p / 10) - (p >= 100 ? 1 : 0));
+    return PROGRESS_STEPS[Math.max(0, i)];
+  }
+
   async function fbGet(node) { try { var r = await fetch(FB + node + ".json", { cache: "no-store" }); return r.ok ? await r.json() : null; } catch (e) { return null; } }
   async function fbPost(node, obj) { var r = await fetch(FB + node + ".json", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(obj) }); if (!r.ok) throw new Error("HTTP " + r.status); return (await r.json()).name; }
   async function fbDelete(node) { var r = await fetch(FB + node + ".json", { method: "DELETE" }); if (!r.ok) throw new Error("HTTP " + r.status); }
 
   w.RatsUtils = {
-    FB: FB, CLASS_COLOR: CLASS_COLOR,
+    FB: FB, CLASS_COLOR: CLASS_COLOR, PROGRESS_STEPS: PROGRESS_STEPS,
     esc: esc, enc: enc, fmtDate: fmtDate, todayStr: todayStr, classColor: classColor,
+    progressColor: progressColor,
     fbGet: fbGet, fbPost: fbPost, fbDelete: fbDelete
   };
 })(window);

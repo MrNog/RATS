@@ -8,6 +8,14 @@ desktop.ini
 # logs / temp
 *.log
 
+# local build tooling for the gallery (sharp) — the SITE stays dependency-free.
+# The generated thumbnails in images/_thumb/ ARE committed; the tool that makes them is not.
+scripts/node_modules/
+scripts/package-lock.json
+
+# third-party agent skills installed via `npx skills` (machine-local, not part of the site)
+.agents/
+
 # local Claude Code overrides (machine-specific, not shared)
 .claude/settings.local.json
 

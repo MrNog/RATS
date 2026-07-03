@@ -1,16 +1,18 @@
-name: Build gallery.json
+name: Build gallery
 
-# Regenerate gallery.json whenever images are added/removed/renamed.
+# On any image change: rebuild gallery.json AND generate WebP thumbnails, then commit both back.
+# So you just drop art in images/ and push (via Fork) — the manifest + thumbnails are made for you.
 on:
   push:
     paths:
       - "images/**"
       - "scripts/build-gallery.ps1"
+      - "scripts/thumbs.mjs"
       - ".github/workflows/build-gallery.yml"
   workflow_dispatch: {}   # allow running it manually from the Actions tab
 
 permissions:
-  contents: write          # needed to commit the regenerated manifest back
+  contents: write          # needed to commit the regenerated manifest + thumbnails back
 
 jobs:
   build:
@@ -22,15 +24,26 @@ jobs:
         shell: pwsh                       # pwsh is preinstalled on the runner
         run: ./scripts/build-gallery.ps1
 
-      - name: Commit gallery.json if it changed
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install thumbnail tool (sharp)
+        run: npm --prefix scripts install --no-audit --no-fund
+
+      - name: Generate thumbnails
+        run: node scripts/thumbs.mjs      # skips up-to-date thumbs; only new/changed art is processed
+
+      - name: Commit manifest + thumbnails if changed
         run: |
-          if [[ -n "$(git status --porcelain gallery.json)" ]]; then
+          if [[ -n "$(git status --porcelain gallery.json images/_thumb)" ]]; then
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add gallery.json
-            git commit -m "chore: rebuild gallery.json [skip ci]"
+            git add gallery.json images/_thumb
+            git commit -m "chore: rebuild gallery.json + thumbnails [skip ci]"
             git push
-            echo "gallery.json updated."
+            echo "Gallery manifest + thumbnails updated."
           else
-            echo "gallery.json already up to date."
+            echo "Gallery already up to date."
           fi

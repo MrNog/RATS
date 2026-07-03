@@ -1,0 +1,12 @@
+{
+  "name": "rats-image-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local-only build tools for the RATS gallery (thumbnail generation). Not part of the website — the site is dependency-free static files. Run scripts/thumbs.mjs to (re)build thumbnails.",
+  "scripts": {
+    "thumbs": "node thumbs.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

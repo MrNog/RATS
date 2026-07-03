@@ -4,6 +4,115 @@
   flex-wrap: wrap;
   align-items: center;
 }
+/* The date buttons grow wider once a date is picked ("15 Aug 2026" vs "Pick a date"). Let the
+   flexible note field shrink to absorb that (min-width:0 lets flex shrink below its content), and
+   keep +Add from being bumped to its own line. */
+.form #vNote {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.form > button {
+  flex-shrink: 0;
+}
+
+/* ---- live preview ---- */
+.preview {
+  border-color: #3a4a5b;
+}
+.preview .pv-hd {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.preview .pv-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ad0ff;
+}
+/* keep the eye emoji in line with the 12px caption text (emoji ignore letter-spacing and can
+   render oversized); size + vertical-align it explicitly */
+.preview .pv-eye {
+  font-size: 13px;
+  vertical-align: -1px;
+  letter-spacing: 0;
+}
+.preview .pv-sub {
+  font-size: 12px;
+  color: var(--text-dim-2);
+}
+/* the two embed cards sit in a grid that wraps cleanly (no dead space to the right) */
+.pv-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px 20px;
+  align-items: start;
+}
+.pv-card {
+  min-width: 0;
+}
+.pv-lbl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim-2);
+  margin: 0 0 6px;
+}
+.pv-lbl-i {
+  font-size: 12px;
+}
+
+/* Vacations list header: title on the left, sort toggle on the right */
+.listhd {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 22px 0 0;
+}
+.listhd .sec {
+  margin: 0;
+}
+.listhd .sortsegs {
+  margin-left: auto;
+}
+.listhd .sortsegs .seg {
+  font-size: 12px;
+  padding: 5px 12px;
+}
+/* "by raider" grouping: the first row of a person's group gets a top divider + a little "+N more"
+   count; continuation rows blank the name and sit tight under it (no divider) so they read as one
+   cluster. No dangling tie-line. */
+tr.grp-cont td {
+  border-top: 0;
+  padding-top: 2px;
+}
+tr.grp-first td {
+  border-top: 2px solid var(--border);
+}
+.nm.cont {
+  padding-left: 16px;
+}
+/* "+N" count on a raider's group head — class-coloured text in a subtle bordered pill (currentColor
+   is the row's class colour; we tint border/text with it, not the fill, so the number stays legible) */
+.nm .grp-count {
+  font-size: 10px;
+  font-weight: 800;
+  color: currentColor;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 8px;
+  padding: 0 6px;
+  margin-left: 6px;
+  vertical-align: 1px;
+}
 
 /* segmented vacation/personal toggle */
 .segs {
@@ -115,6 +224,26 @@ tr:hover td {
   padding: 10px 2px;
 }
 
+/* the vacations list is the main content here — give it room instead of the shared 300px cap so
+   the page doesn't feel empty (especially for guildies, who have no calendar below). */
+#allWrap.seclist {
+  max-height: 62vh;
+}
+
+/* Officer page order: put the CALENDAR above the list (the list already ends with closed vacations).
+   Flex-column the wrap and reorder; header/add/preview keep their natural order, calendar jumps up. */
+body.officer .wrap {
+  display: flex;
+  flex-direction: column;
+}
+body.officer .wrap > .row { order: 0; }
+body.officer .wrap > .sub { order: 1; }
+body.officer .wrap > .card:not(.preview) { order: 2; } /* add-vacation form */
+body.officer .wrap > .preview { order: 3; }
+body.officer #calSection { order: 4; }   /* calendar first */
+body.officer .listhd { order: 5; }        /* then the list (closed vacations sink to its bottom) */
+body.officer #allWrap { order: 6; }
+
 /* month calendar (officers only — revealed by JS) */
 .calnav {
   display: flex;
@@ -126,10 +255,117 @@ tr:hover td {
 .calnav .del {
   padding: 5px 11px;
 }
+/* two-column calendar area: big month grid (75%) + "away today" sidebar (25%).
+   align-items:stretch makes both columns the SAME height (the calendar's), so the sidebar matches
+   it exactly; when the away list is longer than that height, the list inside scrolls. */
+.calwrap {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+.calwrap #calBox {
+  min-width: 0;
+}
 .calgrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+}
+
+/* "Away today" sidebar — read-only day glance; header fixed, list scrolls, capped so it never
+   grows taller than the calendar even with 10-12 people away. */
+.caltoday {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allow the inner list to shrink + scroll within the calendar-matched height */
+}
+.caltoday .ct-list {
+  flex: 1 1 auto;
+  min-height: 0;      /* required so overflow-y actually scrolls inside the flex column */
+  overflow-y: auto;
+  margin: 0 -6px;     /* let the scrollbar sit at the edge */
+  padding: 0 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--surface-3);
+}
+.caltoday .ct-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--accent);
+}
+.caltoday .ct-cnt {
+  margin-left: auto;
+  background: var(--accent);
+  color: var(--surface-2);
+  font-size: 11px;
+  border-radius: 9px;
+  padding: 0 7px;
+}
+.caltoday .ct-sub {
+  color: var(--text-dim-2);
+  font-size: 11px;
+  margin: 2px 0 12px;
+}
+.caltoday .ct-row {
+  padding: 7px 0;
+  border-top: 1px solid #232529;
+}
+.caltoday .ct-row:first-of-type {
+  border-top: 0;
+}
+.caltoday .ct-name {
+  font-weight: 700;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.caltoday .ct-note {
+  cursor: help;
+  font-size: 11px;
+}
+.caltoday .ct-meta {
+  color: var(--text-dim-2);
+  font-size: 10px;
+  margin: 1px 0 4px;
+}
+.caltoday .ct-bar {
+  height: 5px;
+  background: #232529;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.caltoday .ct-bar i {
+  display: block;
+  height: 100%;
+}
+.caltoday .ct-back {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 700;
+}
+.caltoday .ct-back:hover {
+  text-decoration: underline;
+}
+
+/* stack the two columns on narrow screens */
+@media (max-width: 820px) {
+  .calwrap {
+    grid-template-columns: 1fr;
+  }
+  .caltoday {
+    order: -1; /* show "away today" above the grid when stacked */
+  }
 }
 .caldow {
   text-align: center;
@@ -148,12 +384,28 @@ tr:hover td {
   padding: 4px 5px;
   overflow: hidden;
 }
+.calcell[data-day] {
+  cursor: pointer;
+}
+.calcell[data-day]:hover {
+  border-color: var(--accent-hi);
+}
+.calcell[data-day]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .calcell.out {
   background: #131416;
   border-color: #232529;
 }
 .calcell.today {
   border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+/* the selected day (drives the sidebar) — filled accent tint so it's distinct from "today" */
+.calcell.sel {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-3));
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 .calcell.wknd {

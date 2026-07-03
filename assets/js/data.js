@@ -202,11 +202,21 @@ window.RatsData = (function () {
   }
 
   // ---- shared MEMBER directory (plain names+class for the public vacation picker) ----
+  // members = the public name+class picker list; changes rarely (only when an officer republishes),
+  // so cache it in localStorage with a TTL to avoid a Firebase read on every public page visit.
+  const MEMBERS_LS = "ratsMembersCache", MEMBERS_TTL = 30 * 60 * 1000; // 30 min
   function publishMembers(list) {
+    try { localStorage.setItem(MEMBERS_LS, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
     return fbOn() ? fbPut("members", list) : Promise.resolve();
   }
   async function loadMembers() {
-    return (fbOn() ? await fbGetSafe("members") : null) || [];
+    try {
+      const c = JSON.parse(localStorage.getItem(MEMBERS_LS) || "null");
+      if (c && Date.now() - c.t < MEMBERS_TTL && Array.isArray(c.data)) return c.data;
+    } catch (e) {}
+    const list = (fbOn() ? await fbGetSafe("members") : null) || [];
+    try { localStorage.setItem(MEMBERS_LS, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
+    return list;
   }
 
   // ---- per-main PROFILE keys (Path B) — soft login for the raider profile page ----
@@ -650,8 +660,76 @@ window.RatsData = (function () {
     return NAME_ALIASES[_normAlias(name)] || null;
   }
 
+  // ---- GLOBAL dev role override + officer check ------------------------------------------------
+  // Single source of truth for "is this viewer an officer". Live: officer === has the guild key.
+  // On your own machine (file:// or localhost) a floating ⚙ panel lets you preview as Officer or
+  // Guildie without touching the real key — stored in localStorage.ratsDevRole, IGNORED on the live
+  // site. Every officer-aware page should call RatsData.isOfficer() instead of reading the key directly.
+  const IS_DEV = location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  function isDev() { return IS_DEV; }
+  function devRole() {
+    if (!IS_DEV) return "";
+    try { return localStorage.getItem("ratsDevRole") || ""; } catch (e) { return ""; }
+  }
+  function hasGuildKey() {
+    try { return !!localStorage.getItem(PASS_LS); } catch (e) { return false; }
+  }
+  // the officer check every page uses. Dev override wins locally; real key decides on the live site.
+  function isOfficer() {
+    const r = devRole();
+    if (r === "officer") return true;
+    if (r === "guildie") return false;
+    return hasGuildKey();
+  }
+  function setDevRole(role) {
+    try {
+      if (role) localStorage.setItem("ratsDevRole", role);
+      else localStorage.removeItem("ratsDevRole");
+    } catch (e) {}
+    location.reload(); // pages read isOfficer() at load — reload re-renders in the new role
+  }
+  // Render the floating dev-role panel (once, only in dev). Call RatsData.mountDevRole() on any page.
+  function mountDevRole() {
+    if (!IS_DEV || document.getElementById("ratsDevRole")) return;
+    if (!document.getElementById("ratsDevRoleCss")) {
+      const s = document.createElement("style");
+      s.id = "ratsDevRoleCss";
+      s.textContent =
+        "#ratsDevRole{position:fixed;bottom:14px;right:16px;z-index:99998;background:#1b1d21;border:1px solid #c0943a;border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:'Segoe UI',Roboto,Arial,sans-serif}" +
+        "#ratsDevRole .dr-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#c0943a;margin-bottom:8px}" +
+        "#ratsDevRole .dr-tag{margin-left:auto;font-size:9px;font-weight:800;color:#1b1d21;background:#c0943a;border-radius:8px;padding:1px 6px}" +
+        "#ratsDevRole .dr-btns{display:flex;gap:6px}" +
+        "#ratsDevRole .dr-b{padding:6px 10px;font-size:12px;font-weight:700;color:#9aa0a6;background:#16181c;border:1px solid #2f3137;border-radius:6px;cursor:pointer;font-family:inherit}" +
+        "#ratsDevRole .dr-b:hover{color:#fff;border-color:#c0943a}" +
+        "#ratsDevRole .dr-b.on{background:#c0943a;border-color:#c0943a;color:#1b1d21}" +
+        "#ratsDevRole .dr-reset{width:100%;margin-top:7px;padding:4px;font-size:11px;color:#8a8d93;background:none;border:0;cursor:pointer;font-family:inherit}" +
+        "#ratsDevRole .dr-reset:hover{color:#fff}";
+      document.head.appendChild(s);
+    }
+    const off = isOfficer(), cur = devRole();
+    const el = document.createElement("div");
+    el.id = "ratsDevRole";
+    el.innerHTML =
+      '<div class="dr-hd">⚙ View as <span class="dr-tag">dev</span></div>' +
+      '<div class="dr-btns">' +
+      '<button type="button" class="dr-b' + (off ? " on" : "") + '" data-r="officer">🛡️ Officer</button>' +
+      '<button type="button" class="dr-b' + (!off ? " on" : "") + '" data-r="guildie">🐀 Guildie</button>' +
+      "</div>" +
+      (cur ? '<button type="button" class="dr-reset" data-r="">↺ use real key</button>' : "");
+    el.addEventListener("click", function (e) {
+      const b = e.target.closest("[data-r]");
+      if (b) setDevRole(b.getAttribute("data-r"));
+    });
+    (document.body || document.documentElement).appendChild(el);
+  }
+
   return {
     aliasFor,
+    isDev,
+    isOfficer,
+    devRole,
+    setDevRole,
+    mountDevRole,
     loadVacations,
     addVacation,
     updateVacation,

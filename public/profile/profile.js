@@ -198,7 +198,8 @@
   var ROSTER = null; // decrypted roster (officer/unlock only)
 
   // ---------- identity / unlock state ----------
-  var IS_OFFICER = !!localStorage.getItem("ratsGuildKey");
+  var IS_OFFICER = window.RatsData ? RatsData.isOfficer() : !!localStorage.getItem("ratsGuildKey");
+  if (window.RatsData && RatsData.mountDevRole) RatsData.mountDevRole();
   function unlockedKey() {
     try {
       return localStorage.getItem("ratsProfileUnlock") || "";

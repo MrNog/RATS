@@ -4,6 +4,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141517" />
+  <link rel="preconnect" href="https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app" crossorigin />
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
   <title>RATS — Vacations</title>
@@ -51,47 +53,52 @@
         </div>
         <input type="date" id="vStart" lang="en-GB" title="From">
         <input type="date" id="vEnd" lang="en-GB" title="To (optional)">
-        <input type="text" id="vNote" placeholder="note for officers (optional)" maxlength="120"
-          style="flex:1;min-width:140px">
+        <input type="text" id="vNote" placeholder="note for officers (optional)" maxlength="120">
         <button onclick="addVac()">+ Add</button>
       </div>
       <div class="msg" id="msg"></div>
     </div>
 
-    <div id="previewWrap" class="card" style="display:none;border-color:#3a4a5b">
-      <div
-        style="font-size:12px;color:#9ad0ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">
-        👁 Live preview <span style="color:#6e7178;font-weight:600;text-transform:none;letter-spacing:0"> · how your
-          away
-          card will look</span>
+    <div id="previewWrap" class="card preview" style="display:none">
+      <div class="pv-hd">
+        <span class="pv-title"><span class="pv-eye">👁</span> Live preview</span>
+        <span class="pv-sub">this is exactly what posts to Discord</span>
       </div>
       <div id="devCard"></div>
     </div>
 
-    <h2 class="sec" onclick="toggleSec('active')"><span class="caret" id="caretactive">▼</span> 🟢 Away now <span
-        class="cnt" id="cntactive"></span></h2>
-    <div id="activeWrap" class="seclist">
-      <div id="active"></div>
+    <!-- ONE vacations list: currently-away first (with bars), then upcoming, then ended.
+         Officers get repost/edit/remove inline; guildies see it read-only.
+         Sort toggle: "By status" (away-now first) or "By raider" (each person's vacations grouped). -->
+    <div class="listhd">
+      <h2 class="sec" onclick="toggleSec('all')"><span class="caret" id="caretall">▼</span> 📅 Vacations <span
+          class="cnt" id="cntall"></span></h2>
+      <div class="segs sortsegs" id="sortSegs" title="Order the list by status, or grouped per raider">
+        <button type="button" class="seg active" data-sort="status" onclick="setSort(this)">By status</button>
+        <button type="button" class="seg" data-sort="raider" onclick="setSort(this)">By raider</button>
+      </div>
     </div>
-    <h2 class="sec" onclick="toggleSec('all')"><span class="caret" id="caretall">▶</span> 📅 All vacations <span
-        class="cnt" id="cntall"></span></h2>
-    <div id="allWrap" class="seclist" style="display:none">
+    <div id="allWrap" class="seclist">
       <div id="all"></div>
     </div>
 
-    <!-- officers only: month calendar of who's away (revealed by vacations.js when the guild key is present) -->
+    <!-- officers only: month calendar + click-a-day detail (revealed by vacations.js with the guild key) -->
     <div id="calSection" class="officer-only" style="display:none">
       <div class="calnav">
         <h2 style="margin:0">🗓️ Calendar</h2>
-        <button class="del" onclick="calShift(-1)" style="border-color:#3a3d44;color:#9aa0a6">◀</button>
+        <button class="del" onclick="calShift(-1)" title="Previous month" style="border-color:#3a3d44;color:#9aa0a6">◀</button>
         <b id="calLabel" style="color:#fff;min-width:160px;text-align:center"></b>
-        <button class="del" onclick="calShift(1)" style="border-color:#3a3d44;color:#9aa0a6">▶</button>
+        <button class="del" onclick="calShift(1)" title="Next month" style="border-color:#3a3d44;color:#9aa0a6">▶</button>
         <button class="del" onclick="calToday()" style="border-color:#3a3d44;color:#9aa0a6">Today</button>
       </div>
-      <div id="calBox"></div>
+      <div class="calwrap">
+        <div id="calBox"></div>
+        <aside id="calToday" class="caltoday"></aside>
+      </div>
     </div>
   </div>
 
+  <script src="../../assets/js/utils.js"></script>
   <script src="../../assets/js/data.js"></script>
   <script src="../../assets/js/datepicker.js"></script>
   <script src="vacations.js"></script>

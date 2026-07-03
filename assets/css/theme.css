@@ -75,3 +75,13 @@ html { scrollbar-width: thin; scrollbar-color: var(--accent) var(--surface-3) }
 ::-webkit-scrollbar-track { background: var(--surface-3) }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 8px; border: 2px solid var(--surface-3) }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-hi) }
+
+/* honor reduced-motion: near-instant transitions/animations, no scroll smoothing */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

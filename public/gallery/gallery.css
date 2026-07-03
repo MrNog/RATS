@@ -92,6 +92,7 @@ svg.gs-icon {
 }
 .tab {
   cursor: pointer;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 700;
   color: var(--text-dim);
@@ -99,11 +100,17 @@ svg.gs-icon {
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 6px 14px;
-  transition: 0.15s;
+  height: auto;
+  transition: border-color 0.15s, color 0.15s;
 }
 .tab:hover {
   border-color: var(--accent);
   color: var(--white);
+}
+.tab:focus-visible,
+.tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .tab.active {
   background: var(--accent);

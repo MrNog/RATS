@@ -422,12 +422,15 @@ function renderAttendance() {
   const q = (document.getElementById("search").value || "").toLowerCase().trim();
   let list = q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
   const sort = SORT;
+  // SORT_DIR flips the primary comparison of the sortable columns (click the active sort to reverse).
+  // Rank mode is structural (collapsible groups) and isn't reversed.
+  const dir = SORT_DIR;
   list = list.slice().sort((a, b) => {
-    if (sort === "name") return a.name.localeCompare(b.name);
+    if (sort === "name") return dir * a.name.localeCompare(b.name);
     if (sort === "class")
-      return (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct || a.name.localeCompare(b.name);
-    if (sort === "present") return b.lockouts - a.lockouts || b.pct - a.pct;
-    if (sort === "pct") return b.pct - a.pct || b.lockouts - a.lockouts || a.name.localeCompare(b.name);
+      return dir * (a.cls || "").localeCompare(b.cls || "") || b.pct - a.pct || a.name.localeCompare(b.name);
+    if (sort === "present") return dir * (b.lockouts - a.lockouts) || b.pct - a.pct;
+    if (sort === "pct") return dir * (b.pct - a.pct) || b.lockouts - a.lockouts || a.name.localeCompare(b.name);
     // default: guild rank (GM → Officer → Raider → Sewer), then class, then alphabetical
     return a.rankIndex - b.rankIndex || (a.cls || "").localeCompare(b.cls || "") || a.name.localeCompare(b.name);
   });
@@ -443,7 +446,8 @@ function renderAttendance() {
     return;
   }
 
-  const ar = (s) => (sort === s ? " ▼" : "");
+  // arrow reflects the actual direction: SORT_DIR 1 = each column's natural order, -1 = reversed.
+  const ar = (s) => (sort === s ? (SORT_DIR === 1 ? " ▼" : " ▲") : "");
   const tc = (s) => (sort === s ? ' style="color:#fff"' : "");
   let html =
     "<table><thead><tr>" +
@@ -503,7 +507,9 @@ function renderAttendance() {
 }
 
 function setSort(v) {
-  SORT = v;
+  // click the already-active sort (button OR column header) again to flip direction (100%↔0%, A↔Z…)
+  if (v === SORT) SORT_DIR = -SORT_DIR;
+  else { SORT = v; SORT_DIR = 1; } // new column starts in its natural direction
   document.querySelectorAll("#sortSegs .seg").forEach((s) => s.classList.toggle("active", s.dataset.v === SORT));
   renderAttendance();
 }
@@ -512,6 +518,7 @@ function setSort(v) {
 let SIZE = "25",
   RANGE_DAYS = 0,
   SORT = "rank",
+  SORT_DIR = 1, // 1 = natural direction, -1 = reversed (toggled by clicking the active sort again)
   RAID = "all";
 function setSize(b) {
   SIZE = b.dataset.s;

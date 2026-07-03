@@ -14,6 +14,12 @@ const CATS = [
 const esc = (s) =>
   String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const enc = (s) => encodeURI(String(s == null ? "" : s)); // URL-safe path (handles spaces in filenames)
+
+// grid thumbnail path for an item: images/<cat>/<name>.ext -> images/_thumb/<cat>/<name>.webp
+// (built by scripts/thumbs.mjs). The lightbox + download still use the full original (it.file).
+// If a thumb is missing (new art not yet processed), onerror in the template falls back to the original.
+const thumbFor = (file) => String(file || "").replace(/\/images\//, "/images/_thumb/").replace(/\.[a-z0-9]+$/i, ".webp");
+
 const grid = document.getElementById("grid");
 const tabsEl = document.getElementById("tabs");
 const searchEl = document.getElementById("search");
@@ -70,15 +76,20 @@ function matchesQuery(it) {
   return q.split(" ").every((tok) => expandToken(tok).some((alias) => hay.includes(alias)));
 }
 
-// --- tabs ---
+// --- tabs (buttons so they're keyboard-focusable & operable) ---
 tabsEl.innerHTML = CATS.map(
-  (c) => `<div class="tab${c.id === "all" ? " active" : ""}" data-cat="${c.id}">${esc(c.label)}</div>`
+  (c) =>
+    `<button type="button" class="tab${c.id === "all" ? " active" : ""}" data-cat="${c.id}"${c.id === "all" ? ' aria-pressed="true"' : ' aria-pressed="false"'}>${esc(c.label)}</button>`
 ).join("");
 tabsEl.addEventListener("click", (e) => {
   const t = e.target.closest(".tab");
   if (!t) return;
   filter = t.dataset.cat;
-  [...tabsEl.children].forEach((x) => x.classList.toggle("active", x === t));
+  [...tabsEl.children].forEach((x) => {
+    const on = x === t;
+    x.classList.toggle("active", on);
+    x.setAttribute("aria-pressed", on ? "true" : "false");
+  });
   render();
 });
 
@@ -128,9 +139,11 @@ function render() {
   grid.classList.remove("empty-state");
   grid.innerHTML = view
     .map(
-      (it, i) => `<div class="tile${it.wide ? " wide" : ""}" data-i="${i}">
-    <img src="${esc(enc(it.file))}" alt="${esc(it.title)}"
-         onerror="this.closest('.tile').style.display='none';window.__relayout&&window.__relayout()" />
+      (it, i) => `<div class="tile${it.wide ? " wide" : ""}" data-i="${i}" role="button" tabindex="0"
+       aria-label="View ${esc(it.title || "art")}">
+    <img src="${esc(enc(thumbFor(it.file)))}" data-full="${esc(enc(it.file))}" alt="${esc(it.title)}"
+         loading="lazy" decoding="async"
+         onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full;}else{this.closest('.tile').style.display='none';window.__relayout&&window.__relayout();}" />
     <div class="meta">
       <div class="t">${esc(it.title || "")}</div>
       ${it.caption ? `<div class="c">${esc(it.caption)}</div>` : ""}
@@ -194,6 +207,14 @@ addEventListener("resize", () => {
 grid.addEventListener("click", (e) => {
   const card = e.target.closest(".tile");
   if (!card) return;
+  open(+card.dataset.i);
+});
+// keyboard: tiles are role=button + tabindex, so Enter/Space open the lightbox too
+grid.addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const card = e.target.closest(".tile");
+  if (!card) return;
+  e.preventDefault();
   open(+card.dataset.i);
 });
 
