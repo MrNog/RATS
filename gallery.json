@@ -430,6 +430,14 @@
   },
   {
     "cat": "banners",
+    "file": "images/banners/ToGC 25.png",
+    "title": "Trial of the Grand Crusader (25-man)",
+    "caption": "",
+    "date": "2026-07",
+    "wide": true
+  },
+  {
+    "cat": "banners",
     "file": "images/banners/Ulduar 10 .png",
     "title": "Ulduar (10-man)",
     "caption": "",
