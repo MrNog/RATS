@@ -46,7 +46,7 @@ const OPTIONAL = [
 const WA_PACKS = [
   { name: "T7 Pack", raid: "Naxxramas · Obsidian Sanctum · Eye of Eternity", url: "https://wago.io/Dic_mszCj" },
   { name: "T8 Pack", raid: "Ulduar", url: "https://wago.io/wIeM-Q6Qh" },
-  { name: "T9 Pack", raid: "Trial of the Crusader", url: "https://wago.io/ZGexKRmOL" },
+  { name: "T9 Pack", raid: "Trial of the Crusader", url: "https://wago.io/ZGexKRmOL", hot: true },
   { name: "T10 Pack", raid: "Icecrown Citadel", url: "https://wago.io/OQP0SKedt" },
 ];
 
@@ -212,11 +212,28 @@ document.getElementById("listPatch").innerHTML = `<div class="item">
   <span class="acts">
     <a class="primary" href="../../downloads/patch-y.mpq" download>⬇ Download (27 MB)</a>
   </span>
+</div>
+<div class="item">
+  <span class="ic">🧩</span>
+  <span class="nm">patch-y-hd.mpq</span>
+  <span class="desc">HD visual patch. Rename to <code>patch-y.mpq</code> (drop the <code>-hd</code>), put in <code>Data\\</code>, restart.</span>
+  <span class="acts">
+    <a class="primary" href="../../downloads/patch-y-hd.mpq" download>⬇ Download (29 MB)</a>
+  </span>
+</div>
+<div class="item">
+  <span class="ic">🧲</span>
+  <span class="nm">client-HD.torrent</span>
+  <span class="desc">Full HD 3.3.5a client via torrent. Open with a torrent client (qBittorrent, etc.) to download.</span>
+  <span class="acts">
+    <a class="primary" href="../../downloads/client-HD.torrent" download>⬇ Download torrent</a>
+  </span>
 </div>`;
 document.getElementById("listWA").innerHTML = WA_PACKS.map(
-  (w) => `<div class="item">
+  (w) => `<div class="item${w.hot ? " hot" : ""}">
   <span class="ic">✨</span>
   <span class="nm">${esc(w.name)}</span>
+  ${w.hot ? '<span class="pill-hot">CURRENT</span>' : ""}
   <span class="desc">${esc(w.raid)}</span>
   <span class="acts">
     <a class="primary" href="${w.url}" target="_blank" rel="noopener">Import ↗</a>

@@ -7,6 +7,10 @@
   color: var(--text-dim);
   font-size: 13px;
 }
+/* keep code chips (e.g. -main, -master, the AddOns path) from breaking mid-token across a line */
+.note code {
+  white-space: nowrap;
+}
 
 /* one addon per line */
 .item {
@@ -20,8 +24,29 @@
   padding: 12px 16px;
   margin-top: 10px;
 }
+.item {
+  transition:
+    border-color 0.15s,
+    transform 0.05s,
+    box-shadow 0.15s;
+}
 .item:hover {
-  border-color: var(--border-2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* featured rows — the mandatory addons you need to raid (matches the hub's featured card) */
+#list .item {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(192, 148, 58, 0.1), var(--surface-2) 62%);
+  box-shadow:
+    0 0 0 1px rgba(192, 148, 58, 0.18),
+    0 6px 22px rgba(192, 148, 58, 0.06);
+}
+#list .item:hover {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 10px 30px rgba(192, 148, 58, 0.12);
 }
 .ic {
   font-size: 20px;
@@ -66,6 +91,35 @@
   font-size: 13px;
   flex: 1 1 120px;
   min-width: 70px;
+}
+.desc code {
+  white-space: nowrap;
+}
+
+/* optional patch rows — slimmer than mandatory addons (they matter less) */
+#listPatch .item {
+  padding: 7px 16px;
+  margin-top: 7px;
+}
+
+/* highlighted WeakAura pack — the current-tier one to grab first */
+.item.hot {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(192, 148, 58, 0.1), var(--surface-2) 62%);
+  box-shadow:
+    0 0 0 1px rgba(192, 148, 58, 0.18),
+    0 6px 22px rgba(192, 148, 58, 0.06);
+}
+.pill-hot {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  border-radius: 7px;
+  padding: 1px 6px;
+  color: var(--surface-2);
+  background: var(--accent);
+  flex: 0 0 auto;
 }
 
 .acts {
@@ -125,6 +179,12 @@
   letter-spacing: 0.6px;
   margin: 0;
   white-space: nowrap;
+  text-align: center;
+}
+@media (max-width: 560px) {
+  .sec h2 {
+    white-space: normal;
+  }
 }
 .sechint {
   color: var(--text-dim-2);
