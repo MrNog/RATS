@@ -8,6 +8,7 @@ const DISCORD_URL = "https://discord.gg/v7Unzr7tUZ";
 const FEATURES = {
   profile:  false,  // Raider Profile — officer/dev only until profile keys are handed out
   rankings: false,  // Rankings & Hall of Fame — waiting on the wow-logs API
+  loot:     false,  // Loot History — dev only until the Okanvil export + officer sign-off
 };
 (function () {
   var a = document.getElementById("discord");

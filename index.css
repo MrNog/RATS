@@ -33,6 +33,21 @@ body {
   width: 100%;
   max-width: 440px;
 }
+/* small section labels that group the cards */
+.grouplbl {
+  width: 100%;
+  text-align: left;
+  color: var(--text-dim-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 14px 2px 0;
+}
+.links > .grouplbl:first-of-type {
+  margin-top: 6px;
+}
+
 a.card {
   width: 100%;
   text-decoration: none;
@@ -44,10 +59,70 @@ a.card {
   transition:
     border-color 0.15s,
     transform 0.05s;
+  /* entrance: fade + rise, staggered per card below */
+  opacity: 0;
+  animation: cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.links > a.card:nth-of-type(1) {
+  animation-delay: 0.04s;
+}
+.links > a.card:nth-of-type(2) {
+  animation-delay: 0.1s;
+}
+.links > a.card:nth-of-type(3) {
+  animation-delay: 0.16s;
+}
+.links > a.card:nth-of-type(4) {
+  animation-delay: 0.22s;
+}
+.links > a.card:nth-of-type(5) {
+  animation-delay: 0.28s;
+}
+.links > a.card:nth-of-type(6) {
+  animation-delay: 0.34s;
+}
+.grouplbl {
+  opacity: 0;
+  animation: cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
+}
+/* accessibility: users who ask for less motion get none — and nothing stays invisible */
+@media (prefers-reduced-motion: reduce) {
+  a.card,
+  a.card.featured,
+  .grouplbl {
+    animation: none;
+    opacity: 1;
+  }
 }
 a.card:hover {
   border-color: var(--accent);
   transform: translateY(-1px);
+}
+
+/* officer card — discreet: half-height, thin muted-gold dashed border */
+a.card.officer {
+  border: 1px dashed rgba(192, 148, 58, 0.45);
+  padding: 10px 16px;
+}
+a.card.officer:hover {
+  border-color: var(--accent);
+}
+a.card.officer .t {
+  font-size: 15px;
+}
+a.card.officer .d {
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 /* featured card — the one people should see first (Addons: you need it to raid) */
@@ -55,6 +130,20 @@ a.card.featured {
   border-color: var(--accent);
   background: linear-gradient(135deg, rgba(192, 148, 58, 0.14), var(--surface) 60%);
   box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.25), 0 8px 28px rgba(192, 148, 58, 0.08);
+  /* entrance first, then the infinite breathing glow (delayed so it starts after the fade-in) */
+  animation:
+    cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.04s forwards,
+    featuredGlow 3.2s ease-in-out 0.5s infinite;
+}
+/* slow breathing gold glow to pull the eye to START HERE */
+@keyframes featuredGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.25), 0 8px 28px rgba(192, 148, 58, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.5), 0 8px 34px rgba(192, 148, 58, 0.22);
+  }
 }
 a.card.featured:hover {
   box-shadow: 0 0 0 1px var(--accent), 0 10px 32px rgba(192, 148, 58, 0.14);
