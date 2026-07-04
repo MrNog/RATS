@@ -18,16 +18,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Rebuild manifest
         shell: pwsh                       # pwsh is preinstalled on the runner
         run: ./scripts/build-gallery.ps1
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install thumbnail tool (sharp)
         run: npm --prefix scripts install --no-audit --no-fund
