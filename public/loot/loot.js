@@ -883,16 +883,11 @@
       importMsg("Paste the export JSON first.");
       return;
     }
-    var parsed;
+    var incoming;
     try {
-      parsed = JSON.parse(raw);
+      incoming = parseLootPaste(raw).list; // tolerant: accepts loose "{…},{…}" too
     } catch (e) {
       importMsg("Invalid JSON: " + e.message);
-      return;
-    }
-    var incoming = Array.isArray(parsed) ? parsed : parsed.loot;
-    if (!Array.isArray(incoming)) {
-      importMsg('Expected a "loot" array in the JSON.');
       return;
     }
     if (!DATA.loot) DATA.loot = [];
@@ -935,33 +930,125 @@
     }
   }
 
-  // remove duplicate drops already in the data (same ts + itemId — keeps the one with a winner)
-  async function dedupeLoot() {
-    if (!IS_OFFICER) return;
-    var seen = {},
-      out = [],
+  // Collapse duplicate drops in a list. A duplicate is the SAME winner getting the
+  // SAME item within a short window — the MRT/loot log often records one physical
+  // drop twice, seconds apart (two people opened the corpse), so an exact-ts match
+  // misses them. Same player + itemId within DEDUP_WINDOW seconds = one drop.
+  // Entries with a winner are kept over unassigned ones; earliest ts is kept.
+  // Returns { kept: [...], removed: n }.
+  // Tolerant parse of pasted loot JSON. Accepts, in order:
+  //   1. a proper object  { "loot": [ … ] }  (or with a t/data wrapper)
+  //   2. a bare array     [ { … }, { … } ]
+  //   3. LOOSE objects pasted without the array brackets:
+  //        { … },  { … }     <- what a partial copy/paste produces
+  // For case 3 we wrap the text in [ … ] and strip a trailing comma so it parses.
+  // Returns { list: [...] , shape: "array"|"loot"|"wrapped", parsed } or throws.
+  function parseLootPaste(raw) {
+    var txt = (raw || "").trim();
+    if (!txt) throw new Error("empty");
+    // try strict first
+    try {
+      var p = JSON.parse(txt);
+      if (Array.isArray(p)) return { list: p, shape: "array", parsed: p };
+      if (p && Array.isArray(p.loot)) return { list: p.loot, shape: "loot", parsed: p };
+      // t/data wrapper (hub snapshot): { t, data:{ loot:[…] } }
+      if (p && p.data && Array.isArray(p.data.loot))
+        return { list: p.data.loot, shape: "wrapped", parsed: p };
+    } catch (e) {
+      /* fall through to loose repair */
+    }
+    // LOOSE repair: wrap in [] if it doesn't already start with [ or {"loot"
+    var body = txt.replace(/,\s*$/, ""); // drop a trailing comma
+    if (body[0] !== "[") body = "[" + body + "]";
+    var arr = JSON.parse(body); // may still throw -> caller reports it
+    if (!Array.isArray(arr)) throw new Error("not a loot array");
+    return { list: arr, shape: "array", parsed: arr };
+  }
+
+  var DEDUP_WINDOW = 90; // seconds
+  function dedupeList(list) {
+    var kept = [],
       removed = 0;
-    // sort so assigned entries come first → we keep the winner over an unassigned dup
-    (DATA.loot || [])
+    (list || [])
       .slice()
       .sort(function (a, b) {
-        return (b.player ? 1 : 0) - (a.player ? 1 : 0);
+        var aw = a.player ? 1 : 0,
+          bw = b.player ? 1 : 0;
+        if (aw !== bw) return bw - aw;
+        return (a.ts || 0) - (b.ts || 0);
       })
       .forEach(function (l) {
-        var k = (l.ts || 0) + "|" + l.itemId;
-        if (seen[k]) {
+        var dup = kept.some(function (k) {
+          return (
+            k.itemId === l.itemId &&
+            (k.player || null) === (l.player || null) &&
+            Math.abs((k.ts || 0) - (l.ts || 0)) <= DEDUP_WINDOW
+          );
+        });
+        if (dup) {
           removed++;
           return;
         }
-        seen[k] = 1;
-        out.push(l);
+        kept.push(l);
       });
-    if (!removed) {
+    kept.sort(function (a, b) {
+      return (a.ts || 0) - (b.ts || 0);
+    });
+    return { kept: kept, removed: removed };
+  }
+
+  // "Remove duplicates" button. If there's JSON pasted in the import box, dedupe
+  // THAT (rewrite the textarea in place) so you can clean an export before merging
+  // — you shouldn't have to save dirty data first. If the box is empty, fall back
+  // to deduping the already-saved DATA.loot.
+  async function dedupeLoot() {
+    if (!IS_OFFICER) return;
+    var box = document.getElementById("importText");
+    var raw = box ? box.value.trim() : "";
+
+    // --- case 1: dedupe the pasted import text ---
+    if (raw) {
+      var pp;
+      try {
+        pp = parseLootPaste(raw); // tolerant: fixes loose "{…},{…}" pastes too
+      } catch (e) {
+        importMsg("Invalid JSON: " + e.message);
+        return;
+      }
+      var res = dedupeList(pp.list);
+      // rebuild the paste in the same shape it came in (or normalise a loose paste
+      // into a proper { loot: [...] } so the next Merge & save is clean).
+      var outObj;
+      if (pp.shape === "loot") outObj = Object.assign({}, pp.parsed, { loot: res.kept });
+      else if (pp.shape === "wrapped")
+        outObj = Object.assign({}, pp.parsed, {
+          data: Object.assign({}, pp.parsed.data, { loot: res.kept }),
+        });
+      else outObj = { loot: res.kept }; // array or loose -> wrap cleanly
+      box.value = JSON.stringify(outObj, null, 1);
+      if (!res.removed) {
+        importMsg("No duplicates found (JSON cleaned up). Review, then Merge & save.", true);
+        return;
+      }
+      importMsg(
+        "🧹 Removed " +
+          res.removed +
+          " duplicate" +
+          (res.removed !== 1 ? "s" : "") +
+          " from the paste — review, then Merge & save.",
+        true,
+      );
+      return;
+    }
+
+    // --- case 2: nothing pasted -> dedupe what's already saved ---
+    var r = dedupeList(DATA.loot || []);
+    if (!r.removed) {
       importMsg("No duplicates found.", true);
       return;
     }
-    DATA.loot = out;
-    await persistLoot("🧹 Removed " + removed + " duplicate" + (removed !== 1 ? "s" : ""));
+    DATA.loot = r.kept;
+    await persistLoot("🧹 Removed " + r.removed + " duplicate" + (r.removed !== 1 ? "s" : ""));
   }
 
   // wipe ALL loot history (double-confirmed)
