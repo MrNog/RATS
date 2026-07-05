@@ -24,6 +24,17 @@ window.RatsData = (function () {
     VoA: "#8ab4f8", // Vault of Archavon
     EoE: "#49d6c4", // Eye of Eternity
   };
+  // ---- canonical raid order (shared: change here → every page updates) ----
+  // WotLK release order. `key` matches RAID_COLORS / raidKeyOf; `name` is the
+  // full in-game instance name (what the addon export puts in l.raid).
+  const RAIDS = [
+    { key: "Naxx", label: "Naxx", name: "Naxxramas" },
+    { key: "Ulduar", label: "Ulduar", name: "Ulduar" },
+    { key: "ToC", label: "ToC", name: "Trial of the Crusader" },
+    { key: "Ony", label: "Ony", name: "Onyxia's Lair" },
+    { key: "ICC", label: "ICC", name: "Icecrown Citadel" },
+    { key: "RS", label: "RS", name: "The Ruby Sanctum" },
+  ];
   // pull a raid key out of a free-text subtitle ("ULDUAR 25 HM", "Ulduar HM", "ICC"…)
   function raidKeyOf(desc) {
     const s = String(desc || "").toLowerCase();
@@ -37,6 +48,82 @@ window.RatsData = (function () {
     if (/eoe|eternity|malygos/.test(s)) return "EoE";
     return null;
   }
+
+  // ---- specs (shared: guild tool + loot priority read the SAME source) ----
+  // per WoW class: [specLabel, emoteId, ...matchWords]. First word is stored/shown.
+  const SPECS = {
+    "Death Knight": [
+      ["Blood", "1013371105874018405", "blood", "bdk", "tank"],
+      ["Frost", "1013371107610468445", "frost"],
+      ["Unholy", "1013371108575162419", "unholy", "uh"],
+    ],
+    Druid: [
+      ["Balance", "637564171994529798", "balance", "boomkin", "boom", "moonkin", "bala"],
+      ["Feral", "637564172061900820", "feral", "cat", "ferals"],
+      ["Guardian", "637564171696734209", "guardian", "bear", "tank"],
+      ["Restoration", "637564172007112723", "resto", "restoration", "restro", "rdudu", "healer", "heal"],
+    ],
+    Hunter: [
+      ["Beastmastery", "637564202021814277", "bm", "beast"],
+      ["Marksmanship", "637564202084466708", "mm", "marks", "marksman"],
+      ["Survival", "637564202130866186", "surv", "survival"],
+    ],
+    Mage: [
+      ["Arcane", "637564231545389056", "arcane"],
+      ["Fire", "637564231239073802", "fire"],
+      ["Frost", "637564231469891594", "frost"],
+    ],
+    Paladin: [
+      ["Holy", "637564297622454272", "holy", "holylate", "preg"],
+      ["Protection", "637564297647489034", "prot", "protection", "tank"],
+      ["Retribution", "637564297953673216", "ret", "retri", "retribution"],
+    ],
+    Priest: [
+      ["Discipline", "637564323442720768", "disc", "disco", "discipline"],
+      ["Holy", "637564323530539019", "holy"],
+      ["Shadow", "637564323291725825", "shadow"],
+    ],
+    Rogue: [
+      ["Assassination", "637564351707873324", "sin", "assa", "assassination", "ass"],
+      ["Combat", "637564352333086720", "combat"],
+      ["Subtlety", "637564352169508892", "sub", "subtlety"],
+    ],
+    Shaman: [
+      ["Elemental", "637564379595931649", "ele", "elem", "elemental", "spellhance"],
+      ["Enhancement", "637564379772223489", "enh", "enha", "enhancement"],
+      ["Restoration", "637564379847458846", "resto", "restoration", "healer", "heal"],
+    ],
+    Warlock: [
+      ["Affliction", "637564406984867861", "affli", "affliction"],
+      ["Demonology", "637564407001513984", "demo", "demonology"],
+      ["Destruction", "637564406682877964", "destro", "destruction"],
+    ],
+    Warrior: [
+      ["Arms", "637564445031399474", "arms"],
+      ["Fury", "637564445215948810", "fury"],
+      ["Protection", "637564444834136065", "prot", "protection", "tank"],
+    ],
+  };
+  function specsFor(cls) { return (SPECS[cls] || []).map((s) => s[0]); }
+  // guess spec from the free-text publicNote — earliest keyword wins
+  function guessSpec(m) {
+    const rows = SPECS[m.class];
+    if (!rows) return "";
+    const note = " " + String(m.publicNote || "").toLowerCase() + " ";
+    let best = "", bestPos = Infinity;
+    for (const row of rows)
+      for (let i = 2; i < row.length; i++) {
+        const pos = note.search(new RegExp("[^a-z]" + row[i] + "[^a-z]"));
+        if (pos >= 0 && pos < bestPos) { bestPos = pos; best = row[0]; }
+      }
+    return best;
+  }
+  // resolved spec for a member: saved override (in specsMap) first, else guessed
+  function specOf(m, specsMap) {
+    const saved = specsMap && specsMap[m.name];
+    return saved || guessSpec(m);
+  }
+
   function escHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
   }
@@ -642,6 +729,7 @@ window.RatsData = (function () {
   const NAME_ALIASES = {
     kobe: "Kobee", // Discord "Kobe" -> in-game "Kobee"
     mojo: "Mojobimbo", // Discord "Mojo" -> one of his toons; roster alt->main does the rest
+    mojodaddy: "Mojobimbo", // renamed char: old logs say "Mojodaddy", now "Mojobimbo"
     foug: "Fouug", // Discord "Foug" -> in-game "Fouug" (Hunter)
     solanar: "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
     // add more Discord-nick -> in-game pairs here as needed:
@@ -764,7 +852,12 @@ window.RatsData = (function () {
     cached,
     gate,
     RAID_COLORS,
+    RAIDS,
     raidKeyOf,
     raidBadge,
+    SPECS,
+    specsFor,
+    guessSpec,
+    specOf,
   };
 })();

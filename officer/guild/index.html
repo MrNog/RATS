@@ -34,8 +34,9 @@
     <div class="controls">
       <button onclick="openModal()">📥 Import roster</button>
       <button class="alt" onclick="exportRoster()"
-        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save
-        roster</button>
+        title="Encrypt and save the roster (instant via Firebase, or downloads roster.json to commit)">💾 Save roster</button>
+      <button class="alt" onclick="exportRosterJSON()"
+        title="Download the current roster as a plain .json file">⬇ Export JSON</button>
       <input type="text" id="search" placeholder="Search name / spec / profession…" oninput="paint()"
         style="flex:1;min-width:200px" />
       <select id="rankSel" onchange="paint()">

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141517" />
+  <link rel="preconnect" href="https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app" crossorigin />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Loot History</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="loot.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div class="row">
+      <a class="btn" href="../../index.html">← Back</a>
+      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 12v10H4V12" />
+          <rect x="2" y="7" width="20" height="5" />
+          <line x1="12" y1="22" x2="12" y2="7" />
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+        </svg> RATS — Loot History</h1>
+      <button id="importBtn" onclick="openImport()" hidden style="margin-left:auto">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+        <span>Import loot</span>
+      </button>
+    </div>
+
+    <div class="row ctrls">
+      <span id="raidRow" style="display:inline-flex">
+        <div class="segs" id="raidSegs"></div>
+      </span>
+      <div class="segs" id="sizeSegs" style="margin-left:auto">
+        <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
+        <button class="seg" data-s="10" onclick="setSize(this)">10-man</button>
+      </div>
+      <div class="segs" id="periodSegs">
+        <button class="seg active" data-p="all" onclick="setPeriod(this)">All time</button>
+        <button class="seg" data-p="month" onclick="setPeriod(this)">Month</button>
+        <button class="seg" data-p="week" onclick="setPeriod(this)">Week</button>
+      </div>
+    </div>
+
+    <div class="searchbar">
+      <input type="text" id="search" placeholder="🔎 Search item, boss or player…" oninput="render()">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-t="run" onclick="setTab(this)">📦 By run</button>
+      <button class="tab" data-t="player" onclick="setTab(this)">🐀 By player</button>
+      <button class="tab" id="prioTab" data-t="priority" onclick="setTab(this)" hidden>⚖️ Priority</button>
+    </div>
+
+    <section class="panel" data-panel="run">
+      <div class="runbar">
+        <button class="btn" onclick="setAllRuns(true)">▾ Expand all</button>
+        <button class="btn" onclick="setAllRuns(false)">▸ Collapse all</button>
+      </div>
+      <div id="runs"></div>
+    </section>
+
+    <section class="panel" data-panel="player" hidden>
+      <p class="sub" style="margin:0 0 14px">Items won per raider — <b class="gold">click a name to see their
+          loot</b>. Droughts show who hasn't won in a while.</p>
+      <div id="players"></div>
+    </section>
+
+    <section class="panel" data-panel="priority" hidden>
+      <p class="sub" style="margin:0 0 12px">Who's <b class="gold">owed loot</b> — cross-references
+        <b class="gold">attendance</b> with <b class="gold">items won</b> so regulars who rarely win
+        rise to the top, and frequent winners settle to the bottom.</p>
+      <div id="priority"></div>
+    </section>
+
+  </div>
+
+  <!-- officer import overlay -->
+  <div id="importOv" class="importOv" onclick="if(event.target===this) closeImport()">
+    <div class="importCard">
+      <button class="x" onclick="closeImport()" title="Close">✕</button>
+      <h2>Import loot JSON</h2>
+      <p class="sub">Paste the <code>/okanvil export</code> output. It's <b class="gold">merged</b> with what's
+        already saved (no overwrite) — safe to paste a run more than once.</p>
+      <textarea id="importText" placeholder='{ "loot": [ { "ts": …, "player": "Kobee", "itemId": 45107, … } ] }'></textarea>
+      <div id="importMsg" class="msg"></div>
+      <div class="frow">
+        <button onclick="doImport()">💾 Merge &amp; save</button>
+        <button class="btn" onclick="closeImport()">Cancel</button>
+      </div>
+      <div class="frow" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+        <button type="button" class="btn" onclick="dedupeLoot()" title="Remove duplicate drops (same item + time)">🧹 Remove duplicates</button>
+        <button type="button" class="del" onclick="clearAllLoot()" title="Delete ALL loot history">🗑 Clear all loot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- officer edit-winner overlay -->
+  <div id="editOv" class="importOv" onclick="if(event.target===this) closeEdit()">
+    <div class="importCard">
+      <button class="x" onclick="closeEdit()" title="Close">✕</button>
+      <h2>Change winner</h2>
+      <p class="sub" id="editItem"></p>
+      <label class="sub">Who won it?</label>
+      <div class="winrow">
+        <div class="ac-wrap" style="flex:0 0 70%">
+          <input type="text" id="editSearch" placeholder="Type a raider…" autocomplete="off"
+            oninput="filterEditList()" onfocus="filterEditList()">
+          <div id="editList" class="picklist ac" style="display:none"></div>
+        </div>
+        <button class="btn de-btn" style="flex:0 0 28%" onclick="pickDisenchant()"
+          title="Mark as disenchanted">
+          <img class="de-ic" src="https://wow.zamimg.com/images/wow/icons/small/inv_enchant_abysscrystal.jpg" alt="">
+          Disenchant</button>
+      </div>
+      <div class="frow" style="margin-top:14px">
+        <button class="btn" onclick="closeEdit()" style="flex:1">Cancel</button>
+        <button onclick="confirmEdit()" style="flex:1">✔ Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../assets/js/utils.js"></script>
+  <script src="../../assets/js/data.js"></script>
+  <script src="loot.js"></script>
+</body>
+
+</html>

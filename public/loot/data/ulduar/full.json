@@ -1,0 +1,2645 @@
+[
+  {
+    "boss": "Flame Leviathan",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Neck",
+          "id": "45285",
+          "name": "Might of the Leviathan",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Head",
+          "id": "45289",
+          "name": "Lifespark Visage",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45291",
+          "name": "Combustion Bracers",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45288",
+          "name": "Firestrider Chestguard",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45287",
+          "name": "Firesoul",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Fist Weapon",
+          "id": "45284",
+          "name": "Kinetic Ripper",
+          "type": "Off Hand"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45283",
+          "name": "Flamewatch Armguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Thrown",
+          "id": "45296",
+          "name": "Twirling Blades",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45292",
+          "name": "Energy Siphon",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45286",
+          "name": "Pyrite Infuser",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Mace",
+          "id": "45282",
+          "name": "Ironsoul",
+          "type": "Two-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "45297",
+          "name": "Shimmering Seal",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45293",
+          "name": "Handguards of Potent Cures",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45300",
+          "name": "Mantle of Fiery Vengeance",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45295",
+          "name": "Gilded Steel Legplates",
+          "type": "Plate Armor"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Neck",
+          "id": "45116",
+          "name": "Freya's Choker of Warding",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45114",
+          "name": "Steamcaller's Totem",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45113",
+          "name": "Glowing Ring of Reclamation",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45106",
+          "name": "Strength of the Automaton",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45112",
+          "name": "The Leviathan's Coil",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45135",
+          "name": "Boots of Fiery Resolution",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45117",
+          "name": "Constructor's Handwraps",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45119",
+          "name": "Embrace of the Leviathan",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45108",
+          "name": "Mechanist's Bindings",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45109",
+          "name": "Gloves of the Fiery Behemoth",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45118",
+          "name": "Steamworker's Goggles",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Off-hand Frill",
+          "id": "45115",
+          "name": "Leviathan Fueling Manual",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "45110",
+          "name": "Titanguard",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Head",
+          "id": "45107",
+          "name": "Iron Riveted War Helm",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45111",
+          "name": "Mimiron's Inferno Couplings",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Thrown",
+          "id": "45086",
+          "name": "Rising Sun",
+          "type": "Ranged"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Neck",
+          "id": "45133",
+          "name": "Pendant of Fiery Havoc",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45136",
+          "name": "Shoulderpads of Dormant Energies",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Fist Weapon",
+          "id": "45132",
+          "name": "Golden Saronite Dragon",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Legs",
+          "id": "45134",
+          "name": "Plated Leggings of Ruination",
+          "type": "Plate Armor"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Ignis the Furnace Master",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45318",
+          "name": "Drape of Fuming Anger",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Back",
+          "id": "45317",
+          "name": "Shawl of the Caretaker",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45312",
+          "name": "Gloves of Smoldering Touch",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45316",
+          "name": "Armbraces of the Vibrant Flame",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Off-hand Frill",
+          "id": "45314",
+          "name": "Igniter Rod",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Hands",
+          "id": "45310",
+          "name": "Gauntlets of the Iron Furnace",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45321",
+          "name": "Pauldrons of Tempered Will",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Gun",
+          "id": "45309",
+          "name": "Rifle of the Platinum Guard",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45313",
+          "name": "Furnace Stone",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Polearm",
+          "id": "45311",
+          "name": "Relentless Edge",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Relic",
+          "id": "45169",
+          "name": "Totem of the Dancing Flame",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45157",
+          "name": "Cindershard Ring",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45168",
+          "name": "Pyrelight Circle",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45186",
+          "name": "Soot-Covered Mantle",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45162",
+          "name": "Flamestalker Boots",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45185",
+          "name": "Flamewrought Cinch",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45164",
+          "name": "Helm of the Furnace Master",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45187",
+          "name": "Wristguards of the Firetender",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45167",
+          "name": "Lifeforge Breastplate",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45166",
+          "name": "Charred Saronite Greaves",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45161",
+          "name": "Girdle of Embers",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wand",
+          "id": "45170",
+          "name": "Scepter of Creation",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45158",
+          "name": "Heart of Iron",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Axe",
+          "id": "45165",
+          "name": "Worldcarver",
+          "type": "Two-Hand"
+        },
+        {
+          "slot": "Staff",
+          "id": "45171",
+          "name": "Intensity",
+          "type": "Two-Hand"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Razorscale",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Ring",
+          "id": "45303",
+          "name": "Band of Draconic Guile",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Waist",
+          "id": "45306",
+          "name": "Binding of the Dragon Matriarch",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45302",
+          "name": "Treads of the Invader",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45307",
+          "name": "Ironscale Leggings",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45301",
+          "name": "Bracers of the Smothering Inferno",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45298",
+          "name": "Razorscale Talon",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45305",
+          "name": "Breastplate of the Afterlife",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45299",
+          "name": "Dragonsteel Faceplate",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45304",
+          "name": "Stormtempered Girdle",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45308",
+          "name": "Eye of the Broodmother",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45138",
+          "name": "Drape of the Drakerider",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45510",
+          "name": "Libram of Discord",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45144",
+          "name": "Sigil of Deflection",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Head",
+          "id": "45150",
+          "name": "Collar of the Wyrmhunter",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45146",
+          "name": "Shackles of the Odalisque",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45141",
+          "name": "Proto-Hide Leggings",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45149",
+          "name": "Bracers of the Broodmother",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45143",
+          "name": "Saronite Mesh Legguards",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45151",
+          "name": "Belt of the Fallen Wyrm",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "45147",
+          "name": "Guiding Star",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "45142",
+          "name": "Remorse",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45140",
+          "name": "Razorscale Shoulderguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45139",
+          "name": "Dragonslayer's Brace",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Gun",
+          "id": "45137",
+          "name": "Veranus' Bane",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45148",
+          "name": "Living Flame",
+          "type": "Trinket"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "XT-002 Deconstructor",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Ring",
+          "id": "45675",
+          "name": "Power Enhancing Loop",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Waist",
+          "id": "45694",
+          "name": "Conductive Cord",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45686",
+          "name": "Vest of the Glowing Crescent",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45677",
+          "name": "Treacherous Shoulderpads",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45679",
+          "name": "Gloves of Taut Grip",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45687",
+          "name": "Helm of Veiled Energies",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45685",
+          "name": "Plasma Foil",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Shield",
+          "id": "45682",
+          "name": "Pulsing Spellshield",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45676",
+          "name": "Chestplate of Vicious Potency",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45680",
+          "name": "Armbands of the Construct",
+          "type": "Plate Armor"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "45871",
+          "name": "Seal of Ulduar",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45869",
+          "name": "Fluxing Energy Coils",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45867",
+          "name": "Breastplate of the Stoneshaper",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Gun",
+          "id": "45870",
+          "name": "Magnetized Projectile Emitter",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Sword",
+          "id": "45868",
+          "name": "Aesir's Edge",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Relic",
+          "id": "45254",
+          "name": "Sigil of the Vengeful Heart",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45255",
+          "name": "Thunderfall Totem",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45250",
+          "name": "Crazed Construct Ring",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45247",
+          "name": "Signet of the Earthshaker",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45258",
+          "name": "Sandals of Rash Temperament",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45253",
+          "name": "Mantle of Wavering Calm",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45260",
+          "name": "Boots of Hasty Revival",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45259",
+          "name": "Quartz-Studded Harness",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45249",
+          "name": "Brass-Lined Boots",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45246",
+          "name": "Golem-Shard Sticker",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Legs",
+          "id": "45248",
+          "name": "Clockwork Legplates",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45251",
+          "name": "Shoulderplates of the Deconstructor",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45252",
+          "name": "Horologist's Wristguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wand",
+          "id": "45257",
+          "name": "Quartz Crystal Wand",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Staff",
+          "id": "45256",
+          "name": "Twisted Visage",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Neck",
+          "id": "45443",
+          "name": "Charm of Meticulous Timing",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45446",
+          "name": "Grasps of Reason",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45444",
+          "name": "Gloves of the Steady Hand",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "45442",
+          "name": "Sorthalis, Hammer of the Watchers",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45445",
+          "name": "Breastplate of the Devoted",
+          "type": "Plate Armor"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Assembly of Iron",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45322",
+          "name": "Cloak of the Iron Council",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45447",
+          "name": "Watchful Eye of Fate",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45418",
+          "name": "Lady Maye's Sapphire Ring",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45423",
+          "name": "Runetouch Wristwraps",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45378",
+          "name": "Boots of the Petrified Forest",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45324",
+          "name": "Leggings of Swift Reflexes",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45455",
+          "name": "Belt of the Crystal Tree",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45329",
+          "name": "Circlet of True Sight",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45333",
+          "name": "Belt of the Iron Servant",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45332",
+          "name": "Stormtip",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "45331",
+          "name": "Rune-Etched Nightblade",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Feet",
+          "id": "45330",
+          "name": "Greaves of Iron Intensity",
+          "type": "Plate Armor"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "45456",
+          "name": "Loop of the Agile",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Fist Weapon",
+          "id": "45449",
+          "name": "The Masticator",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45448",
+          "name": "Perilous Bite",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Quest",
+          "id": "45506",
+          "name": "Archivum Data Disc",
+          "type": "Other"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45224",
+          "name": "Drape of the Lithe",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45193",
+          "name": "Insurmountable Fervor",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45236",
+          "name": "Unblinking Eye",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45235",
+          "name": "Radiant Seal",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Chest",
+          "id": "45240",
+          "name": "Raiments of the Iron Council",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45238",
+          "name": "Overload Legwraps",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45237",
+          "name": "Phaelia's Vestments of the Sprouting Seed",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45232",
+          "name": "Runed Ironhide Boots",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45244",
+          "name": "Greaves of Swift Vengeance",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45239",
+          "name": "Runeshaper's Gloves",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45227",
+          "name": "Iron-Studded Mantle",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45607",
+          "name": "Fang of Oblivion",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45225",
+          "name": "Steelbreaker's Embrace",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45228",
+          "name": "Handguards of the Enclave",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45226",
+          "name": "Ancient Iron Heaume",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Staff",
+          "id": "45234",
+          "name": "Rapture",
+          "type": "Two-Hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "45233",
+          "name": "Stormrune Edge",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Back",
+          "id": "45242",
+          "name": "Drape of Mortal Downfall",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45243",
+          "name": "Sapphire Amulet of Renewal",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45245",
+          "name": "Shoulderpads of the Intruder",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Quest",
+          "id": "45857",
+          "name": "Archivum Data Disc",
+          "type": "Other"
+        },
+        {
+          "slot": "Waist",
+          "id": "45241",
+          "name": "Belt of Colossal Rage",
+          "type": "Plate Armor"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Kologarn",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45704",
+          "name": "Shawl of the Shattered Giant",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45696",
+          "name": "Mark of the Unyielding",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45699",
+          "name": "Pendant of the Piercing Glare",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45702",
+          "name": "Emerald Signet Ring",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45701",
+          "name": "Greaves of the Earthbinder",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45700",
+          "name": "Stoneguard",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Feet",
+          "id": "45698",
+          "name": "Sabatons of the Iron Watcher",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45697",
+          "name": "Shoulderguards of the Solemn Watch",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45703",
+          "name": "Spark of Hope",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Staff",
+          "id": "45695",
+          "name": "Spire of Withering Dreams",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Neck",
+          "id": "45262",
+          "name": "Necklace of Unerring Mettle",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45270",
+          "name": "Idol of the Crying Wind",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Chest",
+          "id": "45272",
+          "name": "Robes of the Umbral Brute",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45273",
+          "name": "Handwraps of Plentiful Recovery",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45275",
+          "name": "Bracers of Unleashed Magic",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45265",
+          "name": "Shoulderpads of the Monolith",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45274",
+          "name": "Leggings of the Stoneweaver",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Off-hand Frill",
+          "id": "45271",
+          "name": "Ironmender",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "45266",
+          "name": "Malice",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Hands",
+          "id": "45268",
+          "name": "Gloves of the Pythonic Guardian",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45267",
+          "name": "Saronite Plated Legguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45264",
+          "name": "Decimator's Armguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45269",
+          "name": "Unfaltering Armguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Gun",
+          "id": "45261",
+          "name": "Giant's Bane",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45263",
+          "name": "Wrathstone",
+          "type": "Trinket"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Auriaya",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Chest",
+          "id": "45865",
+          "name": "Raiments of the Corrupted",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45832",
+          "name": "Mantle of the Preserver",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45864",
+          "name": "Cover of the Keepers",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45709",
+          "name": "Nimble Climber's Belt",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45711",
+          "name": "Ironaya's Discarded Mantle",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Shield",
+          "id": "45707",
+          "name": "Shieldwall of the Breaker",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45712",
+          "name": "Chestplate of Titanic Fury",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45708",
+          "name": "Archaedas' Lost Legplates",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wand",
+          "id": "45713",
+          "name": "Nurturing Touch",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45866",
+          "name": "Elemental Focus Stone",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45319",
+          "name": "Cloak of the Makers",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45436",
+          "name": "Libram of the Resolute",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45326",
+          "name": "Platinum Band of the Aesir",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45438",
+          "name": "Ring of the Faithful Servant",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45441",
+          "name": "Sandals of the Ancient Keeper",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45435",
+          "name": "Cowl of the Absolute",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45325",
+          "name": "Gloves of the Stonereaper",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45439",
+          "name": "Unwavering Stare",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45440",
+          "name": "Amice of the Stoic Watch",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45437",
+          "name": "Runescribed Blade",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Mace",
+          "id": "45315",
+          "name": "Stonerender",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Chest",
+          "id": "45334",
+          "name": "Unbreakable Chestguard",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45434",
+          "name": "Greaves of the Rockmender",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45320",
+          "name": "Shoulderplates of the Eternal",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Bow",
+          "id": "45327",
+          "name": "Siren's Cry",
+          "type": "Ranged"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Freya",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Chest",
+          "id": "45940",
+          "name": "Tunic of the Limber Stalker",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45941",
+          "name": "Chestguard of the Lasher",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45935",
+          "name": "Ironbark Faceguard",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45936",
+          "name": "Legplates of Flourishing Resolve",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wand",
+          "id": "45294",
+          "name": "Petrified Ivy Sprig",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Staff",
+          "id": "45934",
+          "name": "Unraveling Reach",
+          "type": "Two-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Neck",
+          "id": "45945",
+          "name": "Seed of Budding Carnage",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45946",
+          "name": "Fire Orchid Signet",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45943",
+          "name": "Gloves of Whispering Winds",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45947",
+          "name": "Serilas, Blood Blade of Invar One-Arm",
+          "type": "One-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Neck",
+          "id": "45480",
+          "name": "Nymph Heart Charm",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45483",
+          "name": "Boots of the Servant",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45482",
+          "name": "Leggings of the Lifetender",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45481",
+          "name": "Gauntlets of Ruthless Reprisal",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Staff",
+          "id": "45613",
+          "name": "Dreambinder",
+          "type": "Two-Hand"
+        },
+        {
+          "slot": "Staff",
+          "id": "45479",
+          "name": "The Lifebinder",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Back",
+          "id": "45486",
+          "name": "Drape of the Sullen Goddess",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45485",
+          "name": "Bronze Pendant of the Vanir",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Legs",
+          "id": "45488",
+          "name": "Leggings of the Enslaved Idol",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45484",
+          "name": "Bladetwister",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Hands",
+          "id": "45487",
+          "name": "Handguards of Revitalization",
+          "type": "Plate Armor"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Hodir",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45873",
+          "name": "Winter's Frigid Embrace",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45874",
+          "name": "Signet of Winter",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Head",
+          "id": "45464",
+          "name": "Cowl of Icy Breaths",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Bow",
+          "id": "45872",
+          "name": "Avalanche",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Axe",
+          "id": "45458",
+          "name": "Stormedge",
+          "type": "Two-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Shield",
+          "id": "45887",
+          "name": "Ice Layered Barrier",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Shield",
+          "id": "45877",
+          "name": "The Boreal Guard",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Mace",
+          "id": "45876",
+          "name": "Shiver",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45888",
+          "name": "Bitter Cold Armguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Staff",
+          "id": "45886",
+          "name": "Icecore Staff",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Ring",
+          "id": "45451",
+          "name": "Frozen Loop",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Chest",
+          "id": "45453",
+          "name": "Winter's Icy Embrace",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45454",
+          "name": "Frost-Bound Chain Bracers",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Shield",
+          "id": "45450",
+          "name": "Northern Barrier",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Legs",
+          "id": "45452",
+          "name": "Frostplate Greaves",
+          "type": "Plate Armor"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Back",
+          "id": "45461",
+          "name": "Drape of Icy Intent",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45459",
+          "name": "Frigid Strength of Hodir",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45462",
+          "name": "Gloves of the Frozen Glade",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45460",
+          "name": "Bindings of Winter Gale",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Staff",
+          "id": "45457",
+          "name": "Staff of Endless Winter",
+          "type": "Two-Hand"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Mimiron",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45973",
+          "name": "Stylish Power Cape",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45976",
+          "name": "Static Charge Handwraps",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45974",
+          "name": "Shoulderguards of Assimilation",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "45972",
+          "name": "Pulse Baton",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Waist",
+          "id": "45975",
+          "name": "Cable of the Metrognome",
+          "type": "Plate Armor"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Head",
+          "id": "45993",
+          "name": "Mimiron's Flight Goggles",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45989",
+          "name": "Tempered Mercury Greaves",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Sword",
+          "id": "45990",
+          "name": "Fusion Blade",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Feet",
+          "id": "45988",
+          "name": "Greaves of the Iron Army",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45982",
+          "name": "Fused Alloy Legplates",
+          "type": "Plate Armor"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45493",
+          "name": "Asimov's Drape",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45492",
+          "name": "Malleable Steelweave Mantle",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45491",
+          "name": "Waistguard of the Creator",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Fist Weapon",
+          "id": "45489",
+          "name": "Insanity's Grip",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45490",
+          "name": "Pandora's Plea",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Back",
+          "id": "45496",
+          "name": "Titanskin Cloak",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45495",
+          "name": "Conductive Seal",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Head",
+          "id": "45497",
+          "name": "Crown of Luminescence",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Fist Weapon",
+          "id": "45494",
+          "name": "Delirium's Touch",
+          "type": "Off Hand"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45663",
+          "name": "Armbands of Bedlam",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45620",
+          "name": "Starshard Edge",
+          "type": "Main Hand"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Thorim",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Hands",
+          "id": "45927",
+          "name": "Handwraps of Resonance",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45894",
+          "name": "Leggings of Unstable Discharge",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45893",
+          "name": "Guise of the Midgard Serpent",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45895",
+          "name": "Belt of the Blood Pit",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "45892",
+          "name": "Legacy of Thunder",
+          "type": "One-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Neck",
+          "id": "45933",
+          "name": "Pendant of the Shallow Grave",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45930",
+          "name": "Combatant's Bootblade",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Hands",
+          "id": "45928",
+          "name": "Gauntlets of the Thunder God",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45931",
+          "name": "Mjolnir Runestone",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45929",
+          "name": "Sif's Remembrance",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Ring",
+          "id": "45469",
+          "name": "Sif's Promise",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Legs",
+          "id": "45468",
+          "name": "Leggings of Lost Love",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45467",
+          "name": "Belt of the Betrayed",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "45463",
+          "name": "Vulmir, the Northern Tempest",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45466",
+          "name": "Scale of Fates",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "45471",
+          "name": "Fate's Clutch",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Chest",
+          "id": "45473",
+          "name": "Embrace of the Gladiator",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45474",
+          "name": "Pauldrons of the Combatant",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Shield",
+          "id": "45470",
+          "name": "Wisdom's Hold",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Head",
+          "id": "45472",
+          "name": "Warhelm of the Champion",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Crossbow",
+          "id": "45570",
+          "name": "Skyforge Crossbow",
+          "type": "Ranged"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "General Vezax",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "46014",
+          "name": "Saronite Animus Cloak",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "46008",
+          "name": "Choker of the Abyss",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "46015",
+          "name": "Pendant of Endless Despair",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "46010",
+          "name": "Darkstone Ring",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Chest",
+          "id": "46012",
+          "name": "Vestments of the Piercing Light",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "46013",
+          "name": "Underworld Mantle",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "46009",
+          "name": "Bindings of the Depths",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "46011",
+          "name": "Shadowbite",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Hands",
+          "id": "45997",
+          "name": "Gauntlets of the Wretched",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Polearm",
+          "id": "45996",
+          "name": "Hoperender",
+          "type": "Two-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Back",
+          "id": "46032",
+          "name": "Drape of the Faceless General",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Legs",
+          "id": "46034",
+          "name": "Leggings of Profound Darkness",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "46035",
+          "name": "Aesuga, Hand of the Ardent Champion",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "46036",
+          "name": "Void Sabre",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Staff",
+          "id": "46033",
+          "name": "Tortured Earth",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Relic",
+          "id": "45509",
+          "name": "Idol of the Corruptor",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Relic",
+          "id": "45145",
+          "name": "Libram of the Sacred Shield",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45503",
+          "name": "Metallic Loop of the Sufferer",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45515",
+          "name": "Ring of the Vacant Eye",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45514",
+          "name": "Mantle of the Unknowing",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45508",
+          "name": "Belt of the Darkspeaker",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "45512",
+          "name": "Grips of the Unbroken",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45513",
+          "name": "Boots of the Forgotten Depths",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45504",
+          "name": "Darkcore Leggings",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45501",
+          "name": "Boots of the Underdweller",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45502",
+          "name": "Helm of the Faceless",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45505",
+          "name": "Belt of Clinging Hope",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wand",
+          "id": "45511",
+          "name": "Scepter of Lost Souls",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45507",
+          "name": "The General's Heart",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Polearm",
+          "id": "45498",
+          "name": "Lotrafen, Spear of the Damned",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Neck",
+          "id": "45517",
+          "name": "Pendulum of Infinity",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Hands",
+          "id": "45520",
+          "name": "Handwraps of the Vigilant",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45519",
+          "name": "Vestments of the Blind Denizen",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45518",
+          "name": "Flare of the Heavens",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Sword",
+          "id": "45516",
+          "name": "Voldrethar, Dark Blade of Oblivion",
+          "type": "Two-Hand"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Yogg-Saron",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Neck",
+          "id": "46022",
+          "name": "Pendant of a Thousand Maws",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "46030",
+          "name": "Treads of the Dragon Council",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "46019",
+          "name": "Leggings of the Insatiable",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Axe",
+          "id": "46031",
+          "name": "Touch of Madness",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Dagger",
+          "id": "46024",
+          "name": "Kingsbane",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Head",
+          "id": "46028",
+          "name": "Faceguard of the Eyeless Horror",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Crossbow",
+          "id": "46018",
+          "name": "Deliverance",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Trinket",
+          "id": "46021",
+          "name": "Royal Seal of King Llane",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Trinket",
+          "id": "46312",
+          "name": "Vanquished Clutches of Yogg-Saron",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Staff",
+          "id": "46025",
+          "name": "Devotion",
+          "type": "Two-Hand"
+        },
+        {
+          "slot": "Sword",
+          "id": "46016",
+          "name": "Abaddon",
+          "type": "Two-Hand"
+        }
+      ],
+      "10 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "46096",
+          "name": "Signet of Soft Lament",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "46068",
+          "name": "Amice of Inconceivable Horror",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "46095",
+          "name": "Soul-Devouring Cinch",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "46097",
+          "name": "Caress of Insanity",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Mace",
+          "id": "46067",
+          "name": "Hammer of Crushing Whispers",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "45529",
+          "name": "Shawl of Haunted Memories",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45525",
+          "name": "Godbane Signet",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45530",
+          "name": "Sanity's Bond",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Head",
+          "id": "45532",
+          "name": "Cowl of Dark Whispers",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45523",
+          "name": "Garona's Guise",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45524",
+          "name": "Chestguard of Insidious Intent",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Chest",
+          "id": "45531",
+          "name": "Chestguard of the Fallen God",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45527",
+          "name": "Soulscribe",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Mount",
+          "id": "45693",
+          "name": "Mimiron's Head",
+          "type": "Other"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45522",
+          "name": "Blood of the Old God",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Mace",
+          "id": "45521",
+          "name": "Earthshaper",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Hard Mode": [
+        {
+          "slot": "Ring",
+          "id": "45534",
+          "name": "Seal of the Betrayed King",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "45537",
+          "name": "Treads of the False Oracle",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45536",
+          "name": "Legguards of Cunning Deception",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45535",
+          "name": "Show of Faith",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Polearm",
+          "id": "45533",
+          "name": "Dark Edge of Depravity",
+          "type": "Two-Hand"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Algalon the Observer",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Back",
+          "id": "46042",
+          "name": "Drape of the Messenger",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "46047",
+          "name": "Pendant of the Somber Witness",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "46040",
+          "name": "Strength of the Heavens",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "46048",
+          "name": "Band of Lights",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "46046",
+          "name": "Nebula Band",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Feet",
+          "id": "46050",
+          "name": "Starlight Treads",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "46045",
+          "name": "Pulsar Gloves",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Hands",
+          "id": "46043",
+          "name": "Gloves of the Endless Dark",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "46049",
+          "name": "Zodiac Leggings",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "46044",
+          "name": "Observer's Mantle",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Quest",
+          "id": "46052",
+          "name": "Reply-Code Alpha",
+          "type": "Other"
+        },
+        {
+          "slot": "Chest",
+          "id": "46039",
+          "name": "Breastplate of the Timeless",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "46037",
+          "name": "Shoulderplates of the Celestial Watch",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "46041",
+          "name": "Starfall Girdle",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "46038",
+          "name": "Dark Matter",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Trinket",
+          "id": "46051",
+          "name": "Meteorite Crystal",
+          "type": "Trinket"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Hands",
+          "id": "45665",
+          "name": "Pharos Gloves",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45619",
+          "name": "Starwatcher's Binding",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45616",
+          "name": "Star-Beaded Clutch",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45611",
+          "name": "Solar Bindings",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "45615",
+          "name": "Planewalker Treads",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Head",
+          "id": "45610",
+          "name": "Boundless Gaze",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45620",
+          "name": "Starshard Edge",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Mace",
+          "id": "45612",
+          "name": "Constellus",
+          "type": "Main Hand"
+        },
+        {
+          "slot": "Off-hand Frill",
+          "id": "45617",
+          "name": "Cosmos",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Shield",
+          "id": "45587",
+          "name": "Bulwark of Algalon",
+          "type": "Off-hand"
+        },
+        {
+          "slot": "Quest",
+          "id": "46053",
+          "name": "Reply-Code Alpha",
+          "type": "Other"
+        },
+        {
+          "slot": "Feet",
+          "id": "45599",
+          "name": "Sabatons of Lifeless Night",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45594",
+          "name": "Legplates of the Endless Void",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Trinket",
+          "id": "45609",
+          "name": "Comet's Trail",
+          "type": "Trinket"
+        },
+        {
+          "slot": "Staff",
+          "id": "45613",
+          "name": "Dreambinder",
+          "type": "Two-Hand"
+        },
+        {
+          "slot": "Crossbow",
+          "id": "45570",
+          "name": "Skyforge Crossbow",
+          "type": "Ranged"
+        }
+      ]
+    }
+  },
+  {
+    "boss": "Trash",
+    "modes": {
+      "10 Player Normal": [
+        {
+          "slot": "Cloak",
+          "id": "46347",
+          "name": "Cloak of the Dormant Blaze",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Cloak",
+          "id": "46341",
+          "name": "Drape of the Spellweaver",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "46343",
+          "name": "Fervor of the Protectorate",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "46344",
+          "name": "Iceshear Mantle",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Feet",
+          "id": "46346",
+          "name": "Boots of Unsettled Prey",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Mace",
+          "id": "46351",
+          "name": "Bloodcrush Cudgel",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Plate gloves",
+          "id": "46340",
+          "name": "Adamant Handguards",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Wrist",
+          "id": "46345",
+          "name": "Bracers of Righteous Reformation",
+          "type": "Plate Armor"
+        },
+        {
+          "slot": "Bow",
+          "id": "46342",
+          "name": "Golemheart Longbow",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Gun",
+          "id": "46339",
+          "name": "Mimiron's Repeater",
+          "type": "Ranged"
+        },
+        {
+          "slot": "Staff",
+          "id": "46350",
+          "name": "Pillar of Fortitude",
+          "type": "Two-Hand"
+        }
+      ],
+      "25 Player Normal": [
+        {
+          "slot": "Cloak",
+          "id": "45541",
+          "name": "Shroud of Alteration",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45539",
+          "name": "Pendant of Focused Energies",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Neck",
+          "id": "45538",
+          "name": "Titanstone Pendant",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Ring",
+          "id": "45540",
+          "name": "Bladebearer's Signet",
+          "type": "Accessories"
+        },
+        {
+          "slot": "Wrist",
+          "id": "45549",
+          "name": "Grips of Chaos",
+          "type": "Cloth Armor"
+        },
+        {
+          "slot": "Leather belt",
+          "id": "45548",
+          "name": "Belt of the Sleeper",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Waist",
+          "id": "45547",
+          "name": "Relic Hunter's Cord",
+          "type": "Leather Armor"
+        },
+        {
+          "slot": "Legs",
+          "id": "45544",
+          "name": "Leggings of the Tortured Earth",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Shoulder",
+          "id": "45543",
+          "name": "Shoulders of Misfortune",
+          "type": "Mail Armor"
+        },
+        {
+          "slot": "Dagger",
+          "id": "45605",
+          "name": "Daschal's Bite",
+          "type": "One-Hand"
+        },
+        {
+          "slot": "Feet",
+          "id": "45542",
+          "name": "Greaves of the Stonewarder",
+          "type": "Plate Armor"
+        }
+      ]
+    }
+  }
+]

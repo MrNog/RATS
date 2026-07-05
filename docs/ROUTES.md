@@ -15,6 +15,7 @@ public/                             PUBLIC pages (everyone)
   vacations/index.html              vacations — role-aware (see note)  (+ vacations.css/.js)
   profile/index.html                raider profile — armory + badges   (+ profile.css/.js)
   rankings/index.html               rankings & hall of fame (public)   (+ rankings.css/.js)
+  loot/index.html                   loot history — by run/player/time  (+ loot.css/.js)
 officer/                            PRIVATE tools (gated by guild key)
   index.html                        officer landing / menu
   guild/index.html                  roster browser                     (+ guild.css/.js)
@@ -46,6 +47,13 @@ assets/                             SHARED
 > raid/size/period toggles filter client-side (no extra reads). The gold **Fetch** button shows only with the
 > guild key — it pulls the wow-logs API, computes, and writes the snapshot. `RANKINGS_URL` is empty until the
 > API is live, so it renders the bundled `SAMPLE`. Full spec in `.claude/rules/rankings.md`.
+>
+> **Loot History is a public page** at `public/loot/`, gated behind the `loot` dev feature-flag until the
+> Okanvil export + officer sign-off. Reads ONE plain `loot` node (TTL 30 min, cached); raid/size/period +
+> By-run/By-player/Timeline tabs filter client-side (no extra reads). The **Import** button + **assign winner**
+> controls show only with the guild key — an officer pastes the Okanvil `/okanvil export` JSON, which is
+> **merged** into the `loot` node. Data comes from MRT loot history (who actually kept the item). Renders the
+> bundled `SAMPLE` until the node is populated. Contract in `docs/LOOT_EXPORT.md`.
 
 ## Cross-page links (the ones to keep in sync on a move)
 

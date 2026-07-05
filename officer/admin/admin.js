@@ -97,11 +97,48 @@ async function testHook(btn) {
   }
 }
 
+function renderStatus() {
+  const el = document.getElementById("statusRow");
+  if (!el) return;
+  const hasKey = !!(localStorage.getItem("ratsGuildKey") || "");
+  const hooks = loadHooks().filter((h) => (h.url || "").trim()).length;
+  const consoleLocked = !!window.__adminLocked;
+  const pill = (on, onTxt, offTxt) =>
+    '<span class="statPill ' + (on ? "ok" : "off") + '">' + (on ? onTxt : offTxt) + "</span>";
+  el.innerHTML =
+    pill(consoleLocked, "&#128274; Console locked", "&#128275; Console open") +
+    pill(hasKey, "&#128273; Guild key set", "&#128273; No guild key") +
+    pill(hooks > 0, "&#128227; " + hooks + " webhook" + (hooks !== 1 ? "s" : ""), "&#128227; No webhooks");
+}
+
 function showConsole() {
   document.getElementById("console").style.display = "";
   const k = localStorage.getItem("ratsGuildKey") || "";
   if (k) document.getElementById("guildKey").value = k;
   renderHooks();
+  renderStatus();
+}
+
+// --- reset controls (this browser only; never touches committed json or Firebase) ---
+function forgetGuildKey() {
+  if (!confirm("Forget the guild key stored in THIS browser? You'll need to re-enter it to use officer tools.")) return;
+  localStorage.removeItem("ratsGuildKey");
+  document.getElementById("guildKey").value = "";
+  renderStatus();
+  msg("Guild key cleared from this browser.");
+}
+function clearAllHooks() {
+  if (!confirm("Clear all webhook URLs saved in this browser?")) return;
+  localStorage.removeItem("ratsWebhooks");
+  localStorage.removeItem("ratsWebhook");
+  renderHooks();
+  renderStatus();
+  msg("All webhooks cleared from this browser.");
+}
+function adminLogout() {
+  if (!confirm("Log out of the admin console in this browser?")) return;
+  localStorage.removeItem(AKEY);
+  location.reload();
 }
 
 function lockOverlay(blob) {
@@ -156,6 +193,7 @@ async function init() {
     const r = await fetch("admin.json", { cache: "no-store" });
     if (r.ok) blob = await r.json();
   } catch (e) {}
+  window.__adminLocked = !!(blob && (blob.enc || blob.ct));
   if (!blob || !(blob.enc || blob.ct)) {
     document.getElementById("banner").textContent =
       "First-time setup - no admin password yet. Set one below and commit admin.json to lock this console.";

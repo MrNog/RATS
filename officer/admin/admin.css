@@ -1,8 +1,28 @@
+/* more breathing room between cards + inside them */
+.card {
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+
 /* section titles inside cards — not the uppercase theme h2 */
 h2 {
-  font-size: 15px;
-  margin: 0 0 4px;
+  font-size: 16px;
+  margin: 0 0 6px;
   text-transform: none;
+}
+
+/* the descriptive lines under a title — give them room before the controls */
+.card .sub {
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+/* the trailing hint line after the controls */
+.card .frow + .sub {
+  margin: 12px 0 0;
+}
+/* space the control row off the description */
+.card .frow {
+  margin-top: 4px;
 }
 
 /* full-width settings fields (base styling from ui.css) */
@@ -25,13 +45,17 @@ textarea {
 .hookRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
-  margin-top: 8px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.hookRow:first-child {
+  border-top: 0;
 }
 .hookRow .hlbl {
-  flex: 0 0 120px;
-  min-width: 100px;
+  flex: 0 0 130px;
+  min-width: 110px;
 }
 .hookRow .hlbl strong {
   display: block;
@@ -51,4 +75,35 @@ textarea {
 
 .msg {
   min-height: 18px;
+}
+
+/* status pills under the banner */
+.statusRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 18px;
+}
+.statPill {
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.statPill.ok {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.statPill.off {
+  color: var(--text-dim-2);
+}
+
+/* danger-zone card */
+.card.danger {
+  border-color: #5a2f2f;
+}
+.card.danger h2 {
+  color: #ff8f8f;
 }

@@ -32,26 +32,18 @@
 
     <div id="console" style="display:none">
 
+      <div id="statusRow" class="statusRow"></div>
+
       <div class="card">
         <h2>&#128273; Guild key &amp; lock</h2>
         <p class="sub">The key officers type to unlock the tools. Arm the lock &#8212; works with no roster needed.</p>
         <div class="frow">
-          <input type="text" id="guildKey" placeholder="Guild key (the password officers will use)">
+          <input type="password" id="guildKey" placeholder="Guild key (the password officers will use)">
+          <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('guildKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
           <button class="btn" onclick="armLock()">&#128274; Arm lock &#8212; download gate.json</button>
         </div>
         <p class="sub">Commit the downloaded <code>gate.json</code> &#8594; the index lock turns on. Share the key in
           the officer channel.</p>
-      </div>
-
-      <div class="card">
-        <h2>&#128190; Backup</h2>
-        <p class="sub">Download the current encrypted <code>roster.json</code> + <code>history.json</code> and commit
-          via Fork. Each commit is an unchangeable snapshot &#8212; restores automatically if live data is wiped.</p>
-        <div class="frow">
-          <button onclick="doBackup()">&#11015; Download backup (roster.json + history.json)</button>
-        </div>
-        <p class="sub">Tip: do this after big roster/raid changes. Your browser may ask to allow multiple downloads
-          &#8212; say yes.</p>
       </div>
 
       <div class="card">
@@ -72,6 +64,17 @@
           <button onclick="setAdmin()">Set admin password &#8212; download admin.json</button>
         </div>
         <p class="sub">Commit the downloaded <code>admin.json</code> &#8594; this console requires that password.</p>
+      </div>
+
+      <div class="card danger">
+        <h2>&#9888;&#65039; Reset (this browser only)</h2>
+        <p class="sub">Clears values saved in <strong style="color:#fff">your browser</strong> &#8212; it does not
+          touch committed <code>gate.json</code>/<code>admin.json</code> or live Firebase data.</p>
+        <div class="frow">
+          <button type="button" class="del" onclick="forgetGuildKey()">&#128273; Forget guild key</button>
+          <button type="button" class="del" onclick="clearAllHooks()">&#128227; Clear all webhooks</button>
+          <button type="button" class="del" onclick="adminLogout()">&#128274; Log out of admin</button>
+        </div>
       </div>
 
     </div>

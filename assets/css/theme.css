@@ -28,6 +28,7 @@
 
   /* status */
   --ok: #7cfc8a;
+  --purple: #a335ee; /* WoW epic quality — used for disenchanted loot */
 
   /* layout */
   --wrap: 960px;       /* standard page width */

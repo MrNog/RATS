@@ -30,6 +30,11 @@ textarea {
   flex-wrap: wrap;
   margin: 14px 0;
 }
+/* keep every toolbar button the same height + on one line */
+.controls > button {
+  height: var(--ctl-h);
+  white-space: nowrap;
+}
 .err {
   color: #ff6b6b;
   min-height: 18px;

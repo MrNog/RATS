@@ -24,7 +24,20 @@ p.sub {
 
 .tools {
   display: grid;
-  gap: 14px;
+  gap: 8px;
+}
+/* group labels that organize the tools */
+.grouplbl {
+  text-align: left;
+  color: var(--text-dim-2);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 12px 2px 2px;
+}
+.tools > .grouplbl:first-child {
+  margin-top: 0;
 }
 a.tool {
   display: block;
@@ -32,7 +45,7 @@ a.tool {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  padding: 11px 16px;
   text-align: left;
   transition:
     border-color 0.15s,
@@ -45,12 +58,13 @@ a.tool:hover {
 a.tool .t {
   color: var(--accent);
   font-weight: 800;
-  font-size: 17px;
+  font-size: 15px;
 }
 a.tool .d {
   color: var(--text-dim);
-  font-size: 13px;
-  margin-top: 4px;
+  font-size: 12.5px;
+  margin-top: 2px;
+  line-height: 1.4;
 }
 .foot {
   color: var(--text-faint);

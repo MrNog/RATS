@@ -893,6 +893,25 @@ async function exportRoster() {
   }
   await autoShare("✅ Roster re-shared with the officers");
 }
+
+// download the current roster as a plain .json file (local export, not shared)
+function exportRosterJSON() {
+  const data = load();
+  if (!data || !data.roster) {
+    alert("Import a roster first (📥 Import roster).");
+    return;
+  }
+  const stamp = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "roster-" + stamp + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+  setMsgOk("⬇ Exported roster-" + stamp + ".json (" + data.roster.length + " members)");
+}
 function setMsgOk(t) {
   const e = document.getElementById("err");
   if (e) {

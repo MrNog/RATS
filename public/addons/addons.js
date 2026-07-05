@@ -34,6 +34,13 @@ const ADDONS = [
 // Optional / fun addons — separate group below the mandatory list.
 const OPTIONAL = [
   {
+    name: "Okanvil",
+    emoji: "⚒️",
+    desc: "RATS guild toolkit — invites, loot rolls, combat logs, recruit & an ID finder. /okanvil",
+    dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",
+    gh: "https://github.com/MrNog/Okanvil",
+  },
+  {
     name: "Rats-Redeemer",
     emoji: "⚰️",
     desc: "Battle-res flavour lines. /redeemer",
