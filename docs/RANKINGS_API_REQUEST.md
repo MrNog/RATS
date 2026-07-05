@@ -95,3 +95,29 @@ Each entry (for the leaderboard columns) also exposes:
 
 `{ "ok": false, "error": { "code", "message" } }` + matching HTTP status:
 `400 BAD_REQUEST` · `404 NOT_FOUND` · `429 RATE_LIMITED` · `500 SERVER_ERROR`
+
+## Proposed — consumables (PENDING, not live yet)
+
+> Requested from the wow-logs dev, not yet in the feed. Powers "🎉 Fun & shame" awards
+> (Drunk Rat / No prep / Well fed). **All fields OPTIONAL** — the page treats them as absent when
+> missing, so adding them is non-breaking and needs no other API change. Extends each `players[]` entry:
+
+```json
+{
+  "name": "Kobee",
+  "consumables": {
+    "potionsUsed": 3,          // combat potions consumed this fight (int)
+    "healthstonesUsed": 1,     // warlock healthstones used (int)
+    "flaskActive": true,       // had a flask/elixir buff during the fight (bool)
+    "flaskUptime": 1.0,        // 0–1, fraction of fight with a flask/elixir up
+    "foodBuff": true,          // had a Well Fed / food buff at pull (bool)
+    "hadPrepot": true          // pre-potted (potion in the last ~2s before pull) (bool)
+  }
+}
+```
+
+- `potionsUsed` / `healthstonesUsed`: raw counts per player per fight (we sum across the raid).
+- `flaskActive` / `foodBuff`: simple booleans are enough for the "No prep" shame award; `flaskUptime`
+  is a nice-to-have for a "Well Fed" 100%-uptime award.
+- If any field can't be computed, **omit it** rather than sending 0/false — the page distinguishes
+  "no data" from "genuinely zero".
