@@ -83,8 +83,18 @@
   border: 1px solid #3a5b42;
   flex: 0 0 auto;
 }
+/* an addon with an update gets the same gold featured look as the mandatory rows */
 .item.has-update {
-  border-color: #3a5b42;
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(192, 148, 58, 0.1), var(--surface-2) 62%);
+  box-shadow:
+    0 0 0 1px rgba(192, 148, 58, 0.18),
+    0 6px 22px rgba(192, 148, 58, 0.06);
+}
+.item.has-update:hover {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 10px 30px rgba(192, 148, 58, 0.12);
 }
 .desc {
   color: var(--text-dim);
