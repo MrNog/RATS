@@ -311,9 +311,13 @@ th.pctcol {
 }
 .ggrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  /* auto-fill columns capped at ~210px so hidden empty groups don't leave a gaping column AND
+     the shown groups sit close together (left-packed) instead of stretching edge-to-edge.
+     A 10-man shows 2 tight columns; a 25-man wraps to 3+. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 210px));
+  gap: 12px 20px;
   margin-top: 8px;
+  justify-content: start;
 }
 .ghead {
   color: var(--header);
@@ -526,11 +530,15 @@ th.pctcol {
   font-weight: 700;
 }
 
-/* raid log: show ~7 then scroll inside */
+/* raid log: tall enough that an expanded card (roster + per-instance actions) fits without a
+   cramped inner scroll; still caps so the collapsed list doesn't run off-screen. */
 #log {
-  max-height: 400px;
+  max-height: 78vh;
   overflow: auto;
   padding-right: 6px;
+}
+@media (max-height: 800px) {
+  #log { max-height: 72vh; }
 }
 .explain {
   margin: 10px 0 2px;

@@ -958,7 +958,7 @@ function setMsg(txt, color) {
 })();
 
 // ---- handoff from History → "✏️ Edit in Comp": load a saved raid here for editing ----
-// (Save to history overwrites the raid with the same date, so the original date is restored.)
+// (payload.id is captured into window.__editId, so Save updates THAT raid — not a same-day sibling.)
 (function () {
   let payload;
   try {
@@ -971,6 +971,7 @@ function setMsg(txt, color) {
     localStorage.removeItem("ratsCompEdit");
   } catch (e) {}
   try {
+    window.__editId = payload.id || null; // reuse this raid's id on save (update, not duplicate)
     document.getElementById("jsonIn").value = payload.json || "";
     if (payload.date) {
       const di = document.getElementById("dateIn");
@@ -1119,7 +1120,16 @@ async function saveToHistory() {
     const hist = await RatsData.loadHistory({ interactive: false });
     hist.raids = Array.isArray(hist.raids) ? hist.raids : [];
 
+    // stable unique id so two raids on the SAME day (e.g. Ony + ToD) can coexist and be
+    // edited/deleted independently. Editing an existing raid reuses its id (window.__editId).
+    const raidId =
+      window.__editId ||
+      (crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+
     const entry = {
+      id: raidId,
       date: dateVal,
       title: window.__title || formatRaidTitle(dateVal),
       size: raidSize(),
@@ -1146,13 +1156,20 @@ async function saveToHistory() {
       savedAt: new Date().toISOString(),
     };
 
-    // one raid per date: replace an existing same-date entry, else append
-    const existing = hist.raids.findIndex((r) => r.date === dateVal);
+    // update the SAME raid when editing (match by id); a brand-new raid always appends, so two
+    // raids can share a date (Ony + ToD on one day). Legacy entries had no id — only then fall
+    // back to same-date matching, so old saves still update in place instead of duplicating.
+    const existing = window.__editId
+      ? hist.raids.findIndex((r) => r.id === window.__editId)
+      : hist.raids.findIndex((r) => !r.id && r.date === dateVal);
     let verb = "Saved";
     if (existing >= 0) {
+      // preserve the original id when overwriting a legacy (id-less) same-date entry
+      if (!entry.id) entry.id = hist.raids[existing].id;
       hist.raids[existing] = entry;
       verb = "Updated";
     } else hist.raids.push(entry);
+    window.__editId = entry.id; // a re-save (without leaving) now updates THIS raid, not a dupe
     hist.raids.sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
 
     const count = entry.groups.reduce((n, g) => n + g.members.length, 0);
@@ -1186,6 +1203,9 @@ function openRosterPicker() {
   document.getElementById("rosterModal").style.display = "flex";
   document.getElementById("rpSearch").value = "";
   document.getElementById("rpAlts").checked = false;
+  const pn = document.getElementById("pugName");
+  if (pn) pn.value = "";
+  fillPugClasses();
   renderRosterPicker();
   setTimeout(() => document.getElementById("rpSearch").focus(), 50);
 }
@@ -1335,6 +1355,83 @@ function applyRosterPicker() {
       ".",
     "#7CFC8A"
   );
+}
+
+// ---- add a PUG (not in the roster): kept EXACTLY as typed, never resolved to a main ----
+function pugClassList() {
+  const cs = window.__classes && window.__classes.length ? window.__classes : DEFAULT_CLASSES;
+  return cs.filter((c) => c.name !== "Tank");
+}
+function fillPugClasses() {
+  const sel = document.getElementById("pugClass");
+  if (!sel) return;
+  sel.innerHTML = '<option value="" disabled selected>Class…</option>';
+  pugClassList().forEach((c) => {
+    const o = document.createElement("option");
+    o.value = c.name;
+    o.textContent = c.name === "DK" ? "Death Knight" : c.name;
+    sel.appendChild(o);
+  });
+  fillPugSpecs();
+}
+function fillPugSpecs() {
+  const sp = document.getElementById("pugSpec");
+  if (!sp) return;
+  const c = pugClassList().find((x) => x.name === document.getElementById("pugClass").value);
+  sp.innerHTML = '<option value="" disabled selected>Spec…</option>';
+  if (c)
+    c.specs.forEach((s) => {
+      const o = document.createElement("option");
+      o.value = s.name;
+      o.textContent = prettySpec(s.name);
+      sp.appendChild(o);
+    });
+}
+function addPug() {
+  const name = (document.getElementById("pugName").value || "").trim();
+  if (!name) {
+    setMsg("❌ Type the pug's name.");
+    return;
+  }
+  const clName = document.getElementById("pugClass").value,
+    specName = document.getElementById("pugSpec").value;
+  if (!clName || !specName) {
+    setMsg("❌ Pick the pug's class and spec.");
+    return;
+  }
+  const ta = document.getElementById("jsonIn");
+  let data;
+  try {
+    data = JSON.parse(ta.value.trim());
+  } catch (e) {
+    data = null;
+  }
+  if (!data || !Array.isArray(data.slots)) data = baseComp();
+  if (!data.classes || !data.classes.length) data.classes = DEFAULT_CLASSES;
+  data.slots = data.slots || [];
+  if (data.slots.some((x) => (x.name || "").toLowerCase() === name.toLowerCase())) {
+    setMsg("❌ " + name + " is already in the comp.");
+    return;
+  }
+  const c = (data.classes || []).find((x) => x.name === clName);
+  const s = c && c.specs.find((x) => x.name === specName);
+  const grp = nextGroupWithRoom(data, 1);
+  if (grp > (data.groupCount || 5)) data.groupCount = grp;
+  const inGroup = data.slots.filter((x) => x.groupNumber === grp).length;
+  data.slots.push({
+    specName: specName,
+    color: (s && s.color) || "#ffffff",
+    slotNumber: inGroup + 1,
+    name: name, // verbatim — no resolveMain, so a pug NEVER becomes a roster member
+    className: clName,
+    specEmoteId: s && s.emoteId,
+    classEmoteId: c && c.emoteId,
+    groupNumber: grp,
+  });
+  ta.value = JSON.stringify(data);
+  document.getElementById("pugName").value = "";
+  render();
+  setMsg("✅ Added pug " + name + " — " + prettySpec(specName) + " (Group " + grp + ").", "#7CFC8A");
 }
 
 function loadSample() {

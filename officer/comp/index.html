@@ -103,6 +103,18 @@
         <div id="rosterList"
           style="max-height:52vh;overflow:auto;border:1px solid #2a2c31;border-radius:8px;padding:10px;background:#161719">
         </div>
+        <div
+          style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2c31;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span class="sub" style="margin:0;color:var(--accent);font-weight:700">➕ Add a pug</span>
+          <input type="text" id="pugName" placeholder="Name (kept exactly as typed)"
+            onkeydown="if(event.key==='Enter')addPug()"
+            style="flex:1;min-width:150px;height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px">
+          <select id="pugClass" onchange="fillPugSpecs()"
+            style="height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 8px"></select>
+          <select id="pugSpec"
+            style="height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 8px"></select>
+          <button class="alt" onclick="addPug()" style="padding:6px 12px">Add pug</button>
+        </div>
         <div class="controls" style="margin-top:12px;align-items:center">
           <button onclick="applyRosterPicker()">Add selected to comp</button>
           <button class="alt" onclick="closeRosterPicker()">Cancel</button>

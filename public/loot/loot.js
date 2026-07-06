@@ -165,8 +165,14 @@
   var ROSTER = []; // filled from members node for the assign picker (officer only)
   var BOSS_TABLE = {}; // itemName(lower) -> boss, from data/ulduar-loot-table.json (loaded once)
 
-  // Crafting mats & recipes we DON'T track (no guild value) — dropped on import.
+  // Crafting mats & recipes grouped as "crafts" in the loot list (patterns/orbs shown once).
   var SKIP_RE = /^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|orb of/i;
+  // Items that must NOT count against a raider's LOOT PRIORITY — pure craft mats that are rolled
+  // but aren't personal gear: any Val'anyr fragment, all crafting orbs (Runed / Crusader /
+  // Primordial Saronite), and patterns/recipes. NOTE: ToC Trophies DO count (they're set-token
+  // gear upgrades, so winning one spends priority). Superset of SKIP_RE for the craft mats.
+  var PRIORITY_SKIP_RE =
+    /fragment.*val'?anyr|val'?anyr.*fragment|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
   // Fragments of the legendary — always kept; boss resolved by "last real boss killed" (time).
   var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment/i;
   // the 14 real Ulduar bosses that anchor the timeline (Assembly = the Iron Council)
@@ -223,10 +229,14 @@
         boss = tableBoss; // in table but not a "real boss" bucket (e.g. Trash) -> keep it
       }
       if (isFragment) {
-        var fk = l.runId + "|" + boss;
+        // Only the real boss drop ("Fragment of Val'anyr") is 1-per-boss, so de-dupe THAT by
+        // run|boss to catch two looters logging the same corpse. Keep the fragment NAME in the
+        // key so the Unbound/Shattered quest variants (not boss drops) are never mistaken for a
+        // dup of the plain Fragment and dropped.
+        var fk = l.runId + "|" + boss + "|" + (name || "").toLowerCase();
         if (fragSeen[fk]) {
           skipped++;
-          return; // 2nd fragment from same boss/run = logging dup
+          return; // same fragment kind, same boss/run = logging dup
         }
         fragSeen[fk] = 1;
       }
@@ -338,9 +348,25 @@
       "'\">"
     );
   }
+  // WoW item-quality colors (0 poor … 5 legendary). Raid loot is epic by default, so records
+  // that predate the `quality` field still read purple; fragments/legendaries (5) show orange.
+  var QUALITY_COLOR = {
+    0: "#9d9d9d", // poor (grey)
+    1: "#ffffff", // common (white)
+    2: "#1eff00", // uncommon (green)
+    3: "#0070dd", // rare (blue)
+    4: "#a335ee", // epic (purple)
+    5: "#ff8000", // legendary (orange)
+    6: "#e6cc80", // artifact / heirloom (tan)
+    7: "#e6cc80",
+  };
+  function qualityColor(q) {
+    return QUALITY_COLOR[q] || QUALITY_COLOR[4]; // default epic for raid loot without a quality
+  }
   function itemLink(l) {
     var nm = l.name || "Item #" + l.itemId;
-    return '<span class="iname">' + esc(nm) + "</span>";
+    var col = qualityColor(l.quality);
+    return '<span class="iname" style="color:' + col + '">' + esc(nm) + "</span>";
   }
   function winnerHtml(l, idx) {
     // only officers (guild key present) get the pen to edit — never public visitors
@@ -525,8 +551,22 @@
           var d = daysSince(p.last);
           var drought = d != null && d >= 14 ? '<span class="drought"> · no loot ' + d + "d</span>" : "";
           var open = !!OPEN_PLAYERS[p.name];
-          var nFrag = p.frags.length,
-            nCraft = p.crafts.length;
+          var nCraft = p.crafts.length;
+          // Group the Val'anyr fragments by EXACT name so the three kinds stay separate:
+          //   "Fragment of Val'anyr" = the real 1-per-boss raid drop,
+          //   "Unbound Fragments of Val'anyr" = the 30-merge quest item (not a boss drop),
+          //   "Shattered Fragments of Val'anyr" = the quest turn-in reward.
+          // Merging them hid that only the first is loot. Each gets its own badge / row.
+          var fragGroups = {}; // exact name -> { name, items: [] }
+          p.frags.forEach(function (l) {
+            var k = l.name || "Fragment of Val'anyr";
+            (fragGroups[k] = fragGroups[k] || { name: k, items: [] }).items.push(l);
+          });
+          var fragList = Object.keys(fragGroups)
+            .sort()
+            .map(function (k) {
+              return fragGroups[k];
+            });
           // small "icon ×N" badge for a merged mat group (fragments / crafts)
           var badge = function (n, first, title) {
             return n
@@ -535,7 +575,12 @@
                   iconUrl(ICON_FALLBACK, "small") + "'\"><i>×" + n + "</i></span>"
               : "";
           };
-          var fragPeek = badge(nFrag, p.frags[0], "Fragment of Val'anyr") + badge(nCraft, p.crafts[0], "Recipes");
+          var fragPeek =
+            fragList
+              .map(function (g) {
+                return badge(g.items.length, g.items[0], g.name);
+              })
+              .join("") + badge(nCraft, p.crafts[0], "Recipes");
           // thumbnails (collapsed peek) or the full editable item list (expanded)
           var peek = p.items
             .slice(0, 14)
@@ -564,7 +609,11 @@
               })
               .map(lootItemHtml)
               .join("") +
-            matRow(nFrag, p.frags[0], "Fragment of Val'anyr") +
+            fragList
+              .map(function (g) {
+                return matRow(g.items.length, g.items[0], g.name);
+              })
+              .join("") +
             matRow(nCraft, p.crafts[0], nCraft === 1 ? "Recipe" : "Recipes");
           return (
             '<div class="pcard' + (open ? " open" : "") + (isDE ? " de-card" : "") +
@@ -702,7 +751,8 @@
       if (!l.player || l.player === DISENCHANT) return;
       if (firstTs && l.ts && l.ts < firstTs) return; // loot before we tracked attendance
       var nm = l.name || "";
-      if (FRAGMENT_RE.test(nm) || SKIP_RE.test(nm)) return;
+      // craft mats (fragments/orbs/patterns) don't spend priority; ToC trophies DO (gear tokens).
+      if (PRIORITY_SKIP_RE.test(nm)) return;
       var who = mainName(l.player);
       (won[who] = won[who] || []).push(l);
       if (l.class && !cls[who]) cls[who] = l.class;
@@ -1129,7 +1179,8 @@
       '<span class="edit-head">' +
       '<img class="iic" src="' + esc(iconUrl(l.icon, "large")) + '" alt="" ' +
       "onerror=\"this.src='" + iconUrl(ICON_FALLBACK, "large") + "'\">" +
-      '<span class="edit-meta"><span class="edit-name">' + esc(l.name || "item #" + l.itemId) + "</span>" +
+      '<span class="edit-meta"><span class="edit-name" style="color:' + qualityColor(l.quality) + '">' +
+      esc(l.name || "item #" + l.itemId) + "</span>" +
       '<span class="edit-sub">' + esc(l.boss || "") + " · " + fmtTs(l.ts) + "</span></span></span>" +
       '<div class="edit-from">from ' + fromTxt + ' <span class="edit-arrow">→</span> <span id="editTo"></span></div>';
     pendingWho = l.player || ""; // selection awaiting Confirm

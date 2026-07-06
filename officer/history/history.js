@@ -44,6 +44,15 @@ function msg(t, c) {
   e.textContent = t || "";
 }
 
+// A raid is identified by its unique id (legacy entries only have a date). raidRef() is what we
+// thread through button handlers; findRaid() resolves it back, so two same-day raids never collide.
+function raidRef(r) {
+  return r.id || r.date;
+}
+function findRaid(ref) {
+  return (HIST.raids || []).find((x) => x.id === ref) || (HIST.raids || []).find((x) => !x.id && x.date === ref);
+}
+
 let HIST = { raids: [] };
 let VAC = []; // shared vacations (plain Firebase node, written by members + officers)
 
@@ -141,6 +150,16 @@ function raidSize(r) {
   const n = (r.groups || []).reduce((a, g) => a + (g.members || []).length, 0);
   return n > 10 ? 25 : 10;
 }
+// is this run a HEROIC / hard-mode lockout? (ToC Normal and ToC Heroic are SEPARATE lockouts)
+function isHM(r) {
+  return /\bhm\b|heroic|hard\s*mode/i.test(r.desc || "");
+}
+// the raid identity for lockout/obligation grouping: instance + difficulty. ToC-N and ToC-HM
+// differ here, so they count as TWO mandatory obligations (do both = 2/2), never one 50% run.
+function instKey(r) {
+  const inst = window.RatsData && RatsData.raidKeyOf ? RatsData.raidKeyOf(r.desc) || "?" : "?";
+  return inst + (isHM(r) ? "|HM" : "");
+}
 // ---- continuation detection ----
 // A "continuation" = a later run that resumes an earlier run's WEEKLY LOCKOUT.
 // Same lockout week (Wed→Wed reset) + same instance + same size + ≥50% of the SAME
@@ -173,10 +192,10 @@ function isContinuation(r) {
   if (!keysR.size) return false;
   const wk = lockoutStart(r.date),
     sz = raidSize(r),
-    rk = RatsData.raidKeyOf(r.desc);
+    rk = instKey(r); // ToC-N and ToC-HM are different lockouts, so not continuations of each other
   for (const p of HIST.raids || []) {
     if (p === r || !(p.date < r.date)) continue; // only an EARLIER run counts as the origin
-    if (lockoutStart(p.date) !== wk || raidSize(p) !== sz || RatsData.raidKeyOf(p.desc) !== rk) continue;
+    if (lockoutStart(p.date) !== wk || raidSize(p) !== sz || instKey(p) !== rk) continue;
     const keysP = rosterKeys(p);
     if (!keysP.size) continue;
     let shared = 0;
@@ -217,8 +236,8 @@ function filteredRaids() {
       (r) =>
         r.date &&
         inRange(r.date) &&
-        (sf === "all" || String(raidSize(r)) === sf) &&
-        (RAID === "all" || raidInstOf(r) === RAID)
+        String(raidSize(r)) === sf && // size filter is always "25" or "10"
+        (RAID === "all" || raidInstOf(r) === RAID) // instance filter still has an "All"
     )
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 }
@@ -235,6 +254,9 @@ function computeAttendance(raids) {
       map[key] = {
         name: main,
         cls: (rm && rm.class) || cls || "",
+        // known roster member → LOCK the color to their main's class (Grunho stays Warrior even
+        // when he raids on a Mage alt). Pugs (not in roster) keep showing their last-raided class.
+        _roster: !!(rm && rm.class),
         present: 0,
         noShow: 0,
         lastDate: "",
@@ -310,8 +332,8 @@ function computeAttendance(raids) {
   const chains = {};
   raids.forEach((r) => {
     if (isLogOnly(r)) return;
-    const inst = window.RatsData ? RatsData.raidKeyOf(r.desc) : r.desc || "";
-    const gk = raidSize(r) + "|" + lockoutStart(r.date) + "|" + inst;
+    // instKey splits ToC Normal vs ToC Heroic into separate chains (2 obligations, not 1)
+    const gk = raidSize(r) + "|" + lockoutStart(r.date) + "|" + instKey(r);
     if (!chains[gk]) chains[gk] = [];
     chains[gk].push(r);
   });
@@ -357,14 +379,19 @@ function computeAttendance(raids) {
       denom++; // one obligation
       if (nAttended > 0) {
         attendedLockouts++; // showed up to this lockout at all
-        const counting = nights.length - nExcused; // nights that actually counted
-        present += counting > 0 ? nAttended / counting : 1; // fractional credit → % (loot council)
-        // HALF = came the FIRST night then vanished: present on the first attended night, but
-        // absent (not excused) a LATER night. A latecomer (missed the first night, came later
-        // to help) has no missed night AFTER their first appearance → not a half.
+        // BAILED = came a night then skipped a LATER (non-excused) night of the same run — a
+        // commitment broken. That's the ONLY case that loses credit. A LATECOMER (joined a later
+        // night to fill a spot / help finish) has no missed night AFTER their first appearance →
+        // full credit, no penalty (showing up to help shouldn't score like a no-show).
         const firstIdx = ordered.findIndex(wasPresent);
         const missedLater = ordered.slice(firstIdx + 1).some((r) => !wasPresent(r) && !isExcused(r));
-        if (missedLater) halves++;
+        if (missedLater) {
+          halves++;
+          const counting = nights.length - nExcused; // nights that actually counted
+          present += counting > 0 ? nAttended / counting : 1; // fractional credit → % (loot council)
+        } else {
+          present += 1; // came and never bailed (incl. latecomers) → full credit for this run
+        }
       }
     });
 
@@ -400,24 +427,19 @@ function barColor(p) {
 function renderAttendance() {
   const raids = filteredRaids();
   const { rows, total } = computeAttendance(raids);
-  const sf = SIZE;
-  const sizeLbl = sf === "all" ? "all raids" : sf + "-man";
+  const sf = SIZE; // always "25" or "10" — the size filter has no "all" option
   document.getElementById("attHead").textContent =
-    "📊 Attendance (" + sizeLbl + ") — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
+    "📊 Attendance (" + sf + "-man) — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
 
   const lg = document.getElementById("legend");
   // key with context — the full rules live in the "How attendance works" panel above.
   const scope =
-    sf === "10"
-      ? "💀 <b>10-man</b> counts for Fangs"
-      : sf === "25"
-        ? "🔴 <b>25-man</b> counts for everyone"
-        : "🔴 25-man = everyone · 💀 10-man = Fangs";
+    sf === "10" ? "💀 <b>10-man</b> counts for Fangs" : "🔴 <b>25-man</b> counts for everyone";
   lg.innerHTML =
     scope +
-    ". <b>%</b> = share of the run you did (1 of 2 nights = 50%). " +
+    ". <b>%</b> = 100% if you showed up (latecomers included); you only lose % by bailing mid-run. " +
     '<span class="pill">ghost</span> = signed up but never showed; ' +
-    '<span class="pill half">2nd day</span> = came night 1, skipped a later night.';
+    '<span class="pill half">2nd day</span> = came night 1, skipped a later night (the only way % drops).';
 
   const q = (document.getElementById("search").value || "").toLowerCase().trim();
   let list = q ? rows.filter((r) => r.name.toLowerCase().includes(q)) : rows;
@@ -567,8 +589,8 @@ function lockoutWed(dateStr) {
   return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
 }
 function lockoutKey(r) {
-  const inst = window.RatsData && RatsData.raidKeyOf ? RatsData.raidKeyOf(r.desc || "") || "?" : "?";
-  return inst + "|" + raidSize(r) + "|" + lockoutWed(r.date);
+  // instKey keeps ToC-N and ToC-HM in separate lockout groups (they're separate obligations)
+  return instKey(r) + "|" + raidSize(r) + "|" + lockoutWed(r.date);
 }
 function raiderCount(r) {
   return (r.groups || []).reduce((n, g) => n + (g.members || []).length, 0);
@@ -581,13 +603,14 @@ function editHeadHtml(r) {
   return `<div class="head editing">
         <input class="tedit" id="te_title" value="${esc(r.title || r.date)}" placeholder="Title" onclick="event.stopPropagation()">
         <input class="tedit" id="te_desc" value="${esc(r.desc || "")}" placeholder="Note / description" onclick="event.stopPropagation()" style="flex:1 1 160px">
-        <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(r.date)}')">💾 Save</button>
+        <button class="ren" onclick="event.stopPropagation();saveTitle('${esc(raidRef(r))}')">💾 Save</button>
         <button class="pen" title="Cancel" onclick="event.stopPropagation();cancelTitle()">✕</button>
       </div>`;
 }
 // the roster + no-shows grid + actions for ONE run (shared by standalone & grouped runs)
 function runBodyHtml(r) {
   const groups = (r.groups || [])
+    .filter((g) => (g.members || []).length) // hide empty groups (e.g. 3/4/5 on a 10-man)
     .map((g) => {
       const mem = (g.members || [])
         .map((m) => {
@@ -620,17 +643,17 @@ function runBodyHtml(r) {
   return `<div class="body">
         <div class="ggrid">${groups}${nsBlock}</div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(r.date)}')" title="Open this raid in the Comp tool to fix names / move raiders, then Save to overwrite it">✏️ Edit in Comp</button>
-          <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(r.date)}')">⬇ Export JSON</button>
-          <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(r.date)}')">📣 Post to Discord</button>
-          <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(r.date)}')">🗑 Delete this raid</button>
+          <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(raidRef(r))}')" title="Open this raid in the Comp tool to fix names / move raiders, then Save to overwrite it">✏️ Edit in Comp</button>
+          <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(raidRef(r))}')">⬇ Export JSON</button>
+          <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(raidRef(r))}')">📣 Post to Discord</button>
+          <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(raidRef(r))}')">🗑 Delete this raid</button>
         </div>
       </div>`;
 }
 // standalone run (a lockout with a single run) — full header with size + raid + continuation badge
 function runCard(r, id) {
   const head =
-    editDate === r.date
+    editDate === raidRef(r)
       ? editHeadHtml(r)
       : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
             <span class="date">${esc(r.title || r.date)}</span>
@@ -640,26 +663,28 @@ function runCard(r, id) {
             ${contBadge(r)}
             ${metaHtml(r)}
             ${optSwitch(r)}
-            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(raidRef(r))}')">✏️</button>
           </div>`;
   return `<div class="raid" id="${id}">${head}${runBodyHtml(r)}</div>`;
 }
 // a run INSIDE a lockout group — size + raid live on the group header, so omit them here
 function subRunCard(r, id) {
   const head =
-    editDate === r.date
+    editDate === raidRef(r)
       ? editHeadHtml(r)
       : `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
             <span class="date">${esc(r.title || r.date)}</span>
             ${kindBadge(r)}
             ${metaHtml(r)}
             ${optSwitch(r)}
-            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(r.date)}')">✏️</button>
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(raidRef(r))}')">✏️</button>
           </div>`;
   return `<div class="raid subraid" id="${id}">${head}${runBodyHtml(r)}</div>`;
 }
-// a lockout with 2+ runs → one group card; expand to see each run; each run expands to its roster
-function groupCard(runs, gid) {
+// a lockout with 2+ runs → one group card; expand to see each run; each run expands to its roster.
+// `units` = array of units, each unit an array of raids (a unit of 2+ = a multi-instance day).
+function groupCard(units, gid) {
+  const runs = units.reduce((a, u) => a.concat(u), []); // flatten
   const ordered = runs.slice().sort((a, b) => (a.date < b.date ? -1 : 1)); // oldest -> newest inside
   const r0 = ordered[0],
     rN = ordered[ordered.length - 1];
@@ -680,6 +705,79 @@ function groupCard(runs, gid) {
       </div>`;
   return `<div class="raid grp" id="grp${gid}">${head}<div class="body">${subs}</div></div>`;
 }
+// per-raid action buttons (edit/export/post/delete) for ONE raid inside a multi-instance card
+function raidActionsHtml(r) {
+  return `<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="editbtn" onclick="event.stopPropagation();editInComp('${esc(raidRef(r))}')" title="Open this raid in the Comp tool">✏️ Edit in Comp</button>
+          <button class="exp" onclick="event.stopPropagation();exportRaid('${esc(raidRef(r))}')">⬇ Export JSON</button>
+          <button class="post" onclick="event.stopPropagation();postRaidToDiscord('${esc(raidRef(r))}')">📣 Post to Discord</button>
+          <button class="del" onclick="event.stopPropagation();deleteRaid('${esc(raidRef(r))}')">🗑 Delete this raid</button>
+        </div>`;
+}
+// MULTI-INSTANCE DAY: 2+ raids, same date + size + roster, different instances (ToC + Ony on one
+// comp). Shows ONE card with all the instance tags and the shared roster once; each instance keeps
+// its own optional toggle + action buttons (edit/delete), so they stay independent underneath.
+function multiInstCard(runs, id) {
+  const ordered = runs.slice().sort((a, b) => (a.date < b.date ? -1 : 1));
+  const r0 = ordered[0];
+  const badges = ordered
+    .map((r) => RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, "")))
+    .join(" ");
+  // shared roster (same comp) — render it once from the first raid
+  const rosterGrid = (r0.groups || [])
+    .filter((g) => (g.members || []).length) // hide empty groups (e.g. 3/4/5 on a 10-man)
+    .map((g) => {
+      const mem = (g.members || [])
+        .map((m) => {
+          const icon = m.specEmoteId || m.classEmoteId;
+          const img = icon
+            ? `<img class="ic" src="${CDN(icon)}" onerror="this.style.visibility='hidden'">`
+            : `<span class="ic"></span>`;
+          const col = CLASS_COLOR[realClass(m)] || "#ddd";
+          return `<div class="mrow">${img}<span style="color:${col}">${esc(m.name)}</span></div>`;
+        })
+        .join("");
+      return `<div><div class="ghead">${esc(g.name)}</div>${mem || '<div class="sub">—</div>'}</div>`;
+    })
+    .join("");
+  // per-instance strip: its tag, optional toggle + this instance's own actions
+  const perInst = ordered
+    .map((r) => {
+      return `<div class="miInst" style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            ${RatsData.raidBadge((r.desc || "").replace(/\s*[-–]?\s*continuation\s*$/i, ""))}
+            ${kindBadge(r)}
+            ${optSwitch(r)}
+            <button class="pen" title="Edit title & note" onclick="event.stopPropagation();editTitle('${esc(raidRef(r))}')">✏️</button>
+          </div>
+          ${raidActionsHtml(r)}
+        </div>`;
+    })
+    .join("");
+  const head = `<div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+        <span class="date">${esc(r0.title || r0.date)}</span>
+        <span class="szbadge">${raidSize(r0)}-man</span>
+        ${badges}
+        <span class="runs-chip" title="Same comp, ${ordered.length} instances back-to-back">🔗 ${ordered.length} instances</span>
+        ${metaHtml(r0)}
+      </div>`;
+  return `<div class="raid" id="${id}">${head}
+      <div class="body">
+        <div class="ggrid">${rosterGrid}</div>
+        ${perInst}
+      </div></div>`;
+}
+// sorted, normalized roster signature — two raids with the SAME people share this string
+function rosterSig(r) {
+  const names = [];
+  (r.groups || []).forEach((g) => (g.members || []).forEach((m) => names.push(normName(m.name))));
+  return names.filter(Boolean).sort().join(",");
+}
+// A "multi-instance day" = 2+ raids on the SAME date + size + roster, DIFFERENT instances
+// (e.g. ToC + Ony back-to-back with one comp). We show them as ONE card with all the instance tags.
+function multiInstKey(r) {
+  return r.date + "|" + raidSize(r) + "|" + rosterSig(r);
+}
 function renderLog() {
   const raids = filteredRaids();
   const el = document.getElementById("log");
@@ -687,21 +785,36 @@ function renderLog() {
     el.innerHTML = '<div class="empty">No raids in this range.</div>';
     return;
   }
-  // group by lockout, keeping the (newest-first) order of first appearance
+  // First pass: fuse same-day, same-size, same-roster raids (different instances) into one unit.
+  const mOrder = [],
+    mByKey = {};
+  raids.forEach((r) => {
+    const k = multiInstKey(r);
+    if (!mByKey[k]) {
+      mByKey[k] = [];
+      mOrder.push(k);
+    }
+    mByKey[k].push(r);
+  });
+
+  // Second pass: group the (possibly fused) units by weekly lockout, as before.
   const order = [],
     byKey = {};
-  raids.forEach((r) => {
-    const k = lockoutKey(r);
+  mOrder.forEach((mk) => {
+    const unit = mByKey[mk]; // array of raids that are one visual card
+    const k = lockoutKey(unit[0]);
     if (!byKey[k]) {
       byKey[k] = [];
       order.push(k);
     }
-    byKey[k].push(r);
+    byKey[k].push(unit);
   });
   el.innerHTML = order
     .map((k, gi) => {
-      const runs = byKey[k];
-      return runs.length > 1 ? groupCard(runs, gi) : runCard(runs[0], "raid" + gi);
+      const units = byKey[k]; // array of units (each unit = array of raids)
+      if (units.length > 1) return groupCard(units, gi); // several lockout runs → chain card
+      const unit = units[0];
+      return unit.length > 1 ? multiInstCard(unit, "raid" + gi) : runCard(unit[0], "raid" + gi);
     })
     .join("");
 }
@@ -749,8 +862,8 @@ function compJSON(r) {
 }
 
 // open the Comp tool with this saved raid loaded for editing — Save there overwrites it (same date)
-function editInComp(date) {
-  const r = (HIST.raids || []).find((x) => x.date === date);
+function editInComp(ref) {
+  const r = findRaid(ref);
   if (!r) return;
   const d = r.desc || "";
   const raid = /icc|icecrown/i.test(d)
@@ -771,6 +884,7 @@ function editInComp(date) {
     localStorage.setItem(
       "ratsCompEdit",
       JSON.stringify({
+        id: r.id || null, // so Save in Comp updates THIS raid, not another same-day one
         json: JSON.stringify(compJSON(r)),
         date: r.date,
         size: String(raidSize(r)),
@@ -787,8 +901,8 @@ function editInComp(date) {
 }
 
 // rebuild comp-tool-importable JSON (slots format) from a saved raid and download it
-function exportRaid(date) {
-  const r = (HIST.raids || []).find((x) => x.date === date);
+function exportRaid(ref) {
+  const r = findRaid(ref);
   if (!r) return;
   const out = compJSON(r);
   const a = document.createElement("a");
@@ -799,13 +913,13 @@ function exportRaid(date) {
 }
 
 // post a saved raid straight to Discord (same embed as the comp tool, using the webhook from Admin)
-function postRaidToDiscord(date) {
+function postRaidToDiscord(ref) {
   const url = (localStorage.getItem("ratsWebhook") || "").trim();
   if (!/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/\S+/.test(url)) {
     msg("❌ No Discord webhook set — add it in the Admin console (🛠 Admin → Discord webhook).", "#ff6b6b");
     return;
   }
-  const r = (HIST.raids || []).find((x) => x.date === date);
+  const r = findRaid(ref);
   if (!r) return;
   const healSpecs = /Holy|Discipline|Restoration/i,
     tankSpecs = /Protection|Guardian|_Tank/i;
@@ -869,9 +983,9 @@ function postRaidToDiscord(date) {
 }
 
 // ---- inline edit of a saved raid's title + note (prompt() is unreliable in the desktop webview) ----
-let editDate = null;
-function editTitle(date) {
-  editDate = date;
+let editDate = null; // holds a raid REF (id, or date for legacy) while its title/note is being edited
+function editTitle(ref) {
+  editDate = ref;
   renderLog();
   const el = document.getElementById("te_title");
   if (el) {
@@ -883,8 +997,8 @@ function cancelTitle() {
   editDate = null;
   renderLog();
 }
-async function saveTitle(date) {
-  const r = (HIST.raids || []).find((x) => x.date === date);
+async function saveTitle(ref) {
+  const r = findRaid(ref);
   if (!r) return;
   const title = (document.getElementById("te_title").value || "").trim();
   const desc = (document.getElementById("te_desc").value || "").trim();
@@ -907,14 +1021,14 @@ async function saveTitle(date) {
   }
 }
 
-async function deleteRaid(date) {
-  const r = (HIST.raids || []).find((x) => x.date === date);
+async function deleteRaid(ref) {
+  const r = findRaid(ref);
   if (!r) return;
   const fb = window.RatsData && RatsData.fbOn();
   if (
     !confirm(
       'Delete the raid "' +
-        (r.title || date) +
+        (r.title || r.date) +
         '" from history?' +
         (fb ? " This deletes it for everyone." : " You'll download an updated history.json to commit.")
     )
@@ -929,7 +1043,8 @@ async function deleteRaid(date) {
     msg("❌ Locked — open the tools from the index and enter the guild key first.", "#ff6b6b");
     return;
   }
-  HIST.raids = HIST.raids.filter((x) => x.date !== date);
+  // delete THIS raid only — match by id so a same-day sibling (Ony vs ToD) survives
+  HIST.raids = HIST.raids.filter((x) => x !== r);
   msg("⏳ Deleting…", "#8a8d93");
   try {
     const res = await RatsData.saveHistory(HIST, pass);
@@ -957,12 +1072,12 @@ function kindBadge(r) {
 }
 function optSwitch(r) {
   return `<label class="optsw" onclick="event.stopPropagation()" title="Optional = log only (alt / casual run — doesn't count for attendance)">
-        <input type="checkbox" ${isLogOnly(r) ? "checked" : ""} onchange="setOptional('${esc(r.date)}',this.checked)">
+        <input type="checkbox" ${isLogOnly(r) ? "checked" : ""} onchange="setOptional('${esc(raidRef(r))}',this.checked)">
         <span class="otrack"><span class="oknob"></span></span><span class="olbl">Optional</span></label>`;
 }
 // toggle a raid to optional/log-only — saves immediately, no edit mode
-async function setOptional(date, on) {
-  const r = (HIST.raids || []).find((x) => x.date === date);
+async function setOptional(ref, on) {
+  const r = findRaid(ref);
   if (!r) return;
   r.optional = !!on;
   if (window.RatsData) RatsData.cacheHistory(HIST);
