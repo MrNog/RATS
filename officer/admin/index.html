@@ -47,6 +47,21 @@
       </div>
 
       <div class="card">
+        <h2>&#128273; WoW-Logs API key</h2>
+        <p class="sub">The <code>wl_live_&#8230;</code> key the Rankings page uses to pull guild logs. Stored only in
+          your browser &#8212; <strong style="color:#fff">never committed</strong>. Get one at Account &#8594; Public
+          API Keys on wow-logs.co.in.</p>
+        <div class="frow">
+          <input type="password" id="logsApiKey" placeholder="wl_live_&#8230; (or wl_test_&#8230;)" autocomplete="off">
+          <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('logsApiKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
+          <button type="button" class="dark" onclick="testLogsApiKey()">Test</button>
+          <button class="btn" onclick="saveLogsApiKey()">&#128190; Save key</button>
+        </div>
+        <p class="sub" id="logsApiHint">Free tier: 30 req/min, 15k/month. The Rankings &#128260; Fetch reads it from
+          here.</p>
+      </div>
+
+      <div class="card">
         <h2>&#128227; Discord webhooks</h2>
         <p class="sub">Names are <strong style="color:#fff">fixed</strong> &#8212; tools find the right hook by name.
           Only paste/edit the URL. Leave blank to disable. Stored only in your browser &#8212; never committed.</p>
@@ -72,6 +87,7 @@
           touch committed <code>gate.json</code>/<code>admin.json</code> or live Firebase data.</p>
         <div class="frow">
           <button type="button" class="del" onclick="forgetGuildKey()">&#128273; Forget guild key</button>
+          <button type="button" class="del" onclick="forgetLogsApiKey()">&#128273; Forget API key</button>
           <button type="button" class="del" onclick="clearAllHooks()">&#128227; Clear all webhooks</button>
           <button type="button" class="del" onclick="adminLogout()">&#128274; Log out of admin</button>
         </div>

@@ -598,6 +598,49 @@ window.RatsData = (function () {
     download("roster.json", await encrypt(obj, pass));
   }
 
+  // ---- WoW-Logs API key: shared, encrypted with the guild key (like roster/history) ----
+  // Stored ciphered in Firebase `config/logsApiKey` so any officer with the guild key can Fetch,
+  // but the plaintext key never lands in the public repo. Decrypted value is cached in localStorage
+  // (`ratsLogsApiKey`) so, once loaded, we never re-read Firebase for it — respecting the cost rules.
+  const API_KEY_LS = "ratsLogsApiKey";
+
+  // Save: cipher with the guild key, write once to Firebase, and cache the plaintext locally.
+  async function saveApiKey(k) {
+    k = (k || "").trim();
+    if (!k) throw new Error("Empty API key.");
+    const pass = getPass();
+    if (!pass) throw new Error("Enter the guild key first (unlock the tools).");
+    if (fbOn()) await fbPut("config/logsApiKey", await encrypt({ k: k }, pass));
+    try { localStorage.setItem(API_KEY_LS, k); } catch (e) {}
+    return true;
+  }
+
+  // Load: localStorage first (no network). Only touch Firebase if this browser has no cached copy.
+  // Returns the plaintext key or null. Never throws on a missing key — returns null.
+  async function loadApiKey() {
+    try {
+      const cached = localStorage.getItem(API_KEY_LS);
+      if (cached) return cached;
+    } catch (e) {}
+    if (!fbOn()) return null;
+    const blob = await fbGetSafe("config/logsApiKey");
+    if (!blob) return null;
+    const pass = getPass();
+    if (!pass) return null; // locked — caller must unlock first
+    try {
+      const obj = await decrypt(blob, pass);
+      const k = obj && obj.k;
+      if (k) { try { localStorage.setItem(API_KEY_LS, k); } catch (e) {} }
+      return k || null;
+    } catch (e) {
+      return null; // wrong pass / corrupt blob
+    }
+  }
+
+  function clearApiKey() {
+    try { localStorage.removeItem(API_KEY_LS); } catch (e) {}
+  }
+
   // ---- access gate: block the page until the guild key is entered ----
   let _unlocked = false;
 
@@ -846,6 +889,9 @@ window.RatsData = (function () {
     encrypt,
     decrypt,
     exportEncrypted,
+    saveApiKey,
+    loadApiKey,
+    clearApiKey,
     getPass,
     setPass,
     clearPass,

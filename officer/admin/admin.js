@@ -101,6 +101,7 @@ function renderStatus() {
   const el = document.getElementById("statusRow");
   if (!el) return;
   const hasKey = !!(localStorage.getItem("ratsGuildKey") || "");
+  const hasApi = !!(localStorage.getItem("ratsLogsApiKey") || "");
   const hooks = loadHooks().filter((h) => (h.url || "").trim()).length;
   const consoleLocked = !!window.__adminLocked;
   const pill = (on, onTxt, offTxt) =>
@@ -108,6 +109,7 @@ function renderStatus() {
   el.innerHTML =
     pill(consoleLocked, "&#128274; Console locked", "&#128275; Console open") +
     pill(hasKey, "&#128273; Guild key set", "&#128273; No guild key") +
+    pill(hasApi, "&#128273; API key set", "&#128273; No API key") +
     pill(hooks > 0, "&#128227; " + hooks + " webhook" + (hooks !== 1 ? "s" : ""), "&#128227; No webhooks");
 }
 
@@ -117,6 +119,59 @@ function showConsole() {
   if (k) document.getElementById("guildKey").value = k;
   renderHooks();
   renderStatus();
+  prefillApiKey();
+}
+
+// Prefill the API-key field from the shared (encrypted) store — localStorage first, Firebase once.
+async function prefillApiKey() {
+  const el = document.getElementById("logsApiKey");
+  if (!el) return;
+  try {
+    const k = await RatsData.loadApiKey();
+    if (k) el.value = k;
+  } catch (e) {}
+}
+
+async function saveLogsApiKey() {
+  const el = document.getElementById("logsApiKey");
+  const k = (el.value || "").trim();
+  if (!k) { msg("Paste the wl_live_ key first.", "#ff6b6b"); return; }
+  if (!/^wl_(live|test)_/.test(k)) { msg("That doesn't look like a wl_live_/wl_test_ key.", "#ff6b6b"); return; }
+  try {
+    await RatsData.saveApiKey(k);
+    msg("API key saved (encrypted, shared with all officers).");
+    renderStatus();
+  } catch (e) {
+    msg("Couldn't save: " + (e && e.message ? e.message : e), "#ff6b6b");
+  }
+}
+
+async function testLogsApiKey() {
+  const k = (document.getElementById("logsApiKey").value || "").trim();
+  if (!k) { msg("Paste a key to test.", "#ff6b6b"); return; }
+  msg("Testing key against the API...", "#8a8d93");
+  try {
+    const r = await fetch("https://api.wow-logs.co.in/api/v1/health", {
+      headers: { Authorization: "Bearer " + k }, cache: "no-store",
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.ok) {
+      const l = j.data.limits || {};
+      msg("Key OK — tier " + j.data.tier + " (" + l.rpmLimit + "/min, " + l.monthlyLimit + "/month).");
+    } else {
+      msg("Rejected: " + ((j && j.error && j.error.message) || ("HTTP " + r.status)) + ".", "#ff6b6b");
+    }
+  } catch (e) {
+    msg("Blocked (CORS / file://). Works on the hosted https site.", "#ff6b6b");
+  }
+}
+
+function forgetLogsApiKey() {
+  if (!confirm("Forget the API key cached in THIS browser? The shared encrypted copy in Firebase stays.")) return;
+  RatsData.clearApiKey();
+  document.getElementById("logsApiKey").value = "";
+  renderStatus();
+  msg("API key cleared from this browser (Firebase copy untouched).");
 }
 
 // --- reset controls (this browser only; never touches committed json or Firebase) ---

@@ -375,6 +375,21 @@
   padding: 2px 7px;
   flex: 0 0 auto;
 }
+/* BoE = Bind on Equip: tradeable / sellable. Small gold pill after the item name. */
+.boe-tag {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1px 5px;
+  margin-left: 6px;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  opacity: 0.85;
+}
 .assignbtn {
   height: var(--ctl-h);
   padding: 0 10px;

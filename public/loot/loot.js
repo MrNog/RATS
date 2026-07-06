@@ -172,9 +172,10 @@
   // Primordial Saronite), and patterns/recipes. NOTE: ToC Trophies DO count (they're set-token
   // gear upgrades, so winning one spends priority). Superset of SKIP_RE for the craft mats.
   var PRIORITY_SKIP_RE =
-    /fragment.*val'?anyr|val'?anyr.*fragment|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
-  // Fragments of the legendary — always kept; boss resolved by "last real boss killed" (time).
-  var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment/i;
+    /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
+  // Fragments of a legendary — always kept; boss resolved by "last real boss killed" (time).
+  // Covers Val'anyr fragments (Ulduar, guild pool) and Shard of Shadowmourne (ICC, questline).
+  var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne/i;
   // the 14 real Ulduar bosses that anchor the timeline (Assembly = the Iron Council)
   var REAL_BOSSES = {
     "Flame Leviathan": 1, "Ignis the Furnace Master": 1, Razorscale: 1, "XT-002 Deconstructor": 1,
@@ -363,10 +364,15 @@
   function qualityColor(q) {
     return QUALITY_COLOR[q] || QUALITY_COLOR[4]; // default epic for raid loot without a quality
   }
+  // BoE items are tradeable/sellable — flag them so it's clear which drops could
+  // have been sold or passed around. Bind info comes from the addon (l.boe).
+  function boeTag(l) {
+    return l && l.boe ? '<span class="boe-tag" title="Bind on Equip (tradeable / sellable)">BoE</span>' : "";
+  }
   function itemLink(l) {
     var nm = l.name || "Item #" + l.itemId;
     var col = qualityColor(l.quality);
-    return '<span class="iname" style="color:' + col + '">' + esc(nm) + "</span>";
+    return '<span class="iname" style="color:' + col + '">' + esc(nm) + "</span>" + boeTag(l);
   }
   function winnerHtml(l, idx) {
     // only officers (guild key present) get the pen to edit — never public visitors
@@ -597,7 +603,8 @@
               ? '<div class="lootitem frag-row">' +
                   '<img class="iic" src="' + esc(iconUrl((first || {}).icon, "large")) +
                   '" alt="" onerror="this.src=\'' + iconUrl(ICON_FALLBACK, "large") + "'\">" +
-                  '<span class="iname">' + esc(label) + "</span>" +
+                  '<span class="iname" style="color:' + qualityColor((first || {}).quality) + '">' +
+                  esc(label) + "</span>" +
                   '<span class="frag-x">×' + n + "</span></div>"
               : "";
           };
