@@ -641,6 +641,28 @@ window.RatsData = (function () {
     try { localStorage.removeItem(API_KEY_LS); } catch (e) {}
   }
 
+  // ---- Rankings snapshot (plain, world-readable — officer's Fetch writes it, public page reads it) ----
+  // One computed blob at `rankings`; visitors read it once/visit (page caches with a TTL). Never
+  // encrypted (it's public info) and never read on toggle/filter — that's the page's job.
+  async function saveRankings(snapshot) {
+    if (!fbOn()) throw new Error("Firebase off.");
+    const t = Date.now();
+    await fbPut("rankings", { t: t, data: snapshot });
+    return t; // caller caches under this same t so the version probe matches
+  }
+  async function loadRankings() {
+    if (!fbOn()) return null;
+    const o = await fbGetSafe("rankings");
+    return o || null; // { t, data } or null
+  }
+  // Cheap version probe: read only the `t` field (a few bytes) to decide if the cached snapshot is
+  // stale, without downloading the whole blob. Returns the number, or null.
+  async function loadRankingsVersion() {
+    if (!fbOn()) return null;
+    const t = await fbGetSafe("rankings/t");
+    return typeof t === "number" ? t : null;
+  }
+
   // ---- access gate: block the page until the guild key is entered ----
   let _unlocked = false;
 
@@ -892,6 +914,9 @@ window.RatsData = (function () {
     saveApiKey,
     loadApiKey,
     clearApiKey,
+    saveRankings,
+    loadRankings,
+    loadRankingsVersion,
     getPass,
     setPass,
     clearPass,

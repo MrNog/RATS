@@ -7,9 +7,22 @@
   margin: 0 0 10px;
 }
 
+/* sticky filter+tab bar — stays at the top so you can switch raid/size/period/tab while scrolled */
+.sticky-controls {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  padding-top: 10px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.6);
+}
+
 /* top controls row + tab strip */
 .ctrls {
-  margin-top: 12px;
+  margin-top: 0;
   flex-wrap: nowrap;
   overflow-x: auto;
 }
@@ -45,7 +58,7 @@
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  margin: 18px 0 14px;
+  margin: 12px 0 0;
   border-bottom: 1px solid var(--border);
 }
 .tab {
@@ -69,8 +82,57 @@
   color: var(--white);
   border-bottom-color: var(--accent);
 }
+.panel {
+  margin-top: 14px;
+}
 .panel[hidden] {
   display: none;
+}
+
+/* board header: title on the left + DPS/HPS toggle, so the toggle isn't floating on its own line */
+.board-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 6px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.board-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+/* metric toggle — discreet, pushed to the right; plain text tabs, active = gold underline */
+.metricbar {
+  display: inline-flex;
+  gap: 14px;
+  margin-left: auto; /* push to the far right of the board header */
+}
+.mbtn {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim-2);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 1px 4px;
+  cursor: pointer;
+  height: auto;
+  border-radius: 0;
+}
+.mbtn:hover {
+  color: var(--white);
+  filter: none;
+}
+.mbtn.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.card.board {
+  padding: 8px 10px;
 }
 
 .banner {
@@ -83,18 +145,17 @@
   margin: 12px 0 0;
 }
 
-/* MVP / parse of the week */
+/* MVP / parse of the week — calm gold frame, no flashing */
 .mvp {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
   background: linear-gradient(120deg, #241f12, var(--surface-2));
-  border: 1px solid var(--accent);
+  border: 1px solid rgba(192, 148, 58, 0.6);
   border-radius: 14px;
   padding: 16px 20px;
   margin: 16px 0 6px;
-  box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.15);
 }
 .mvp .crown {
   font-size: 34px;
@@ -133,6 +194,9 @@
   gap: 16px;
   margin-top: 22px;
 }
+.cols > .card {
+  min-width: 0; /* let each 50% column shrink instead of overflowing to the right */
+}
 .lb {
   list-style: none;
   margin: 0;
@@ -142,17 +206,62 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 0;
+  padding: 7px 12px; /* same horizontal padding as podium rows so rank numbers line up */
   border-bottom: 1px solid #232529;
+}
+/* podium rows sit in a medal-tinted framed box */
+.lb li.r1,
+.lb li.r2,
+.lb li.r3 {
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+.lb li.r1 {
+  padding: 13px 12px;
+  border-color: rgba(246, 196, 82, 0.55);
+  background: linear-gradient(90deg, rgba(246, 196, 82, 0.09), transparent 70%);
+}
+.lb li.r2 {
+  padding: 11px 12px;
+  border-color: rgba(207, 214, 222, 0.4);
+  background: linear-gradient(90deg, rgba(207, 214, 222, 0.06), transparent 70%);
+}
+.lb li.r3 {
+  border-color: rgba(214, 138, 82, 0.42);
+  background: linear-gradient(90deg, rgba(214, 138, 82, 0.06), transparent 70%);
 }
 .lb li:last-child {
   border-bottom: 0;
 }
 #dps,
 #hps {
-  max-height: 300px;
-  overflow: auto;
+  max-height: 440px;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+/* gold, thin scrollbar with no native arrows (webkit) */
+#dps::-webkit-scrollbar,
+#hps::-webkit-scrollbar {
+  width: 6px;
+}
+#dps::-webkit-scrollbar-track,
+#hps::-webkit-scrollbar-track {
+  background: transparent;
+}
+#dps::-webkit-scrollbar-thumb,
+#hps::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+#dps::-webkit-scrollbar-button,
+#hps::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
 }
 .rank {
   width: 22px;
@@ -161,27 +270,33 @@
   color: #6e7178;
   flex: 0 0 auto;
 }
-.rank.g {
-  color: var(--accent-hi);
-}
-.rank.s {
-  color: #cfd2d6;
-}
-.rank.b {
-  color: #d39b6a;
-}
 .cic {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 4px;
   flex: 0 0 auto;
 }
+.lb li.r1 .cic {
+  width: 32px;
+  height: 32px;
+}
+.lb li.r2 .cic {
+  width: 28px;
+  height: 28px;
+}
+.lb li.r3 .cic {
+  width: 26px;
+  height: 26px;
+}
 .mv {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 800;
-  width: 24px;
+  width: 38px; /* fixed column so ▲/▼/NEW all line up vertically */
   text-align: center;
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .mv.up {
   color: var(--ok);
@@ -190,48 +305,155 @@
   color: #ff9b9b;
 }
 .mv.same {
-  color: #5e6166;
+  color: #8a8d93;
+  font-size: 14px;
+}
+.crownmv {
+  color: var(--accent-hi);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  position: relative;
+  top: -2px;
 }
 .mv.new {
-  color: var(--accent-hi);
+  color: #1b1d21;
+  background: var(--accent);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+/* WIDE board: name gets real room (no truncation), bar fills, big legible value column */
+.pnamecol {
+  flex: 0 0 150px;
+  width: 150px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.pnamecol > a {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .streak {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--accent-hi);
   font-weight: 800;
   margin-left: 6px;
   white-space: nowrap;
-  vertical-align: 2px;
+  flex: 0 0 auto;
 }
 .pname {
   font-weight: 700;
-  flex: 1 1 auto;
-  min-width: 0;
+  font-size: 15px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.pspec {
-  color: #6e7178;
+/* value column: fixed width, right-aligned, big numbers */
+.pval {
+  flex: 0 0 168px;
+  width: 168px;
+  text-align: right;
+  line-height: 1.15;
+  padding-left: 16px;
+}
+.pval .prate {
+  display: block;
+  font-weight: 800;
+  font-size: 22px; /* big and legible on any screen */
+  color: var(--accent); /* gold for DPS */
+  font-variant-numeric: tabular-nums;
+}
+.pval .prate .unit {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.6;
+  letter-spacing: 0.3px;
+}
+/* subtitle: keep all 3 facts but small + dim so they don't fight the DPS */
+.pval .psub {
+  display: block;
+  font-weight: 500;
   font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.pval .ptot {
+  color: var(--text-dim);
   font-weight: 600;
 }
-.pval {
-  font-weight: 800;
-  color: var(--white);
-  flex: 0 0 auto;
+.pval .psrv {
+  color: #9a7fe0; /* server percentile — muted purple, subtle */
+  font-weight: 600;
+}
+/* HEALING: the rate is green (it's healing, not damage) */
+.lb li.hps .prate {
+  color: #6bd18a;
+}
+
+/* ---- podium sizing: #1 biggest → rest readable (base rate is 22px) ---- */
+.lb li.r1 .prate {
+  font-size: 30px;
+}
+.lb li.r1 .pname {
+  font-size: 19px;
+}
+.lb li.r1 .rank {
+  font-size: 22px;
+}
+.lb li.r2 .prate {
+  font-size: 26px;
+}
+.lb li.r2 .pname {
+  font-size: 17px;
+}
+.lb li.r3 .prate {
+  font-size: 24px;
+}
+.lb li.r3 .pname {
+  font-size: 16px;
+}
+/* rows 4+ use the base sizes (22px rate, 15px name) — no shrink needed on a wide board */
+/* medal-tinted rank numbers */
+.rank.g {
+  color: #f6c452;
+  text-shadow: 0 0 8px rgba(246, 196, 82, 0.35);
+}
+.rank.s {
+  color: #cfd6de;
+}
+.rank.b {
+  color: #d68a52;
 }
 .pbar {
-  height: 4px;
+  height: 5px;
   border-radius: 3px;
   background: var(--border);
-  margin-top: 3px;
   overflow: hidden;
+  flex: 1 1 auto; /* fill the middle between name and value columns */
+  min-width: 60px;
+}
+/* podium bars only a hair taller */
+.lb li.r1 .pbar {
+  height: 7px;
+}
+.lb li.r2 .pbar {
+  height: 6px;
+}
+.lb li.r3 .pbar {
+  height: 6px;
 }
 .pbar > i {
   display: block;
   height: 100%;
   border-radius: 3px;
+  transition: width 0.3s ease-out; /* smooth slide when switching filters */
 }
 .shame li .pval {
   color: #ff9b9b;
@@ -241,6 +463,130 @@
   font-style: italic;
   font-size: 11px;
   margin-left: 6px;
+}
+/* section subtitle under a card heading (explains what the % compares) */
+.secsub {
+  margin: -4px 0 10px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+.secsub b {
+  color: var(--text);
+}
+/* Most improved / Needs work rows — arrow · spec icon · name+sub · % */
+.mvrow {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 8px;
+  border-bottom: 1px solid #232529;
+}
+.mvrow:last-child {
+  border-bottom: 0;
+}
+.mvrow .mv {
+  width: 22px;
+  font-size: 14px;
+}
+.mvrow .cic {
+  width: 30px;
+  height: 30px;
+}
+/* leaderboard-style row: ▲ · icon · name (fills) · rich value column · % chip */
+.mvname {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mvrow .pval {
+  flex: 0 0 auto;
+  width: auto;
+  padding-left: 10px;
+}
+.mvpct {
+  flex: 0 0 54px;
+  text-align: right;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.mvpct.up {
+  color: var(--ok);
+}
+.mvpct.down {
+  color: #ff9b9b;
+}
+.mvpct.dim {
+  color: var(--text-faint);
+  font-weight: 600;
+  font-size: 11px;
+}
+.mvempty {
+  border: 0;
+  color: #6e7178;
+  padding: 10px 4px;
+  font-size: 12px;
+}
+/* Records: medal + name + boss context */
+.recmedal {
+  width: 26px;
+  text-align: center;
+  font-size: 17px;
+  flex: 0 0 auto;
+}
+/* name · boss on one line, fills the space before the value */
+.recname {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recboss {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+/* podium flare on the top-3 records — medal-framed boxes like the leaderboard */
+.mvrow.rec.r1,
+.mvrow.rec.r2,
+.mvrow.rec.r3 {
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  margin-bottom: 6px;
+}
+.mvrow.rec.r1 {
+  border-color: rgba(246, 196, 82, 0.55);
+  background: linear-gradient(90deg, rgba(246, 196, 82, 0.1), transparent 70%);
+}
+.mvrow.rec.r1 .prate {
+  font-size: 26px;
+}
+.mvrow.rec.r1 .recmedal {
+  font-size: 22px;
+}
+.mvrow.rec.r2 {
+  border-color: rgba(207, 214, 222, 0.4);
+  background: linear-gradient(90deg, rgba(207, 214, 222, 0.07), transparent 70%);
+}
+.mvrow.rec.r2 .prate {
+  font-size: 23px;
+}
+.mvrow.rec.r3 {
+  border-color: rgba(214, 138, 82, 0.42);
+  background: linear-gradient(90deg, rgba(214, 138, 82, 0.07), transparent 70%);
+}
+.mvrow.rec.r3 .prate {
+  font-size: 21px;
+}
+.mv.flat {
+  color: #5e6166;
 }
 
 /* awards / fun stats grid */
@@ -460,71 +806,172 @@
 }
 
 /* logs list */
-.loglist {
+/* Logs tab — compact accordion grouped by WoW lockout (merges multi-log runs) */
+#logs {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
-a.logbadge {
+.lockgrp {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.lockhd {
   display: flex;
   align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 9px 16px;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 7px 12px;
   color: #cfd2d6;
-  font-weight: 500;
+  font: inherit;
 }
-a.logbadge:hover {
-  border-color: var(--accent);
+.lockhd:hover {
   background: var(--surface);
 }
-a.logbadge .lraid {
-  font-weight: 600;
-  color: var(--text);
-  min-width: 74px;
+.lcaret {
+  color: var(--accent);
+  font-size: 9px;
+  transition: transform 0.15s;
+  flex: 0 0 auto;
 }
-a.logbadge .lsize {
+.lockgrp.open .lcaret {
+  transform: rotate(90deg);
+}
+.lockhd .lraid {
+  font-weight: 700;
+  color: var(--text);
+  min-width: 58px;
+  font-size: 13px;
+}
+.lockhd .llock {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.lockhd .lmeta {
+  margin-left: auto;
+  color: var(--text-faint);
+  font-size: 11.5px;
+  flex: 0 0 auto;
+}
+.lmerge {
   font-size: 10.5px;
   font-weight: 800;
   color: var(--accent);
   border: 1px solid #5a4a1f;
   background: #2a2616;
   border-radius: var(--radius);
-  padding: 1px 0;
-  width: 32px;
-  text-align: center;
+  padding: 1px 7px;
   flex: 0 0 auto;
 }
-a.logbadge .ldate {
-  color: var(--text-dim);
-  font-size: 12.5px;
-  min-width: 96px;
-}
-a.logbadge .lfangs {
-  font-size: 11px;
+.lfangs {
+  font-size: 10.5px;
   font-weight: 800;
   color: #e0857f;
   border: 1px solid #5b3a3a;
   background: #2a1818;
   border-radius: var(--radius);
-  padding: 4px 10px;
+  padding: 1px 7px;
   flex: 0 0 auto;
 }
-a.logbadge .lid {
-  margin-left: auto;
-  color: var(--text-faint);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
+.lockbody {
+  display: none;
+  border-top: 1px solid var(--border);
+  padding: 2px 10px 4px;
 }
-a.logbadge .lgo {
+.lockgrp.open .lockbody {
+  display: block;
+}
+.logsum {
+  color: var(--accent);
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 6px 4px;
+  border-bottom: 1px dashed #5a4a1f;
+  margin-bottom: 2px;
+}
+a.logrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+  color: #cfd2d6;
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+a.logrow:last-child {
+  border-bottom: 0;
+}
+a.logrow:hover {
+  color: var(--text);
+}
+a.logrow .lid {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  min-width: 56px;
+}
+a.logrow .ldate {
+  color: var(--text-dim);
+  font-size: 12px;
+  min-width: 84px;
+}
+a.logrow .lkw {
+  color: var(--text-dim);
+  font-size: 11.5px;
+}
+a.logrow .lkw b {
+  color: var(--ok);
+}
+a.logrow .lbosses {
+  color: var(--text-dim-2);
+  font-size: 11.5px;
+  flex: 1 1 100%;
+  padding-left: 56px;
+  line-height: 1.35;
+}
+a.logrow .lgo {
   color: var(--accent);
   font-weight: 800;
+  margin-left: auto;
   flex: 0 0 auto;
-  position: relative;
-  top: -2px;
+}
+.logrowwrap {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.logrowwrap:last-child {
+  border-bottom: 0;
+}
+.logrowwrap a.logrow {
+  flex: 1 1 auto;
+  border-bottom: 0;
+}
+.logdel {
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: var(--radius);
+  padding: 2px 7px;
+  margin-left: 4px;
+  opacity: 0.5;
+}
+.logdel:hover {
+  opacity: 1;
+  color: #e0857f;
+  border-color: #5b3a3a;
+  background: #2a1818;
 }
 
 @media (max-width: 680px) {

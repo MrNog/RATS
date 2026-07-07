@@ -1,5 +1,13 @@
 # RATS logs API — contract
 
+> ⚠️ **SUPERSEDED (2026-07-06).** This is the shape we *requested*. The dev shipped Public API V1 with
+> **different** requests/responses ("follow the documentation") and confirmed `activity`, `biggestHit`
+> etc. are **not** available. Build against **[`WOWLOGS_API.md`](WOWLOGS_API.md)** — the real, delivered
+> API. Kept here only as the historical request. Do not code to the shape below.
+
+---
+
+
 The fight-level + rankings feed the `public/rankings/` page consumes (wow-logs dev). Plain JSON, raw numbers,
 times in **seconds**, **CORS** enabled for `https://mrnog.github.io`. The full page spec lives in
 `.claude/rules/rankings.md`; this doc is just the API shape.
