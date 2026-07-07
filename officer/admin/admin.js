@@ -120,6 +120,7 @@ function showConsole() {
   renderHooks();
   renderStatus();
   prefillApiKey();
+  refreshApiUsage();
 }
 
 // Prefill the API-key field from the shared (encrypted) store — localStorage first, Firebase once.
@@ -130,6 +131,55 @@ async function prefillApiKey() {
     const k = await RatsData.loadApiKey();
     if (k) el.value = k;
   } catch (e) {}
+}
+
+// Paint the usage box. `note` overrides the default line (used for the live per-minute figure).
+function showApiUsage(used, cap, month, note) {
+  cap = cap || 15000;
+  const pct = used != null ? Math.min(100, Math.round((used / cap) * 1000) / 10) : 0;
+  document.getElementById("auCount").textContent = used != null ? used.toLocaleString() : "—";
+  document.getElementById("auCap").textContent = "/ " + cap.toLocaleString();
+  const bar = document.getElementById("auBar");
+  bar.style.width = pct + "%";
+  bar.style.background = pct >= 90 ? "#e05656" : pct >= 70 ? "#d6a12a" : "var(--accent)";
+  document.getElementById("auNote").textContent =
+    note || ("Our count" + (month ? " (" + month + ")" : "") + " — every Rankings Fetch adds to it. Resets monthly.");
+}
+
+// Auto-load on open: read ONLY the Firebase counter (no API call, no cost).
+async function refreshApiUsage() {
+  if (!document.getElementById("apiUsage") || !RatsData.loadApiUsage) return;
+  try {
+    const u = await RatsData.loadApiUsage();
+    showApiUsage(u.count || 0, 15000, u.month);
+  } catch (e) {
+    document.getElementById("auNote").textContent = "";
+  }
+}
+
+// Live check (button): our monthly count + the API's per-minute header. Costs 1 call (and counts it).
+async function checkApiUsage() {
+  const note = document.getElementById("auNote");
+  if (!RatsData.checkApiUsage) return;
+  note.textContent = "Checking…";
+  let u;
+  try {
+    u = await RatsData.checkApiUsage();
+  } catch (e) {
+    refreshApiUsage();
+    msg("Couldn't check usage: " + (e && e.message ? e.message : e), "#ff6b6b");
+    return;
+  }
+  const extra =
+    u.minuteRemaining != null && u.minuteLimit != null
+      ? " · " + u.minuteRemaining + "/" + u.minuteLimit + " this minute (live)"
+      : "";
+  showApiUsage(
+    u.monthlyUsed,
+    u.monthlyLimit,
+    u.month,
+    "Our count (" + u.month + ")" + extra + " — server's monthly header is unreliable."
+  );
 }
 
 async function saveLogsApiKey() {

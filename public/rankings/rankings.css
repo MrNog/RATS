@@ -174,6 +174,10 @@
   gap: 14px;
   margin-left: auto; /* push to the far right of the board header */
 }
+/* [hidden] must win over display:inline-flex (e.g. #boardDiff is hidden on non-split raids like Ulduar) */
+.metricbar[hidden] {
+  display: none;
+}
 .mbtn {
   background: transparent;
   border: 0;
@@ -194,71 +198,148 @@
   color: var(--text);
   border-bottom-color: var(--accent);
 }
+/* Guild-progress card: same framed board-head as the Leaderboards. The verdict + stat grid live inside
+   it (in .proghead-body, below a divider); the per-boss table is a separate card below. */
+.proghead {
+  margin-bottom: 14px;
+}
+.proghead .board-head {
+  margin-bottom: 0; /* the header's own border-bottom is the divider */
+}
+.proghead-body {
+  padding: 14px 6px 6px;
+}
+/* inside the card the verdict banner is a plain inset panel, not a floating card */
+.proghead-body .verdict {
+  margin: 0 0 14px;
+}
+.proghead-body .gsum {
+  margin: 0;
+}
+.proghead-body .compnote {
+  margin: 12px 0 0;
+}
+/* Leaderboard board-head NM/HC toggle — sits right next to the DPS/HPS toggle (both grouped far right),
+   separated by a thin divider. Only the DPS/HPS bar keeps margin-left:auto to push the whole group right. */
+.board-head .boarddiff {
+  margin-left: auto;
+  padding-right: 14px;
+  border-right: 1px solid var(--border-2);
+}
+/* when the diff bar is VISIBLE it pushes the group right, so the DPS/HPS bar drops its own auto-margin.
+   (:not([hidden]) — on Ulduar the diff bar is hidden, so DPS/HPS keeps margin-left:auto and stays right) */
+.board-head .boarddiff:not([hidden]) + .metricbar {
+  margin-left: 0;
+}
 .card.board {
   padding: 8px 10px;
 }
 
-.banner {
-  background: #2a2616;
-  border: 1px solid #5a4a1f;
-  color: #e0c878;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 12.5px;
-  margin: 12px 0 0;
-}
-
-/* MVP / parse of the week — calm gold frame, no flashing */
-.mvp {
+/* empty state — centred rats joke with a comfortable min-height so the page never collapses */
+.emptyrat {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: linear-gradient(120deg, #241f12, var(--surface-2));
-  border: 1px solid rgba(192, 148, 58, 0.6);
-  border-radius: 14px;
-  padding: 16px 20px;
-  margin: 16px 0 6px;
+  justify-content: center;
+  min-height: 260px;
+  text-align: center;
 }
-.mvp .crown {
-  font-size: 34px;
-  flex: 0 0 auto;
+/* the [hidden] attribute must win over display:flex, or the 260px min-height leaves a blank gap */
+.emptyrat[hidden] {
+  display: none;
 }
-.mvp .who {
-  font-size: 22px;
+.emptyrat-in {
+  max-width: 420px;
+  padding: 20px;
+}
+.emptyrat-emoji {
+  font-size: 46px;
+  line-height: 1;
+  margin-bottom: 12px;
+  filter: grayscale(0.2);
+  opacity: 0.9;
+}
+.emptyrat-title {
+  font-size: 15px;
   font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
 }
-.mvp .meta {
-  color: var(--text-dim);
+.emptyrat-joke {
   font-size: 13px;
-  margin-top: 2px;
-}
-.mvp .val {
-  margin-left: auto;
-  text-align: right;
-  flex: 0 0 auto;
-}
-.mvp .val b {
-  font-size: 26px;
-  color: var(--white);
-}
-.mvp .val span {
-  display: block;
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  line-height: 1.5;
 }
 
-/* leaderboard cards grid */
-.cols {
+/* ---- Fun & Shame: compact award cards ---- */
+.funcards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  align-items: stretch; /* every card in a row is the same height */
 }
-.cols > .card {
-  min-width: 0; /* let each 50% column shrink instead of overflowing to the right */
+.funcard {
+  --fc-hue: var(--accent);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 13px 14px 13px 16px;
+  overflow: hidden;
+}
+/* subtle: just a thin coloured spine on the left edge — no glow, no wash */
+.funcard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--fc-hue);
+  opacity: 0.7;
+}
+.funcard.shame {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.fc-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.fc-emoji {
+  font-size: 19px;
+  line-height: 1;
+}
+.fc-title {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim);
+}
+.fc-name,
+.fc-sub {
+  position: relative;
+}
+.fc-name {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 3px;
+}
+.fc-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  min-height: 2.8em; /* reserve ~2 lines so 1-line and 2-line cards match height */
+}
+.fc-sub b {
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
 }
 .lb {
   list-style: none;
@@ -524,15 +605,6 @@
   border-radius: 3px;
   transition: width 0.3s ease-out; /* smooth slide when switching filters */
 }
-.shame li .pval {
-  color: #ff9b9b;
-}
-.tagline {
-  color: var(--text-dim-2);
-  font-style: italic;
-  font-size: 11px;
-  margin-left: 6px;
-}
 /* section subtitle under a card heading (explains what the % compares) */
 .secsub {
   margin: -4px 0 10px;
@@ -741,42 +813,6 @@
   color: #5e6166;
 }
 
-/* awards / fun stats grid */
-.awards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 12px;
-  margin-top: 10px;
-}
-.award {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 12px 14px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-.award .em {
-  font-size: 26px;
-  flex: 0 0 auto;
-}
-.award .at {
-  font-weight: 800;
-  color: var(--white);
-  font-size: 13px;
-}
-.award .an {
-  font-weight: 700;
-  font-size: 13px;
-}
-.award .ad {
-  color: var(--text-dim-2);
-  font-size: 11.5px;
-  font-style: italic;
-  margin-top: 1px;
-}
-
 /* ---- guild progress: per-boss table ---- */
 .progtbl {
   width: 100%;
@@ -826,39 +862,37 @@
   font-weight: 700;
   white-space: nowrap;
 }
-.progtbl tr.pend td {
-  opacity: 0.62;
-}
 .progtbl tr.nokill .bn {
   color: #c98b8b;
-}
-.mtag {
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  border-radius: var(--radius);
-  padding: 1px 5px;
-  margin-left: 6px;
-  vertical-align: 1px;
-}
-.mtag.dps {
-  background: var(--surface);
-  color: var(--text-dim);
-  border: 1px solid var(--border-2);
-}
-.mtag.hps {
-  background: #1e3326;
-  color: var(--ok);
-  border: 1px solid #3a5b42;
-}
-.pendtag {
-  color: var(--text-dim);
-  font-weight: 700;
 }
 .nokilltag {
   color: #ff9b9b;
   font-weight: 700;
+}
+.hctag {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--accent-hi);
+  background: linear-gradient(120deg, #2a2110, var(--surface));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.nmtag {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: 1px;
 }
 .leg {
   color: var(--text-faint);
@@ -870,6 +904,20 @@
 }
 .leg b {
   color: #cfd2d6;
+  font-weight: 700;
+}
+
+.progtbl .best {
+  color: var(--accent-hi);
+}
+.firstkill {
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
+.gs .of {
+  font-size: 14px;
+  color: #6e7178;
   font-weight: 700;
 }
 
@@ -1124,10 +1172,4 @@ a.logrow .lgo {
   color: #e0857f;
   border-color: #5b3a3a;
   background: #2a1818;
-}
-
-@media (max-width: 680px) {
-  .cols {
-    grid-template-columns: 1fr;
-  }
 }

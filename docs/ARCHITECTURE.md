@@ -1,8 +1,8 @@
 # RATS — technical reference (what we have & how it works)
 
 > Maintainer-only, gitignored. The single source of truth for the app's structure & features.
-> Conventions (colors, dates, voice, icons) live in `../CLAUDE.md`. The logs API request sent to the
-> wow-logs dev is in `RANKINGS_API_REQUEST.md`; hero-art style + per-rat sheets in `art/` (`STYLE.md` + `characters/`).
+> Conventions (colors, dates, voice, icons) live in `../CLAUDE.md`. The real wow-logs API contract is in
+> `WOWLOGS_API.md`; hero-art style + per-rat sheets in `art/` (`STYLE.md` + `characters/`).
 
 ---
 
@@ -148,7 +148,7 @@ Top controls: raid segs (from API `raids[]`) · 25/10-man · Week/Month/All. Per
 **Week** = this lockout vs last lockout; **Month** = per-boss best/avg + trend ("vs month avg"); **All** =
 guild-best kill ever + fastest full clear (no comparison).
 
-**Data flow (cost-safe):** the wow-logs dev builds a fight-level API (see `RANKINGS_API_REQUEST.md`). The
+**Data flow (cost-safe):** the wow-logs dev's fight-level Public API (real contract in `WOWLOGS_API.md`). The
 **officer's 🔄 Fetch data** button (gold-on-dark, visible only with the guild key) pulls the logs, computes, and
 writes ONE `rankings` snapshot to Firebase. Public visitors read that snapshot **once per visit** (localStorage
 TTL 30 min); all raid/size/period toggles filter client-side → ~0 reads. `SAMPLE` in the page is the data

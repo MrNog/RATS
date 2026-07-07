@@ -4,6 +4,19 @@
    — raid/size/period toggles never hit the network. Full spec in .claude/rules/rankings.md. */
 (function () {
   "use strict";
+
+  // Empty-state flavour — one fixed rat/cheese line shown whenever a filter has no logs yet.
+  var RAT_JOKE = "Squeak. That's the sound of an empty leaderboard. Bring us logs! 🐀";
+  function emptyRatHtml(title) {
+    return (
+      '<div class="emptyrat-in">' +
+      '<div class="emptyrat-emoji">🧀</div>' +
+      '<div class="emptyrat-title">' + esc(title) + "</div>" +
+      '<div class="emptyrat-joke">' + esc(RAT_JOKE) + "</div>" +
+      "</div>"
+    );
+  }
+
   var U = window.RatsUtils;
   var CLASS_COLOR = U.CLASS_COLOR,
     esc = U.esc,
@@ -44,6 +57,11 @@
     var d = new Date(s);
     return isNaN(d) ? String(s) : d.getDate() + " " + MON[d.getMonth()] + " " + d.getFullYear();
   };
+
+  // Raids where Normal and Heroic are SEPARATE lockouts/runs (whole-instance difficulty), so Guild
+  // Progress splits them via a Normal|Heroic toggle. Ulduar is NOT here: there hard mode is per-boss
+  // within one lockout (towers/elders/firefighter), so it stays mixed with ✦HC/NM badges per boss.
+  var SPLIT_DIFF_RAIDS = { toc: true, icc: true };
 
   // Canonical boss order per raid (from /meta/raids/{raid}/bosses, fetched once — static, never changes).
   // Used to sort killed bosses by the real raid path instead of kill order. Add ToC/ICC when needed.
@@ -255,180 +273,732 @@
       .join("");
   }
 
-  function renderProgress(d) {
+  // Group a raid's scoped logs into WoW lockouts (Wed→Wed), newest first, each with merged bfights.
+  function lockoutsOf(logs) {
+    var groups = {};
+    logs.forEach(function (l) {
+      var k = lockoutStart(l.date);
+      var g = groups[k] || (groups[k] = { lock: k, date: l.date, bfights: [], wipes: 0, killed: {} });
+      if (new Date(l.date) < new Date(g.date)) g.date = l.date; // earliest fight date of the lockout
+      if (l.bfights && l.bfights.length) {
+        l.bfights.forEach(function (f) {
+          g.bfights.push(f);
+          if (f.kill) g.killed[f.bn] = true;
+          else g.wipes++;
+        });
+      } else {
+        // legacy log (no per-boss fights): fold in the killed list + the per-log wipe count
+        (l.bosses || []).forEach(function (bn) {
+          g.killed[bn] = true;
+        });
+        g.wipes += l.wipes || 0;
+      }
+    });
+    return Object.keys(groups)
+      .sort()
+      .reverse()
+      .map(function (k) {
+        return groups[k];
+      });
+  }
+
+  // Per-lockout aggregate from its merged bfights: guild DPS, boss time (Σ kill durations),
+  // full-clear span (first pull → last kill end), wipes, bosses cleared, hard-mode count.
+  function lockoutStats(g) {
+    var bt = 0,
+      firstT = null,
+      lastEnd = null,
+      hm = 0,
+      dmg = null; // Σ boss damage — filled from rows[] below (bfights carry no per-player damage)
+    (g.bfights || []).forEach(function (f) {
+      var st = f.t ? new Date(f.t).getTime() : null;
+      if (st != null) {
+        if (firstT == null || st < firstT) firstT = st;
+        var en = st + (f.dur || 0) * 1000;
+        if (lastEnd == null || en > lastEnd) lastEnd = en;
+      }
+      if (f.kill) {
+        if (f.dur != null) bt += f.dur;
+        if (f.hm) hm++;
+      }
+    });
+    // guild damage over the lockout's kills (rows[] = per player per kill)
+    (g.logs || []).forEach(function (l) {
+      (l.rows || []).forEach(function (r) {
+        if (dmg == null) dmg = 0;
+        dmg += r.dmg || 0;
+      });
+    });
+    var span = firstT != null && lastEnd != null ? Math.round((lastEnd - firstT) / 1000) : null;
+    return {
+      date: g.date,
+      bosses: Object.keys(g.killed).length,
+      wipes: g.wipes,
+      bossTime: bt || null,
+      span: span,
+      hm: hm,
+      gdps: dmg != null && bt ? Math.round(dmg / bt) : null,
+    };
+  }
+
+  // Guild progress — the original grid + verdict + per-boss table, fed by REAL data now:
+  //  · verdict banner + stat grid (Guild DPS, Boss time, Wipes, Bosses, Hard modes) with ▲/▼ vs baseline
+  //  · per-boss table: best kill (record) · vs baseline · wipes · HC/NM badge · ⭐ new kill
+  // CUR is always this week's raid; Week/Month/All picks the BASELINE it's compared to (last / month avg /
+  // all-time avg) for BOTH the grid and the per-boss "vs" column.
+  // For ToC/ICC: return a copy of the logs keeping only fights of the chosen difficulty (Normal/Heroic),
+  // with bosses/wipes recomputed. For Ulduar (not split): return the logs unchanged. Legacy logs with no
+  // bfights pass through (can't be split — they predate per-fight difficulty).
+  function filterByDiff(logs) {
+    if (!SPLIT_DIFF_RAIDS[RAID]) return logs;
+    var wantHC = PROGDIFF === "hc";
+    return logs
+      .map(function (l) {
+        if (!(l.bfights && l.bfights.length)) return l; // legacy — leave as-is
+        var bf = l.bfights.filter(function (f) {
+          return !!f.hm === wantHC; // f.hm is /_HC$/ on the fight's difficulty
+        });
+        if (!bf.length) return null;
+        return {
+          reportId: l.reportId, reportUrl: l.reportUrl, raid: l.raid, raidSlug: l.raidSlug,
+          size: l.size, date: l.date, uploadedAt: l.uploadedAt, fangs: l.fangs,
+          bfights: bf,
+          bosses: bf.filter(function (f) { return f.kill; }).map(function (f) { return f.bn; }),
+          kills: bf.filter(function (f) { return f.kill; }).length,
+          wipes: bf.filter(function (f) { return !f.kill; }).length,
+          rows: l.rows || [],
+        };
+      })
+      .filter(Boolean);
+  }
+
+  // Pick a stable line from a pool, seeded by a string (so the same player+boss always gets the same
+  // quip — it won't flicker on re-render, but different subjects get different lines).
+  function pickLine(pool, seed) {
+    var s = 0,
+      str = String(seed || "");
+    for (var i = 0; i < str.length; i++) s = (s * 31 + str.charCodeAt(i)) | 0;
+    return pool[Math.abs(s) % pool.length];
+  }
+  // Quip pools live in the editable funquips.js (window.RATS_QUIPS). A tiny built-in fallback keeps the
+  // page working if that file fails to load — but funquips.js is the one to EDIT. (The `bossDeath` /
+  // `scenic` pools in funquips.js are unused for now — they're for the Cliff Diver / Scenic route cards
+  // we'll restore once the API exposes `deaths`; see docs/WOWLOGS_API.md.)
+  var Q = window.RATS_QUIPS || {};
+  var QUIPS = {
+    ghost: Q.ghost || ["where'd you go? 👻"],
+  };
+
+  // ---- Fun & Shame: superlatives from the damage/healing/duration/wipe data we actually have --------
+  // (deaths & damageTaken are null in the API — see docs §dev note — so no "most deaths"/"squishy" here).
+  // A "fun card" = emoji + title + a class-coloured name + a subline. Empty categories are skipped.
+  // Award accent hues — each award title gets its own vivid colour for the emoji glow + top border, so
+  // the grid reads like colourful trading cards. Keyed by title; falls back to gold.
+  var AWARD_HUE = {
+    "The Baker": "#3fa7ff",
+    "The Medic": "#57d977",
+    "One-trick pony": "#c88bff",
+    "Overachiever": "#ffb03f",
+    "Mr. Reliable": "#3fd9c8",
+    "The Wildcard": "#ff5db1",
+    "Lone wolf": "#8a93ff",
+    "On strike": "#ff7a3f",
+    "On a streak": "#ff9d3f",
+    "Perfect attendance": "#ffd23f",
+  };
+  function funCard(emoji, title, name, cls, sub, shame) {
+    var col = classColor(cls);
+    var hue = shame ? "#c05656" : AWARD_HUE[title] || "var(--accent)";
+    return (
+      '<div class="funcard' + (shame ? " shame" : "") + '" style="--fc-hue:' + hue + '">' +
+      '<div class="fc-top"><span class="fc-emoji">' + emoji + "</span>" +
+      '<span class="fc-title">' + esc(title) + "</span></div>" +
+      '<div class="fc-name" style="color:' + col + '">' + esc(name) + "</div>" +
+      '<div class="fc-sub">' + sub + "</div></div>"
+    );
+  }
+  function renderFunShame() {
+    var awEl = document.getElementById("funAwards");
+    if (!awEl) return;
+    var logs = filterByDiff(logsInScope(PERIOD));
+    // how many distinct raid nights (lockouts) are in scope — "perfect attendance" is only meaningful
+    // across MULTIPLE raids (in a single-raid Week, everyone who came was in "every" kill — trivial).
+    var lockSet = {};
+    logs.forEach(function (l) { lockSet[lockoutStart(l.date)] = 1; });
+    var lockCount = Object.keys(lockSet).length;
+    var guild = rosterSet();
+    var isGuildie = function (n) {
+      if (!guild) return true;
+      var id = resolveIdentity(n, "");
+      return guild[id.key] || guild[normNm(n)];
+    };
+    var trole = toonRoles(logs);
+
+    // ---- gather per-toon DPS parses (kills only, guildies, non-tank), and totals ----
+    // Aggregate by PERSON (alt→main), not by toon — so Foougg's reroll toons count as one raider (fixes
+    // "1/27 kills"). A person's DPS toons fuse; their healer toon is excluded above. The displayed name/
+    // class = the "face" toon (the one that played the most DPS fights for that person).
+    var perPerson = {}; // DPS people, keyed by main: {fights,dpsList,sumDmg,byBoss:{boss:bestDps},faces}
+    var perHealer = {}; // HEALER people, keyed by main: {sumHeal,faces}
+    var presence = {}; // main → {kills, name, cls} — EVERY kill a person is in (any role: tank/dps/heal)
+    var bossBest = {}; // boss → the guild's best DPS on it (for the Overachiever "above par" count)
+    var raidTotalDmg = 0,
+      raidTotalHeal = 0;
+    function faceOf(map, id, r) {
+      var e = map[id.key] || (map[id.key] = { fights: 0, dpsList: [], sumDmg: 0, sumHeal: 0, byBoss: {}, faces: {} });
+      var fc = e.faces[normNm(r.n)] || (e.faces[normNm(r.n)] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
+      fc.n++;
+      return e;
+    }
+    logs.forEach(function (l) {
+      rowsForDiff(l.rows).forEach(function (r) {
+        if (!isGuildie(r.n)) return;
+        var tk = normNm(r.n);
+        var id = resolveIdentity(r.n, r.c);
+        // presence = attended this kill in ANY role (so a raider who TANKED a boss still counts as
+        // present — Rellik tanking half the run must NOT read as "missed those kills").
+        var pr = presence[id.key] || (presence[id.key] = { kills: 0, name: r.n, cls: r.c });
+        pr.kills++;
+        if (trole[tk] === "HEALER") {
+          raidTotalHeal += r.heal || 0;
+          var h = faceOf(perHealer, id, r);
+          h.sumHeal += r.heal || 0;
+          return;
+        }
+        if (isTankFight(r)) return; // tanks out of the DPS awards
+        raidTotalDmg += r.dmg || 0;
+        var e = faceOf(perPerson, id, r);
+        e.fights++;
+        e.sumDmg += r.dmg || 0;
+        e.dpsList.push(r.d || 0);
+        if (!e.byBoss[r.b] || (r.d || 0) > e.byBoss[r.b]) e.byBoss[r.b] = r.d || 0;
+        if ((r.d || 0) > (bossBest[r.b] || 0)) bossBest[r.b] = r.d || 0;
+      });
+    });
+    // resolve each person's face toon (most fights on that role) → name/cls/spec on the card
+    function resolveFaces(map) {
+      return Object.keys(map).map(function (k) {
+        var e = map[k],
+          face = null;
+        Object.keys(e.faces).forEach(function (t) {
+          if (!face || e.faces[t].n > face.n) face = e.faces[t];
+        });
+        e.key = k; // main key — lets us cross-reference the presence map (any-role kill count)
+        e.name = face.name;
+        e.cls = face.cls;
+        e.spec = face.spec;
+        return e;
+      });
+    }
+    var toons = resolveFaces(perPerson);
+    var healers = resolveFaces(perHealer);
+    var maxFights = toons.reduce(function (m, t) { return Math.max(m, t.fights); }, 0);
+
+    var awards = [];
+
+    // 🌊 The Baker — highest share of the guild's total damage (carries the raid)
+    if (raidTotalDmg > 0 && toons.length) {
+      var baker = toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0];
+      var share = Math.round((baker.sumDmg / raidTotalDmg) * 1000) / 10;
+      awards.push(funCard("🌊", "The Baker", baker.name, baker.cls,
+        "<b>" + share + "%</b> of all guild damage · " + fmtBig(baker.sumDmg)));
+    }
+
+    // 💚 The Medic — healer with the biggest share of total guild healing
+    if (raidTotalHeal > 0 && healers.length) {
+      var medic = healers.slice().sort(function (a, b) { return b.sumHeal - a.sumHeal; })[0];
+      var hshare = Math.round((medic.sumHeal / raidTotalHeal) * 1000) / 10;
+      awards.push(funCard("💚", "The Medic", medic.name, medic.cls,
+        "<b>" + hshare + "%</b> of all guild healing · " + fmtBig(medic.sumHeal)));
+    }
+
+    // (King of <boss> removed — it duplicated the One-trick pony when the top parse was the same person.)
+
+    // 🎯 Mr. Reliable — steady AND GOOD (5k-5k-5k, not 1k-1k-1k). Low variance is only impressive above
+    // the guild average — a flat mediocre line is not an achievement. So: only consider players whose
+    // average is >= the guild DPS average, then pick the steadiest (lowest coefficient of variation).
+    var withSpread = toons.filter(function (t) { return t.fights >= 3; }).map(function (t) {
+      var mean = t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights;
+      var varc = t.dpsList.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / t.fights;
+      return { t: t, cv: mean > 0 ? Math.sqrt(varc) / mean : 1, mean: mean };
+    });
+    var guildAvgDps = withSpread.length
+      ? withSpread.reduce(function (a, b) { return a + b.mean; }, 0) / withSpread.length
+      : 0;
+    // reliable pool = the good half (>= guild average); wildcard pool = everyone (any level can be swingy)
+    var goodSteady = withSpread.filter(function (x) { return x.mean >= guildAvgDps; });
+    if (goodSteady.length) {
+      var steady = goodSteady.slice().sort(function (a, b) { return a.cv - b.cv; })[0];
+      awards.push(funCard("🎯", "Mr. Reliable", steady.t.name, steady.t.cls,
+        "high &amp; steady · <b>" + fmt(Math.round(steady.mean)) + "</b> DPS every raid, no off nights"));
+    }
+    if (withSpread.length) {
+      // 🎲 Wildcard — highest variance (roulette)
+      var wild = withSpread.slice().sort(function (a, b) { return b.cv - a.cv; })[0];
+      if (!goodSteady.length || wild.t !== goodSteady.slice().sort(function (a, b) { return a.cv - b.cv; })[0].t)
+        awards.push(funCard("🎲", "The Wildcard", wild.t.name, wild.t.cls,
+          "hot-or-cold — biggest swings raid to raid"));
+    }
+
+    // 🎸 One-trick pony — biggest gap between a player's best boss and their own average (shines on one
+    // fight, mortal on the rest). Needs ≥3 kills so it's a real pattern, not a single lucky parse.
+    var tricks = toons.filter(function (t) { return t.fights >= 3; }).map(function (t) {
+      var mean = t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights;
+      var bestBoss = "",
+        bestV = 0;
+      Object.keys(t.byBoss).forEach(function (b) {
+        if (t.byBoss[b] > bestV) { bestV = t.byBoss[b]; bestBoss = b; }
+      });
+      return { t: t, ratio: mean > 0 ? bestV / mean : 1, boss: bestBoss };
+    });
+    if (tricks.length) {
+      var trick = tricks.slice().sort(function (a, b) { return b.ratio - a.ratio; })[0];
+      if (trick.ratio >= 1.4)
+        awards.push(funCard("🎸", "One-trick pony", trick.t.name, trick.t.cls,
+          "a god on <b>" + esc(shortBoss(trick.boss)) + "</b>, mortal elsewhere"));
+    }
+
+    // 📈 Overachiever — above the guild's best-on-that-boss average in the MOST bosses (good everywhere).
+    // We score each person by how many bosses their best beats the guild-median-best on that boss.
+    var bossMed = {}; // boss → median of all players' best DPS on it
+    Object.keys(bossBest).forEach(function (b) {
+      var vals = toons.map(function (t) { return t.byBoss[b] || 0; }).filter(function (x) { return x > 0; }).sort(function (a, c) { return a - c; });
+      bossMed[b] = vals.length ? vals[Math.floor(vals.length / 2)] : 0;
+    });
+    if (toons.length > 2) {
+      var over = toons.map(function (t) {
+        var n = 0;
+        Object.keys(t.byBoss).forEach(function (b) { if (t.byBoss[b] >= (bossMed[b] || 0)) n++; });
+        return { t: t, n: n, cov: Object.keys(t.byBoss).length };
+      }).filter(function (x) { return x.cov >= 3; })
+        .sort(function (a, b) { return b.n / b.cov - a.n / a.cov || b.n - a.n; })[0];
+      if (over && over.n >= 3)
+        awards.push(funCard("📈", "Overachiever", over.t.name, over.t.cls,
+          "above par on <b>" + over.n + "</b> of " + over.cov + " bosses"));
+    }
+
+    // 🐺 Lone wolf — most total damage carried across the scope (volume × presence), the workhorse.
+    if (toons.length) {
+      var wolf = toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0];
+      // avoid duplicating the Baker card if it's the same person (Baker = % share, Wolf = raw volume)
+      var bakerName = raidTotalDmg > 0 && toons.length ? toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0].name : null;
+      // second-highest if the top is already the Baker
+      var wolfPick = wolf.name === bakerName && toons.length > 1
+        ? toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[1]
+        : wolf;
+      awards.push(funCard("🐺", "Lone wolf", wolfPick.name, wolfPick.cls,
+        "<b>" + fmtBig(wolfPick.sumDmg) + "</b> damage over <b>" + wolfPick.fights + "</b> kills"));
+    }
+
+    // ⚡ On strike — tops the meters on the MOST bosses (holds #1 everywhere). "No way to take you from
+    // the top." Counts how many bosses each person's best is the guild's best on that boss.
+    if (toons.length > 2 && Object.keys(bossBest).length) {
+      var strike = toons
+        .map(function (t) {
+          var n = 0;
+          Object.keys(t.byBoss).forEach(function (b) {
+            if (t.byBoss[b] >= (bossBest[b] || 0)) n++;
+          });
+          return { t: t, n: n };
+        })
+        .sort(function (a, b) { return b.n - a.n; })[0];
+      if (strike && strike.n >= 2)
+        awards.push(funCard("⚡", "On strike", strike.t.name, strike.t.cls,
+          "#1 on <b>" + strike.n + "</b> boss" + (strike.n !== 1 ? "es" : "") + " — untouchable at the top"));
+    }
+
+    // 🔥 On a streak — the same player has topped the board multiple lockouts IN A ROW (the persistent
+    // 👑 crown from the Leaderboards). Rewards holding #1 raid after raid, not just one good night.
+    var streaks = computeStreaks();
+    [
+      { s: streaks.dps, unit: "DPS" },
+      { s: streaks.hps, unit: "healing" },
+    ].forEach(function (o) {
+      if (o.s && o.s.name && o.s.count >= 2) {
+        // find the display name + class for this normalized name (from any role's face toons)
+        var face = null;
+        toons.concat(healers).forEach(function (t) {
+          if (normNm(t.name) === o.s.name) face = t;
+        });
+        var nm = face ? face.name : o.s.name;
+        var cl = face ? face.cls : "";
+        awards.push(funCard("🏅", "On a streak", nm, cl,
+          "held <b>#1 " + o.unit + "</b> for <b>" + o.s.count + "</b> raids straight"));
+      }
+    });
+
+    // 👑 Perfect attendance — was in EVERY kill of the scope (any role counts, so a tank qualifies too)
+    // only across ≥2 raid nights — perfect attendance in a single raid is just "showed up", not a feat.
+    var presAward = Object.keys(presence).map(function (k) { return presence[k]; });
+    var maxPres = presAward.reduce(function (m, p) { return Math.max(m, p.kills); }, 0);
+    if (maxPres > 1 && lockCount >= 2) {
+      var present = presAward.filter(function (p) { return p.kills === maxPres; });
+      if (present.length === 1) {
+        // one lone perfect raider — name them
+        awards.push(funCard("👑", "Perfect attendance", present[0].name, present[0].cls,
+          "in all <b>" + maxPres + "</b> kills — never missed"));
+      } else if (present.length > 1) {
+        // several — one summary card celebrating the whole crew (no class colour on a count)
+        awards.push(funCard("👑", "Perfect attendance", present.length + " raiders", "",
+          "never missed a kill · <b>" + maxPres + "/" + maxPres + "</b> each 🧀"));
+      }
+    }
+
+    // ---- SHAME (rat voice, playful). One person can hold only ONE shame card. ----
+    // NOTE: no "lowest single parse" cards (Cliff Diver / Scenic route were removed) — a low parse can be
+    // a mid-fight DEATH, not lack of skill (e.g. Shmurda 913 on Auriaya = he died), and the API gives us
+    // NO `deaths` field to tell them apart. So shame is limited to signals we CAN trust: attendance
+    // (presence, any role) and a consistently low AVERAGE across many kills. Restore the single-parse
+    // cards only if the dev exposes `deaths` (see docs §dev note).
+    var shame = [];
+    var shamed = {};
+    function addShame(name, html) {
+      var k = normNm(name);
+      if (shamed[k]) return; // already shamed elsewhere — don't pile on
+      shamed[k] = true;
+      shame.push(html);
+    }
+
+    // 💤 Ghost — fewest kills attended, using TOTAL presence (any role) so a tank/off-spec night doesn't
+    // read as absence. Only shame someone well below the pack (< 60% of max).
+    var pres = Object.keys(presence).map(function (k) { return presence[k]; });
+    var maxPresence = pres.reduce(function (m, p) { return Math.max(m, p.kills); }, 0);
+    if (maxPresence > 1 && pres.length > 2) {
+      var ghost = pres.slice().sort(function (a, b) { return a.kills - b.kills; })[0];
+      if (ghost.kills < maxPresence * 0.6)
+        addShame(ghost.name, funCard("💤", "Raid ghost", ghost.name, ghost.cls,
+          "only <b>" + ghost.kills + "</b>/" + maxPresence + " kills — " +
+          esc(pickLine(QUIPS.ghost, ghost.name)), true));
+    }
+
+    // 🍺 Last one standing — a DPS REGULAR with the lowest AVERAGE dps (excludes tanks via presence ratio).
+    var dpsRegulars = toons.filter(function (t) {
+      if (t.fights < Math.max(3, Math.ceil(maxFights / 2))) return false; // must be a regular
+      var totalKills = presence[t.key] ? presence[t.key].kills : t.fights;
+      return t.fights >= totalKills * 0.7; // played DPS in ≥70% of their kills (not a part-time tank)
+    });
+    if (dpsRegulars.length > 2) {
+      // pick the lowest-average one that isn't already shamed
+      var ranked = dpsRegulars
+        .map(function (t) {
+          return { t: t, avg: t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights };
+        })
+        .sort(function (a, b) { return a.avg - b.avg; });
+      for (var si = 0; si < ranked.length; si++) {
+        if (shamed[normNm(ranked[si].t.name)]) continue;
+        var sl = ranked[si];
+        addShame(sl.t.name, funCard("🍺", "Last one standing", sl.t.name, sl.t.cls,
+          "there every raid but bottom of the meters · avg <b>" + fmt(Math.round(sl.avg)) +
+          "</b> DPS — present, but not really 🫥", true));
+        break;
+      }
+    }
+
+    // 🧊 Ice cold — below the guild median on the MOST bosses (the opposite of the Overachiever): not one
+    // bad parse, but consistently cold everywhere. Uses each person's best-per-boss vs the boss median.
+    if (toons.length > 2) {
+      var cold = toons
+        .map(function (t) {
+          var below = 0,
+            cov = Object.keys(t.byBoss).length;
+          Object.keys(t.byBoss).forEach(function (b) {
+            if (t.byBoss[b] < (bossMed[b] || 0)) below++;
+          });
+          return { t: t, below: below, cov: cov, ratio: cov ? below / cov : 0 };
+        })
+        .filter(function (x) { return x.cov >= 3 && !shamed[normNm(x.t.name)]; })
+        .sort(function (a, b) { return b.ratio - a.ratio || b.below - a.below; })[0];
+      if (cold && cold.below >= 3)
+        addShame(cold.t.name, funCard("🧊", "Ice cold", cold.t.name, cold.t.cls,
+          "below par on <b>" + cold.below + "</b> of " + cold.cov + " bosses — time to warm up 🔥", true));
+    }
+
+    // Empty state: nothing to award AND nothing to shame → hide the titles/cards and show one centred
+    // rats block (same look as the Leaderboards empty state) instead of two lonely "nothing yet" lines.
+    var body = document.getElementById("funBody"),
+      empty = document.getElementById("funEmpty");
+    if (!awards.length && !shame.length && empty && body) {
+      var rObj2 = (DATA.raids || []).filter(function (r) { return r.key === RAID; })[0];
+      var lbl2 = (rObj2 && rObj2.label) || RAID || "this raid";
+      var diff2 = SPLIT_DIFF_RAIDS[RAID] ? (PROGDIFF === "hc" ? "Heroic " : "Normal ") : "";
+      empty.innerHTML = emptyRatHtml("No " + lbl2 + " " + diff2 + SIZE + "-man logs yet");
+      empty.hidden = false;
+      body.hidden = true;
+      return;
+    }
+    if (empty) empty.hidden = true;
+    if (body) body.hidden = false;
+    // one grid: positive awards first, then the negative ones (red-tinted) — no separate "shame" section
+    awEl.innerHTML = awards.concat(shame).join("");
+  }
+
+  function renderProgress() {
     var el = document.getElementById("progress");
     if (!el) return;
-    var p = d.progress || {},
-      tw = p.thisWeek,
-      lw = p.lastWeek;
-    var boss = d.perBoss || [];
-    var statusOf = function (b) {
-      return (b.kill && b.kill.status) || b.status || (b.kill && b.kill.time ? "killed" : "pending");
-    };
-    var total = boss.length;
-    var killed =
-      tw && tw.bosses != null
-        ? tw.bosses
-        : boss.filter(function (b) {
-            return statusOf(b) === "killed";
-          }).length;
+    var rObj = (DATA.raids || []).filter(function (r) {
+      return r.key === RAID;
+    })[0];
+    var raidLabel = (rObj && rObj.label) || RAID || "raid";
+    var split = !!SPLIT_DIFF_RAIDS[RAID];
+    var diffLabel = PROGDIFF === "hc" ? "Heroic" : "Normal";
+
+    // Framed "Guild progress" header (board-head style, matches the Leaderboards) — shown for EVERY raid.
+    // Only split raids (ToC/ICC) get the Normal|Heroic toggle on the right; Ulduar shows just the title.
+    // The verdict + stat grid render INSIDE this same card (below the header); the per-boss table is its
+    // own card below. progHeadOpen opens the card + header, `head` is injected, progHeadClose seals it.
+    var toggleHtml = split
+      ? '<div class="metricbar">' +
+        '<button class="mbtn' + (PROGDIFF === "nm" ? " active" : "") + '" onclick="setProgDiff(\'nm\')">Normal</button>' +
+        '<button class="mbtn' + (PROGDIFF === "hc" ? " active" : "") + '" onclick="setProgDiff(\'hc\')">Heroic</button>' +
+        "</div>"
+      : "";
+    var progHeadOpen =
+      '<div class="card board proghead"><div class="board-head">' +
+      '<span class="board-title">Guild progress</span>' +
+      toggleHtml +
+      "</div>";
+    var progHeadClose = "</div>";
+    // empty state: header framed + self-closed
+    var diffBar = progHeadOpen + progHeadClose;
+
+    var scoped = filterByDiff(logsInScope(PERIOD));
+    if (!scoped.length) {
+      el.innerHTML =
+        diffBar +
+        '<div class="card emptyrat">' +
+        emptyRatHtml("No " + raidLabel + " " + (split ? diffLabel + " " : "") + SIZE + "-man runs yet") +
+        "</div>";
+      return;
+    }
+
+    // Guild progress runs over the FULL raid+size history (so first-kill / vs-last are real). The
+    // Week/Month/All filter picks the BASELINE the latest raid is compared to (see below).
+    var allLogs = filterByDiff(logsInScope("all"));
+    var lockGroups = {};
+    allLogs.forEach(function (l) {
+      var k = lockoutStart(l.date);
+      (lockGroups[k] = lockGroups[k] || []).push(l);
+    });
+    var locks = lockoutsOf(allLogs); // newest-first, full history
+    locks.forEach(function (g) {
+      g.logs = lockGroups[g.lock] || [];
+    });
+
+    var hasTimes = allLogs.some(function (l) {
+      return (l.bfights || []).some(function (f) {
+        return f.kill && f.dur != null;
+      });
+    });
+
+    // ---- stats per lockout + baseline (prev / avg / best) ----
     var head = "";
-    if (tw && lw) {
-      var dB = (tw.bosses || 0) - (lw.bosses || 0);
-      var dW = (tw.wipes || 0) - (lw.wipes || 0);
-      var dT = (toSec(tw.raidTime) || 0) - (toSec(lw.raidTime) || 0);
-      var score = 0;
-      if (dB > 0) score++;
-      if (dB < 0) score--;
-      if (dW < 0) score++;
-      if (dW > 0) score--;
-      if (dT < 0) score++;
-      if (dT > 0) score--;
+    var curDate = locks.length ? locks[0].date : null; // the raid the table anchors on (set by period below)
+    if (locks.length >= 1) {
+      var stats = locks.map(lockoutStats); // newest-first
+      // CUR is ALWAYS this week's raid (the most recent). The Week/Month/All button only changes the
+      // BASELINE it's compared to:  Week = last raid  ·  Month = avg of the last 31 days  ·  All = avg of all.
+      var cur = stats[0];
+      curDate = cur.date;
+      var older = stats.slice(1);
+      var baseSet, word;
+      if (PERIOD === "week") {
+        baseSet = older.slice(0, 1); // just the previous raid
+        word = "last raid";
+      } else if (PERIOD === "month") {
+        baseSet = older.filter(function (m) {
+          return (Date.now() - new Date(m.date).getTime()) / 86400000 <= 31;
+        });
+        word = "the month's average";
+      } else {
+        baseSet = older; // all-time
+        word = "our all-time average";
+      }
+
+      // baseline value for a metric = average across baseSet (single raid for Week = that raid's value)
+      function baseOf(key) {
+        var vals = baseSet.map(function (m) { return m[key]; }).filter(function (x) { return x != null; });
+        return vals.length ? vals.reduce(function (a, b) { return a + b; }, 0) / vals.length : null;
+      }
+      // delta {chip, sign}; sign>0 means improvement (lowerIsBetter flips it for wipes/time)
+      function d(key, lowerIsBetter) {
+        var b = baseOf(key);
+        if (cur[key] == null || b == null) return { chip: null, sign: 0 };
+        var diff = cur[key] - b;
+        var s = lowerIsBetter ? -diff : diff;
+        return { chip: diff, sign: s > 0 ? 1 : s < 0 ? -1 : 0 };
+      }
+      var dDps = d("gdps", false),
+        dTime = d("bossTime", true),
+        dWipe = d("wipes", true),
+        dBoss = d("bosses", false),
+        dHm = d("hm", false);
+
+      var score = dTime.sign * 2 + dWipe.sign + dDps.sign + dBoss.sign + dHm.sign * 2;
       var v = score > 0 ? "good" : score < 0 ? "bad" : "flat";
       var vEmoji = score > 0 ? "📈" : score < 0 ? "📉" : "➖";
-      var vText =
-        score > 0
-          ? "Better week than last time"
-          : score < 0
-            ? "Tougher week than last time"
-            : "About the same as last week";
+      var vText = score > 0 ? "Sharper than " + word : score < 0 ? "Rougher than " + word : "On par with " + word;
       var bits = [];
-      if (dB)
-        bits.push(
-          Math.abs(dB) + " " + (dB > 0 ? "more" : "fewer") + " boss" + (Math.abs(dB) !== 1 ? "es" : "") + " down"
-        );
-      if (dW) bits.push(Math.abs(dW) + " " + (dW < 0 ? "fewer" : "more") + " wipes");
-      if (dT) bits.push(fmtDur(dT) + " " + (dT < 0 ? "faster" : "slower") + " clear");
+      if (dTime.chip) bits.push(fmtDur(dTime.chip) + " " + (dTime.chip < 0 ? "faster" : "slower") + " clear");
+      if (dWipe.chip) bits.push(Math.abs(Math.round(dWipe.chip * 10) / 10) + " " + (dWipe.chip < 0 ? "fewer" : "more") + " wipes");
+      if (dHm.chip) bits.push(Math.abs(Math.round(dHm.chip * 10) / 10) + " " + (dHm.chip > 0 ? "more" : "fewer") + " hard mode" + (Math.abs(dHm.chip) !== 1 ? "s" : ""));
+      if (dBoss.chip) bits.push(Math.abs(Math.round(dBoss.chip * 10) / 10) + " " + (dBoss.chip > 0 ? "more" : "fewer") + " bosses");
+
+      // stat grid — Guild DPS · Boss time · Wipes · Bosses · Hard modes
+      // Ulduar: mixed HC/NM within a lockout → show a "Hard modes X/N" card. ToC/ICC: the whole run is
+      // one difficulty (chosen by the toggle) → no HM card (it'd always be N/N or 0/N).
+      var grid =
+        gsCard("Guild DPS", cur.gdps != null ? fmt(cur.gdps) : "—", dDps.chip != null ? deltaChip(dDps.chip, false) : "") +
+        (hasTimes ? gsCard("Boss time", cur.bossTime != null ? fmtDur(cur.bossTime) : "—", dTime.chip != null ? tArrow(dTime.chip) : "") : "") +
+        gsCard("Wipes", String(cur.wipes), dWipe.chip != null ? deltaChip(dWipe.chip, true) : "") +
+        gsCard("Bosses cleared", String(cur.bosses), dBoss.chip != null ? deltaChip(dBoss.chip, false) : "") +
+        (split ? "" : gsCard("Hard modes", cur.hm + '<span class="of"> / ' + cur.bosses + "</span>", dHm.chip != null ? deltaChip(dHm.chip, false) : ""));
+
+      var hasBase = baseSet.length > 0;
       head =
-        '<div class="verdict ' +
-        v +
-        '"><span class="em">' +
-        vEmoji +
-        "</span><span>" +
-        vText +
-        '<span class="sub2">' +
-        (bits.join(" · ") || "no change vs last raid") +
-        "</span></span></div>" +
-        '<div class="gsum">' +
-        '<div class="gs"><div class="lbl">Bosses cleared</div><div class="v">' +
-        killed +
-        '<span style="font-size:14px;color:#6e7178"> / ' +
-        total +
-        "</span></div>" +
-        cmp(
-          killed,
-          lw.bosses,
-          false,
-          function (x) {
-            return "+" + x;
-          },
-          ["", ""]
-        ) +
-        "</div>" +
-        '<div class="gs"><div class="lbl">Total wipes</div><div class="v">' +
-        (tw.wipes != null ? tw.wipes : "—") +
-        "</div>" +
-        cmp(
-          tw.wipes,
-          lw.wipes,
-          true,
-          function (x) {
-            return x;
-          },
-          ["fewer", "more"]
-        ) +
-        "</div>" +
-        '<div class="gs"><div class="lbl">Boss encounter time</div><div class="v">' +
-        esc(tw.bossTime || "—") +
-        "</div>" +
-        cmp(toSec(tw.bossTime), toSec(lw.bossTime), true, fmtDur, ["faster", "slower"]) +
-        "</div>" +
-        '<div class="gs"><div class="lbl">Full clear time</div><div class="v">' +
-        esc(tw.raidTime || "—") +
-        "</div>" +
-        cmp(toSec(tw.raidTime), toSec(lw.raidTime), true, fmtDur, ["faster", "slower"]) +
-        "</div>" +
-        "</div>" +
-        '<p class="compnote">This raid (' +
-        esc(tw.date || "") +
-        ") vs last raid (" +
-        esc(lw.date || "") +
-        ").</p>";
+        (hasBase
+          ? '<div class="verdict ' + v + '"><span class="em">' + vEmoji + "</span><span>" + vText +
+            '<span class="sub2">' + (bits.join(" · ") || "no change vs " + word) + "</span></span></div>"
+          : "") +
+        '<div class="gsum">' + grid + "</div>" +
+        '<p class="compnote">This week\'s raid (' + esc(fmtDate(cur.date)) + ")" +
+        (hasBase ? " vs " + esc(word) + (PERIOD === "week" ? " (" + esc(fmtDate(baseSet[0].date)) + ")" : ", " + baseSet.length + " raid" + (baseSet.length !== 1 ? "s" : "")) : "") +
+        ".</p>";
     }
-    var rows = boss
+
+    // ---- per-boss table ----
+    // Per boss:  best kill EVER (the goal, always shown)  ·  this week's kill  ·  a baseline kill time that
+    // follows the SAME button as the grid (Week = last raid · Month = avg of month's kills · All = avg of
+    // all kills). The "vs" column = this week's kill − baseline (red = slower than baseline → we regressed).
+    var curLockKey = curDate ? lockoutStart(curDate) : null;
+    // for Week, the baseline is exactly the single previous lockout
+    var baselineWeekKey = locks.length >= 2 ? lockoutStart(locks[1].date) : null;
+    function inBaseline(date) {
+      var lk = lockoutStart(date);
+      if (lk === curLockKey) return false; // this week is never its own baseline
+      if (PERIOD === "week") return baselineWeekKey && lk === baselineWeekKey;
+      if (PERIOD === "month") return (Date.now() - new Date(date).getTime()) / 86400000 <= 31;
+      return true; // all-time
+    }
+
+    var pb = {};
+    allLogs.forEach(function (l) {
+      var isCur = lockoutStart(l.date) === curLockKey,
+        isBase = inBaseline(l.date);
+      (l.bfights || []).forEach(function (f) {
+        var s = pb[f.bn] || (pb[f.bn] = { best: null, cur: null, baseTimes: [], wipesCur: 0, hm: false, first: null, killedEver: false });
+        if (f.kill) {
+          s.killedEver = true;
+          if (f.dur != null && (s.best == null || f.dur < s.best)) s.best = f.dur;
+          if (isCur) {
+            if (f.dur != null) s.cur = f.dur;
+            s.hm = f.hm; // this week's difficulty drives the HC/NM badge
+          }
+          if (isBase && f.dur != null) s.baseTimes.push(f.dur);
+          if (!s.first || l.date < s.first) s.first = l.date;
+        } else if (isCur) s.wipesCur++;
+      });
+      if (!(l.bfights && l.bfights.length)) {
+        (l.bosses || []).forEach(function (bn) {
+          var s = pb[bn] || (pb[bn] = { best: null, cur: null, baseTimes: [], wipesCur: 0, hm: false, first: null, killedEver: false });
+          s.killedEver = true;
+          if (!s.first || l.date < s.first) s.first = l.date;
+        });
+      }
+    });
+
+    var order = (BOSS_ORDER[RAID] || []).slice();
+    Object.keys(pb).forEach(function (b) {
+      if (order.indexOf(b) < 0) order.push(b);
+    });
+    var tableRows = order
+      .filter(function (b) { return pb[b]; })
       .map(function (b) {
-        var k = b.kill || {},
-          st = statusOf(b);
-        var mt =
-          '<span class="mtag ' +
-          (b.metric === "hps" ? "hps" : "dps") +
-          '">' +
-          (b.metric === "hps" ? "HPS" : "DPS") +
-          "</span>";
-        if (st === "pending") {
-          var att = k.pulls ? k.pulls + " pull" + (k.pulls !== 1 ? "s" : "") + " so far" : "not pulled yet";
+        var s = pb[b];
+        // per-boss HC/NM badge only in Ulduar (mixed). In ToC/ICC the whole table is one difficulty.
+        var hmTag = !split && s.killedEver && hasTimes
+          ? (s.hm ? '<span class="hctag">✦ HC</span>' : '<span class="nmtag">NM</span>')
+          : "";
+        if (!s.killedEver) {
           return (
-            '<tr class="pend"><td class="bn">' +
-            esc(b.encounter) +
-            " " +
-            mt +
-            '</td><td><span class="pendtag">⏳ not yet</span></td><td></td><td class="num">' +
-            att +
-            '</td><td><span class="pendtag">' +
-            esc(k.note || "saved for next raid night") +
-            "</span></td></tr>"
+            '<tr class="nokill"><td class="bn">' + esc(shortBoss(b)) +
+            '</td><td><span class="nokilltag">✖ not killed</span></td><td></td><td class="num">' + s.wipesCur + "</td><td></td></tr>"
           );
         }
-        if (st === "nokill") {
-          var att2 = k.pulls ? k.pulls + " pull" + (k.pulls !== 1 ? "s" : "") : "—";
-          return (
-            '<tr class="nokill"><td class="bn">' +
-            esc(b.encounter) +
-            " " +
-            mt +
-            '</td><td><span class="nokilltag">✖ no kill</span></td><td></td><td class="num">' +
-            att2 +
-            '</td><td><span class="nokilltag">lockout reset unkilled</span></td></tr>'
-          );
+        // vs column: this week's kill vs the baseline avg (faster than baseline = green)
+        var vs;
+        if (s.cur != null && s.baseTimes.length) {
+          var baseAvg = s.baseTimes.reduce(function (a, c) { return a + c; }, 0) / s.baseTimes.length;
+          vs = tArrow(s.cur - baseAvg);
+        } else {
+          vs = '<span class="d flat">—</span>';
         }
-        var tDelta = cmp(toSec(k.time), toSec(k.prevTime), true, fmtDur, ["faster", "slower"]);
-        var wipes =
-          k.wipes == null
-            ? "—"
-            : k.wipes +
-              (k.prevWipes != null && k.prevWipes !== k.wipes
-                ? ' <span class="' + (k.prevWipes > k.wipes ? "better" : "d bad") + '">(was ' + k.prevWipes + ")</span>"
-                : "");
-        var flags = [
-          b.record ? '<span class="rec">🏆 record</span>' : "",
-          k.newThisWeek ? '<span class="better">⭐ NEW KILL</span>' : "",
-          k.hardmode ? '<span class="rec">HARD MODE</span>' : "",
-        ]
-          .filter(Boolean)
-          .join(" · ");
+        // NEW KILL = first-ever kill happened this week
+        var isNew = s.first && curLockKey && lockoutStart(s.first) === curLockKey;
+        var flags = isNew ? '<span class="better">⭐ NEW KILL</span>' : "";
         return (
-          '<tr><td class="bn">' +
-          esc(b.encounter) +
-          " " +
-          mt +
-          '</td><td class="num">' +
-          esc(k.time || "—") +
-          "</td><td>" +
-          tDelta +
-          '</td><td class="num">' +
-          wipes +
-          "</td><td>" +
-          flags +
-          "</td></tr>"
+          '<tr><td class="bn">' + esc(shortBoss(b)) + " " + hmTag +
+          '</td><td class="num best">' + (s.best != null ? fmtDur(s.best) : "—") +
+          "</td><td>" + vs +
+          '</td><td class="num">' + s.wipesCur +
+          "</td><td>" + flags + "</td></tr>"
         );
       })
       .join("");
+
+    var vsHead = PERIOD === "week" ? "vs last raid" : PERIOD === "month" ? "vs month avg" : "vs all-time avg";
+    var fetchHint = hasTimes
+      ? ""
+      : '<p class="compnote" style="margin:10px 2px 0">⏳ Kill times, per-boss wipes &amp; hard-mode (HC) badges fill in after the next ' +
+        "<b>🔄 Fetch</b> — older logs were captured before per-boss timings.</p>";
+
+    var legend = hasTimes
+      ? '<div class="leg">' +
+        (split ? "" : '<span><b style="color:var(--accent)">✦ HC</b> hard mode</span><span><b style="color:#8a8f98">NM</b> normal</span>') +
+        '<span>Best kill = record (the goal) · Wipes = this week · <b style="color:var(--ok)">⭐</b> first-ever kill</span></div>'
+      : "";
+
     el.innerHTML =
-      head +
-      '<div class="card" style="padding:4px 14px"><table class="progtbl"><thead><tr><th>Boss</th><th>Kill time</th><th>vs last</th><th>Wipes</th><th></th></tr></thead><tbody>' +
-      rows +
+      // header + verdict + grid, all inside one framed "Guild progress" card
+      progHeadOpen +
+      '<div class="proghead-body">' + head + "</div>" +
+      progHeadClose +
+      // per-boss table in its own card below
+      '<div class="card" style="padding:4px 14px"><table class="progtbl"><thead><tr>' +
+      "<th>Boss</th><th>Best kill</th><th>" + vsHead + "</th><th>Wipes</th><th></th></tr></thead><tbody>" +
+      tableRows +
       "</tbody></table></div>" +
-      '<div class="leg"><span><b>✓</b> killed</span><span><b style="color:#9aa0a6">⏳</b> saved for the next raid night</span><span><b style="color:#ff9b9b">✖</b> lockout reset without the kill</span></div>';
+      fetchHint +
+      legend;
+  }
+
+  // Sum of boss-fight durations in a set of bfights (kills only) — a "boss time" proxy for full-clear.
+  function clearTime(bfights) {
+    var t = 0,
+      any = false;
+    (bfights || []).forEach(function (f) {
+      if (f.kill && f.dur != null) {
+        t += f.dur;
+        any = true;
+      }
+    });
+    return any ? t : null;
+  }
+  // small stat card for the week verdict summary
+  function gsCard(lbl, valHtml, deltaHtml) {
+    return '<div class="gs"><div class="lbl">' + lbl + '</div><div class="v">' + valHtml + "</div>" + (deltaHtml || "") + "</div>";
+  }
+  // delta chip from a delta value (green/red). lowerIsBetter for wipes. Rounds to 1 dp (avg baselines).
+  function deltaChip(d, lowerIsBetter) {
+    if (d == null) return '<span class="d flat">—</span>';
+    var r = Math.round(d * 10) / 10;
+    if (!r) return '<span class="d flat">— same</span>';
+    var better = lowerIsBetter ? r < 0 : r > 0;
+    return '<span class="d ' + (better ? "good" : "bad") + '">' + (r > 0 ? "+" : "−") + Math.abs(r) + "</span>";
+  }
+  // time delta chip (faster=green). arg is seconds delta (cur-prev), lower is better.
+  function tArrow(d) {
+    if (!d) return '<span class="d flat">— same</span>';
+    return '<span class="d ' + (d < 0 ? "good" : "bad") + '">' + (d < 0 ? "▼ " : "▲ ") + fmtDur(d) + "</span>";
   }
 
   var TAB = "board";
@@ -439,6 +1009,7 @@
     if (SIZE !== "25") q.set("size", SIZE);
     if (PERIOD !== "all") q.set("period", PERIOD);
     if (METRIC !== "dps") q.set("metric", METRIC);
+    if (PROGDIFF !== "nm") q.set("diff", PROGDIFF);
     if (TAB !== "board") q.set("tab", TAB);
     var s = q.toString();
     history.replaceState(null, "", s ? "?" + s : location.pathname);
@@ -487,6 +1058,29 @@
     if (hpsEl) hpsEl.hidden = METRIC !== "hps";
     syncUrl();
     render(); // Records follows the active metric (DPS peaks ⇄ HPS peaks)
+  }
+
+  // Difficulty split for ToC/ICC (Normal vs Heroic are separate runs). SHARED by the Leaderboards and the
+  // Guild Progress tab. Default Normal. Only shown/applied on split raids (SPLIT_DIFF_RAIDS).
+  var PROGDIFF = "nm";
+  function setProgDiff(v) {
+    PROGDIFF = v;
+    document.querySelectorAll("#boardDiff .mbtn").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.d === v);
+    });
+    syncUrl();
+    render(); // both leaderboards + progress recompute from the same difficulty
+  }
+  window.setProgDiff = setProgDiff;
+
+  // Filter a rows[] list to the active difficulty on split raids (ToC/ICC); pass through otherwise.
+  // Rows predating the `hm` field (legacy) pass through so old data isn't silently dropped.
+  function rowsForDiff(rows) {
+    if (!SPLIT_DIFF_RAIDS[RAID]) return rows;
+    var wantHC = PROGDIFF === "hc";
+    return (rows || []).filter(function (r) {
+      return r.hm == null || !!r.hm === wantHC;
+    });
   }
 
   var CLASS_ICON = {
@@ -628,26 +1222,6 @@
       "</li>"
     );
   }
-  function shameRow(p, i) {
-    var col = classColor(p.class);
-    return (
-      "<li>" +
-      '<span class="rank">' +
-      (i + 1) +
-      "</span>" +
-      '<span style="flex:1 1 auto;min-width:0"><span class="pname" style="color:' +
-      col +
-      '">' +
-      esc(p.name) +
-      "</span>" +
-      (p.tagline ? '<span class="tagline">"' + esc(p.tagline) + '"</span>' : "") +
-      "</span>" +
-      '<span class="pval">' +
-      p.deaths +
-      " ☠️</span>" +
-      "</li>"
-    );
-  }
   // ---- leaderboard engine: aggregate players from logs[].rows for the active raid/size/period -----
   // Runs on every render (toggles just re-render — no network). Metric = AVERAGE across kills, with the
   // player's BEST parse shown alongside. role === "HEALER" → HPS table, everyone else → DPS.
@@ -707,7 +1281,7 @@
   function toonRoles(logs) {
     var count = {};
     logs.forEach(function (l) {
-      (l.rows || []).forEach(function (r) {
+      rowsForDiff(l.rows).forEach(function (r) {
         var k = normNm(r.n);
         var c = count[k] || (count[k] = { heal: 0, dps: 0 });
         if (r.r === "HEALER") c.heal++;
@@ -759,7 +1333,7 @@
     var rateKey = wantHealer ? "h" : "d",
       totKey = wantHealer ? "heal" : "dmg";
     logs.forEach(function (l) {
-      (l.rows || []).forEach(function (r) {
+      rowsForDiff(l.rows).forEach(function (r) {
         var tk = normNm(r.n);
         var toonIsHealer = trole[tk] === "HEALER";
         if (wantHealer !== toonIsHealer) return; // this toon belongs to the other table
@@ -927,7 +1501,7 @@
     var guild = rosterSet();
     var mvp = null;
     cur.forEach(function (l) {
-      (l.rows || []).forEach(function (r) {
+      rowsForDiff(l.rows).forEach(function (r) {
         var id = resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[normNm(r.n)]) return;
         var isH = r.r === "HEALER";
@@ -969,7 +1543,7 @@
     var wantHealer = METRIC === "hps";
     var out = [];
     logs.forEach(function (l) {
-      (l.rows || []).forEach(function (r) {
+      rowsForDiff(l.rows).forEach(function (r) {
         var isH = r.r === "HEALER";
         if (wantHealer !== isH) return;
         if (!isH && isTankFight(r)) return;
@@ -997,7 +1571,7 @@
     var guild = rosterSet();
     var by = {};
     logs.forEach(function (l) {
-      (l.rows || []).forEach(function (r) {
+      rowsForDiff(l.rows).forEach(function (r) {
         var tk = normNm(r.n);
         var isHealer = trole[tk] === "HEALER";
         if (isHealer && r.r !== "HEALER") return;
@@ -1295,44 +1869,53 @@
   function render() {
     var d = DATA;
     buildRaidSegs();
+    // show the board-head Normal|Heroic toggle only for split raids (ToC/ICC); sync its active state
+    var bd = document.getElementById("boardDiff");
+    if (bd) {
+      bd.hidden = !SPLIT_DIFF_RAIDS[RAID];
+      bd.querySelectorAll(".mbtn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.d === PROGDIFF);
+      });
+    }
     computeLeaderboards();
     // secondary sections follow the DPS/Healing toggle — label them so it's clear they're not mixed
     document.querySelectorAll(".secmetric").forEach(function (el) {
       el.textContent = METRIC === "hps" ? "Healing" : "DPS";
     });
-    document.getElementById("dps").innerHTML = (d.dps || [])
-      .map(function (p, i) {
-        return lbRow(p, i, "dps");
-      })
-      .join("");
-    document.getElementById("hps").innerHTML = (d.hps || [])
-      .map(function (p, i) {
-        return lbRow(p, i, "hps");
-      })
-      .join("");
-    document.getElementById("deaths").innerHTML = (d.deaths || []).map(shameRow).join("");
-    document.getElementById("awards").innerHTML = (d.awards || [])
-      .map(function (a) {
-        var col = classColor(a.class);
-        return (
-          '<div class="award"><span class="em">' +
-          (a.emoji || "🏅") +
-          "</span>" +
-          '<div><div class="at">' +
-          esc(a.title) +
-          "</div>" +
-          '<div class="an" style="color:' +
-          col +
-          '">' +
-          esc(a.name) +
-          "</div>" +
-          '<div class="ad">' +
-          esc(a.note || "") +
-          "</div></div></div>"
-        );
-      })
-      .join("");
+    // Empty state: no players in EITHER table for this raid/size/diff → clear the rows, hide the whole
+    // "Trends & records" strip, and show one centred rats joke. We CLEAR innerHTML (not just hide) so a
+    // previous raid's rows can never linger under the empty message.
+    var boardEmpty = !(d.dps && d.dps.length) && !(d.hps && d.hps.length);
+    var dpsEl2 = document.getElementById("dps"),
+      hpsEl2 = document.getElementById("hps"),
+      emptyEl = document.getElementById("boardEmpty"),
+      secEl = document.getElementById("boardSecondary");
 
+    dpsEl2.innerHTML = boardEmpty
+      ? ""
+      : (d.dps || []).map(function (p, i) { return lbRow(p, i, "dps"); }).join("");
+    hpsEl2.innerHTML = boardEmpty
+      ? ""
+      : (d.hps || []).map(function (p, i) { return lbRow(p, i, "hps"); }).join("");
+
+    if (emptyEl) {
+      if (boardEmpty) {
+        var rObj = (DATA.raids || []).filter(function (r) { return r.key === RAID; })[0];
+        var lbl = (rObj && rObj.label) || RAID || "this raid";
+        var diffTxt = SPLIT_DIFF_RAIDS[RAID] ? (PROGDIFF === "hc" ? "Heroic " : "Normal ") : "";
+        emptyEl.innerHTML = emptyRatHtml("No " + lbl + " " + diffTxt + SIZE + "-man logs yet");
+        emptyEl.hidden = false;
+        dpsEl2.hidden = true;
+        hpsEl2.hidden = true;
+        if (secEl) secEl.hidden = true;
+      } else {
+        emptyEl.hidden = true;
+        emptyEl.innerHTML = "";
+        if (secEl) secEl.hidden = false;
+        dpsEl2.hidden = METRIC !== "dps";
+        hpsEl2.hidden = METRIC !== "hps";
+      }
+    }
     // Most improved — leaderboard-style rich row + green +% on the right
     document.getElementById("improved").innerHTML =
       (d.improved || [])
@@ -1349,35 +1932,8 @@
         })
         .join("") || '<li class="mvempty">— everyone at or above par 🧀</li>';
 
-    var fs = d.funStats || {};
-    var funCard = function (em, title, o, suffix) {
-      if (!o) return "";
-      var col = classColor(o.class);
-      var extra = o.ability ? " · " + esc(o.ability) : o.encounter ? " · " + esc(o.encounter) : "";
-      return (
-        '<div class="award"><span class="em">' +
-        em +
-        '</span><div><div class="at">' +
-        title +
-        '</div><div class="an" style="color:' +
-        col +
-        '">' +
-        esc(o.name) +
-        '</div><div class="ad">' +
-        fmt(o.value) +
-        (suffix || "") +
-        extra +
-        "</div></div></div>"
-      );
-    };
-    document.getElementById("fun").innerHTML = [
-      funCard("💥", "Biggest hit", fs.biggestHit, ""),
-      funCard("🛡️", "Most damage taken", fs.mostDamageTaken, ""),
-      funCard("🌊", "Most overhealing", fs.mostOverhealing, ""),
-      funCard("⚡", "Most interrupts", fs.mostInterrupts, " casts"),
-    ].join("");
-
-    renderProgress(d);
+    renderFunShame();
+    renderProgress();
 
     var medal = ["🥇", "🥈", "🥉"];
     document.getElementById("records").innerHTML =
@@ -1430,21 +1986,6 @@
       return String(l.size) === SIZE && raidMatch && inPeriod(l.date || l.uploadedAt);
     });
     renderLogs(logsForSize, (rObj && rObj.label) || RAID);
-
-    document.getElementById("wipes").innerHTML =
-      (d.wipes || [])
-        .map(function (w) {
-          return (
-            '<li><span class="pname" style="flex:1 1 auto;color:#cfd2d6">' +
-            esc(w.encounter) +
-            "</span>" +
-            (w.pulls ? '<span class="pspec" style="margin-right:10px">' + w.pulls + " pulls</span>" : "") +
-            '<span class="pval" style="color:#ff9b9b">' +
-            w.deaths +
-            " ☠️</span></li>"
-          );
-        })
-        .join("") || '<li style="border:0;color:#6e7178">No wipes — clean week! 🧀</li>';
   }
 
   // ---- raid selector: built from the raids that appear in the logs, in fixed progression order ----
@@ -1544,8 +2085,11 @@
     return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
+  var API_COST = 0; // sums X-RateLimit-Cost across a Fetch run → bumped into the monthly usage counter
   async function apiGet(path, key) {
     var r = await fetch(API_BASE + path, { headers: { Authorization: "Bearer " + key }, cache: "no-store" });
+    var c = Number(r.headers.get("X-RateLimit-Cost"));
+    API_COST += isNaN(c) || !c ? 1 : c; // fall back to 1 if the header is missing
     var j = await r.json().catch(function () {
       return null;
     });
@@ -1656,9 +2200,20 @@
       kills = 0,
       wipes = 0,
       firstStart = null,
+      bfights = [], // one compact per-boss fight (kill or wipe) — feeds the Guild progress tab
       rows = []; // one compact row per player per KILL — feeds the leaderboards
     (log.fights || []).forEach(function (f) {
       if (f.start && (!firstStart || f.start < firstStart)) firstStart = f.start;
+      // per-boss fight: boss, kill flag, duration, start, difficulty (HC/NM — the real hard-mode signal;
+      // `f.hardmode` is always null, so we read hard mode off `difficulty` ending in _HC).
+      bfights.push({
+        bn: f.bossName,
+        kill: !!f.kill,
+        dur: f.durationSec || null,
+        t: f.start || null,
+        diff: f.difficulty || null,
+        hm: /_HC$/.test(f.difficulty || ""),
+      });
       if (f.kill) {
         kills++;
         if (killed.indexOf(f.bossName) < 0) killed.push(f.bossName);
@@ -1673,6 +2228,7 @@
             dmg: p.damage || 0, // total damage this kill (boss-only — no trash in the feed)
             heal: p.healing || 0, // total healing this kill
             b: f.bossName,
+            hm: /_HC$/.test(f.difficulty || ""), // Heroic? (for the ToC/ICC leaderboard NM/HC split)
           });
         });
       } else {
@@ -1700,6 +2256,7 @@
       bosses: killed,
       kills: kills,
       wipes: wipes,
+      bfights: bfights,
       rows: rows,
     };
   }
@@ -1754,6 +2311,7 @@
     };
     if (b) b.disabled = true;
     setLbl("Fetching…");
+    API_COST = 0; // reset per-run cost tally (bumped into the monthly usage counter on success)
     try {
       if (!window.RatsData) throw new Error("data.js not loaded");
       var key = await RatsData.loadApiKey();
@@ -1888,6 +2446,10 @@
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify({ t: savedT, data: rawSnap }));
       } catch (e) {}
+      // add this run's real API cost (Σ X-RateLimit-Cost) to the guild-wide monthly usage counter
+      if (window.RatsData && RatsData.bumpApiUsage) {
+        try { await RatsData.bumpApiUsage(API_COST); } catch (e) {}
+      }
       setLbl(
         added || dropped
           ? "✓ +" + added + (dropped ? " / −" + dropped : "") + " (" + snap.logs.length + " logs)"
@@ -1996,6 +2558,9 @@
       if (dEl) dEl.hidden = true;
       if (hEl) hEl.hidden = false;
     }
+    // progress difficulty split (ToC/ICC)
+    var df = q.get("diff");
+    if (df === "hc" || df === "nm") PROGDIFF = df;
     // tab
     var tb = q.get("tab");
     if (tb) {

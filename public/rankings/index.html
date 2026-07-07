@@ -99,10 +99,14 @@
         </div>
       </details>
 
-      <!-- one wide board with its own header: title + DPS/HPS toggle on the left -->
+      <!-- one wide board with its own header: title + Normal|Heroic + DPS/HPS toggles (grouped right) -->
       <div class="card board">
         <div class="board-head">
           <span class="board-title">Leaderboard</span>
+          <div class="metricbar boarddiff" id="boardDiff" hidden>
+            <button class="mbtn active" data-d="nm" onclick="setProgDiff('nm')">Normal</button>
+            <button class="mbtn" data-d="hc" onclick="setProgDiff('hc')">Heroic</button>
+          </div>
           <div class="metricbar">
             <button class="mbtn active" data-m="dps" onclick="setMetric(this)">DPS</button>
             <button class="mbtn" data-m="hps" onclick="setMetric(this)">Healing</button>
@@ -110,9 +114,11 @@
         </div>
         <ol class="lb" id="dps"></ol>
         <ol class="lb" id="hps" hidden></ol>
+        <!-- empty state: shown (and replaces the rows) when the current filter has no data -->
+        <div class="emptyrat" id="boardEmpty" hidden></div>
       </div>
 
-      <div class="secondary">
+      <div class="secondary" id="boardSecondary">
         <div class="sec-divider"><span>Trends &amp; records</span></div>
         <div class="sec-grid">
           <div class="card sec-card">
@@ -135,24 +141,21 @@
     </section>
 
     <section class="panel" data-panel="boss" hidden>
-      <p class="sub" style="margin:0 0 14px"><b class="gold">Faster or slower than last raid?</b> Bosses saved for the
-        next night show <span class="pendtag">⏳ not yet</span> — not a miss.</p>
+      <p class="sub" style="margin:0 0 14px"><b class="gold">This week's raid vs our history.</b> Guild DPS, clear
+        time, wipes &amp; hard modes (<b>✦ HC</b>) with ▲▼. <b>Week</b> = vs last raid · <b>Month</b> = vs the
+        month's average · <b>All time</b> = vs all raids. Best kill per boss is our record to beat.
+        (Personal rankings live in <b>Leaderboards</b>.)</p>
       <div id="progress"></div>
     </section>
 
     <section class="panel" data-panel="fun" hidden>
-      <div class="card">
-        <h2 class="ch">💀 Hall of Shame — most deaths 🐔</h2>
-        <ol class="lb shame" id="deaths"></ol>
+      <p class="sub" style="margin:0 0 14px"><b class="gold">The cheese awards.</b> Superlatives from the parse
+        data — who carries, who's steady, who tops the meters, and who needs to warm up. Red cards are the
+        cheeky ones — all in good rat fun. 🧀</p>
+      <div id="funBody">
+        <div class="funcards" id="funAwards"></div>
       </div>
-      <h2 class="ch" style="margin:22px 0 10px">🎖️ Awards</h2>
-      <div class="awards" id="awards"></div>
-      <h2 class="ch" style="margin:22px 0 10px">💥 Fun stats</h2>
-      <div class="awards" id="fun"></div>
-      <h2 class="ch" style="margin:22px 0 10px">🪦 Wipe counter — group deaths per boss</h2>
-      <div class="card">
-        <ol class="lb" id="wipes"></ol>
-      </div>
+      <div class="card emptyrat" id="funEmpty" hidden></div>
     </section>
 
     <section class="panel" data-panel="logs" hidden>
@@ -163,6 +166,8 @@
 
   <script src="../../assets/js/utils.js"></script>
   <script src="../../assets/js/data.js"></script>
+  <!-- editable Fun & Shame joke lines — loaded before rankings.js so window.RATS_QUIPS exists -->
+  <script src="funquips.js"></script>
   <script src="rankings.js"></script>
 </body>
 

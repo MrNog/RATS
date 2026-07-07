@@ -641,6 +641,56 @@ window.RatsData = (function () {
     try { localStorage.removeItem(API_KEY_LS); } catch (e) {}
   }
 
+  // ---- API-usage monitor ----------------------------------------------------------------------------
+  // The wow-logs server's X-RateLimit-Monthly-Remaining header is UNRELIABLE — it stays pinned at 14999
+  // no matter how many calls we make (only the per-MINUTE Remaining actually decrements). See the dev
+  // note in docs/WOWLOGS_API.md. So for the monthly total we count OUR OWN calls in Firebase `apiUsage`
+  // ({month,count}); every Rankings Fetch bumps it. The per-minute figure comes live from the header.
+  function curMonthKey() {
+    const d = new Date();
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0");
+  }
+  async function loadApiUsage() {
+    if (!fbOn()) return { month: curMonthKey(), count: 0 };
+    const o = await fbGetSafe("apiUsage");
+    const m = curMonthKey();
+    if (!o || o.month !== m) return { month: m, count: 0 }; // stale/other month = 0 so far
+    return { month: m, count: o.count || 0 };
+  }
+  async function bumpApiUsage(n) {
+    if (!fbOn() || !n) return;
+    try {
+      const cur = await loadApiUsage();
+      await fbPut("apiUsage", { month: cur.month, count: cur.count + n });
+    } catch (e) {}
+  }
+  // One live call: our own monthly total (Firebase) + the API's per-minute rate-limit header (the only
+  // header that actually moves). Uses the guild key to read the shared API key.
+  async function checkApiUsage() {
+    const key = await loadApiKey();
+    if (!key) throw new Error("No API key saved (add one above and unlock with the guild key).");
+    const r = await fetch("https://api.wow-logs.co.in/api/v1/guilds/warmane-onyxia/rats/logs?limit=5", {
+      headers: { Authorization: "Bearer " + key },
+      cache: "no-store",
+    });
+    if (r.status === 401) throw new Error("Key rejected (401) — check the saved key.");
+    const num = (name) => {
+      const v = r.headers.get(name);
+      return v == null || v === "" ? null : Number(v);
+    };
+    const cost = num("X-RateLimit-Cost") || 1;
+    await bumpApiUsage(cost); // this very check counts too
+    const usage = await loadApiUsage();
+    return {
+      monthlyUsed: usage.count, // OUR count (reliable) — the server's monthly header is broken
+      monthlyLimit: num("X-RateLimit-Monthly-Limit") || 15000,
+      month: usage.month,
+      minuteLimit: num("X-RateLimit-Limit"),
+      minuteRemaining: num("X-RateLimit-Remaining"),
+      checkedAt: Date.now(),
+    };
+  }
+
   // ---- Rankings snapshot (plain, world-readable — officer's Fetch writes it, public page reads it) ----
   // One computed blob at `rankings`; visitors read it once/visit (page caches with a TTL). Never
   // encrypted (it's public info) and never read on toggle/filter — that's the page's job.
@@ -914,6 +964,9 @@ window.RatsData = (function () {
     saveApiKey,
     loadApiKey,
     clearApiKey,
+    loadApiUsage,
+    bumpApiUsage,
+    checkApiUsage,
     saveRankings,
     loadRankings,
     loadRankingsVersion,

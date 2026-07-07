@@ -59,6 +59,17 @@
         </div>
         <p class="sub" id="logsApiHint">Free tier: 30 req/min, 15k/month. The Rankings &#128260; Fetch reads it from
           here.</p>
+        <div class="apiusage" id="apiUsage">
+          <div class="au-row">
+            <span class="au-label">Monthly calls used</span>
+            <span class="au-count"><b id="auCount">&#8212;</b> <span class="au-cap" id="auCap">/ 15,000</span></span>
+          </div>
+          <div class="au-bar"><i id="auBar" style="width:0%"></i></div>
+          <p class="au-note" id="auNote">Loading&#8230;</p>
+          <div class="frow" style="margin-top:8px">
+            <button type="button" class="dark" onclick="checkApiUsage()">&#128260; Refresh (live check)</button>
+          </div>
+        </div>
       </div>
 
       <div class="card">

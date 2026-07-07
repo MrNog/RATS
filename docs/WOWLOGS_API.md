@@ -4,8 +4,9 @@ What the wow-logs dev **actually shipped** (v1, read-only, Bearer keys). This is
 reference for building `public/rankings/`. Captured from the live docs + `openapi.json` + a real
 `/health` call on 2026-07-06.
 
-> ⚠️ This **replaces** the shape we proposed in `RANKINGS_API_REQUEST.md` / `.claude/rules/rankings.md`.
-> The delivered API differs from that draft — see **§9 Divergences** before touching the page code.
+> ⚠️ This is the **real, shipped** API — it differs from the draft we originally proposed (that old
+> `RANKINGS_API_REQUEST.md` draft has been removed; `.claude/rules/rankings.md` still has the old shape).
+> See **§9 Divergences** before touching the page code.
 
 > 💡 **FUTURE FEATURE — server-wide percentiles (Boss Points V2).** `/rankings` returns each guild
 > member's **percentile vs the whole server** per boss (`bosses{}`), plus `bossPoints` (0–1000) and
@@ -54,6 +55,17 @@ https://api.wow-logs.co.in/api/v1
 - **Log-list requests cost their `limit` against the RPM budget** — `/logs?limit=5` = 5 of your 30 rpm.
   Use `/logs` for history; use `/logs/latest` or `/logs/{id}` only when you need full fight payloads.
 - Responses can be server-cached (`meta.cached: true`).
+- **Rate-limit headers** on every response: `X-RateLimit-Limit` (30/min), `X-RateLimit-Remaining` (this
+  minute — **DOES** decrement per cost), `X-RateLimit-Cost` (this call's cost), `X-RateLimit-Monthly-Limit`
+  (15000), `X-RateLimit-Monthly-Remaining`.
+- ⚠️ **`X-RateLimit-Monthly-Remaining` is BROKEN — always `14999`** regardless of how many calls we make
+  (verified: 3 real `/logs?limit=5` calls = cost 5 each, per-minute Remaining dropped 30→25→… correctly, but
+  Monthly-Remaining stayed 14999 every time). `/health` only returns the *limits*, not usage. So there is **no
+  reliable server-side monthly-usage figure**. We therefore track our own monthly total in Firebase
+  `apiUsage` ({month,count}), bumped by `Σ X-RateLimit-Cost` per Fetch, shown in the Admin console.
+  **📨 TO ASK THE DEV:** *"`X-RateLimit-Monthly-Remaining` seems stuck at 14999 — it never decrements even
+  after many billed calls (per-minute `Remaining` works fine). Is monthly usage tracked/exposed anywhere?
+  A `used`/`remaining` field on `/health` would let us monitor the 15k quota."*
 
 ## 4. Response envelope
 
@@ -236,7 +248,9 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 | `fightId, encounter, boss, bossId, bossName, kill, start, durationSec, difficulty` | fights | ✅ always present |
 | `name, class, spec, role, dps, hps, damage, healing` | players | ✅ **always present** (spec too — not null in real logs) |
 | `bossPoints, averagePercent, bosses{}` | rankings | ✅ present |
-| `hardmode` | fights | ⚠️ **always `null`** in every real log — unusable, don't badge hardmode |
+| `hardmode` | fights | ⚠️ **always `null`** — DON'T use it. Use `difficulty` (`_HC`/`_NM`) for hard mode instead |
+| `difficulty` | fights | ✅ **per-fight** `TWENTY_FIVE_HC`/`_NM` — the real hard-mode signal (verified) |
+| `durationSec, start` | fights | ✅ on **every** fight incl. wipes — powers timeline, pull-gaps, kill-times |
 | `deaths` | players | ❌ **always `null`** (170/170 + 98/98) — no deaths widget |
 | `activity, damageTaken, overhealing, biggestHit` | players | ❌ **always `null`** — dev-confirmed absent |
 | `interrupts` / `consumables{}` | players | ❌ `?include=` param **returns HTTP 500** — feature broken server-side (bug-report) |
@@ -251,15 +265,39 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 > **Open a bug report** (dev pointed us to `#bug-reports`) for anything that should be there but returns
 > `null` — e.g. if `deaths` or `?include=` fields come back empty. Don't assume; report + confirm.
 
-> **📨 TO ASK THE DEV — tank metrics.** We want a **Tanking leaderboard** but the API gives us nothing to
-> rank tanks with: `damageTaken`, `deaths`, `activity` are all `null`. Message to send:
-> *"For a tank leaderboard, could you expose `damageTaken` (total damage taken, boss-only) and `deaths`
-> per player per fight? Right now they come back null, so we can't measure mitigation/survivability.
-> Even just damageTaken would let us rank tanks fairly."* Until then, the Tanking tab is on hold.
+> **📨 TO ASK THE DEV — deaths & damageTaken (blocks Tanking + half of Fun & Shame).** Both are always
+> `null`, which kills: a **Tanking leaderboard** (no mitigation/survivability metric) AND the fun **Hall of
+> Shame** ideas — "most deaths 💀", per-boss "who died in the wipe", "most damage taken by a non-tank DPS".
+> Message to send: *"Could you expose `deaths` (count per player per fight) and `damageTaken` (total, boss-
+> only) in the players[] payload? Right now both are null. `deaths` powers a wipe/death hall-of-fame and
+> `damageTaken` a tank leaderboard + 'squishy DPS' award. Even just these two would unlock a lot."*
+> Until then: the Tanking tab and any deaths/damage-taken widgets are on hold; Fun & Shame ships with the
+> damage/healing/duration/wipe data we DO have (carry %, consistency, fastest kills, per-boss wipe counts).
+
+> **✅ HARD MODE — USE `difficulty`, NOT `hardmode`.** (Corrected 2026-07-07 by inspecting real logs.)
+> The `fights[].hardmode` bool is always `null` — **ignore it**. But `fights[].difficulty` is **per-fight**
+> and reliably carries `TWENTY_FIVE_HC` vs `TWENTY_FIVE_NM` (and the 10-man equivalents). That IS the
+> hard-mode signal: verified in real logs — e.g. #21158 XT/Hodir = `_HC`, Kologarn/Thorim/Freya = `_NM`;
+> #20922 XT/IC/Hodir/Thorim = `_HC`. So a boss killed on `_HC` = hard mode. One log mixes HC and NM
+> bosses. `hm(fight) = /_HC$/.test(fight.difficulty)`. **No dev request needed — the data is already there.**
+> Note **Flame Leviathan is vehicle damage** (no guild-player parse), so FL never appears in
+> `players[]`/`rows[]`; its kill only shows via `kill:true` on the fight. Don't treat "FL missing from DPS"
+> as a bug.
+
+> **✅ RICH PROGRESSION DATA — confirmed present (2026-07-07).** Everything the wow-logs SITE charts, we can
+> rebuild from the full-log payload — no extra endpoint:
+> - **`durationSec` on EVERY fight** (kills AND wipes) — e.g. Yogg wiped 6× at 64/278/182/517/166/528s.
+> - **`start` (ISO) on every fight** → **pull-gap** = `start[i+1] − (start[i] + durationSec[i])`, and a
+>   **cumulative-kills timeline** (boss count vs minutes-into-raid).
+> - **Guild DPS/HPS** = `Σ player.damage / Σ kill.durationSec` across the run (verified #21158 = 78.5k guild
+>   DPS, 191M total, 41m boss time vs 160m raid span = 90m downtime). Compare run-vs-run.
+> - **Per-boss best kill time**, **wipes-per-boss** (`kill:false` count), **HC/NM** (via `difficulty`).
+> These feed the Guild Progress tab: run-vs-run summary, kill-times bars, pull-gaps bars, cumulative timeline,
+> guild-DPS trend, HC progression. `deaths/damageTaken/activity/overhealing/biggestHit` stay null (unusable).
 
 ## 9. Divergences from our old draft (MUST fix in the page)
 
-The delivered API is **not** what `RANKINGS_API_REQUEST.md` / `rules/rankings.md` describe. Fix before coding:
+The delivered API is **not** what our old draft / `rules/rankings.md` describe. Fix before coding:
 
 | Our draft expected | Delivered API |
 |---|---|
@@ -283,7 +321,7 @@ The delivered API is **not** what `RANKINGS_API_REQUEST.md` / `rules/rankings.md
 | 🏆 Top DPS / Top HPS | `fights[].players[].dps/hps` | ✅ |
 | 🏆 Records (best parse) | iterate `/logs/{id}` history, max per boss | ✅ (N calls — cache!) |
 | 🏆 Most improved / Needs work | same player across ≥2 logs over time | ✅ (needs history) |
-| 📊 Guild progress | `fights[].kill/hardmode/durationSec/bossName` | ✅ |
+| 📊 Guild progress | `fights[].kill/durationSec/bossName` (**NOT `hardmode` — null**) | ⚠️ speed+wipes+milestones only, no HM |
 | 🎉 Fun & shame — wipe counter | `kill:false` = wipe | ✅ (from fights) |
 | 🎉 Fun & shame — deaths | `deaths` | ⚠️ verify, else drop |
 | 🎉 Fun awards (drunk/no-prep/well-fed) | `?include=consumables` | ❓ verify, else drop |
@@ -299,7 +337,8 @@ hardmode, start, durationSec, difficulty`. Rankings = `bossPoints, averagePercen
 - ✅ **MVP** — composite from dps/hps/damage/healing (no `activity`, so weight raw output).
 - ✅ **Records** — max `dps`/`hps` per boss over history (`damage`/`healing` too).
 - ✅ **Most improved / Needs work** — same player's dps/hps across logs over time.
-- ✅ **Guild progress** — kills, hardmode, `durationSec` per boss; wipe = `kill:false`.
+- ⚠️ **Guild progress** — `durationSec` (speed) + `kill:false` (wipes/boss) + first-kill dates (milestones).
+  **NOT hard-mode** (`hardmode` is null — see the dev note above); a plain kill counter is meaningless.
 - ✅ **Wipe counter** (Fun & shame) — count `kill:false` fights per boss/night.
 - ✅ **Logs tab** — per-report badges from `/logs` + fight kill counts.
 - ✅ **Boss Points leaderboard** — straight from `/rankings`.
