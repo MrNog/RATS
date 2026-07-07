@@ -7,7 +7,7 @@ const DISCORD_URL = "https://discord.gg/v7Unzr7tUZ";
 // Each key matches a hub card's data-feature attribute in index.html.
 const FEATURES = {
   profile:  false,  // Raider Profile — officer/dev only until profile keys are handed out
-  rankings: false,  // Rankings & Hall of Fame — waiting on the wow-logs API
+  rankings: true,   // Rankings & Hall of Fame — LIVE (wow-logs API integrated)
 };
 (function () {
   var a = document.getElementById("discord");
