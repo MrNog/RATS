@@ -11,6 +11,26 @@
   var fmt = function (n) {
     return Number(n || 0).toLocaleString("en-US");
   };
+  // Short boss tags (sigla-style) so long names never truncate in tight columns (e.g. Records).
+  var BOSS_SHORT = {
+    // Ulduar
+    "Flame Leviathan": "FL", "Ignis the Furnace Master": "Ignis", "Razorscale": "Razor",
+    "XT-002 Deconstructor": "XT-002", "Assembly of Iron": "IC", "Kologarn": "Kolo",
+    "Auriaya": "Auriaya", "Hodir": "Hodir", "Thorim": "Thorim", "Freya": "Freya", "Mimiron": "Mim",
+    "General Vezax": "Vezax", "Yogg-Saron": "Yogg", "Algalon the Observer": "Algalon",
+    // ToC
+    "Northrend Beasts": "Beasts", "Lord Jaraxxus": "Jarax", "Faction Champions": "FC",
+    "Twin Val'kyr": "Twins", "Anub'arak": "Anub",
+    // ICC
+    "Lord Marrowgar": "Marrow", "Lady Deathwhisper": "LDW", "Gunship Battle": "Gunship",
+    "Deathbringer Saurfang": "DBS", "Festergut": "Fester", "Rotface": "Rot",
+    "Professor Putricide": "Putri", "Blood Prince Council": "BPC", "Blood-Queen Lana'thel": "BQL",
+    "Valithria Dreamwalker": "Valithria", "Sindragosa": "Sindra", "The Lich King": "LK",
+  };
+  function shortBoss(b) {
+    return BOSS_SHORT[b] || b;
+  }
+
   // Compact big numbers for totals: 21_737_114 → "21.7M", 9_000_000 → "9.0M", 843_000 → "843K".
   var fmtBig = function (n) {
     n = Number(n || 0);
@@ -411,14 +431,28 @@
       '<div class="leg"><span><b>✓</b> killed</span><span><b style="color:#9aa0a6">⏳</b> saved for the next raid night</span><span><b style="color:#ff9b9b">✖</b> lockout reset without the kill</span></div>';
   }
 
+  var TAB = "board";
+  // reflect raid/size/period/metric/tab in the URL so a reload keeps the view and links are shareable.
+  function syncUrl() {
+    var q = new URLSearchParams();
+    if (RAID) q.set("raid", RAID);
+    if (SIZE !== "25") q.set("size", SIZE);
+    if (PERIOD !== "all") q.set("period", PERIOD);
+    if (METRIC !== "dps") q.set("metric", METRIC);
+    if (TAB !== "board") q.set("tab", TAB);
+    var s = q.toString();
+    history.replaceState(null, "", s ? "?" + s : location.pathname);
+  }
+
   function setTab(b) {
     document.querySelectorAll(".tab").forEach(function (t) {
       t.classList.toggle("active", t === b);
     });
-    var t = b.dataset.t;
+    TAB = b.dataset.t;
     document.querySelectorAll(".panel").forEach(function (p) {
-      p.hidden = p.dataset.panel !== t;
+      p.hidden = p.dataset.panel !== TAB;
     });
+    syncUrl();
   }
 
   // NOTE: toggles only re-render from already-loaded data — they never hit the network.
@@ -428,6 +462,7 @@
     document.querySelectorAll("#sizeSegs .seg").forEach(function (s) {
       s.classList.toggle("active", s === b);
     });
+    syncUrl();
     render();
   }
   var PERIOD = "all";
@@ -436,6 +471,7 @@
     document.querySelectorAll("#periodSegs .seg").forEach(function (s) {
       s.classList.toggle("active", s === b);
     });
+    syncUrl();
     render();
   }
   // one wide board — METRIC picks which leaderboard (DPS or HPS) is shown
@@ -449,6 +485,7 @@
       hpsEl = document.getElementById("hps");
     if (dpsEl) dpsEl.hidden = METRIC !== "dps";
     if (hpsEl) hpsEl.hidden = METRIC !== "hps";
+    syncUrl();
     render(); // Records follows the active metric (DPS peaks ⇄ HPS peaks)
   }
 
@@ -515,11 +552,16 @@
           '.jpg" alt="" onerror="this.style.visibility=\'hidden\'">'
       : '<span class="cic"></span>';
   }
+  // crown pill (N lockouts at #1) — shown after the name when there's no rank-change column (All time),
+  // or inside the rank-change column otherwise. lbRow decides where via hasDeltaCol.
+  function crownPill(streak) {
+    return streak > 1 ? '<span class="crownmv" title="' + streak + ' weeks at #1">👑' + streak + "x</span>" : "";
+  }
   function deltaTag(d, streak) {
-    // 👑 crown (N weeks at #1) lives in the rank-change column; it replaces the "=" for a held #1.
-    var crown = streak > 1 ? '<span class="crownmv" title="' + streak + ' weeks at #1">👑' + streak + "x</span>" : "";
-    if (crown && (d === "none" || d == null || d === 0)) return '<span class="mv">' + crown + "</span>";
-    if (d === "none") return crown ? '<span class="mv">' + crown + "</span>" : ""; // All time: no prev period
+    // All time = no previous period → NO rank-change column at all (the crown moves next to the name).
+    if (d === "none") return "";
+    var crown = crownPill(streak);
+    if (crown && (d == null || d === 0)) return '<span class="mv">' + crown + "</span>";
     if (d == null) return '<span class="mv new" title="first appearance this period">NEW</span>';
     if (d > 0) return '<span class="mv up" title="up ' + d + '">▲' + d + "</span>";
     if (d < 0) return '<span class="mv down" title="down ' + -d + '">▼' + -d + "</span>";
@@ -533,6 +575,9 @@
     var sizeCls = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "rn";
     // bar follows the RATE (the big number) via barWidths(); coherent with what the eye reads.
     var barPct = p.bar != null ? p.bar : Math.round((p.score || 0) * 100);
+    // All time has no rank-change column → the crown goes next to the name (keeps rows aligned).
+    var noDeltaCol = p.delta === "none";
+    var nameCrown = noDeltaCol ? crownPill(p.streak) : "";
     return (
       '<li class="' +
       sizeCls +
@@ -556,6 +601,7 @@
       '">' +
       esc(p.name) +
       "</span></a>" +
+      nameCrown +
       "</span>" +
       // bar fills the middle
       '<div class="pbar"><i style="width:' +
@@ -929,8 +975,10 @@
         if (!isH && isTankFight(r)) return;
         var id = resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[normNm(r.n)]) return;
+        // a record belongs to the TOON that actually parsed it (Ninjacaldas the healer, not the
+        // roster main Fazcafe) — show the real toon's name + class + spec.
         out.push({
-          name: id.name, class: r.c, spec: r.s, encounter: r.b,
+          name: r.n, class: r.c, spec: r.s, encounter: r.b,
           metric: isH ? "hps" : "dps", value: Math.round(isH ? r.h : r.d),
           date: (l.date || "").slice(0, 10),
         });
@@ -1142,7 +1190,15 @@
       return b.belowPct - a.belowPct; // furthest below average first
     });
 
-    return { improved: improved.slice(0, 6), needsWork: needs.slice(0, 6) };
+    // follow the active metric toggle — DPS view shows dps movers, Healing view shows healer movers
+    var wantMetric = METRIC === "hps" ? "hps" : "dps";
+    var byMetric = function (p) {
+      return p.metric === wantMetric;
+    };
+    return {
+      improved: improved.filter(byMetric).slice(0, 6),
+      needsWork: needs.filter(byMetric).slice(0, 6),
+    };
   }
   // Bar width = blend of the real score gap AND rank position, so bars follow the score but never look
   // identical when scores are near-tied (e.g. #3/#4/#5 within 0.01). 70% score-scaled + 30% even steps.
@@ -1240,32 +1296,10 @@
     var d = DATA;
     buildRaidSegs();
     computeLeaderboards();
-    var m = d.mvp,
-      mc = m ? classColor(m.class) : "#fff";
-    document.getElementById("mvp").innerHTML = m
-      ? '<div class="mvp">' +
-        '<span class="crown">🔥</span>' +
-        '<div><div class="who" style="color:' +
-        mc +
-        '">' +
-        esc(m.name) +
-        "</div>" +
-        '<div class="meta">' +
-        esc(m.spec || "") +
-        " · " +
-        esc(m.encounter || "") +
-        " · " +
-        esc(m.date || "") +
-        "</div></div>" +
-        '<div class="val"><b>' +
-        fmt(m.value) +
-        "</b><span>" +
-        (m.metric || "dps").toUpperCase() +
-        " · top parse " +
-        (PERIOD === "all" ? "all time" : PERIOD === "month" ? "this month" : "this week") +
-        "</span></div>" +
-        "</div>"
-      : "";
+    // secondary sections follow the DPS/Healing toggle — label them so it's clear they're not mixed
+    document.querySelectorAll(".secmetric").forEach(function (el) {
+      el.textContent = METRIC === "hps" ? "Healing" : "DPS";
+    });
     document.getElementById("dps").innerHTML = (d.dps || [])
       .map(function (p, i) {
         return lbRow(p, i, "dps");
@@ -1359,13 +1393,14 @@
             (medal[i] || i + 1) +
             "</span>" +
             cicon(r.class, r.spec) +
-            '<span class="recname"><span class="pname" style="color:' +
+            '<span class="recname pname" style="color:' +
             col +
             '">' +
             esc(r.name) +
-            '</span> <span class="recboss">· ' +
-            esc(r.encounter) +
-            "</span></span>" +
+            "</span>" +
+            '<span class="recboss">' +
+            esc(shortBoss(r.encounter)) +
+            "</span>" +
             '<span class="pval"><span class="prate">' +
             fmt(r.value) +
             ' <span class="unit">' +
@@ -1428,6 +1463,16 @@
       return;
     }
     row.style.display = "inline-flex";
+    // apply a raid from the URL once (if it exists in the list), else keep current / default to first
+    if (window.__urlRaid) {
+      if (
+        raids.some(function (r) {
+          return r.key === window.__urlRaid;
+        })
+      )
+        RAID = window.__urlRaid;
+      window.__urlRaid = null;
+    }
     if (
       !raids.some(function (r) {
         return r.key === RAID;
@@ -1453,6 +1498,7 @@
     document.querySelectorAll("#raidSegs .seg").forEach(function (s) {
       s.classList.toggle("active", s === b);
     });
+    syncUrl();
     render();
   }
 
@@ -1918,5 +1964,47 @@
     var fw = document.getElementById("fetchWrap");
     if (fw) fw.hidden = false;
   }
+
+  // restore raid/size/period/metric/tab from the URL (deep-linkable, survives reload)
+  (function restoreFromUrl() {
+    var q = new URLSearchParams(location.search);
+    // size
+    var sz = q.get("size");
+    if (sz === "10" || sz === "25") {
+      SIZE = sz;
+      document.querySelectorAll("#sizeSegs .seg").forEach(function (s) {
+        s.classList.toggle("active", s.dataset.s === sz);
+      });
+    }
+    // period
+    var pd = q.get("period");
+    if (pd === "week" || pd === "month" || pd === "all") {
+      PERIOD = pd;
+      document.querySelectorAll("#periodSegs .seg").forEach(function (s) {
+        s.classList.toggle("active", s.dataset.p === pd);
+      });
+    }
+    // metric
+    var mt = q.get("metric");
+    if (mt === "hps") {
+      METRIC = "hps";
+      document.querySelectorAll(".metricbar .mbtn").forEach(function (s) {
+        s.classList.toggle("active", s.dataset.m === "hps");
+      });
+      var dEl = document.getElementById("dps"),
+        hEl = document.getElementById("hps");
+      if (dEl) dEl.hidden = true;
+      if (hEl) hEl.hidden = false;
+    }
+    // tab
+    var tb = q.get("tab");
+    if (tb) {
+      var tbBtn = document.querySelector('.tab[data-t="' + tb + '"]');
+      if (tbBtn) setTab(tbBtn);
+    }
+    // raid is applied after DATA loads (buildRaidSegs) — stash it
+    window.__urlRaid = q.get("raid") || null;
+  })();
+
   load();
 })();

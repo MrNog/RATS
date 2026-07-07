@@ -2,6 +2,69 @@
    theme.css gives the body reset, .wrap.wide, gold h2/.sub/scrollbar; ui.css gives button/.card/.pill/select.
    Only page-specific structure lives here — all colours through tokens. */
 
+/* "how it works" collapsible — same look as the attendance page's explainer */
+.explain {
+  margin: 12px 0 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px 14px;
+}
+.explain summary {
+  cursor: pointer;
+  color: var(--white);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 6px 0;
+  list-style: none;
+}
+.explain summary::-webkit-details-marker {
+  display: none;
+}
+.explain .exbody {
+  color: #c4c7cc;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 4px 0 10px;
+}
+.explain .exbody p {
+  margin: 8px 0;
+}
+.explain .exbody ul {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+.explain .exbody li {
+  margin: 4px 0;
+}
+.explain .rules-src {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 11.5px;
+}
+.explain .rules-src a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.explain .rules-src a:hover {
+  text-decoration: underline;
+}
+
+/* visually-hidden label for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* section heading inside cards (theme.css h2 is the gold uppercase label) */
 .ch {
   margin: 0 0 10px;
@@ -310,11 +373,17 @@
 }
 .crownmv {
   color: var(--accent-hi);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   white-space: nowrap;
-  position: relative;
-  top: -2px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+/* crown shown after the name (All time, no rank-change column) */
+.pnamecol .crownmv {
+  margin-left: 7px;
+  flex: 0 0 auto;
 }
 .mv.new {
   color: #1b1d21;
@@ -328,8 +397,8 @@
 }
 /* WIDE board: name gets real room (no truncation), bar fills, big legible value column */
 .pnamecol {
-  flex: 0 0 150px;
-  width: 150px;
+  flex: 0 0 120px;
+  width: 120px;
   display: flex;
   align-items: center;
   min-width: 0;
@@ -470,9 +539,80 @@
   font-size: 11.5px;
   color: var(--text-dim);
 }
+.secmetric {
+  color: var(--accent);
+  font-weight: 700;
+}
 .secsub b {
   color: var(--text);
 }
+/* ---- secondary stats zone: lighter, smaller cards below the hero leaderboard ---- */
+.secondary {
+  margin-top: 26px;
+}
+.sec-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sec-divider::before,
+.sec-divider::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--border);
+}
+.sec-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .sec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* secondary cards read as supporting detail: darker, tighter, smaller type */
+.sec-card {
+  background: var(--surface);
+  min-width: 0;
+}
+.sec-card .ch {
+  font-size: 12px;
+}
+.sec-card .mvrow {
+  padding: 7px 4px;
+  gap: 8px;
+}
+.sec-card .mvrow .cic {
+  width: 24px;
+  height: 24px;
+}
+.sec-card .mvname {
+  font-size: 13.5px;
+}
+.sec-card .prate {
+  font-size: 15px;
+}
+.sec-card .mvpct {
+  font-size: 13px;
+  flex-basis: 46px;
+}
+/* records podium flare is toned down inside the smaller card */
+.sec-card .mvrow.rec.r1 .prate {
+  font-size: 19px;
+}
+.sec-card .mvrow.rec.r2 .prate,
+.sec-card .mvrow.rec.r3 .prate {
+  font-size: 16px;
+}
+
 /* Most improved / Needs work rows — arrow · spec icon · name+sub · % */
 .mvrow {
   display: flex;
@@ -538,9 +678,9 @@
   font-size: 17px;
   flex: 0 0 auto;
 }
-/* name · boss on one line, fills the space before the value */
+/* record row: medal · icon · name · boss (right after the name) · value pinned right */
 .recname {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   font-size: 15px;
   font-weight: 700;
@@ -549,9 +689,21 @@
   white-space: nowrap;
 }
 .recboss {
-  font-size: 11.5px;
+  flex: 1 1 auto; /* takes the slack so the value stays pinned right */
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.recboss::before {
+  content: "· ";
+}
+.mvrow.rec .pval {
+  flex: 0 0 auto;
+  padding-left: 12px;
+  text-align: right;
 }
 /* podium flare on the top-3 records — medal-framed boxes like the leaderboard */
 .mvrow.rec.r1,

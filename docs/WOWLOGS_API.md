@@ -251,6 +251,12 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 > **Open a bug report** (dev pointed us to `#bug-reports`) for anything that should be there but returns
 > `null` — e.g. if `deaths` or `?include=` fields come back empty. Don't assume; report + confirm.
 
+> **📨 TO ASK THE DEV — tank metrics.** We want a **Tanking leaderboard** but the API gives us nothing to
+> rank tanks with: `damageTaken`, `deaths`, `activity` are all `null`. Message to send:
+> *"For a tank leaderboard, could you expose `damageTaken` (total damage taken, boss-only) and `deaths`
+> per player per fight? Right now they come back null, so we can't measure mitigation/survivability.
+> Even just damageTaken would let us rank tanks fairly."* Until then, the Tanking tab is on hold.
+
 ## 9. Divergences from our old draft (MUST fix in the page)
 
 The delivered API is **not** what `RANKINGS_API_REQUEST.md` / `rules/rankings.md` describe. Fix before coding:

@@ -31,6 +31,7 @@
           <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
         </svg> RATS — Rankings &amp; Hall of Fame</h1>
       <span id="fetchWrap" hidden style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+        <label for="fetchScope" class="sr-only">How many logs to fetch</label>
         <select id="fetchScope" title="Last N = incremental (only new logs). All = full rebuild.">
           <option value="1">Last 5</option>
           <option value="2">Last 10</option>
@@ -39,7 +40,7 @@
         </select>
         <button id="fetchBtn" onclick="fetchData()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polyline points="23 4 23 10 17 10" />
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
           </svg>
@@ -73,12 +74,35 @@
     </div>
 
     <section class="panel" data-panel="board">
-      <div id="mvp"></div>
+      <details class="explain">
+        <summary>ℹ️ How these rankings work — <span style="color:var(--accent);font-weight:600">(click)</span></summary>
+        <div class="exbody">
+          <p>Ranked by a blend of <b>50% raw output</b> (total damage/healing — rewards showing up to every
+            raid) and <b>50% server percentile</b> — how you rank <b>against others of your own class/spec</b>
+            on the server (Warrior vs Warrior, not vs everyone). Fairer across classes: a Warrior in the top
+            2% of Warriors can outrank a class with a higher raw ceiling.</p>
+          <p>The big DPS/HPS number is a <b>bayesian average</b> — a couple of fights get pulled toward the
+            guild mean, so a lucky 1–2 fight spike can't top the board. More fights = your real average shows.</p>
+          <p><b>Only guild members</b> count (pugs excluded). <b>Alts fold into the main</b>, but a person's
+            DPS toon and healer toon stay in their own tables. <b>Tank fights (Protection) don't count</b>
+            toward DPS, and your <b>roster main spec</b> decides which table you're in.</p>
+          <ul>
+            <li><b>📈 Most improved</b> — biggest % jump vs the previous raid.</li>
+            <li><b>📉 Needs work</b> — below the guild average for their role.</li>
+            <li><b>🏅 Records</b> — biggest single parses ever (a short fight like Hodir inflates DPS — that's
+              why the boss is shown).</li>
+          </ul>
+          <p><b>Filters</b> (Week / Month / All, per raid and 25/10-man) are all client-side — no reload.
+            <b>Tanking</b> is coming once the log API exposes damage-taken.</p>
+          <p class="rules-src">Parses &amp; server percentiles from
+            <a href="https://wow-logs.co.in" target="_blank" rel="noopener">wow-logs.co.in</a>.</p>
+        </div>
+      </details>
 
       <!-- one wide board with its own header: title + DPS/HPS toggle on the left -->
       <div class="card board">
         <div class="board-head">
-          <span class="board-title">🏆 Leaderboard</span>
+          <span class="board-title">Leaderboard</span>
           <div class="metricbar">
             <button class="mbtn active" data-m="dps" onclick="setMetric(this)">DPS</button>
             <button class="mbtn" data-m="hps" onclick="setMetric(this)">Healing</button>
@@ -88,21 +112,25 @@
         <ol class="lb" id="hps" hidden></ol>
       </div>
 
-      <div class="cols">
-        <div class="card">
-          <h2 class="ch">📈 Most improved</h2>
-          <p class="secsub">Biggest jump vs the previous raid</p>
-          <ol class="lb" id="improved"></ol>
+      <div class="secondary">
+        <div class="sec-divider"><span>Trends &amp; records</span></div>
+        <div class="sec-grid">
+          <div class="card sec-card">
+            <h2 class="ch">🏅 Records</h2>
+            <p class="secsub">biggest <span class="secmetric">DPS</span> parses</p>
+            <ol class="lb" id="records"></ol>
+          </div>
+          <div class="card sec-card">
+            <h2 class="ch">📈 Most improved</h2>
+            <p class="secsub"><span class="secmetric">DPS</span> · vs the previous raid</p>
+            <ol class="lb" id="improved"></ol>
+          </div>
+          <div class="card sec-card">
+            <h2 class="ch">📉 Needs work</h2>
+            <p class="secsub"><span class="secmetric">DPS</span> · below the role average</p>
+            <ol class="lb" id="bottom"></ol>
+          </div>
         </div>
-        <div class="card">
-          <h2 class="ch">📉 Needs work</h2>
-          <p class="secsub">Below the guild average for their role</p>
-          <ol class="lb" id="bottom"></ol>
-        </div>
-      </div>
-      <h2 class="ch" style="margin:22px 0 10px">🏅 Records</h2>
-      <div class="card">
-        <ol class="lb" id="records"></ol>
       </div>
     </section>
 
