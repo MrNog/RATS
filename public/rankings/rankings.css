@@ -542,6 +542,10 @@
   color: #9a7fe0; /* server percentile — muted purple, subtle */
   font-weight: 600;
 }
+.pval .psrv.none {
+  color: var(--text-faint); /* placeholder (no server parse yet) — dimmed so it reads as absent */
+  font-weight: 500;
+}
 /* HEALING: the rate is green (it's healing, not damage) */
 .lb li.hps .prate {
   color: #6bd18a;

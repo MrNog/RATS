@@ -1214,9 +1214,11 @@
       fmtBig(p.value) +
       "</span> total" +
       (p.fights ? ' · ×' + p.fights : "") +
+      // server percentile — always render (keeps rows aligned); placeholder --.- when we have no parse.
+      // Real values always show 1 decimal (61 → 61.0) so the column reads consistently.
       (p.serverPct != null
-        ? ' · <span class="psrv" title="percentile vs the whole server">' + p.serverPct + "% srv</span>"
-        : "") +
+        ? ' · <span class="psrv" title="percentile vs the whole server">' + p.serverPct.toFixed(1) + "% srv</span>"
+        : ' · <span class="psrv none" title="no server parse for this player yet">--.-% srv</span>') +
       "</span>" +
       "</span>" +
       "</li>"
