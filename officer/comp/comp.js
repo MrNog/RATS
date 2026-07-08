@@ -182,19 +182,37 @@ const ADDON_CLASS_TOKEN = {
   PALADIN: "paladin", PRIEST: "priest", ROGUE: "rogue", SHAMAN: "shaman",
   WARLOCK: "warlock", WARRIOR: "warrior",
 };
+// The addon can't know each raider's spec (WoW doesn't expose it without inspect),
+// so it ships specName "". But OUR ROSTER knows the spec (set in officer/guild, saved
+// in ratsGuild.specs[name], else guessed from the public note). rosterSpec() looks it
+// up so the imported comp shows the RIGHT spec icon/role instead of a wrong default.
+function rosterSpec(name) {
+  try {
+    const d = JSON.parse(localStorage.getItem("ratsGuild") || "null");
+    if (!d) return "";
+    const nm = normName(name);
+    // saved spec (data.specs is keyed by in-game name)
+    if (d.specs) {
+      for (const k in d.specs) if (normName(k) === nm) return d.specs[k] || "";
+    }
+  } catch (e) {}
+  return "";
+}
 // The Okanvil addon exports attendance as a FLAT { type:"attendance", players:[
-// {name,class,group,...} ] } (class = WoW token). The comp board works on
-// { slots:[{className,groupNumber,slotNumber}] } (Raid-Helper shape). This adapts
-// the addon export into that shape so pasting an Okanvil attendance JSON just works.
+// {name,class,group,...} ] } (class = WoW token, no spec). The comp board works on
+// { slots:[{className,specName,groupNumber,slotNumber}] } (Raid-Helper shape). This
+// adapts the export AND fills each spec from our roster so icons/roles are correct.
 function addonAttendanceToComp(data) {
   const players = data.players || [];
   const bySlot = {}; // group -> running slot number
   const slots = players.map(function (p) {
     const key = ADDON_CLASS_TOKEN[String(p.class || "").toUpperCase().replace(/[\s_-]/g, "")] || "warrior";
     const disp = (CLASSES.find(function (x) { return x[0] === key; }) || [])[1] || p.class || "";
+    // spec: addon export first (usually ""), else our roster's saved spec.
+    const spec = (p.specName && p.specName !== "") ? p.specName : rosterSpec(p.name);
     const g = p.group || 1;
     bySlot[g] = (bySlot[g] || 0) + 1;
-    return { name: p.name, className: disp, specName: "", groupNumber: g, slotNumber: bySlot[g] };
+    return { name: p.name, className: disp, specName: spec, groupNumber: g, slotNumber: bySlot[g] };
   });
   const groupCount = players.reduce(function (m, p) { return Math.max(m, p.group || 1); }, 0) || 5;
   return { title: data.title || (data.zone || "Raid"), date: data.date || "", desc: "", groupCount: groupCount, slots: slots };
