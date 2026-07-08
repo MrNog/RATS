@@ -706,7 +706,11 @@
             '<span class="pcaret">' + (open ? "▾" : "▸") + "</span>" +
             '<span class="pn" style="color:' + col + '">' +
             headIcon + esc(p.name) + "</span>" +
-            '<span class="pc">' + p.items.length + "</span>" +
+            '<span class="pc">' +
+            // Bank/Disenchant are mat pools -> count everything on the card (their loot IS
+            // the frags/crafts). Real players count only true loot won (mats aren't "won").
+            (isBank || isDE ? p.items.length + p.frags.length + p.crafts.length : p.items.length) +
+            "</span>" +
             "</div>" +
             '<div class="pd">last: ' + fmtTs(p.last) + drought + "</div>" +
             (open

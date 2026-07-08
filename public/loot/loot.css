@@ -456,6 +456,11 @@
   border-color: color-mix(in srgb, var(--purple, #a335ee) 55%, transparent);
   background: color-mix(in srgb, var(--purple, #a335ee) 8%, var(--surface-2));
 }
+/* Bank card pinned right below Disenchant, green */
+.pcard.bank-card {
+  border-color: color-mix(in srgb, var(--bank, #22c55e) 55%, transparent);
+  background: color-mix(in srgb, var(--bank, #22c55e) 8%, var(--surface-2));
+}
 .pcard .ph {
   display: flex;
   align-items: center;
