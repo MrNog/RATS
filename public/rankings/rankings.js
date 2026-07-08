@@ -2130,6 +2130,12 @@
   function normNm(s) {
     return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   }
+  // Raid size → bare digit string ("25"/"10"). The API sends it as a number on some endpoints and a
+  // (sometimes padded) string on others; size filters compare strings, so normalise on read.
+  function normSize(v) {
+    var m = String(v == null ? "" : v).match(/\d+/);
+    return m ? m[0] : "";
+  }
 
   var API_COST = 0; // sums X-RateLimit-Cost across a Fetch run → bumped into the monthly usage counter
   async function apiGet(path, key) {
@@ -2442,32 +2448,43 @@
       var rebuild = maxPages === 0;
       if (rebuild) { have = {}; snap.excludedLogs = []; } // rebuild re-checks archived status from scratch
 
-      setLbl(rebuild ? "Rebuilding…" : "Scanning history…");
-      var res = await apiIncremental(key, {
-        have: have,
-        maxPages: maxPages,
-        onProgress: function (i, n) {
-          setLbl((rebuild ? "Log " : "New log ") + i + "/" + n + "…");
-        },
-      });
-
-      snap.logs = mergeLogs(rebuild ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
-      // Remember archived ids so we NEVER fetch them again — the API marked them superseded, so a later
-      // Fetch would otherwise re-pull each one just to re-learn it's archived (a wasted call per log).
-      // excludedLogs is the "don't fetch, don't show" set; `have` (below, next run) includes it.
-      if (res.archivedIds && res.archivedIds.length) {
-        var exSet = {};
-        (snap.excludedLogs || []).forEach(function (id) { exSet[String(id)] = true; });
-        res.archivedIds.forEach(function (id) { exSet[String(id)] = true; });
-        snap.excludedLogs = Object.keys(exSet);
-      }
+      // PHASE 1 — LOGS (independent): fetch only missing logs. Wrapped in its own try so a log-fetch
+      // error can't skip Phase 2 (server ranks). If nothing is new, res.fresh is empty and we do nothing
+      // here — but Phase 2 still runs, because server ranks change constantly and must always refresh.
+      var res = { fresh: [], archivedIds: [] };
+      try {
+        setLbl(rebuild ? "Rebuilding…" : "Scanning history…");
+        res = await apiIncremental(key, {
+          have: have,
+          maxPages: maxPages,
+          onProgress: function (i, n) {
+            setLbl((rebuild ? "Log " : "New log ") + i + "/" + n + "…");
+          },
+        });
+        snap.logs = mergeLogs(rebuild ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
+        // Remember archived ids so we NEVER fetch them again — the API marked them superseded, so a later
+        // Fetch would otherwise re-pull each one just to re-learn it's archived (a wasted call per log).
+        if (res.archivedIds && res.archivedIds.length) {
+          var exSet = {};
+          (snap.excludedLogs || []).forEach(function (id) { exSet[String(id)] = true; });
+          res.archivedIds.forEach(function (id) { exSet[String(id)] = true; });
+          snap.excludedLogs = Object.keys(exSet);
+        }
+      } catch (e) { /* log phase failed — server ranks (Phase 2) still run below */ }
       if (rosterNames) snap.rosterNames = rosterNames; // guild-only filter for leaderboards
       if (altMap) snap.altMap = altMap; // alt→main, so a person's toons count as one
       if (mainSpec) snap.mainSpec = mainSpec; // roster main spec → decides true role (healer vs dps)
 
-      // server-wide percentiles (Boss Points) — ONE call per (raid × size × difficulty) we ACTUALLY
-      // raided, at the raid's real scoring season (from /meta/seasons). No season sweep, no calling
-      // difficulties/sizes we never played. serverPct[raidSlug][sizeKey][diffKey] = {season, players}.
+      // PHASE 2 — SERVER RANKS (independent of Phase 1): ONE call per (raid × size × difficulty) we
+      // ACTUALLY raided, at the raid's real scoring season (from /meta/seasons). No season sweep, no
+      // calling difficulties/sizes we never played. serverPct[raidSlug][sizeKey][diffKey] = {season,players}.
+      //
+      // This ALWAYS runs — even when Phase 1 fetched no new log — because server ranks change constantly.
+      // A refresh with nothing new must still update ranks. `rankOk` tracks whether the whole ranks pass
+      // completed: if it didn't, we must NOT overwrite the previously-saved serverPct with a half-built
+      // one (that's how ToC ended up missing — the run died before ranks and saved without them).
+      var rankOk = false;
+      var prevServerPct = snap.serverPct; // keep the last good copy to fall back on if this pass fails
       try {
         // which (raidSlug, size, "nm"/"hc") combos do our logs actually contain?
         var combos = {}; // "toc|25|nm" → {slug, size, diff}
@@ -2503,7 +2520,10 @@
           snap.serverPct[c.slug][c.size].season = sr.season;
           snap.serverPct[c.slug][c.size].players = m;
         }
+        rankOk = true; // full ranks pass completed — safe to persist this serverPct
       } catch (e) {}
+      // If the ranks pass blew up mid-way, don't ship a half-built serverPct — keep the last good one.
+      if (!rankOk && prevServerPct) snap.serverPct = prevServerPct;
 
       snap.generatedAt = new Date().toISOString();
       DATA = snap;
