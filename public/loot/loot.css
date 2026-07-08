@@ -564,6 +564,68 @@
   color: var(--white);
 }
 
+/* ---- Import preview (what the merge will add / skip, before saving) ---- */
+.importPreview {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.importPreview .pvSum {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+}
+.importPreview .pvAdd { color: var(--ok); }
+.importPreview .pvDup,
+.importPreview .pvSkip { color: var(--text-dim); }
+.importPreview .pvList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+.importPreview .pvRow {
+  display: grid;
+  grid-template-columns: 140px 1fr 120px;
+  gap: 8px;
+  padding: 3px 10px;
+  font-size: 12px;
+  align-items: center;
+}
+.importPreview .pvRow:nth-child(odd) { background: rgba(255, 255, 255, 0.02); }
+.importPreview .pvBoss { color: var(--accent); }
+.importPreview .pvItem { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.importPreview .pvWho { text-align: right; }
+.importPreview .muted { color: var(--text-dim); }
+.importPreview .pvMore,
+.importPreview .pvEmpty {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+/* dropped list (craft/orb, duplicate fragments) -- shown with the reason */
+.importPreview .pvDropHdr {
+  padding: 8px 10px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+}
+.importPreview .pvDropRow {
+  grid-template-columns: 1fr auto;
+  opacity: 0.75;
+}
+.importPreview .pvDropRow .pvItem { color: var(--text-dim); text-decoration: line-through; }
+.importPreview .pvReason { color: var(--text-dim-2, var(--text-dim)); font-size: 11px; text-align: right; }
+
+/* import overlay actions: Cancel on the left, Merge & save pushed to the right */
+.importCard .importActions { gap: 14px; margin-top: 4px; }
+.importCard .importActions #importGo { margin-left: auto; }
+
 /* ---- Priority (fair loot) tab ---- */
 .prio-legend {
   display: flex;

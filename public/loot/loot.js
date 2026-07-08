@@ -207,20 +207,32 @@
       return (a.ts || 0) - (b.ts || 0);
     });
     var kept = [],
-      skipped = 0;
+      skipped = 0,
+      dropped = []; // {name, reason} of everything we drop, so the preview can show WHAT
     var lastRealByRun = {}; // runId -> boss name of the most recent real-boss drop
     var fragSeen = {}; // runId|boss -> 1 (fragment de-dupe: one per boss per run)
     arr.forEach(function (l) {
       l.runId = lockoutRunId(l); // merge both raid nights into one lockout run
       var name = l.name || "";
-      if (SKIP_RE.test(name)) {
-        skipped++;
-        return; // crafting/orb — don't store
-      }
+      // NOTE: crafts/patterns/orbs (SKIP_RE) are NO LONGER dropped here -- they DID
+      // drop in the raid, so they belong in the loot HISTORY. They just don't count
+      // toward a raider's loot priority (that exclusion is PRIORITY_SKIP_RE, applied
+      // only on the Priority tab). So we keep them; only true logging dups are dropped.
       var tableBoss = BOSS_TABLE[name.toLowerCase()];
       var isFragment = FRAGMENT_RE.test(name);
+      // The addon now resolves the boss itself (in-game scanner) and ships it as
+      // l.boss. TRUST that when it's a real, specific boss name -- only fall back to
+      // our local name-table for older exports / raids the addon didn't tag. Fixes
+      // ToC (and any raid not in BOSS_TABLE, which is Ulduar-only) showing as "TRASH".
+      var addonBoss =
+        l.boss && l.boss !== "" && l.boss !== "Trash" && l.boss !== l.raid
+          ? l.boss
+          : null;
       var boss;
-      if (tableBoss && REAL_BOSSES[tableBoss]) {
+      if (addonBoss) {
+        boss = addonBoss;
+        lastRealByRun[l.runId] = addonBoss; // advance the run's current boss
+      } else if (tableBoss && REAL_BOSSES[tableBoss]) {
         boss = tableBoss;
         lastRealByRun[l.runId] = tableBoss; // advance the run's current boss
       } else if (isFragment || !tableBoss) {
@@ -237,6 +249,7 @@
         var fk = l.runId + "|" + boss + "|" + (name || "").toLowerCase();
         if (fragSeen[fk]) {
           skipped++;
+          dropped.push({ name: name, reason: "duplicate fragment (" + boss + ")" });
           return; // same fragment kind, same boss/run = logging dup
         }
         fragSeen[fk] = 1;
@@ -244,7 +257,7 @@
       l.boss = boss;
       kept.push(l);
     });
-    return { kept: kept, skipped: skipped };
+    return { kept: kept, skipped: skipped, dropped: dropped };
   }
 
   // ---- filtering state (toggles re-render from loaded data — never re-fetch) ----
@@ -337,7 +350,9 @@
     ICON_FALLBACK = "inv_misc_questionmark",
     DE_ICON = "inv_enchant_abysscrystal"; // Abyss Crystal — shown for disenchanted loot
   function iconUrl(slug, size) {
-    return ICON_BASE + (size || "large") + "/" + (slug || ICON_FALLBACK) + ".jpg";
+    // zamimg serves icon slugs LOWERCASE only. The addon exports mixed case
+    // (e.g. "INV_Axe_104"), which 404'd -> "?" fallback. Force lowercase.
+    return ICON_BASE + (size || "large") + "/" + String(slug || ICON_FALLBACK).toLowerCase() + ".jpg";
   }
   function itemIcon(l) {
     return (
@@ -904,6 +919,11 @@
   function openImport() {
     if (!IS_OFFICER) return; // import is officer-only
     document.getElementById("importOv").classList.add("open");
+    // fresh state: clear any leftover paste/preview from a previous open
+    var t = document.getElementById("importText"); if (t) t.value = "";
+    var p = document.getElementById("importPreview"); if (p) { p.hidden = true; p.innerHTML = ""; }
+    var go = document.getElementById("importGo"); if (go) go.disabled = true;
+    importMsg("");
   }
   function closeImport() {
     document.getElementById("importOv").classList.remove("open");
@@ -933,6 +953,72 @@
     });
     return added;
   }
+  // PREVIEW: parse the pasted JSON and show WHAT the import will do -- before any
+  // save. Breakdown: how many NEW items get added, how many are already saved
+  // (skipped as dup), and how many are craft/orb/fragment-dup that we drop. Runs on
+  // every keystroke (oninput); enables the Merge button only when there's something.
+  function previewImport() {
+    var box = document.getElementById("importPreview");
+    var go = document.getElementById("importGo");
+    var raw = (document.getElementById("importText").value || "").trim();
+    importMsg("");
+    if (!raw) { box.hidden = true; if (go) go.disabled = true; return; }
+    var incoming;
+    try {
+      incoming = parseLootPaste(raw).list;
+    } catch (e) {
+      box.hidden = true; if (go) go.disabled = true;
+      importMsg("Invalid JSON: " + e.message);
+      return;
+    }
+    // run the same boss-resolution + de-dup logic as the real import, but READ-ONLY.
+    var res = resolveBosses(incoming);
+    var key = function (l) { return (l.ts || 0) + "|" + l.itemId; };
+    var have = {};
+    (DATA.loot || []).forEach(function (l) { have[key(l)] = 1; });
+    var news = [], dups = 0, seen = {};
+    res.kept.forEach(function (l) {
+      var k = key(l);
+      if (have[k] || seen[k]) { dups++; return; }
+      seen[k] = 1; news.push(l);
+    });
+    // build the preview HTML: a summary line + the list of NEW items (boss · item -> winner)
+    var rows = news.slice(0, 40).map(function (l) {
+      var who = l.player === "Disenchant" ? '<span class="muted">Disenchant</span>'
+        : l.player ? '<b style="color:' + classColor(l.class) + '">' + esc(l.player) + "</b>"
+          : '<span class="muted">unassigned</span>';
+      return '<div class="pvRow"><span class="pvBoss">' + esc(l.boss || "?") + "</span>"
+        + '<span class="pvItem">' + esc(l.name || "?") + "</span>"
+        + '<span class="pvWho">' + who + "</span></div>";
+    }).join("");
+    var moreN = news.length - Math.min(news.length, 40);
+    var sum = '<div class="pvSum"><span class="pvAdd">+' + news.length + " new</span>";
+    if (dups) sum += '<span class="pvDup">' + dups + " already saved</span>";
+    if (res.skipped) sum += '<span class="pvSkip">' + res.skipped + " dropped</span>";
+    sum += "</div>";
+    var body;
+    if (news.length) {
+      body = '<div class="pvList">' + rows;
+      if (moreN > 0) body += '<div class="pvMore">...and ' + moreN + " more</div>";
+      body += "</div>";
+    } else {
+      body = '<div class="pvEmpty">Nothing new to add (all already saved).</div>';
+    }
+    // DROPPED list: show WHAT was dropped and WHY (craft/orb, duplicate fragment) --
+    // so it's never a mystery number. Only when there's something dropped.
+    var drop = "";
+    if (res.dropped && res.dropped.length) {
+      var dr = res.dropped.map(function (d) {
+        return '<div class="pvRow pvDropRow"><span class="pvItem">' + esc(d.name || "?") + "</span>"
+          + '<span class="pvReason">' + esc(d.reason || "dropped") + "</span></div>";
+      }).join("");
+      drop = '<div class="pvDropHdr">Dropped (not imported):</div><div class="pvList">' + dr + "</div>";
+    }
+    box.innerHTML = sum + body + drop;
+    box.hidden = false;
+    if (go) go.disabled = news.length === 0;
+  }
+
   async function doImport() {
     if (!IS_OFFICER) return; // import is officer-only
     var raw = document.getElementById("importText").value.trim();
@@ -1478,6 +1564,7 @@
   window.openImport = openImport;
   window.closeImport = closeImport;
   window.doImport = doImport;
+  window.previewImport = previewImport;
   window.dedupeLoot = dedupeLoot;
   window.clearAllLoot = clearAllLoot;
   window.assign = assign;

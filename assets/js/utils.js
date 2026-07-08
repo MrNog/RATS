@@ -33,7 +33,22 @@
     return s;
   }
   function todayStr() { var d = new Date(), z = function (n) { return String(n).padStart(2, "0"); }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
-  function classColor(cls) { return CLASS_COLOR[cls] || "#fff"; }
+  // WoW class TOKENS (from the addon's UnitClass export: "DEATHKNIGHT", "DRUID"...)
+  // mapped to the CLASS_COLOR keys. The addon ships uppercase, no-space tokens while
+  // CLASS_COLOR is keyed by display names ("Death Knight", "Druid") -- without this
+  // every addon-exported name rendered white. Case-insensitive, space-insensitive.
+  var CLASS_TOKEN = {
+    DEATHKNIGHT: "Death Knight", DRUID: "Druid", HUNTER: "Hunter", MAGE: "Mage",
+    PALADIN: "Paladin", PRIEST: "Priest", ROGUE: "Rogue", SHAMAN: "Shaman",
+    WARLOCK: "Warlock", WARRIOR: "Warrior"
+  };
+  function classColor(cls) {
+    if (!cls) return "#fff";
+    if (CLASS_COLOR[cls]) return CLASS_COLOR[cls];          // exact ("Death Knight", "DK")
+    var tok = String(cls).toUpperCase().replace(/[\s_-]/g, ""); // "Death Knight" -> "DEATHKNIGHT"
+    var name = CLASS_TOKEN[tok];
+    return (name && CLASS_COLOR[name]) || "#fff";
+  }
 
   // Shared progress-bar colour scale, in discrete 10% bands. Low % = reddish (just started, long way
   // to go), high % = green (almost done). Used by any bar that shows progression over time
