@@ -175,6 +175,31 @@ function realClassName(m) {
   return f ? f[1] : m.className || "";
 }
 
+// WoW class TOKEN (from the Okanvil addon export: "DEATHKNIGHT", "DRUID"...) -> the
+// CLASSES key ("dk", "druid"). Case-insensitive, space/underscore-insensitive.
+const ADDON_CLASS_TOKEN = {
+  DEATHKNIGHT: "dk", DRUID: "druid", HUNTER: "hunter", MAGE: "mage",
+  PALADIN: "paladin", PRIEST: "priest", ROGUE: "rogue", SHAMAN: "shaman",
+  WARLOCK: "warlock", WARRIOR: "warrior",
+};
+// The Okanvil addon exports attendance as a FLAT { type:"attendance", players:[
+// {name,class,group,...} ] } (class = WoW token). The comp board works on
+// { slots:[{className,groupNumber,slotNumber}] } (Raid-Helper shape). This adapts
+// the addon export into that shape so pasting an Okanvil attendance JSON just works.
+function addonAttendanceToComp(data) {
+  const players = data.players || [];
+  const bySlot = {}; // group -> running slot number
+  const slots = players.map(function (p) {
+    const key = ADDON_CLASS_TOKEN[String(p.class || "").toUpperCase().replace(/[\s_-]/g, "")] || "warrior";
+    const disp = (CLASSES.find(function (x) { return x[0] === key; }) || [])[1] || p.class || "";
+    const g = p.group || 1;
+    bySlot[g] = (bySlot[g] || 0) + 1;
+    return { name: p.name, className: disp, specName: "", groupNumber: g, slotNumber: bySlot[g] };
+  });
+  const groupCount = players.reduce(function (m, p) { return Math.max(m, p.group || 1); }, 0) || 5;
+  return { title: data.title || (data.zone || "Raid"), date: data.date || "", desc: "", groupCount: groupCount, slots: slots };
+}
+
 function loadEmojiMap() {
   try {
     return JSON.parse(localStorage.getItem("ratsEmoji") || "{}");
@@ -806,6 +831,18 @@ function render() {
     } catch (e) {
       errEl.textContent = "❌ Invalid JSON — copy the full Composition Tool export.";
       return;
+    }
+  }
+  // accept the Okanvil ADDON attendance export (flat players[]) -> comp slots shape.
+  // Normalise the TEXTAREA to the slots shape too, so the interactive board actions
+  // (add raider / no-show / move) — which re-parse jsonIn — see the converted data.
+  if (data && data.type === "attendance" && Array.isArray(data.players)) {
+    data = addonAttendanceToComp(data);
+    document.getElementById("jsonIn").value = JSON.stringify(data, null, 1);
+    // pre-fill the date field from the addon export if empty
+    if (data.date && !document.getElementById("dateIn").value) {
+      document.getElementById("dateIn").value = data.date;
+      if (window.RatsCal && RatsCal.sync) RatsCal.sync();
     }
   }
   if (!Array.isArray(data.slots)) data.slots = [];
