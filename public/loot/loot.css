@@ -332,6 +332,20 @@
 .editbtn:hover {
   color: var(--accent);
 }
+/* delete button sits next to the pencil; danger red on hover */
+.delbtn {
+  background: none;
+  border: 0;
+  color: var(--text-faint);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  flex: 0 0 auto;
+  height: auto;
+}
+.delbtn:hover {
+  color: #e5484d;
+}
 /* winner row: raider input (70%) + Disenchant button (30%) */
 .winrow {
   display: flex;
@@ -389,7 +403,8 @@
 .lootitem .disenchant {
   min-width: 110px;
 }
-.lootitem .editbtn {
+.lootitem .editbtn,
+.lootitem .delbtn {
   flex: 0 0 auto;
 }
 .lootitem .wat {

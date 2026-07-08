@@ -165,8 +165,10 @@
   var ROSTER = []; // filled from members node for the assign picker (officer only)
   var BOSS_TABLE = {}; // itemName(lower) -> boss, from data/ulduar-loot-table.json (loaded once)
 
-  // Crafting mats & recipes grouped as "crafts" in the loot list (patterns/orbs shown once).
-  var SKIP_RE = /^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|orb of/i;
+  // Crafting mats grouped as "crafts" in the loot list (orbs shown once). Patterns/plans
+  // are NOT here — they're personal loot someone wins (and can be epic), so they render
+  // as normal editable rows, not collapsed craft rows.
+  var SKIP_RE = /runed orb|orb of/i;
   // Items that must NOT count against a raider's LOOT PRIORITY — pure craft mats that are rolled
   // but aren't personal gear: any Val'anyr fragment, all crafting orbs (Runed / Crusader /
   // Primordial Saronite), and patterns/recipes. NOTE: ToC Trophies DO count (they're set-token
@@ -177,10 +179,11 @@
   // Covers Val'anyr fragments (Ulduar, guild pool) and Shard of Shadowmourne (ICC, questline).
   var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne/i;
   // Items that ALWAYS go to the guild BANK regardless of who the addon said got them:
-  // crafting orbs + patterns/recipes. These are guild-pool mats, not personal loot, so we
-  // force player = "Bank" on import (even if it says "Kobee"). Fragments are NOT here —
-  // they bind and stay with whoever got them. Trophies are NOT here — they're gear tokens.
-  var BANK_RE = /^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite|alchemist'?s cache/i;
+  // crafting ORBS only. These are guild-pool mats, not personal loot, so we force
+  // player = "Bank" on import (even if it says "Kobee"). Fragments are NOT here — they
+  // bind and stay with whoever got them. Trophies are NOT here — they're gear tokens.
+  // Patterns/plans/recipes are NOT here either — they're personal loot someone wins.
+  var BANK_RE = /runed orb|crusader orb|orb of|primordial saronite|alchemist'?s cache/i;
   // the 14 real Ulduar bosses that anchor the timeline (Assembly = the Iron Council)
   var REAL_BOSSES = {
     "Flame Leviathan": 1, "Ignis the Furnace Master": 1, Razorscale: 1, "XT-002 Deconstructor": 1,
@@ -334,11 +337,22 @@
         var k = raidKeyFor(l.raid);
         if (k && (l.ts || 0) > (newestTs[k] || 0)) newestTs[k] = l.ts || 0;
       });
-      RAID = ALL_RAIDS[0].key;
-      var best = -1;
-      ALL_RAIDS.forEach(function (r) {
-        if ((newestTs[r.key] || 0) > best) { best = newestTs[r.key] || 0; if (best > 0) RAID = r.key; }
-      });
+      // Current season = Trial of the Crusader: default to it whenever it has any loot,
+      // so a stray newer Ony/Naxx drop doesn't yank the default off the progression raid.
+      var seasonKey = null;
+      for (var si = 0; si < ALL_RAIDS.length; si++) {
+        if (/trial of the crusader|^toc$/i.test(ALL_RAIDS[si].key)) { seasonKey = ALL_RAIDS[si].key; break; }
+      }
+      if (seasonKey && (counts[seasonKey] || 0) > 0) {
+        RAID = seasonKey;
+      } else {
+        // fall back to the raid with the newest drop
+        RAID = ALL_RAIDS[0].key;
+        var best = -1;
+        ALL_RAIDS.forEach(function (r) {
+          if ((newestTs[r.key] || 0) > best) { best = newestTs[r.key] || 0; if (best > 0) RAID = r.key; }
+        });
+      }
     }
     row.style.display = "inline-flex";
     document.getElementById("raidSegs").innerHTML = ALL_RAIDS
@@ -406,9 +420,11 @@
     return '<span class="iname" style="color:' + col + '">' + esc(nm) + "</span>" + boeTag(l);
   }
   function winnerHtml(l, idx) {
-    // only officers (guild key present) get the pen to edit — never public visitors
+    // only officers (guild key present) get the pen to edit + trash to delete —
+    // never public visitors. Delete sits right after the pencil on every row.
     var edit = IS_OFFICER
-      ? '<button class="editbtn" title="Change who won this" onclick="assign(' + idx + ')">✎</button>'
+      ? '<button class="editbtn" title="Change who won this" onclick="assign(' + idx + ')">✎</button>' +
+        '<button class="delbtn" title="Delete this drop" onclick="deleteItem(' + idx + ')">🗑</button>'
       : "";
     if (l.player === "Disenchant") {
       return (
@@ -662,25 +678,15 @@
                   '<span class="frag-x">×' + n + "</span></div>"
               : "";
           };
-          // MERGE duplicate items by name (e.g. 5x "Trophy of the Crusade" -> one xN row).
-          // Singles render as the normal editable row; groups of >=2 collapse to a xN
-          // summary row (like the mat rows). Especially for the Bank card (all the orbs).
-          var itemGroups = {};
-          var itemOrder = [];
-          p.items
-            .slice()
-            .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })
-            .forEach(function (l) {
-              var k = (l.itemId || l.name || "").toString().toLowerCase();
-              if (!itemGroups[k]) { itemGroups[k] = []; itemOrder.push(k); }
-              itemGroups[k].push(l);
-            });
+          // Real loot items are NEVER merged into a xN row -- each one stays a separate
+          // EDITABLE row (with the pencil) so the winner of every drop can be changed,
+          // even when two copies of the same item dropped. Only mats (fragments/orbs,
+          // handled by fragList/craftList below) collapse to xN summary rows.
           var full =
-            itemOrder
-              .map(function (k) {
-                var g = itemGroups[k];
-                return g.length > 1 ? matRow(g.length, g[0], g[0].name) : lootItemHtml(g[0]);
-              })
+            p.items
+              .slice()
+              .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })
+              .map(function (l) { return lootItemHtml(l); })
               .join("") +
             fragList
               .map(function (g) {
@@ -1491,6 +1497,28 @@
     }
   }
 
+  // delete a SINGLE loot row (officer only). Confirms with the item name, then saves.
+  // Same dev/Firebase split as deleteRun; keyed by the same index the pencil uses.
+  async function deleteItem(idx) {
+    if (!IS_OFFICER) return;
+    var l = (DATA.loot || [])[idx];
+    if (!l) return;
+    var who = l.player ? " (" + l.player + ")" : "";
+    if (!confirm("Delete this drop?\n\n" + (l.name || "Item #" + l.itemId) + who + "\n\nThis cannot be undone.")) return;
+    DATA.loot.splice(idx, 1);
+    if (IS_DEV) {
+      saveDevDelete(l);
+      render();
+      return;
+    }
+    try {
+      await saveLoot();
+      render();
+    } catch (e) {
+      alert("Delete failed: " + (e && e.message ? e.message : e));
+    }
+  }
+
   // DEV: remember deletions locally so the test file re-import doesn't resurrect them
   function saveDevDelete(l) {
     var dels;
@@ -1661,6 +1689,7 @@
   });
   window.toggleRun = toggleRun;
   window.deleteRun = deleteRun;
+  window.deleteItem = deleteItem;
   window.setAllRuns = setAllRuns;
   window.togglePlayer = togglePlayer;
   window.togglePrio = togglePrio;
