@@ -176,6 +176,11 @@
   // Fragments of a legendary — always kept; boss resolved by "last real boss killed" (time).
   // Covers Val'anyr fragments (Ulduar, guild pool) and Shard of Shadowmourne (ICC, questline).
   var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne/i;
+  // Items that ALWAYS go to the guild BANK regardless of who the addon said got them:
+  // crafting orbs + patterns/recipes. These are guild-pool mats, not personal loot, so we
+  // force player = "Bank" on import (even if it says "Kobee"). Fragments are NOT here —
+  // they bind and stay with whoever got them. Trophies are NOT here — they're gear tokens.
+  var BANK_RE = /^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite|alchemist'?s cache/i;
   // the 14 real Ulduar bosses that anchor the timeline (Assembly = the Iron Council)
   var REAL_BOSSES = {
     "Flame Leviathan": 1, "Ignis the Furnace Master": 1, Razorscale: 1, "XT-002 Deconstructor": 1,
@@ -218,6 +223,9 @@
       // drop in the raid, so they belong in the loot HISTORY. They just don't count
       // toward a raider's loot priority (that exclusion is PRIORITY_SKIP_RE, applied
       // only on the Priority tab). So we keep them; only true logging dups are dropped.
+      // AUTO-BANK: orbs/patterns are guild-pool mats -> force player = "Bank" no matter
+      // who the addon logged (e.g. the ML looted it to self). They never count for anyone.
+      if (BANK_RE.test(name)) l.player = BANK;
       var tableBoss = BOSS_TABLE[name.toLowerCase()];
       var isFragment = FRAGMENT_RE.test(name);
       // The addon now resolves the boss itself (in-game scanner) and ships it as
@@ -318,12 +326,19 @@
       var k = raidKeyFor(l.raid);
       if (k) counts[k] = (counts[k] || 0) + 1;
     });
-    // default to the newest tier that HAS loot, else the first tier
+    // default to the tier with the MOST RECENT loot (by drop timestamp), so the page
+    // opens on the raid you last ran -- not the first tab that happens to have any loot.
     if (!RAID) {
+      var newestTs = {}; // raid key -> newest drop ts
+      (DATA.loot || []).forEach(function (l) {
+        var k = raidKeyFor(l.raid);
+        if (k && (l.ts || 0) > (newestTs[k] || 0)) newestTs[k] = l.ts || 0;
+      });
       RAID = ALL_RAIDS[0].key;
-      for (var i = 0; i < ALL_RAIDS.length; i++) {
-        if (counts[ALL_RAIDS[i].key]) { RAID = ALL_RAIDS[i].key; break; }
-      }
+      var best = -1;
+      ALL_RAIDS.forEach(function (r) {
+        if ((newestTs[r.key] || 0) > best) { best = newestTs[r.key] || 0; if (best > 0) RAID = r.key; }
+      });
     }
     row.style.display = "inline-flex";
     document.getElementById("raidSegs").innerHTML = ALL_RAIDS
@@ -348,7 +363,8 @@
   // The CDN serves icons by slug (e.g. inv_sword_39), not by itemId, so the Okanvil export carries `icon`.
   var ICON_BASE = "https://wow.zamimg.com/images/wow/icons/",
     ICON_FALLBACK = "inv_misc_questionmark",
-    DE_ICON = "inv_enchant_abysscrystal"; // Abyss Crystal — shown for disenchanted loot
+    DE_ICON = "inv_enchant_abysscrystal", // Abyss Crystal — shown for disenchanted loot
+    BANK_ICON = "achievement_guildperk_mobilebanking"; // guild-bank icon — shown for banked loot (orbs/patterns)
   function iconUrl(slug, size) {
     // zamimg serves icon slugs LOWERCASE only. The addon exports mixed case
     // (e.g. "INV_Axe_104"), which 404'd -> "?" fallback. Force lowercase.
@@ -398,6 +414,12 @@
       return (
         '<span class="disenchant"><img class="de-ic" src="' + iconUrl(DE_ICON, "small") +
         '" alt="">Disenchanted</span>' + edit
+      );
+    }
+    if (l.player === BANK) {
+      return (
+        '<span class="banked"><img class="de-ic" src="' + iconUrl(BANK_ICON, "small") +
+        '" alt="">Bank</span>' + edit
       );
     }
     if (l.player) {
@@ -558,9 +580,11 @@
         return by[n];
       })
       .sort(function (a, b) {
-        // Disenchant is pinned to the top; everyone else by real loot count
+        // Disenchant + Bank are pinned to the top; everyone else by real loot count
         if (a.name === DISENCHANT) return -1;
         if (b.name === DISENCHANT) return 1;
+        if (a.name === BANK) return -1;
+        if (b.name === BANK) return 1;
         return b.items.length - a.items.length;
       });
     el.innerHTML =
@@ -568,11 +592,21 @@
       players
         .map(function (p) {
           var isDE = p.name === DISENCHANT;
-          var col = isDE ? "var(--purple, #a335ee)" : classColor(p.class);
+          var isBank = p.name === BANK;
+          var col = isDE ? "var(--purple, #a335ee)" : isBank ? "var(--bank, #22c55e)" : classColor(p.class);
           var d = daysSince(p.last);
           var drought = d != null && d >= 14 ? '<span class="drought"> · no loot ' + d + "d</span>" : "";
           var open = !!OPEN_PLAYERS[p.name];
-          var nCraft = p.crafts.length;
+          // Group recipes/patterns/orbs by EXACT name so each distinct recipe keeps its
+          // own row (in the Bank card you want to know WHICH recipe, not just "Recipes xN").
+          var craftGroups = {}; // exact name -> { name, items: [] }
+          p.crafts.forEach(function (l) {
+            var k = l.name || l.itemId || "Recipe";
+            (craftGroups[k] = craftGroups[k] || { name: k, items: [] }).items.push(l);
+          });
+          var craftList = Object.keys(craftGroups)
+            .sort()
+            .map(function (k) { return craftGroups[k]; });
           // Group the Val'anyr fragments by EXACT name so the three kinds stay separate:
           //   "Fragment of Val'anyr" = the real 1-per-boss raid drop,
           //   "Unbound Fragments of Val'anyr" = the 30-merge quest item (not a boss drop),
@@ -601,7 +635,12 @@
               .map(function (g) {
                 return badge(g.items.length, g.items[0], g.name);
               })
-              .join("") + badge(nCraft, p.crafts[0], "Recipes");
+              .join("") +
+            craftList
+              .map(function (g) {
+                return badge(g.items.length, g.items[0], g.name);
+              })
+              .join("");
           // thumbnails (collapsed peek) or the full editable item list (expanded)
           var peek = p.items
             .slice(0, 14)
@@ -623,27 +662,50 @@
                   '<span class="frag-x">×' + n + "</span></div>"
               : "";
           };
+          // MERGE duplicate items by name (e.g. 5x "Trophy of the Crusade" -> one xN row).
+          // Singles render as the normal editable row; groups of >=2 collapse to a xN
+          // summary row (like the mat rows). Especially for the Bank card (all the orbs).
+          var itemGroups = {};
+          var itemOrder = [];
+          p.items
+            .slice()
+            .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })
+            .forEach(function (l) {
+              var k = (l.itemId || l.name || "").toString().toLowerCase();
+              if (!itemGroups[k]) { itemGroups[k] = []; itemOrder.push(k); }
+              itemGroups[k].push(l);
+            });
           var full =
-            p.items
-              .slice()
-              .sort(function (a, b) {
-                return (b.ts || 0) - (a.ts || 0);
+            itemOrder
+              .map(function (k) {
+                var g = itemGroups[k];
+                return g.length > 1 ? matRow(g.length, g[0], g[0].name) : lootItemHtml(g[0]);
               })
-              .map(lootItemHtml)
               .join("") +
             fragList
               .map(function (g) {
                 return matRow(g.items.length, g.items[0], g.name);
               })
               .join("") +
-            matRow(nCraft, p.crafts[0], nCraft === 1 ? "Recipe" : "Recipes");
+            craftList
+              .map(function (g) {
+                return matRow(g.items.length, g.items[0], g.name);
+              })
+              .join("");
+          // header icon for the pinned sentinels: the Abyss Crystal for Disenchant, a
+          // guild-bank box for Bank (replaces the old 📌 pin emoji).
+          var headIcon = isDE
+            ? '<img class="phead-ic" src="' + iconUrl(DE_ICON, "small") + '" alt="">'
+            : isBank
+              ? '<img class="phead-ic" src="' + iconUrl(BANK_ICON, "small") + '" alt="">'
+              : "";
           return (
-            '<div class="pcard' + (open ? " open" : "") + (isDE ? " de-card" : "") +
+            '<div class="pcard' + (open ? " open" : "") + (isDE ? " de-card" : "") + (isBank ? " bank-card" : "") +
             '" data-player="' + esc(p.name) + '">' +
             '<div class="ph" onclick="togglePlayer(this)">' +
             '<span class="pcaret">' + (open ? "▾" : "▸") + "</span>" +
             '<span class="pn" style="color:' + col + '">' +
-            (isDE ? "📌 " : "") + esc(p.name) + "</span>" +
+            headIcon + esc(p.name) + "</span>" +
             '<span class="pc">' + p.items.length + "</span>" +
             "</div>" +
             '<div class="pd">last: ' + fmtTs(p.last) + drought + "</div>" +
@@ -770,7 +832,7 @@
     // Keep the actual loot rows per raider so the row can expand to show them.
     var won = {}; // main name -> [loot rows]
     rows().forEach(function (l) {
-      if (!l.player || l.player === DISENCHANT) return;
+      if (!l.player || l.player === DISENCHANT || l.player === BANK) return;
       if (firstTs && l.ts && l.ts < firstTs) return; // loot before we tracked attendance
       var nm = l.name || "";
       // craft mats (fragments/orbs/patterns) don't spend priority; ToC trophies DO (gear tokens).
@@ -984,7 +1046,8 @@
     });
     // build the preview HTML: a summary line + the list of NEW items (boss · item -> winner)
     var rows = news.slice(0, 40).map(function (l) {
-      var who = l.player === "Disenchant" ? '<span class="muted">Disenchant</span>'
+      var who = l.player === "Disenchant" ? '<b style="color:var(--purple)">Disenchant</b>'
+        : l.player === BANK ? '<b style="color:var(--bank)">Bank</b>'
         : l.player ? '<b style="color:' + classColor(l.class) + '">' + esc(l.player) + "</b>"
           : '<span class="muted">unassigned</span>';
       return '<div class="pvRow"><span class="pvBoss">' + esc(l.boss || "?") + "</span>"
@@ -1208,6 +1271,7 @@
   // ---- officer: change who won an item — dropdown of raiders + Disenchant ----
   // Fixes loot the Master Looter held then traded, or marks it disenchanted.
   var DISENCHANT = "Disenchant";
+  var BANK = "Bank"; // guild-bank sentinel: orbs/patterns go here (like Disenchant), never count
   var editIdx = -1;
   var pendingWho = ""; // selection awaiting Confirm
 
@@ -1296,6 +1360,7 @@
     var special = [
       { name: "", label: "— unassigned —", col: "var(--text-dim-2)" },
       { name: DISENCHANT, label: "Disenchant", col: "var(--purple)", de: true },
+      { name: BANK, label: "Bank", col: "var(--bank, #22c55e)", bank: true },
     ];
     var mains = playerChoices().filter(function (p) {
       return !(p.rank === 4 || /alt/i.test(p.rankName || "")); // skip alts entirely
@@ -1315,11 +1380,15 @@
   }
   function optHtml(r) {
     var on = r.name === pendingWho;
-    var de = r.de ? '<img class="de-ic" src="' + iconUrl(DE_ICON, "small") + '" alt="">' : "";
+    var ic = r.de
+      ? '<img class="de-ic" src="' + iconUrl(DE_ICON, "small") + '" alt="">'
+      : r.bank
+        ? '<img class="de-ic" src="' + iconUrl(BANK_ICON, "small") + '" alt="">'
+        : "";
     return (
       '<div class="opt' + (on ? " on" : "") + '" style="color:' + r.col + '" ' +
       'onclick="selectWinner(' + JSON.stringify(r.name).replace(/"/g, "&quot;") + ')">' +
-      de + esc(r.label) + (on ? '<span class="opt-cur">✓</span>' : "") + "</div>"
+      ic + esc(r.label) + (on ? '<span class="opt-cur">✓</span>' : "") + "</div>"
     );
   }
   function filterEditList() {
@@ -1345,6 +1414,11 @@
     document.getElementById("editSearch").value = DISENCHANT;
     confirmEdit();
   }
+  function pickBank() {
+    pendingWho = BANK;
+    document.getElementById("editSearch").value = BANK;
+    confirmEdit();
+  }
   function closeEdit() {
     document.getElementById("editOv").classList.remove("open");
     editIdx = -1;
@@ -1365,7 +1439,7 @@
     if (who === (l.player || "")) return closeEdit(); // unchanged
     l.player = who || null;
     var m =
-      who && who !== DISENCHANT
+      who && who !== DISENCHANT && who !== BANK
         ? ROSTER.find(function (r) {
             return (r.name || "").toLowerCase() === who.toLowerCase();
           })
@@ -1573,6 +1647,7 @@
   window.filterEditList = filterEditList;
   window.selectWinner = selectWinner;
   window.pickDisenchant = pickDisenchant;
+  window.pickBank = pickBank;
   // close the suggestion list when clicking outside the search field / list (like vacations)
   document.addEventListener("click", function (e) {
     if (!e.target.closest("#editSearch") && !e.target.closest("#editList")) {

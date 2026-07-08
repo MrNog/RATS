@@ -358,11 +358,16 @@ function computeAttendance(raids) {
     chainList.forEach((nights) => {
       const size = raidSize(nights[0]);
       const firstDate = nights.map((r) => r.date).sort()[0];
-      if (joinD && firstDate < joinD) return; // whole chain predates them
-      if (joinD && nights.some((r) => r.date < joinD) && nights.some((r) => r.date >= joinD)) return; // joined mid-chain → skip
-
       const ordered = nights.slice().sort((a, b) => (a.date < b.date ? -1 : 1)); // chronological
       const wasPresent = (r) => o.presentDates.has(r.date);
+      const cameToThis = ordered.some(wasPresent);
+      // join-date protection: don't PENALISE someone for a chain before they joined --
+      // BUT if they actually SHOWED UP to it (e.g. pug'd before joining, or a wrong
+      // join date), still give them the credit. Only skip when they weren't there.
+      if (!cameToThis) {
+        if (joinD && firstDate < joinD) return; // whole chain predates them (and they didn't come)
+        if (joinD && nights.some((r) => r.date < joinD) && nights.some((r) => r.date >= joinD)) return; // joined mid-chain → skip
+      }
       const isExcused = (r) => !wasPresent(r) && (o.excused.has(r.date) || onVacation(o.name, r.date));
       const nAttended = ordered.filter(wasPresent).length;
       const nExcused = ordered.filter(isExcused).length;

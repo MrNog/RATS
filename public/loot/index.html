@@ -113,15 +113,19 @@
       <p class="sub" id="editItem"></p>
       <label class="sub">Who won it?</label>
       <div class="winrow">
-        <div class="ac-wrap" style="flex:0 0 70%">
+        <div class="ac-wrap" style="flex:1 1 auto">
           <input type="text" id="editSearch" placeholder="Type a raider…" autocomplete="off"
             oninput="filterEditList()" onfocus="filterEditList()">
           <div id="editList" class="picklist ac" style="display:none"></div>
         </div>
-        <button class="btn de-btn" style="flex:0 0 28%" onclick="pickDisenchant()"
+        <button class="btn de-btn" onclick="pickDisenchant()"
           title="Mark as disenchanted">
           <img class="de-ic" src="https://wow.zamimg.com/images/wow/icons/small/inv_enchant_abysscrystal.jpg" alt="">
           Disenchant</button>
+        <button class="btn bank-btn" onclick="pickBank()"
+          title="Send to the guild bank">
+          <img class="de-ic" src="https://wow.zamimg.com/images/wow/icons/small/achievement_guildperk_mobilebanking.jpg" alt="">
+          Bank</button>
       </div>
       <div class="frow" style="margin-top:14px">
         <button class="btn" onclick="closeEdit()" style="flex:1">Cancel</button>

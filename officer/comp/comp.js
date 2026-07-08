@@ -175,6 +175,107 @@ function realClassName(m) {
   return f ? f[1] : m.className || "";
 }
 
+// WoW class TOKEN (from the Okanvil addon export: "DEATHKNIGHT", "DRUID"...) -> the
+// CLASSES key ("dk", "druid"). Case-insensitive, space/underscore-insensitive.
+const ADDON_CLASS_TOKEN = {
+  DEATHKNIGHT: "dk", DRUID: "druid", HUNTER: "hunter", MAGE: "mage",
+  PALADIN: "paladin", PRIEST: "priest", ROGUE: "rogue", SHAMAN: "shaman",
+  WARLOCK: "warlock", WARRIOR: "warrior",
+};
+// Spec keywords per class (mirrors officer/guild SPECS) so we can GUESS a spec from
+// a raider's public note when no spec was saved. Format: [label, ...keywords].
+const SPEC_KW = {
+  "Death Knight": [["Blood", "blood", "bdk"], ["Frost", "frost"], ["Unholy", "unholy", "uh"]],
+  Druid: [["Balance", "balance", "boomkin", "boom", "moonkin", "bala"], ["Feral", "feral", "cat", "ferals"], ["Guardian", "guardian", "bear", "tank"], ["Restoration", "resto", "restoration", "restro", "rdudu", "healer", "heal"]],
+  Hunter: [["Beastmastery", "bm", "beast"], ["Marksmanship", "mm", "marks", "marksman"], ["Survival", "surv", "survival"]],
+  Mage: [["Arcane", "arcane"], ["Fire", "fire"], ["Frost", "frost"]],
+  Paladin: [["Holy", "holy", "preg"], ["Protection", "prot", "protection"], ["Retribution", "ret", "retri", "retribution"]],
+  Priest: [["Discipline", "disc", "disco", "discipline"], ["Holy", "holy"], ["Shadow", "shadow", "spriest"]],
+  Rogue: [["Assassination", "sin", "assa", "assassination", "ass"], ["Combat", "combat"], ["Subtlety", "sub", "subtlety"]],
+  Shaman: [["Elemental", "ele", "elem", "elemental", "spellhance"], ["Enhancement", "enh", "enha", "enhancement"], ["Restoration", "resto", "restoration", "healer", "heal"]],
+  Warlock: [["Affliction", "affli", "affliction"], ["Demonology", "demo", "demonology"], ["Destruction", "destro", "destruction"]],
+  Warrior: [["Arms", "arms"], ["Fury", "fury"], ["Protection", "prot", "protection", "tank"]],
+};
+function guessSpecFromNote(className, note) {
+  const rows = SPEC_KW[className];
+  if (!rows) return "";
+  const hay = " " + String(note || "").toLowerCase() + " ";
+  let best = "", bestPos = Infinity;
+  for (const row of rows) {
+    for (let i = 1; i < row.length; i++) {
+      const pos = hay.search(new RegExp("[^a-z]" + row[i] + "[^a-z]"));
+      if (pos >= 0 && pos < bestPos) { bestPos = pos; best = row[0]; }
+    }
+  }
+  return best;
+}
+// The addon can't know each raider's spec (WoW doesn't expose it without inspect),
+// so it ships specName "". But OUR ROSTER knows: a SAVED spec (officer/guild ->
+// ratsGuild.specs[name]) or a GUESS from the raider's public note. rosterSpec() uses
+// both -- same as officer/guild's specOf() -- so the comp gets the RIGHT spec.
+function rosterSpec(name, className) {
+  try {
+    const d = JSON.parse(localStorage.getItem("ratsGuild") || "null");
+    if (!d) return "";
+    // resolve the roster member via guildMember() -- it applies NAME_ALIASES + alt
+    // handling (e.g. addon "Foug" -> roster "Fouug"), so specs match even when the
+    // in-game name differs slightly from the roster entry.
+    const m = guildMember(name);
+    const rosterName = m ? m.name : name;
+    const nm = normName(rosterName);
+    // 1) saved spec (data.specs is keyed by in-game name)
+    if (d.specs) {
+      for (const k in d.specs) if (normName(k) === nm) { if (d.specs[k]) return d.specs[k]; }
+    }
+    // 2) guess from the roster member's public note
+    if (m) return guessSpecFromNote(className || m.class, m.publicNote);
+  } catch (e) {}
+  return "";
+}
+// The Okanvil addon exports attendance as a FLAT { type:"attendance", players:[
+// {name,class,group,...} ] } (class = WoW token, no spec). The comp board works on
+// { slots:[{className,specName,groupNumber,slotNumber}] } (Raid-Helper shape). This
+// adapts the export AND fills each spec from our roster so icons/roles are correct.
+// look up the class+spec entry in DEFAULT_CLASSES so we can attach the SAME fields
+// Add-raider attaches (color + class/spec emote ids). Without these the board rows
+// render white with no icon. DEFAULT_CLASSES is keyed by display name ("Druid").
+function classSpecMeta(className, specName) {
+  // DEFAULT_CLASSES keys DK as "DK", but our display name is "Death Knight" -- map it.
+  const want = className === "Death Knight" ? "DK" : className;
+  const c = DEFAULT_CLASSES.find(function (x) { return x.name === want; });
+  if (!c) return { color: "#ffffff", classEmoteId: null, specEmoteId: null };
+  let s = specName ? c.specs.find(function (x) { return x.name.toLowerCase() === String(specName).toLowerCase(); }) : null;
+  if (!s && specName) {
+    // roster labels can differ slightly (e.g. "Restoration" vs shaman "Restoration1")
+    s = c.specs.find(function (x) { return x.name.toLowerCase().indexOf(String(specName).toLowerCase()) === 0; });
+  }
+  return {
+    color: (s && s.color) || (c.specs[0] && c.specs[0].color) || "#ffffff",
+    classEmoteId: c.emoteId || null,
+    specEmoteId: (s && s.emoteId) || null,
+  };
+}
+function addonAttendanceToComp(data) {
+  const players = data.players || [];
+  const bySlot = {}; // group -> running slot number
+  const slots = players.map(function (p) {
+    const key = ADDON_CLASS_TOKEN[String(p.class || "").toUpperCase().replace(/[\s_-]/g, "")] || "warrior";
+    const disp = (CLASSES.find(function (x) { return x[0] === key; }) || [])[1] || p.class || "";
+    // spec: addon export first (usually ""), else our roster (saved or guessed).
+    const spec = (p.specName && p.specName !== "") ? p.specName : rosterSpec(p.name, disp);
+    const meta = classSpecMeta(disp, spec);
+    const g = p.group || 1;
+    bySlot[g] = (bySlot[g] || 0) + 1;
+    return {
+      name: p.name, className: disp, specName: spec,
+      color: meta.color, classEmoteId: meta.classEmoteId, specEmoteId: meta.specEmoteId,
+      groupNumber: g, slotNumber: bySlot[g],
+    };
+  });
+  const groupCount = players.reduce(function (m, p) { return Math.max(m, p.group || 1); }, 0) || 5;
+  return { title: data.title || (data.zone || "Raid"), date: data.date || "", desc: "", groupCount: groupCount, slots: slots };
+}
+
 function loadEmojiMap() {
   try {
     return JSON.parse(localStorage.getItem("ratsEmoji") || "{}");
@@ -806,6 +907,18 @@ function render() {
     } catch (e) {
       errEl.textContent = "❌ Invalid JSON — copy the full Composition Tool export.";
       return;
+    }
+  }
+  // accept the Okanvil ADDON attendance export (flat players[]) -> comp slots shape.
+  // Normalise the TEXTAREA to the slots shape too, so the interactive board actions
+  // (add raider / no-show / move) — which re-parse jsonIn — see the converted data.
+  if (data && data.type === "attendance" && Array.isArray(data.players)) {
+    data = addonAttendanceToComp(data);
+    document.getElementById("jsonIn").value = JSON.stringify(data, null, 1);
+    // pre-fill the date field from the addon export if empty
+    if (data.date && !document.getElementById("dateIn").value) {
+      document.getElementById("dateIn").value = data.date;
+      if (window.RatsCal && RatsCal.sync) RatsCal.sync();
     }
   }
   if (!Array.isArray(data.slots)) data.slots = [];
