@@ -203,7 +203,7 @@
         var rows = g.logs
           .map(function (l) {
             var del = IS_OFFICER
-              ? '<button class="logdel" title="Exclude this log (bad/duplicate upload)" ' +
+              ? '<button class="logdel" title="Delete this log from the DB (a later Fetch can re-pull it)" ' +
                 'onclick="excludeLog(\'' +
                 esc(l.reportId) +
                 "')\">🗑</button>"
@@ -1076,6 +1076,7 @@
   // Filter a rows[] list to the active difficulty on split raids (ToC/ICC); pass through otherwise.
   // Rows predating the `hm` field (legacy) pass through so old data isn't silently dropped.
   function rowsForDiff(rows) {
+    markTankRows(rows); // flag tank rows on the original array (flag lives on each row, survives filtering)
     if (!SPLIT_DIFF_RAIDS[RAID]) return rows;
     var wantHC = PROGDIFF === "hc";
     return (rows || []).filter(function (r) {
@@ -1230,7 +1231,6 @@
   var MIN_FIGHTS = { week: 1, month: 3, all: 3 }; // consistency gate: bigger periods need ≥3 fights
 
   function logsInScope(period) {
-    var excl = excludedSet();
     var rObj = (DATA.raids || []).find(function (r) {
       return r.key === RAID;
     });
@@ -1238,7 +1238,6 @@
       return String(x).toLowerCase();
     });
     return (DATA.logs || []).filter(function (l) {
-      if (excl[String(l.reportId)]) return false;
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
@@ -1305,11 +1304,64 @@
   var W_TOTAL = 0.6,
     W_RATE = 0.4;
 
-  // Tank fights must NOT count toward DPS — a Protection warrior/paladin was TANKING, not doing damage
-  // (e.g. Rellik went Prot on 4 bosses; those ~1500 dps fights unfairly tanked his average). Protection
-  // is always a tank spec in WotLK. (We can't reliably detect DK/Druid tanking without threat/dmgTaken.)
+  // Tank fights must NOT count toward DPS — a tank was holding threat, not pumping damage, so its low
+  // "dps" unfairly drags the player's average (e.g. Rellik Prot ~1500 dps on 4 bosses).
+  //
+  // Detecting a tank from the API is hard: `damageTaken`/threat are null, and Feral Combat (Druid) is
+  // BOTH cat-dps and bear-tank under one spec name — the log can't tell them apart. So we combine:
+  //   1) unambiguous tank specs (Protection) → always tank;
+  //   2) AMBIGUOUS specs (Feral Druid, DK Blood/Frost/Unholy) → tank ONLY when their dps on that fight is
+  //      far below the fight's real dps pack (a bear/blood tank parses a fraction of a cat/dps). We flag
+  //      a row as tank when its dps < 55% of the fight's MEDIAN dps among plausible dps rows.
+  // Rows get a computed `_tank` flag (see markTankRows); isTankFight reads it, falling back to spec.
   var TANK_SPEC = { Protection: true };
+  // specs that can be either dps or tank — resolve by the low-dps heuristic
+  var AMBIG_TANK_SPEC = { "Feral Combat": true, Feral: true, Blood: true, Frost: true, Unholy: true };
+  var TANK_DPS_FRAC = 0.55; // below this share of the fight median dps ⇒ treat an ambiguous spec as tank
+
+  // Flag tank rows in-place (adds `_tank` bool). Two passes over ONE log's rows:
+  //   pass 1 — per fight, compute each ambiguous row's dps vs the fight's median dps (is this a low parse?);
+  //   pass 2 — per PLAYER, if they were low on the MAJORITY of their ambiguous fights, mark ALL their rows
+  //            in this log as tank. Deciding per-player (not per-boss) keeps a bear tank consistent across
+  //            the run instead of flickering dps/tank when one fight's numbers happen to line up.
+  // Idempotent — safe to call repeatedly on the same rows array.
+  function markTankRows(rows) {
+    if (!rows || !rows.length || rows._tankMarked) return rows;
+    var byBoss = {};
+    rows.forEach(function (r) {
+      if (r.r === "HEALER") { r._tank = false; return; }
+      if (TANK_SPEC[r.s]) { r._tank = true; return; } // unambiguous tank spec
+      r._tank = false; // default; ambiguous rows resolved below
+      (byBoss[r.b] = byBoss[r.b] || []).push(r);
+    });
+    // pass 1: mark each ambiguous row low/high for its own fight
+    Object.keys(byBoss).forEach(function (b) {
+      var pack = byBoss[b];
+      var dpsVals = pack.map(function (r) { return r.d || 0; }).sort(function (a, bb) { return a - bb; });
+      var mid = dpsVals.length ? dpsVals[Math.floor(dpsVals.length / 2)] : 0;
+      pack.forEach(function (r) {
+        r._low = !!AMBIG_TANK_SPEC[r.s] && mid > 0 && (r.d || 0) < mid * TANK_DPS_FRAC;
+      });
+    });
+    // pass 2: per player, tank the whole log if low on the majority of their ambiguous fights
+    var tally = {}; // normName → {ambig, low}
+    rows.forEach(function (r) {
+      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
+      var k = normNm(r.n);
+      var t = tally[k] || (tally[k] = { ambig: 0, low: 0 });
+      t.ambig++; if (r._low) t.low++;
+    });
+    rows.forEach(function (r) {
+      if (r._tank) return; // already an unambiguous tank
+      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
+      var t = tally[normNm(r.n)];
+      if (t && t.ambig && t.low * 2 >= t.ambig) r._tank = true; // low on ≥half their fights ⇒ tank
+    });
+    try { Object.defineProperty(rows, "_tankMarked", { value: true }); } catch (e) { rows._tankMarked = true; }
+    return rows;
+  }
   function isTankFight(r) {
+    if (r._tank != null) return r._tank; // computed flag wins
     return !!TANK_SPEC[r.s];
   }
   // Healer main-specs (from the roster). If the roster says someone's MAIN spec is a healing one, they
@@ -1455,8 +1507,13 @@
     });
     var slug = (rObj && rObj.key) || RAID; // raids use the slug as key (ulduar/toc/icc)
     var bySize = sp[slug] && sp[slug][SIZE];
-    if (!bySize || !bySize.players) return null;
-    var rec = bySize.players[normNm(faceName)];
+    if (!bySize) return null;
+    // prefer the active difficulty (Normal/Heroic toggle); fall back to the bare-size mirror for
+    // back-compat with snapshots written before the per-difficulty split.
+    var diffKey = SPLIT_DIFF_RAIDS[slug] ? (PROGDIFF === "hc" ? "hc" : "nm") : null;
+    var bucket = (diffKey && bySize[diffKey]) || bySize;
+    if (!bucket.players) return null;
+    var rec = bucket.players[normNm(faceName)];
     if (!rec || rec.avg == null) return null;
     return Math.max(0, Math.min(1, rec.avg / 100));
   }
@@ -1799,7 +1856,6 @@
   // and count how many consecutive most-recent lockouts the same player has led. Returns {dps, hps}.
   function computeStreaks() {
     var minF = 1; // within a single lockout, any parse counts toward "who led that week"
-    var excl = excludedSet();
     var rObj = (DATA.raids || []).find(function (r) {
       return r.key === RAID;
     });
@@ -1807,7 +1863,6 @@
       return String(x).toLowerCase();
     });
     var scoped = (DATA.logs || []).filter(function (l) {
-      if (excl[String(l.reportId)]) return false;
       if (String(l.size) !== SIZE) return false;
       return (
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0
@@ -1848,7 +1903,6 @@
   function prevWindowLogs(period) {
     var span = period === "week" ? 7 : 31;
     var now = Date.now();
-    var excl = excludedSet();
     var rObj = (DATA.raids || []).find(function (r) {
       return r.key === RAID;
     });
@@ -1856,7 +1910,6 @@
       return String(x).toLowerCase();
     });
     return (DATA.logs || []).filter(function (l) {
-      if (excl[String(l.reportId)]) return false;
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
@@ -1980,12 +2033,10 @@
       if (isNaN(dt)) return true;
       return (Date.now() - dt.getTime()) / 86400000 <= (PERIOD === "week" ? 7 : 31);
     };
-    var excl = excludedSet();
     var logsForSize = (d.logs || []).filter(function (l) {
-      if (excl[String(l.reportId)]) return false;
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
-      return String(l.size) === SIZE && raidMatch && inPeriod(l.date || l.uploadedAt);
+      return normSize(l.size) === SIZE && raidMatch && inPeriod(l.date || l.uploadedAt);
     });
     renderLogs(logsForSize, (rObj && rObj.label) || RAID);
   }
@@ -2045,24 +2096,17 @@
     render();
   }
 
-  // ---- manual log exclusion (officer) --------------------------------------------------------
-  // The API sometimes keeps a bad/duplicate upload as "Original" (e.g. a log the officer archived
-  // but a second raider re-uploaded, carrying a phantom kill). Officers can exclude a reportId here;
-  // the id lives in the shared snapshot (`excludedLogs`) so everyone sees the cleaned view. Excluding
-  // only re-renders + re-persists — it never re-fetches, so all toggles keep filtering client-side.
-  function excludedSet() {
-    var s = {};
-    ((DATA && DATA.excludedLogs) || []).forEach(function (id) {
-      s[String(id)] = true;
-    });
-    return s;
-  }
+  // ---- log delete (officer) ------------------------------------------------------------------
+  // `excludedLogs` is NOT a UI blacklist — an archived log never has rows to show anyway. It exists only
+  // so the fetch can SKIP re-pulling logs the API already flagged ARCHIVED (see fetchData/apiIncremental).
+  // Render filters do not consult it. The trash button below is a hard delete (removes from the DB).
+  // DELETE a log from the snapshot — literally remove it from the DB. It is NOT blacklisted, so the next
+  // Fetch is free to pull it again (that's the point: delete → re-fetch a clean copy). Use this for a bad
+  // capture you want re-pulled. (Truly superseded uploads are dropped automatically via API logStatus.)
   async function excludeLog(reportId) {
     reportId = String(reportId);
-    if (!confirm("Exclude log #" + reportId + " from the rankings? (bad/duplicate upload)")) return;
-    DATA.excludedLogs = ((DATA && DATA.excludedLogs) || []).slice();
-    if (DATA.excludedLogs.indexOf(reportId) < 0) DATA.excludedLogs.push(reportId);
-    // drop it from the stored logs too, so it won't reappear without a full rebuild
+    if (!confirm("Delete log #" + reportId + " from the database?\n\nIt is NOT blacklisted — the next Fetch can pull it again.")) return;
+    // remove ONLY from the stored logs. Do not touch excludedLogs (no permanent blacklist).
     DATA.logs = (DATA.logs || []).filter(function (l) {
       return String(l.reportId) !== reportId;
     });
@@ -2156,41 +2200,51 @@
     return { fresh: fresh, archivedIds: archivedIds };
   }
 
-  // Fetch server-wide percentiles (Boss Points V2) for a raid. The scoring SEASON isn't the phase
-  // number — we probe seasons (newest→older) until one returns players with points. Returns
-  // { season, players:[{name, avg, bosses}] } or null. difficulty is "25-hc" / "10-hc".
-  async function apiServerRankings(key, raidSlug, difficulty) {
-    for (var s = 8; s >= 3; s--) {
-      try {
-        var d = await apiGet(
-          "/guilds/" +
-            API_GUILD +
-            "/rankings?raid=" +
-            raidSlug +
-            "&season=" +
-            s +
-            "&difficulty=" +
-            difficulty +
-            "&ladder=regular",
-          key
-        );
-        var pl = (d.rankings && d.rankings.players) || [];
-        var withPts = pl.filter(function (p) {
-          return (p.bossPoints || 0) > 0;
-        });
-        if (withPts.length) {
-          return {
-            season: s,
-            players: pl.map(function (p) {
-              return { name: p.name, avg: p.averagePercent || 0, bossPoints: p.bossPoints || 0, bosses: p.bosses || {} };
-            }),
-          };
-        }
-      } catch (e) {}
-      await new Promise(function (r) {
-        setTimeout(r, 300);
+  var API_SERVER_ID = 3; // warmane-onyxia
+
+  // Ask the API which season scores each raid — ONE call, no more probing seasons 8→3. Returns
+  // { raidSlug: season } from /meta/seasons phases[]. Onyxia mapping: naxx 4 · ulduar 5 · toc 6 · icc 7.
+  // Falls back to that static map if the endpoint shape surprises us.
+  async function apiRaidSeasons(key) {
+    var map = {};
+    try {
+      var d = await apiGet("/meta/seasons?serverId=" + API_SERVER_ID, key);
+      // shape: data.seasons[] or data.{season, phases:[{phase, primaryRaid}]} — probe defensively.
+      var season = (d && (d.season || (d.current && d.current.season))) || null;
+      var phases = (d && (d.phases || (d.current && d.current.phases))) || [];
+      phases.forEach(function (p) {
+        var slug = p.primaryRaid || (p.raid && p.raid.slug) || p.raidSlug;
+        if (slug) map[String(slug).toLowerCase()] = p.season || season;
       });
-    }
+    } catch (e) {}
+    // Fallback: Onyxia's known scoring seasons — one season per phase (naxx 4 · ulduar 5 · toc 6 · icc 7).
+    var FALLBACK = { naxx: 4, ulduar: 5, toc: 6, icc: 7 };
+    Object.keys(FALLBACK).forEach(function (slug) {
+      if (map[slug] == null) map[slug] = FALLBACK[slug];
+    });
+    return map;
+  }
+
+  // ONE rankings call for a known (raid, season, difficulty). No season sweep — the caller already
+  // resolved the season via apiRaidSeasons. Returns { season, players:[{name,avg,bossPoints,bosses}] }
+  // or null (raid not scored that season / no data). difficulty = "25-nm" | "25-hc" | "10-nm" | "10-hc".
+  async function apiServerRankings(key, raidSlug, season, difficulty) {
+    if (season == null) return null;
+    try {
+      var d = await apiGet(
+        "/guilds/" + API_GUILD + "/rankings?raid=" + raidSlug +
+          "&season=" + season + "&difficulty=" + difficulty + "&ladder=regular",
+        key
+      );
+      var pl = (d.rankings && d.rankings.players) || [];
+      if (!pl.length) return null;
+      return {
+        season: season,
+        players: pl.map(function (p) {
+          return { name: p.name, avg: p.averagePercent || 0, bossPoints: p.bossPoints || 0, bosses: p.bosses || {} };
+        }),
+      };
+    } catch (e) {}
     return null;
   }
 
@@ -2375,13 +2429,18 @@
       (snap.logs || []).forEach(function (l) {
         have[l.reportId] = true;
       });
+      // Also skip logs we already know are ARCHIVED (in excludedLogs) — don't waste a call re-fetching
+      // a superseded log just to re-learn it's archived. A rebuild clears this so they're re-checked once.
+      (snap.excludedLogs || []).forEach(function (id) {
+        have[String(id)] = true;
+      });
 
       var scopeEl = document.getElementById("fetchScope");
       var maxPages = scopeEl ? parseInt(scopeEl.value, 10) : 0;
       // "All" (maxPages 0) = full rebuild: ignore what we have and re-fetch every log (recomputes
       // bosses/kills/wipes if the snapshot shape changed). Bounded scopes stay incremental.
       var rebuild = maxPages === 0;
-      if (rebuild) have = {};
+      if (rebuild) { have = {}; snap.excludedLogs = []; } // rebuild re-checks archived status from scratch
 
       setLbl(rebuild ? "Rebuilding…" : "Scanning history…");
       var res = await apiIncremental(key, {
@@ -2393,37 +2452,56 @@
       });
 
       snap.logs = mergeLogs(rebuild ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
+      // Remember archived ids so we NEVER fetch them again — the API marked them superseded, so a later
+      // Fetch would otherwise re-pull each one just to re-learn it's archived (a wasted call per log).
+      // excludedLogs is the "don't fetch, don't show" set; `have` (below, next run) includes it.
+      if (res.archivedIds && res.archivedIds.length) {
+        var exSet = {};
+        (snap.excludedLogs || []).forEach(function (id) { exSet[String(id)] = true; });
+        res.archivedIds.forEach(function (id) { exSet[String(id)] = true; });
+        snap.excludedLogs = Object.keys(exSet);
+      }
       if (rosterNames) snap.rosterNames = rosterNames; // guild-only filter for leaderboards
       if (altMap) snap.altMap = altMap; // alt→main, so a person's toons count as one
       if (mainSpec) snap.mainSpec = mainSpec; // roster main spec → decides true role (healer vs dps)
 
-      // server-wide percentiles (Boss Points) for the HYBRID score + profile pages.
-      // serverPct[raidSlug][sizeKey][normName] = { avg, bosses }. Probes seasons to find data.
+      // server-wide percentiles (Boss Points) — ONE call per (raid × size × difficulty) we ACTUALLY
+      // raided, at the raid's real scoring season (from /meta/seasons). No season sweep, no calling
+      // difficulties/sizes we never played. serverPct[raidSlug][sizeKey][diffKey] = {season, players}.
       try {
-        var raidSlugs = {};
+        // which (raidSlug, size, "nm"/"hc") combos do our logs actually contain?
+        var combos = {}; // "toc|25|nm" → {slug, size, diff}
         (snap.logs || []).forEach(function (l) {
-          if (l.raidSlug) raidSlugs[l.raidSlug] = true;
+          if (!l.raidSlug || !l.size) return;
+          var sizeKey = normSize(l.size);
+          (l.bfights || []).forEach(function (f) {
+            var diffKey = f.hm ? "hc" : "nm";
+            combos[l.raidSlug + "|" + sizeKey + "|" + diffKey] = {
+              slug: l.raidSlug, size: sizeKey, diff: diffKey,
+            };
+          });
         });
+        var seasonMap = await apiRaidSeasons(key); // one /meta/seasons call
         snap.serverPct = snap.serverPct || {};
-        var slugList = Object.keys(raidSlugs);
-        for (var si = 0; si < slugList.length; si++) {
-          var slug = slugList[si];
-          snap.serverPct[slug] = snap.serverPct[slug] || {};
-          var diffs = [
-            ["25", "25-hc"],
-            ["10", "10-hc"],
-          ];
-          for (var di = 0; di < diffs.length; di++) {
-            setLbl("Server ranks " + slug + " " + diffs[di][0] + "…");
-            var sr = await apiServerRankings(key, slug, diffs[di][1]);
-            if (sr) {
-              var m = {};
-              sr.players.forEach(function (p) {
-                m[normNm(p.name)] = { avg: p.avg, bosses: p.bosses };
-              });
-              snap.serverPct[slug][diffs[di][0]] = { season: sr.season, players: m };
-            }
-          }
+        var comboList = Object.keys(combos);
+        for (var ci = 0; ci < comboList.length; ci++) {
+          var c = combos[comboList[ci]];
+          var season = seasonMap[c.slug];
+          var apiDiff = c.size + "-" + c.diff; // "25-nm"
+          setLbl("Server ranks " + c.slug + " " + c.size + " " + c.diff.toUpperCase() + "…");
+          var sr = await apiServerRankings(key, c.slug, season, apiDiff);
+          await new Promise(function (r) { setTimeout(r, 300); }); // stay under 30 rpm
+          if (!sr) continue;
+          var m = {};
+          sr.players.forEach(function (p) {
+            m[normNm(p.name)] = { avg: p.avg, bossPoints: p.bossPoints, bosses: p.bosses };
+          });
+          snap.serverPct[c.slug] = snap.serverPct[c.slug] || {};
+          snap.serverPct[c.slug][c.size] = snap.serverPct[c.slug][c.size] || {};
+          // keep per-difficulty; also mirror to the bare size key for back-compat with existing readers
+          snap.serverPct[c.slug][c.size][c.diff] = { season: sr.season, players: m };
+          snap.serverPct[c.slug][c.size].season = sr.season;
+          snap.serverPct[c.slug][c.size].players = m;
         }
       } catch (e) {}
 
