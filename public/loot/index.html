@@ -95,15 +95,12 @@
       <h2>Import loot JSON</h2>
       <p class="sub">Paste the <code>/okanvil export</code> output. It's <b class="gold">merged</b> with what's
         already saved (no overwrite) — safe to paste a run more than once.</p>
-      <textarea id="importText" placeholder='{ "loot": [ { "ts": …, "player": "Kobee", "itemId": 45107, … } ] }'></textarea>
+      <textarea id="importText" placeholder='{ "loot": [ { "ts": …, "player": "Kobee", "itemId": 45107, … } ] }' oninput="previewImport()"></textarea>
+      <div id="importPreview" class="importPreview" hidden></div>
       <div id="importMsg" class="msg"></div>
-      <div class="frow">
-        <button onclick="doImport()">💾 Merge &amp; save</button>
+      <div class="frow importActions">
         <button class="btn" onclick="closeImport()">Cancel</button>
-      </div>
-      <div class="frow" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
-        <button type="button" class="btn" onclick="dedupeLoot()" title="Remove duplicate drops (same item + time)">🧹 Remove duplicates</button>
-        <button type="button" class="del" onclick="clearAllLoot()" title="Delete ALL loot history">🗑 Clear all loot</button>
+        <button id="importGo" onclick="doImport()" disabled>💾 Merge &amp; save</button>
       </div>
     </div>
   </div>
