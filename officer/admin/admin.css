@@ -107,3 +107,56 @@ textarea {
 .card.danger h2 {
   color: #ff8f8f;
 }
+
+/* wow-logs API-usage monitor (in the API key card) */
+.apiusage {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #2a2c31);
+}
+.au-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.au-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-dim, #9aa0a6);
+}
+.au-count {
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  font-size: 15px;
+}
+.au-count b {
+  font-size: 20px;
+  font-weight: 800;
+}
+.au-cap {
+  color: #6e7178;
+  font-size: 12px;
+  font-weight: 600;
+}
+.au-bar {
+  margin-top: 8px;
+  height: 7px;
+  border-radius: 999px;
+  background: #16181c;
+  overflow: hidden;
+}
+.au-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent, #c0943a);
+  transition: width 0.3s;
+}
+.au-note {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: #6e7178;
+}

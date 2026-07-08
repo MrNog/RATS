@@ -24,66 +24,44 @@ all filters are client-side — zero extra Firebase reads.
 - **Month** = per-boss best/avg + trend ("vs month avg")
 - **All** = guild-best kill ever + fastest full clear (no cross-period comparison)
 
-## API contract (wow-logs dev)
+## API contract
 
-Base: `https://wow-logs.co.in/api/v1/guild/{realm}/{guild}/`
+> ⚠️ The draft we sent the dev is **NOT** what shipped. The dev opened the Public API V1 with
+> different request/response shapes and said "follow the documentation." **The ground-truth reference
+> is [`docs/WOWLOGS_API.md`](../../docs/WOWLOGS_API.md)** — read it before building this page. Summary below.
 
-### Endpoints
-- `GET /latest` — latest report + its fights
-- `GET /reports?limit=10` — last N reports for backfill
+Base (note the `api.` subdomain and **plural** `guilds`, Bearer key required):
+`https://api.wow-logs.co.in/api/v1/guilds/{realm}/{guild}/`
 
-### Success 200
-```json
-{
-  "ok": true,
-  "data": {
-    "report": {
-      "reportId": "20459",
-      "reportUrl": "https://wow-logs.co.in/20459",
-      "raid": "icc",
-      "size": 25,
-      "uploadedAt": "2026-06-25T23:55:00Z"
-    },
-    "fights": [
-      {
-        "encounter": "Festergut",
-        "boss": true,
-        "kill": true,
-        "hardmode": false,
-        "start": "2026-06-25T21:14:03Z",
-        "durationSec": 220,
-        "players": [
-          {
-            "name": "Kobee", "class": "Rogue", "spec": "Assassination",
-            "dps": 6210, "hps": 0, "damage": 13662000, "healing": 0,
-            "deaths": 0, "interrupts": 2, "damageTaken": 410000,
-            "overhealing": 0, "activity": 0.97,
-            "biggestHit": { "ability": "Mutilate", "amount": 18234 }
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-A wipe = same shape with `"kill": false`. For `/reports`: `data.reports: [{ report, fights }]`.
+### Endpoints we use
+- `GET /logs/latest` — latest log, full fights + players (was `/latest`)
+- `GET /logs?limit=5` — metadata-only history, paginate via `nextCursor` (was `/reports?limit=10`; **free cap 5**)
+- `GET /logs/{logId}` — one full log, for backfill of older reports
+- `GET /rankings?raid=&season=&difficulty=&ladder=` — Boss Points leaderboard
 
-### Field reference
-**report:** `reportId`, `reportUrl`, `raid` (slug: icc/ulduar/toc…), `size` (10|25), `uploadedAt` (ISO)
+### Real response shape (full log)
+`data.log` (nested — NOT `data.report`) → `log.fights[]` → `fights[].players[]`. Ids are **numbers**
+(`logId`, `fightId`). `raid`/`server` are **objects** `{slug,name,id}`. `difficulty` in a fight is the
+enum form (`"TWENTY_FIVE_HC"`); the `/rankings` param uses `"25-hc"`.
 
-**fights[]:** `encounter` (stable name — group by this), `boss` (bool), `kill` (bool), `hardmode` (bool),
-`start` (ISO), `durationSec`, `players[]`
+### Fields — CONFIRMED available
+- **fights[]:** `encounter`, `bossName`, `boss`, `kill`, `hardmode`, `start`, `durationSec`, `difficulty`
+- **players[]:** `name`, `class` (full WotLK), `spec` (often null), `role`, `dps`, `hps`, `damage`, `healing`
+- **rankings players[]:** `bossPoints`, `averagePercent`, `bosses{}` (build columns from `data.bossOrder[]`)
 
-**players[]:** `name`, `class` (full WotLK name e.g. "Death Knight"), `spec`, `dps`, `hps`, `damage`,
-`healing`, `deaths`, `interrupts`, `damageTaken`, `overhealing`, `activity` (0–1),
-`biggestHit { ability, amount }`
+### Fields — NOT in the API (dev-confirmed 2026-07-06)
+`activity`, `biggestHit`, and per the dev's "etc" assume `damageTaken`/`overhealing` are absent too.
+`deaths`, `interrupts` (`?include=interrupts`), `consumables` (`?include=consumables`) are **unverified** —
+gate any widget on them (render only if non-null) and open a `#bug-reports` ticket if they come back empty.
+**Don't build** MVP/awards that need activity/biggestHit — weight raw dps/hps/damage/healing instead.
 
 ### Errors
-`{ "ok": false, "error": { "code", "message" } }` + matching HTTP status.
-Codes: `400 BAD_REQUEST` · `404 NOT_FOUND` · `429 RATE_LIMITED` · `500 SERVER_ERROR`
+`{ "ok": false, "error": { "code", "message" } }` + HTTP status.
+`400 BAD_REQUEST` · `401` (bad key) · `404 NOT_FOUND` (unknown/private guild) · `429 RATE_LIMITED` · `500 SERVER_ERROR`.
 
 ## Fetch strategy
-- First run (empty history): `/reports?limit=10` for backfill.
-- Subsequent runs: `/latest` only.
-- After fetch: compute rankings client-side → write one JSON blob to Firebase `rankings` node.
-- `SAMPLE` constant in the page is the data contract + fallback while API is not live (`RANKINGS_URL` empty).
+- Officer's key stays browser-side; **30 rpm / 15k month** (free) — log-list weight = `limit`. Sequence, don't burst.
+- First run / backfill: `/logs?limit=5` then `/logs/{id}` per new report. Subsequent: `/logs/latest` only.
+- Compute client-side → write one JSON blob to Firebase `rankings` node (visitors read once/visit, TTL 30 min).
+- `SAMPLE` constant = fallback + data contract while key/`RANKINGS_URL` empty. **Update it to the real nested
+  shape before wiring live data** (the current SAMPLE uses the old flat `report`/`reportId` shape).

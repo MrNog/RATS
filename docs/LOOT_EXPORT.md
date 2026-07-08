@@ -140,6 +140,10 @@ Second entry = a **drop with no winner yet** (`player: null`) → officer assign
 - **`runId`** — groups loot from the same lockout/run even across multiple days:
   `"<YYYY-MM-DD of run start>-<raid slug>-<size>"`. Lets the page show loot per weekly run, not just per
   raid type. Okanvil derives it from the first `ts` of a contiguous run.
+- **`boe`** (bool, optional) — `true` if the item is **Bind on Equip** (tradeable / sellable), `false`/absent
+  for BoP. Okanvil reads it in-game by scanning the item tooltip (`isBoE` in `Loot.lua`) at loot time.
+  The site shows a small gold **BoE** pill next to the item name so it's clear which drops could be sold or
+  passed around. Absent = treated as BoP (no tag).
 
 ## Site side (plan)
 

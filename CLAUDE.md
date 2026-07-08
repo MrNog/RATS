@@ -23,7 +23,7 @@ re-derive the conventions.
 - `assets/js/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
 - `assets/js/datepicker.js` = `RatsCal` dark calendar.
 - `images/<category>/`, `downloads/` (patch-y.mpq), `files/` (officer sheets), `scripts/` (gallery builder).
-- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `RANKINGS_API_REQUEST.md`), tracked in git.
+- `docs/` = maintainer notes (`ARCHITECTURE.md`, `ROUTES.md` = site map, `COLORS.md` = palette, `MIGRATION.md`, `WOWLOGS_API.md` = the real wow-logs API contract), tracked in git.
 - `docs/art/` = the hero-art system: `STYLE.md` (locked style tokens + a template per format — card, profile banner, Discord icon, iPhone wallpaper, lore, raid, Warchiefs, Fangs) and `characters/<main>/<main>.md` (**ONE sheet per player, not per toon**). The main's locked look sits at the top; the player's **alts live in an `## Alts` section at the bottom of that same file** (condensed: rat/armor/weapon/signature + palette + scenes per alt) — do NOT create a separate file per alt. Recalled by name via a recursive search `characters/**/*.md` (match the main name or an alt name inside). New player = new folder + one sheet from `_TEMPLATE.md`; new alt = add a block to that player's Alts section. `chronicles/` = guild-history lore pieces (e.g. Val'anyr). The `/rat-art` + `/rats loremaster` skills read these.
 - **Run locally with a server** — `file://` blocks fetch/crypto/webhooks. Use VS Code Live Server or `python -m http.server 8000`.
 
@@ -145,7 +145,7 @@ Most improved, Records), **📊 Guild progress** (week-over-week verdicts, per-b
 
 **Data flow (cost-safe):** officer's **🔄 Fetch** (gold, guild-key-gated) calls the wow-logs API, computes,
 writes ONE `rankings` snapshot to Firebase. Public visitors read that snapshot **once per visit** (TTL 30 min)
-and filter client-side — no extra reads. Full API contract in `docs/RANKINGS_API_REQUEST.md`.
+and filter client-side — no extra reads. Full API contract in `docs/WOWLOGS_API.md` (the real shipped API).
 See `.claude/rules/rankings.md` for the full spec when building this page.
 
 ## Automation (GitHub Actions)
