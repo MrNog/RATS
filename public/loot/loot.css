@@ -2,6 +2,12 @@
    theme.css gives the body reset, .wrap.wide, gold h2/.sub/scrollbar; ui.css gives button/.card/.msg/textarea.
    Only page-specific structure lives here — all colours through tokens (never hard-code the gold or a width). */
 
+/* Bank sentinel color: an emerald GREEN, distinct from the Hunter lime (#AAD372) and
+   from every other class color / purple (Disenchant) / gold (accent). */
+:root {
+  --bank: #22c55e;
+}
+
 /* ---- top controls + tab strip (same vocabulary as rankings) ---- */
 .ctrls {
   margin-top: 12px;
@@ -203,6 +209,25 @@
   align-items: center;
   gap: 5px;
 }
+/* banked loot (orbs/patterns -> guild bank) -- same layout as disenchant, emerald green */
+.banked {
+  color: var(--bank, #22c55e);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* pinned-sentinel header icon (Disenchant crystal / Bank box) -- replaces the pin emoji */
+.phead-ic {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+.lootitem .banked {
+  min-width: 110px;
+}
 .de-ic {
   width: 16px;
   height: 16px;
@@ -326,6 +351,22 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+}
+.winrow .bank-btn {
+  color: var(--bank, #22c55e);
+  border: 1px solid color-mix(in srgb, var(--bank, #22c55e) 45%, transparent);
+  background: color-mix(in srgb, var(--bank, #22c55e) 12%, transparent);
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.winrow .bank-btn .de-ic {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
 }
 .winrow .de-btn .de-ic {
   width: 16px;
