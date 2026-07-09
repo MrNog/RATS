@@ -19,6 +19,21 @@
     if (!ts) return null;
     return Math.floor((Date.now() / 1000 - ts) / 86400);
   };
+  // Unix seconds of the Wednesday 00:00 that opened the lockout containing `d`
+  // (WotLK weekly reset is Wednesday; same rule as officer/history/history.js lockoutStart).
+  function lockoutStartTs(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() - 3 + 7) % 7));
+    return Math.floor(x.getTime() / 1000);
+  }
+  // Inclusive lower bound (unix sec) for the active period, or null for "all".
+  // week  = the current Wed->Wed lockout only
+  // month = the last 4 lockouts (4 weeks back from this lockout's Wednesday)
+  function periodStart() {
+    if (PERIOD === "all") return null;
+    var wed = lockoutStartTs(new Date());
+    return PERIOD === "week" ? wed : wed - 3 * 7 * 86400;
+  }
 
   // ⬇⬇ Export format the Okanvil addon produces (docs/LOOT_EXPORT.md). Fallback while the DB is empty. ⬇⬇
   var SAMPLE = {
@@ -299,14 +314,11 @@
     return el ? el.value.trim().toLowerCase() : "";
   }
   function rows() {
-    var q = searchQ();
+    var q = searchQ(), from = periodStart();
     return (DATA.loot || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       if (RAID && raidKeyFor(l.raid) !== RAID) return false;
-      if (PERIOD !== "all") {
-        var d = daysSince(l.ts);
-        if (d != null && d > (PERIOD === "week" ? 7 : 31)) return false;
-      }
+      if (from && l.ts && l.ts < from) return false;
       if (q) {
         var hay = (l.name || "") + " " + (l.boss || "") + " " + (l.player || "");
         if (hay.toLowerCase().indexOf(q) < 0) return false;
@@ -803,9 +815,9 @@
       var got = RatsData.raidKeyOf(r.desc || r.raid || r.name || "");
       if (got && want && got !== want) return false;
     }
-    if (PERIOD !== "all" && r.date) {
-      var d = daysSince(dateToTs(r.date));
-      if (d != null && d > (PERIOD === "week" ? 7 : 31)) return false;
+    if (r.date) {
+      var from = periodStart(), t = dateToTs(r.date);
+      if (from && t && t < from) return false;
     }
     return true;
   }
