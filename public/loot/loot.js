@@ -165,10 +165,13 @@
   var ROSTER = []; // filled from members node for the assign picker (officer only)
   var BOSS_TABLE = {}; // itemName(lower) -> boss, from data/ulduar-loot-table.json (loaded once)
 
-  // Crafting mats grouped as "crafts" in the loot list (orbs shown once). Patterns/plans
-  // are NOT here — they're personal loot someone wins (and can be epic), so they render
-  // as normal editable rows, not collapsed craft rows.
-  var SKIP_RE = /runed orb|orb of/i;
+  // Crafting mats collapsed into one "xN" row per exact name (orbs stack in the Bank
+  // card instead of listing 5 identical lines). Must cover the same mats as BANK_RE,
+  // or an orb goes to the Bank but renders as an ungrouped loot row — that's how
+  // "Crusader Orb" ended up on two separate lines.
+  // Patterns/plans are NOT here: they're personal loot someone wins (and can be epic),
+  // so they render as normal editable rows.
+  var SKIP_RE = /runed orb|crusader orb|orb of|primordial saronite|alchemist'?s cache/i;
   // Items that must NOT count against a raider's LOOT PRIORITY — pure craft mats that are rolled
   // but aren't personal gear: any Val'anyr fragment, all crafting orbs (Runed / Crusader /
   // Primordial Saronite), and patterns/recipes. NOTE: ToC Trophies DO count (they're set-token
