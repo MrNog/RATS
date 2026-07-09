@@ -32,6 +32,9 @@ const ADDONS = [
 ];
 
 // Optional / fun addons — separate group below the mandatory list.
+// Set `hidden: true` to keep an addon out of the public list while it's still
+// being tested. The entry stays here (URLs, description) so publishing it again
+// is a one-line change: drop the flag.
 const OPTIONAL = [
   {
     name: "Okanvil",
@@ -39,6 +42,7 @@ const OPTIONAL = [
     desc: "RATS guild toolkit — invites, loot rolls, combat logs, recruit & an ID finder. /okanvil",
     dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",
     gh: "https://github.com/MrNog/Okanvil",
+    hidden: true, // in testing — not shown on the public addons page yet
   },
   {
     name: "Rats-Redeemer",
@@ -63,6 +67,7 @@ function esc(s) {
 
 function renderList(arr) {
   return arr
+    .filter((a) => !a.hidden) // addons still in testing never reach the public list
     .map((a) => {
       const repo = repoOf(a) || "";
       return `<div class="item" data-repo="${esc(repo)}">
@@ -137,6 +142,7 @@ async function latestVersion(a) {
 async function checkUpdates() {
   const seen = seenMap();
   for (const a of [...ADDONS, ...OPTIONAL]) {
+    if (a.hidden) continue; // not rendered -> no row to badge, no API call to spend
     const repo = repoOf(a);
     if (!repo) continue;
     const info = await latestVersion(a);
