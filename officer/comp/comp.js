@@ -852,6 +852,8 @@ function setSize(b) {
   try {
     localStorage.setItem("ratsSize", SIZE);
   } catch (e) {}
+  // 25 vs 10-man is a distinct raid entry — drop the edit lock too.
+  window.__editId = null;
   render();
 }
 
@@ -867,6 +869,9 @@ function setRaid(b) {
   try {
     localStorage.setItem("ratsRaid", RAID);
   } catch (e) {}
+  // switching instance = a DIFFERENT raid; drop the edit lock so the next Save appends a new
+  // entry instead of overwriting the one we just saved (two raids can share a date).
+  window.__editId = null;
   render();
 }
 function setDiff(b) {
@@ -875,6 +880,8 @@ function setDiff(b) {
   try {
     localStorage.setItem("ratsDiff", DIFF);
   } catch (e) {}
+  // difficulty is part of the raid's identity (ToC HM vs ToC NM) — drop the edit lock too.
+  window.__editId = null;
   render();
 }
 
@@ -890,6 +897,9 @@ document.getElementById("dateIn").addEventListener("change", function () {
   try {
     localStorage.setItem("ratsDate", this.value);
   } catch (e) {}
+  // a new date = a different raid; drop the edit lock so the next Save appends rather than
+  // overwriting the raid we just saved.
+  window.__editId = null;
   render();
 });
 
