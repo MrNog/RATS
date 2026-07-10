@@ -125,7 +125,10 @@
 
     <div class="barrow" style="margin-top:12px">
       <button id="postBtn" onclick="postWebhook()" disabled>📣 Post to Discord</button>
-      <button id="saveHistBtn" class="alt" onclick="saveToHistory()" disabled>💾 Save to history</button>
+      <button id="updateHistBtn" class="alt" onclick="saveToHistory('update')" disabled
+        title="Overwrite the raid you loaded from History (keeps its id)." style="display:none">💾 Update this raid</button>
+      <button id="saveHistBtn" class="alt" onclick="saveToHistory('new')" disabled
+        title="Add a NEW raid to history. Use this to save the same group as several raids in one night (e.g. ToC 10 Normal, ToC 10 HM, Onyxia) — switch the raid/difficulty/size and hit this again.">➕ Save as new raid</button>
       <button type="button" id="optBtn" class="tbtn" onclick="toggleOpt(this)"
         title="Optional = log only (alt / casual run — doesn't count for attendance). 25-man counts for all, 10-man counts for 💀 Fangs.">Optional
         <span class="tsub">log only</span></button>

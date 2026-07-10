@@ -852,8 +852,6 @@ function setSize(b) {
   try {
     localStorage.setItem("ratsSize", SIZE);
   } catch (e) {}
-  // 25 vs 10-man is a distinct raid entry — drop the edit lock too.
-  window.__editId = null;
   render();
 }
 
@@ -869,9 +867,6 @@ function setRaid(b) {
   try {
     localStorage.setItem("ratsRaid", RAID);
   } catch (e) {}
-  // switching instance = a DIFFERENT raid; drop the edit lock so the next Save appends a new
-  // entry instead of overwriting the one we just saved (two raids can share a date).
-  window.__editId = null;
   render();
 }
 function setDiff(b) {
@@ -880,8 +875,6 @@ function setDiff(b) {
   try {
     localStorage.setItem("ratsDiff", DIFF);
   } catch (e) {}
-  // difficulty is part of the raid's identity (ToC HM vs ToC NM) — drop the edit lock too.
-  window.__editId = null;
   render();
 }
 
@@ -897,9 +890,6 @@ document.getElementById("dateIn").addEventListener("change", function () {
   try {
     localStorage.setItem("ratsDate", this.value);
   } catch (e) {}
-  // a new date = a different raid; drop the edit lock so the next Save appends rather than
-  // overwriting the raid we just saved.
-  window.__editId = null;
   render();
 });
 
@@ -1045,9 +1035,19 @@ function updatePostState() {
   const total = (window.__stats && window.__stats.total) || 0;
   const ok = total >= MIN_RAIDERS;
   const pb = document.getElementById("postBtn"),
-    sb = document.getElementById("saveHistBtn");
+    sb = document.getElementById("saveHistBtn"),
+    ub = document.getElementById("updateHistBtn");
   if (pb) pb.disabled = !ok;
   if (sb) sb.disabled = !ok;
+  if (ub) ub.disabled = !ok;
+}
+
+// show "💾 Update this raid" only while a raid loaded from History is being edited; otherwise
+// only "➕ Save as new raid" is offered (so a re-save can't silently overwrite the wrong entry).
+function reflectEditState() {
+  const ub = document.getElementById("updateHistBtn");
+  if (ub) ub.style.display = window.__editId ? "" : "none";
+  updatePostState();
 }
 
 function setMsg(txt, color) {
@@ -1126,11 +1126,12 @@ function setMsg(txt, color) {
     OPT = !!payload.optional;
     const ob = document.getElementById("optBtn");
     if (ob) ob.classList.toggle("active", OPT);
+    reflectEditState(); // reveal the "💾 Update this raid" button
     render();
     setMsg(
       "✏️ Editing " +
         (payload.date || "this raid") +
-        " — fix names / move raiders, then 💾 Save to history to overwrite it.",
+        " — fix names / move raiders, then 💾 Update this raid to overwrite it (or ➕ Save as new raid to keep both).",
       "#9ad0ff"
     );
   } catch (e) {}
@@ -1213,7 +1214,11 @@ function postWebhook() {
 }
 
 // ---- save the current comp into the shared raid history (downloads history.json) ----
-async function saveToHistory() {
+// mode: "new" = always append a brand-new raid (a fresh id) — lets the same group be saved as
+// several raids in one night (ToC 10 N, ToC 10 HM, Ony). "update" = overwrite the raid loaded
+// from History (reuses window.__editId). Legacy callers with no arg behave like "update" if
+// editing, else "new".
+async function saveToHistory(mode) {
   if (!window.RatsData) {
     setMsg("❌ Data layer not loaded.");
     return;
@@ -1243,13 +1248,18 @@ async function saveToHistory() {
     const hist = await RatsData.loadHistory({ interactive: false });
     hist.raids = Array.isArray(hist.raids) ? hist.raids : [];
 
-    // stable unique id so two raids on the SAME day (e.g. Ony + ToD) can coexist and be
-    // edited/deleted independently. Editing an existing raid reuses its id (window.__editId).
-    const raidId =
-      window.__editId ||
-      (crypto && crypto.randomUUID
+    const newId = () =>
+      crypto && crypto.randomUUID
         ? crypto.randomUUID()
-        : "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+        : "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+    // "update" overwrites the raid loaded from History (reuses its id). "new" ALWAYS mints a
+    // fresh id + appends, so the same group can be saved as several raids in one night
+    // (ToC 10 N, ToC 10 HM, Ony) just by switching the toggles and hitting Save-as-new again.
+    // Default (no mode): update if we're editing, else new.
+    const doUpdate = mode === "update" || (!mode && !!window.__editId);
+    // stable unique id so several raids can coexist and be edited/deleted independently.
+    const raidId = doUpdate && window.__editId ? window.__editId : newId();
 
     const entry = {
       id: raidId,
@@ -1279,20 +1289,18 @@ async function saveToHistory() {
       savedAt: new Date().toISOString(),
     };
 
-    // update the SAME raid when editing (match by id); a brand-new raid always appends, so two
-    // raids can share a date (Ony + ToD on one day). Legacy entries had no id — only then fall
-    // back to same-date matching, so old saves still update in place instead of duplicating.
-    const existing = window.__editId
-      ? hist.raids.findIndex((r) => r.id === window.__editId)
-      : hist.raids.findIndex((r) => !r.id && r.date === dateVal);
+    // "update" replaces the raid we loaded (match by id). "new" always appends — never matches an
+    // existing entry — so two raids can share a date (Ony + ToD, or ToC N + ToC HM on one night).
+    const existing = doUpdate && window.__editId ? hist.raids.findIndex((r) => r.id === window.__editId) : -1;
     let verb = "Saved";
     if (existing >= 0) {
-      // preserve the original id when overwriting a legacy (id-less) same-date entry
-      if (!entry.id) entry.id = hist.raids[existing].id;
       hist.raids[existing] = entry;
       verb = "Updated";
     } else hist.raids.push(entry);
-    window.__editId = entry.id; // a re-save (without leaving) now updates THIS raid, not a dupe
+    // now editing THIS raid: the "💾 Update this raid" button targets it, and a plain re-save
+    // updates it instead of duplicating. "➕ Save as new" still forces a fresh id next time.
+    window.__editId = entry.id;
+    reflectEditState();
     hist.raids.sort((a, b) => (a.date < b.date ? 1 : -1)); // newest first
 
     const count = entry.groups.reduce((n, g) => n + g.members.length, 0);
