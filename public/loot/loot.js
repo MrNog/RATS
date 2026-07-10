@@ -463,6 +463,24 @@
     return m ? SOCKET_COLOR[m[1].toLowerCase()] : null;
   }
 
+  // "Classes: Paladin" / "Classes: Paladin, Warrior" -- tint each class with its own
+  // WoW colour (the client sends the whole line as plain white text). Anchored, so an
+  // item whose stat text merely contains the word can't match. classColor() falls back
+  // to #fff for a name it doesn't know, so an unexpected token still renders.
+  var CLASSES_RE = /^classes:\s*(.+)$/i;
+  function classesHtml(text) {
+    var m = CLASSES_RE.exec(String(text || "").trim());
+    if (!m) return null;
+    var parts = m[1].split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!parts.length) return null;
+    var body = parts
+      .map(function (name) {
+        return '<span style="color:' + classColor(name) + '">' + esc(name) + "</span>";
+      })
+      .join('<span class="wowtip-sep">, </span>');
+    return '<span class="wowtip-dim">Classes:</span> ' + body;
+  }
+
   function tipHtml(l) {
     var tip = l.tip || [];
     var head = "";
@@ -488,6 +506,9 @@
             "</div>"
           );
         }
+        // "Classes: Paladin" -- already escaped per class name inside the helper
+        var cls = classesHtml(txt);
+        if (cls) return '<div class="wowtip-l">' + cls + "</div>";
         var c = /^[0-9a-f]{6}$/i.test(ln.c || "") ? "#" + ln.c : "";
         return '<div class="wowtip-l"' + (c ? ' style="color:' + c + '"' : "") + ">" + esc(txt) + "</div>";
       })

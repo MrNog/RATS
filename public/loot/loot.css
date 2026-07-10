@@ -1000,3 +1000,10 @@
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
   flex: 0 0 auto;
 }
+/* "Classes: Paladin, Warrior" -- label dimmed, each class in its own colour */
+.wowtip-dim {
+  color: var(--text-dim);
+}
+.wowtip-sep {
+  color: var(--text-dim);
+}
