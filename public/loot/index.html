@@ -100,6 +100,8 @@
       <div id="importMsg" class="msg"></div>
       <div class="frow importActions">
         <button class="btn" onclick="closeImport()">Cancel</button>
+        <button class="btn" id="copyIdsBtn" onclick="copyMissingIds()"
+          title="Copy the item ids with no tooltip, to paste into /okdebug scan in game">🔎 Copy missing ids</button>
         <button id="importGo" onclick="doImport()" disabled>💾 Merge &amp; save</button>
       </div>
     </div>

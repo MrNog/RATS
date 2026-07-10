@@ -932,3 +932,71 @@
 .pscore.mid {
   color: var(--text-dim);
 }
+
+/* ---- in-game item tooltip ------------------------------------------------
+   One reusable floating node (see loot.js tipEl). Mimics the WoW tooltip:
+   near-black plate, gold hairline, tight line rhythm. Line colours come from
+   the addon's tooltip scan, so they are the client's real stat colours. */
+.iname.hastip {
+  cursor: help;
+}
+.wowtip {
+  position: fixed;
+  z-index: 200;
+  display: none;
+  max-width: 340px;
+  padding: 10px 12px;
+  background: #05060a;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.75);
+  pointer-events: none; /* never let the tooltip eat the hover it depends on */
+}
+.wowtip.on {
+  display: block;
+}
+/* icon floats top-left; the stat lines wrap around and past it */
+.wowtip-ic {
+  float: left;
+  width: 40px;
+  height: 40px;
+  margin: 0 9px 4px 0;
+  border-radius: 5px;
+  border: 1px solid var(--border-2);
+  background: var(--surface);
+}
+.wowtip-body {
+  overflow: hidden; /* new block formatting context: lines clear the float cleanly */
+}
+.wowtip-body::after {
+  content: "";
+  display: block;
+  clear: both;
+}
+.wowtip-l {
+  color: var(--white);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+}
+/* the item name: first LINE, not first child (the icon is the first child now) */
+.wowtip-body .wowtip-l:first-child {
+  font-size: 13px;
+  font-weight: 600;
+}
+/* socket row: coloured gem square + label. WoW sends these as plain grey text,
+   so the square is ours -- see socketColor() in loot.js. */
+.wowtip-sock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+}
+.wowtip-gem {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+  flex: 0 0 auto;
+}

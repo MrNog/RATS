@@ -429,10 +429,129 @@
   function boeTag(l) {
     return l && l.boe ? '<span class="boe-tag" title="Bind on Equip (tradeable / sellable)">BoE</span>' : "";
   }
+  // ---- in-game tooltip -------------------------------------------------
+  // The addon exports l.tip = [{t:"+67 Strength", c:"1eff00"}, ...] scanned straight
+  // off the WoW client's GameTooltip, so the colours are the real in-game ones.
+  // Drops captured before that existed have no .tip -> no hover, name renders as before.
+  // ONE floating node is reused for every row (not one per item) and it is positioned
+  // on hover, so a 200-row table costs a single element.
+  var TIP_EL = null;
+  function tipEl() {
+    if (!TIP_EL) {
+      TIP_EL = document.createElement("div");
+      TIP_EL.className = "wowtip";
+      TIP_EL.setAttribute("role", "tooltip");
+      document.body.appendChild(TIP_EL);
+    }
+    return TIP_EL;
+  }
+  // Socket lines arrive from the client as plain GREY text ("Yellow Socket") -- in
+  // game the coloured square is a separate texture, not part of the string, so the
+  // scanned colour carries no hue. Recover it from the word and draw our own square.
+  // Anchored at the end + "Socket Bonus:" excluded, so an item merely NAMED "...Socket"
+  // can't match.
+  var SOCKET_COLOR = {
+    red: "#e0403f",
+    yellow: "#e0c040",
+    blue: "#4a7fe0",
+    meta: "#c0c0c0",
+    prismatic: "#d070e0",
+  };
+  var SOCKET_RE = /^(red|yellow|blue|meta|prismatic)\s+socket$/i;
+  function socketColor(text) {
+    var m = SOCKET_RE.exec(String(text || "").trim());
+    return m ? SOCKET_COLOR[m[1].toLowerCase()] : null;
+  }
+
+  function tipHtml(l) {
+    var tip = l.tip || [];
+    var head = "";
+    // The icon slug lands inside src="...". It comes from an officer-pasted JSON, so
+    // treat it as hostile: a slug containing a quote would close the attribute and
+    // inject its own onerror. Real slugs are [A-Za-z0-9_] only -- anything else is
+    // dropped rather than escaped.
+    if (l.icon && /^[a-z0-9_]+$/i.test(l.icon)) {
+      head =
+        '<img class="wowtip-ic" src="' + iconUrl(l.icon, "medium") + '" alt="" ' +
+        'onerror="this.style.visibility=\'hidden\'">';
+    }
+    var body = tip
+      .map(function (ln) {
+        var txt = ln.t || "";
+        var sock = socketColor(txt);
+        if (sock) {
+          // coloured square + the label, mirroring the in-game socket row
+          return (
+            '<div class="wowtip-l wowtip-sock">' +
+            '<span class="wowtip-gem" style="background:' + sock + '"></span>' +
+            esc(txt) +
+            "</div>"
+          );
+        }
+        var c = /^[0-9a-f]{6}$/i.test(ln.c || "") ? "#" + ln.c : "";
+        return '<div class="wowtip-l"' + (c ? ' style="color:' + c + '"' : "") + ">" + esc(txt) + "</div>";
+      })
+      .join("");
+    return head + '<div class="wowtip-body">' + body + "</div>";
+  }
+  // Follow the cursor, like the in-game tooltip. Size is measured ONCE per show:
+  // reading offsetWidth on every mousemove would force a layout each frame.
+  var TIP_W = 0,
+    TIP_H = 0;
+  var TIP_OFF = 16; // gap from the cursor, so it never sits under the pointer
+
+  function placeTip(mx, my) {
+    var t = TIP_EL;
+    if (!t) return;
+    var x = mx + TIP_OFF,
+      y = my + TIP_OFF;
+    // flip to the other side of the cursor when there is no room
+    if (x + TIP_W > window.innerWidth - 8) x = mx - TIP_W - TIP_OFF;
+    if (y + TIP_H > window.innerHeight - 8) y = my - TIP_H - TIP_OFF;
+    // last resort: clamp inside the viewport (tiny window / huge tooltip)
+    if (x < 8) x = 8;
+    if (y < 8) y = 8;
+    t.style.left = x + "px";
+    t.style.top = y + "px";
+  }
+  function showTip(l, mx, my) {
+    var t = tipEl();
+    t.innerHTML = tipHtml(l);
+    t.classList.add("on");
+    // The icon has a fixed CSS size, so this measures correctly even before the
+    // image has loaded -- otherwise the first hover would mis-place the tooltip.
+    TIP_W = t.offsetWidth;
+    TIP_H = t.offsetHeight;
+    placeTip(mx, my);
+  }
+  function hideTip() {
+    if (TIP_EL) TIP_EL.classList.remove("on");
+  }
+  // stash the drop by index so the markup stays small (no JSON in a data- attribute).
+  // We keep the whole drop, not just .tip, because the tooltip also draws its icon.
+  var TIPS = [];
+  window.lootTipOn = function (el, i, ev) {
+    var l = TIPS[i];
+    if (l && l.tip && l.tip.length) showTip(l, ev.clientX, ev.clientY);
+  };
+  window.lootTipMove = function (ev) {
+    if (TIP_EL && TIP_EL.classList.contains("on")) placeTip(ev.clientX, ev.clientY);
+  };
+  window.lootTipOff = hideTip;
+
   function itemLink(l) {
     var nm = l.name || "Item #" + l.itemId;
     var col = qualityColor(l.quality);
-    return '<span class="iname" style="color:' + col + '">' + esc(nm) + "</span>" + boeTag(l);
+    var hook = "";
+    if (l.tip && l.tip.length) {
+      var i = TIPS.push(l) - 1;
+      hook =
+        ' class="iname hastip" onmouseenter="lootTipOn(this,' + i + ',event)"' +
+        ' onmousemove="lootTipMove(event)" onmouseleave="lootTipOff()"';
+    } else {
+      hook = ' class="iname"';
+    }
+    return "<span" + hook + ' style="color:' + col + '">' + esc(nm) + "</span>" + boeTag(l);
   }
   function winnerHtml(l, idx) {
     // only officers (guild key present) get the pen to edit + trash to delete —
@@ -965,6 +1084,10 @@
   }
 
   function render() {
+    // itemLink() pushes into TIPS on every row it draws; reset first or the array
+    // grows without bound across re-renders (every filter/tab click rebuilds the rows).
+    TIPS.length = 0;
+    hideTip();
     buildRaidSegs();
     renderRuns();
     renderPlayers();
@@ -1022,22 +1145,45 @@
   }
   // merge new entries into DATA.loot, de-duped by ts+itemId (a drop is unique by time+item;
   // the winner can be edited later, so don't include player in the key or re-imports duplicate).
+  // Fields the addon knows better than we do, and that an officer never edits by hand.
+  // On a re-import these get filled in on drops we ALREADY have, so a re-export that
+  // carries new data (e.g. `tip`, the scanned tooltip) enriches the history instead of
+  // being skipped. `player` is deliberately NOT here: the winner is corrected on the
+  // site (the addon credits everything to the master looter), so it must never be
+  // overwritten by an import.
+  var ENRICH_FIELDS = ["tip", "icon", "quality", "boe", "boss"];
   function mergeLoot(incoming) {
     var key = function (l) {
       return (l.ts || 0) + "|" + l.itemId;
     };
-    var seen = {};
+    var byKey = {};
     (DATA.loot || []).forEach(function (l) {
-      seen[key(l)] = 1;
+      byKey[key(l)] = l;
     });
-    var added = 0;
+    var added = 0,
+      enriched = 0;
     incoming.forEach(function (l) {
-      if (!seen[key(l)]) {
+      var k = key(l);
+      var cur = byKey[k];
+      if (!cur) {
         DATA.loot.push(l);
-        seen[key(l)] = 1;
+        byKey[k] = l;
         added++;
+        return;
       }
+      // already have it: fill in only the missing addon-owned fields
+      var touched = false;
+      ENRICH_FIELDS.forEach(function (f) {
+        var v = l[f];
+        if (v === undefined || v === null || v === "") return;
+        if (cur[f] === undefined || cur[f] === null || cur[f] === "") {
+          cur[f] = v;
+          touched = true;
+        }
+      });
+      if (touched) enriched++;
     });
+    mergeLoot.enriched = enriched;
     return added;
   }
   // PREVIEW: parse the pasted JSON and show WHAT the import will do -- before any
@@ -1049,6 +1195,29 @@
     var go = document.getElementById("importGo");
     var raw = (document.getElementById("importText").value || "").trim();
     importMsg("");
+    // a tooltip dictionary is not a loot list -- preview it on its own terms
+    var tips = raw ? parseTipsPaste(raw) : null;
+    if (tips) {
+      var ids = Object.keys(tips);
+      var hits = 0,
+        seen = {};
+      (DATA.loot || []).forEach(function (l) {
+        if (l.tip && l.tip.length) return;
+        if (tips[String(l.itemId)]) {
+          hits++;
+          seen[l.itemId] = 1;
+        }
+      });
+      box.hidden = false;
+      box.innerHTML =
+        '<div class="pvSum">' +
+        '<span class="pvAdd">' + Object.keys(seen).length + " item(s) matched</span>" +
+        '<span class="pvDup">' + hits + " drop(s) get a tooltip</span>" +
+        '<span class="pvSkip">' + ids.length + " id(s) in paste</span>" +
+        "</div>";
+      if (go) go.disabled = hits === 0;
+      return;
+    }
     if (!raw) { box.hidden = true; if (go) go.disabled = true; return; }
     var incoming;
     try {
@@ -1114,6 +1283,31 @@
       importMsg("Paste the export JSON first.");
       return;
     }
+    // tooltip dictionary: fills drops in place, adds nothing, deletes nothing
+    var tips = parseTipsPaste(raw);
+    if (tips) {
+      var n = applyTips(tips);
+      if (!n) {
+        importMsg("No drop needed those tooltips.");
+        return;
+      }
+      if (IS_DEV) {
+        importMsg("✅ Tooltips added to " + n + " drop(s) (dev - in memory).", true);
+        render();
+        setTimeout(closeImport, 1200);
+        return;
+      }
+      importMsg("⏳ Saving...", true);
+      try {
+        await saveLoot();
+        importMsg("✅ Tooltips added to " + n + " drop(s).", true);
+        render();
+        setTimeout(closeImport, 1200);
+      } catch (e) {
+        importMsg("Save failed: " + (e && e.message ? e.message : e));
+      }
+      return;
+    }
     var incoming;
     try {
       incoming = parseLootPaste(raw).list; // tolerant: accepts loose "{…},{…}" too
@@ -1125,10 +1319,15 @@
     // resolve each item's boss from our local Ulduar table (drops crafting mats); then merge
     var res = resolveBosses(incoming);
     var added = mergeLoot(res.kept);
+    var enriched = mergeLoot.enriched || 0;
     var skipNote = res.skipped ? " · skipped " + res.skipped + " craft/dup" : "";
+    // a re-import can add nothing and still be useful (it filled tooltips into drops we
+    // already had), so say so -- otherwise "0 new" reads as "nothing happened".
+    var enrichNote = enriched ? " - updated " + enriched + " existing" : "";
+    var summary = "Merged " + added + " new item" + (added !== 1 ? "s" : "") + enrichNote + skipNote;
     if (IS_DEV) {
       // dev: keep it in memory only, don't touch Firebase
-      importMsg("✅ Merged " + added + " new item" + (added !== 1 ? "s" : "") + skipNote + " (dev — in memory).", true);
+      importMsg("✅ " + summary + " (dev - in memory).", true);
       render();
       setTimeout(closeImport, 1200);
       return;
@@ -1136,7 +1335,7 @@
     importMsg("⏳ Saving…", true);
     try {
       await saveLoot();
-      importMsg("✅ Merged " + added + " new item" + (added !== 1 ? "s" : "") + skipNote + ".", true);
+      importMsg("✅ " + summary + ".", true);
       render();
       setTimeout(closeImport, 1200);
     } catch (e) {
@@ -1174,6 +1373,51 @@
   //        { … },  { … }     <- what a partial copy/paste produces
   // For case 3 we wrap the text in [ … ] and strip a trailing comma so it parses.
   // Returns { list: [...] , shape: "array"|"loot"|"wrapped", parsed } or throws.
+  // ---- tooltip dictionary (from the addon's `/okdebug scan`) ----------------
+  // Shape: {"type":"tips","tips":{"45107":[{"t":"...","c":"ffd100"}, ...]}}
+  // A tooltip belongs to the ITEM, not to the drop, so one entry fills every drop
+  // of that item -- which is what lets us fix history whose in-game sessions are
+  // long gone. Returns null when the paste isn't a tips payload.
+  function parseTipsPaste(raw) {
+    var p;
+    try {
+      p = JSON.parse((raw || "").trim());
+    } catch (e) {
+      return null;
+    }
+    if (!p || p.type !== "tips" || !p.tips || typeof p.tips !== "object") return null;
+    return p.tips;
+  }
+  // apply a tips dictionary to DATA.loot; returns how many drops gained a tooltip
+  function applyTips(tips) {
+    var n = 0;
+    (DATA.loot || []).forEach(function (l) {
+      if (l.tip && l.tip.length) return; // never overwrite one we already have
+      var t = tips[String(l.itemId)];
+      if (t && t.length) {
+        l.tip = t;
+        n++;
+      }
+    });
+    return n;
+  }
+  // The item ids currently missing a tooltip, de-duped (a tooltip is per item).
+  // An id qualifies if ANY drop of it lacks a tooltip. Two drops of the same item can
+  // disagree -- one imported before the addon captured tooltips, one after -- so a
+  // sibling that already has one must NOT veto the request, or the blank drop stays
+  // blank forever.
+  function missingTipIds() {
+    var need = {};
+    (DATA.loot || []).forEach(function (l) {
+      if (!l.itemId) return;
+      if (l.tip && l.tip.length) return;
+      need[l.itemId] = 1;
+    });
+    return Object.keys(need)
+      .map(Number)
+      .sort(function (a, b) { return a - b; });
+  }
+
   function parseLootPaste(raw) {
     var txt = (raw || "").trim();
     if (!txt) throw new Error("empty");
@@ -1682,6 +1926,52 @@
   window.setRaid = setRaid;
   window.setSize = setSize;
   window.setPeriod = setPeriod;
+  // Copy the ids that still need a tooltip, for `/okdebug scan` in game.
+  // navigator.clipboard needs a secure context (https / localhost); on plain http or
+  // file:// it is undefined, so fall back to execCommand, and if even that fails put
+  // the ids in the textarea so they can be copied by hand. Never leave the user stuck.
+  function copyMissingIds() {
+    var ids = missingTipIds();
+    if (!ids.length) {
+      importMsg("Every drop already has a tooltip.", true);
+      return;
+    }
+    var text = ids.join(" ");
+    var done = function () {
+      importMsg("Copied " + ids.length + " id(s). In game: /okdebug scan, paste, Scan.", true);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        legacyCopy(text, ids.length);
+      });
+      return;
+    }
+    legacyCopy(text, ids.length);
+  }
+  function legacyCopy(text, n) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (e) {
+      ok = false;
+    }
+    document.body.removeChild(ta);
+    if (ok) {
+      importMsg("Copied " + n + " id(s). In game: /okdebug scan, paste, Scan.", true);
+    } else {
+      // last resort: show them so they can be selected manually
+      document.getElementById("importText").value = text;
+      importMsg("Could not reach the clipboard - the ids are in the box, copy them.", true);
+    }
+  }
+  window.copyMissingIds = copyMissingIds;
   window.openImport = openImport;
   window.closeImport = closeImport;
   window.doImport = doImport;
