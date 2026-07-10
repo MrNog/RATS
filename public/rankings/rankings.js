@@ -2371,7 +2371,15 @@
     var setLbl = function (t) {
       if (lbl) lbl.textContent = t;
     };
+    // persistent banner (survives past the button label's 2.5s reset) so a failed Fetch is unmissable
+    var msgEl = document.getElementById("fetchMsg");
+    var showMsg = function (t) {
+      if (!msgEl) return;
+      msgEl.textContent = t || "";
+      msgEl.hidden = !t;
+    };
     if (b) b.disabled = true;
+    showMsg("");
     setLbl("Fetching…");
     API_COST = 0; // reset per-run cost tally (bumped into the monthly usage counter on success)
     try {
@@ -2452,6 +2460,7 @@
       // error can't skip Phase 2 (server ranks). If nothing is new, res.fresh is empty and we do nothing
       // here — but Phase 2 still runs, because server ranks change constantly and must always refresh.
       var res = { fresh: [], archivedIds: [] };
+      var phase1Err = null; // set if the log fetch died — used to SKIP Phase 2 (don't waste API calls)
       try {
         setLbl(rebuild ? "Rebuilding…" : "Scanning history…");
         res = await apiIncremental(key, {
@@ -2470,7 +2479,11 @@
           res.archivedIds.forEach(function (id) { exSet[String(id)] = true; });
           snap.excludedLogs = Object.keys(exSet);
         }
-      } catch (e) { /* log phase failed — server ranks (Phase 2) still run below */ }
+      } catch (e) {
+        // Log phase failed (e.g. API 500). Remember it — and DON'T run Phase 2: the same API is down,
+        // so the server-ranks calls would just burn our rate limit re-hitting a broken endpoint.
+        phase1Err = e;
+      }
       if (rosterNames) snap.rosterNames = rosterNames; // guild-only filter for leaderboards
       if (altMap) snap.altMap = altMap; // alt→main, so a person's toons count as one
       if (mainSpec) snap.mainSpec = mainSpec; // roster main spec → decides true role (healer vs dps)
@@ -2484,8 +2497,11 @@
       // completed: if it didn't, we must NOT overwrite the previously-saved serverPct with a half-built
       // one (that's how ToC ended up missing — the run died before ranks and saved without them).
       var rankOk = false;
+      var rankErr = null; // set if the ranks pass died (or was skipped because Phase 1 failed)
       var prevServerPct = snap.serverPct; // keep the last good copy to fall back on if this pass fails
+      if (phase1Err) rankErr = phase1Err; // API is down — skip Phase 2 entirely, save the calls
       try {
+        if (phase1Err) throw phase1Err; // jump straight to the catch — no server-rank calls made
         // which (raidSlug, size, "nm"/"hc") combos do our logs actually contain?
         var combos = {}; // "toc|25|nm" → {slug, size, diff}
         (snap.logs || []).forEach(function (l) {
@@ -2521,7 +2537,7 @@
           snap.serverPct[c.slug][c.size].players = m;
         }
         rankOk = true; // full ranks pass completed — safe to persist this serverPct
-      } catch (e) {}
+      } catch (e) { rankErr = rankErr || e; }
       // If the ranks pass blew up mid-way, don't ship a half-built serverPct — keep the last good one.
       if (!rankOk && prevServerPct) snap.serverPct = prevServerPct;
 
@@ -2531,6 +2547,10 @@
         dropped = res.archivedIds.length;
 
       render();
+
+      // Total failure (logs never loaded): nothing new was computed, so don't overwrite the good
+      // Firebase snapshot / cache with this run. Jump to the error label below.
+      if (phase1Err) throw phase1Err;
 
       // persist ONLY raw fields — never the computed leaderboards (dps/hps/mvp/records/…). Those are
       // derived from logs[].rows on every render, so the snapshot must stay raw or an old computed
@@ -2550,13 +2570,29 @@
       if (window.RatsData && RatsData.bumpApiUsage) {
         try { await RatsData.bumpApiUsage(API_COST); } catch (e) {}
       }
-      setLbl(
-        added || dropped
-          ? "✓ +" + added + (dropped ? " / −" + dropped : "") + " (" + snap.logs.length + " logs)"
-          : "✓ up to date (" + snap.logs.length + ")"
-      );
+      // A partial failure must NOT read as "✓ up to date". If logs merged but server ranks failed,
+      // the data is only partly updated — say so with a ⚠ label + persistent banner.
+      if (rankErr) {
+        setLbl(
+          (added || dropped ? "⚠ +" + added + (dropped ? " / −" + dropped : "") : "⚠ logs ok") +
+            " (ranks failed)"
+        );
+        showMsg("Logs updated, but server ranks failed (" +
+          (rankErr && rankErr.message ? rankErr.message : "request failed") +
+          "). Guild leaderboards are current; server-percentile ranks may be stale — try Fetch again.");
+      } else {
+        setLbl(
+          added || dropped
+            ? "✓ +" + added + (dropped ? " / −" + dropped : "") + " (" + snap.logs.length + " logs)"
+            : "✓ up to date (" + snap.logs.length + ")"
+        );
+      }
     } catch (e) {
-      setLbl("✗ " + (e && e.message ? e.message : "failed"));
+      // Total failure (thrown from Phase 1 or the guard above): nothing was saved — the console shows
+      // the real HTTP error (e.g. 500 on /meta/seasons). Keep the good snapshot; just warn the officer.
+      setLbl("✗ fetch failed");
+      showMsg("Fetch failed: " + (e && e.message ? e.message : "unknown error") +
+        ". Nothing was saved — the rankings shown may be stale. Try again shortly.");
     }
     setTimeout(function () {
       if (b) b.disabled = false;

@@ -70,6 +70,17 @@
   margin: 0 0 10px;
 }
 
+/* officer fetch error banner — persistent (unlike the 2.5s button label) so a failed Fetch is unmissable */
+.msg.err:not(:empty) {
+  color: #ff9b9b;
+  background: #241a1a;
+  border: 1px solid #5a2e2e;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
 /* sticky filter+tab bar — stays at the top so you can switch raid/size/period/tab while scrolled */
 .sticky-controls {
   position: sticky;
