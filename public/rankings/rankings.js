@@ -372,22 +372,8 @@
       .filter(Boolean);
   }
 
-  // Pick a stable line from a pool, seeded by a string (so the same player+boss always gets the same
-  // quip — it won't flicker on re-render, but different subjects get different lines).
-  function pickLine(pool, seed) {
-    var s = 0,
-      str = String(seed || "");
-    for (var i = 0; i < str.length; i++) s = (s * 31 + str.charCodeAt(i)) | 0;
-    return pool[Math.abs(s) % pool.length];
-  }
-  // Quip pools live in the editable funquips.js (window.RATS_QUIPS). A tiny built-in fallback keeps the
-  // page working if that file fails to load — but funquips.js is the one to EDIT. (The `bossDeath` /
-  // `scenic` pools in funquips.js are unused for now — they're for the Cliff Diver / Scenic route cards
-  // we'll restore once the API exposes `deaths`; see docs/WOWLOGS_API.md.)
-  var Q = window.RATS_QUIPS || {};
-  var QUIPS = {
-    ghost: Q.ghost || ["where'd you go? 👻"],
-  };
+  // (the quip pools + pickLine now live in the shared award module, assets/js/fun-awards.js —
+  //  funquips.js is still the file to EDIT; it publishes window.RATS_QUIPS for that module.)
 
   // ---- Fun & Shame: superlatives from the damage/healing/duration/wipe data we actually have --------
   // (deaths & damageTaken are null in the API — see docs §dev note — so no "most deaths"/"squishy" here).
@@ -406,6 +392,7 @@
     "On a streak": "#ff9d3f",
     "Perfect attendance": "#ffd23f",
   };
+  // Card for one award. The award DATA (who won what) comes from the shared RatsFun module.
   function funCard(emoji, title, name, cls, sub, shame) {
     var col = classColor(cls);
     var hue = shame ? "#c05656" : AWARD_HUE[title] || "var(--accent)";
@@ -417,303 +404,27 @@
       '<div class="fc-sub">' + sub + "</div></div>"
     );
   }
+  // ---- Fun & Shame — rendered from the SHARED award module (assets/js/fun-awards.js) --------------
+  // The superlative logic lives in ONE place (RatsFun) and is reused by the profile page's Honours,
+  // so the two can never drift apart. Here we only turn the computed awards into cards.
   function renderFunShame() {
     var awEl = document.getElementById("funAwards");
     if (!awEl) return;
-    var logs = filterByDiff(logsInScope(PERIOD));
-    // how many distinct raid nights (lockouts) are in scope — "perfect attendance" is only meaningful
-    // across MULTIPLE raids (in a single-raid Week, everyone who came was in "every" kill — trivial).
-    var lockSet = {};
-    logs.forEach(function (l) { lockSet[lockoutStart(l.date)] = 1; });
-    var lockCount = Object.keys(lockSet).length;
-    var guild = rosterSet();
-    var isGuildie = function (n) {
-      if (!guild) return true;
-      var id = resolveIdentity(n, "");
-      return guild[id.key] || guild[normNm(n)];
+    var res = { awards: [], shame: [] };
+    if (window.RatsFun) {
+      try {
+        res = window.RatsFun(DATA).compute({ raid: RAID, size: SIZE, diff: PROGDIFF, period: PERIOD });
+      } catch (e) {
+        res = { awards: [], shame: [] };
+      }
+    }
+    var toCard = function (a) {
+      return funCard(a.emoji, a.title, a.winner, a.cls, a.sub, a.shame);
     };
-    var trole = toonRoles(logs);
+    var awards = res.awards.map(toCard),
+      shame = res.shame.map(toCard);
 
-    // ---- gather per-toon DPS parses (kills only, guildies, non-tank), and totals ----
-    // Aggregate by PERSON (alt→main), not by toon — so Foougg's reroll toons count as one raider (fixes
-    // "1/27 kills"). A person's DPS toons fuse; their healer toon is excluded above. The displayed name/
-    // class = the "face" toon (the one that played the most DPS fights for that person).
-    var perPerson = {}; // DPS people, keyed by main: {fights,dpsList,sumDmg,byBoss:{boss:bestDps},faces}
-    var perHealer = {}; // HEALER people, keyed by main: {sumHeal,faces}
-    var presence = {}; // main → {kills, name, cls} — EVERY kill a person is in (any role: tank/dps/heal)
-    var bossBest = {}; // boss → the guild's best DPS on it (for the Overachiever "above par" count)
-    var raidTotalDmg = 0,
-      raidTotalHeal = 0;
-    function faceOf(map, id, r) {
-      var e = map[id.key] || (map[id.key] = { fights: 0, dpsList: [], sumDmg: 0, sumHeal: 0, byBoss: {}, faces: {} });
-      var fc = e.faces[normNm(r.n)] || (e.faces[normNm(r.n)] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
-      fc.n++;
-      return e;
-    }
-    logs.forEach(function (l) {
-      rowsForDiff(l.rows).forEach(function (r) {
-        if (!isGuildie(r.n)) return;
-        var tk = normNm(r.n);
-        var id = resolveIdentity(r.n, r.c);
-        // presence = attended this kill in ANY role (so a raider who TANKED a boss still counts as
-        // present — Rellik tanking half the run must NOT read as "missed those kills").
-        var pr = presence[id.key] || (presence[id.key] = { kills: 0, name: r.n, cls: r.c });
-        pr.kills++;
-        if (trole[tk] === "HEALER") {
-          raidTotalHeal += r.heal || 0;
-          var h = faceOf(perHealer, id, r);
-          h.sumHeal += r.heal || 0;
-          return;
-        }
-        if (isTankFight(r)) return; // tanks out of the DPS awards
-        raidTotalDmg += r.dmg || 0;
-        var e = faceOf(perPerson, id, r);
-        e.fights++;
-        e.sumDmg += r.dmg || 0;
-        e.dpsList.push(r.d || 0);
-        if (!e.byBoss[r.b] || (r.d || 0) > e.byBoss[r.b]) e.byBoss[r.b] = r.d || 0;
-        if ((r.d || 0) > (bossBest[r.b] || 0)) bossBest[r.b] = r.d || 0;
-      });
-    });
-    // resolve each person's face toon (most fights on that role) → name/cls/spec on the card
-    function resolveFaces(map) {
-      return Object.keys(map).map(function (k) {
-        var e = map[k],
-          face = null;
-        Object.keys(e.faces).forEach(function (t) {
-          if (!face || e.faces[t].n > face.n) face = e.faces[t];
-        });
-        e.key = k; // main key — lets us cross-reference the presence map (any-role kill count)
-        e.name = face.name;
-        e.cls = face.cls;
-        e.spec = face.spec;
-        return e;
-      });
-    }
-    var toons = resolveFaces(perPerson);
-    var healers = resolveFaces(perHealer);
-    var maxFights = toons.reduce(function (m, t) { return Math.max(m, t.fights); }, 0);
-
-    var awards = [];
-
-    // 🌊 The Baker — highest share of the guild's total damage (carries the raid)
-    if (raidTotalDmg > 0 && toons.length) {
-      var baker = toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0];
-      var share = Math.round((baker.sumDmg / raidTotalDmg) * 1000) / 10;
-      awards.push(funCard("🌊", "The Baker", baker.name, baker.cls,
-        "<b>" + share + "%</b> of all guild damage · " + fmtBig(baker.sumDmg)));
-    }
-
-    // 💚 The Medic — healer with the biggest share of total guild healing
-    if (raidTotalHeal > 0 && healers.length) {
-      var medic = healers.slice().sort(function (a, b) { return b.sumHeal - a.sumHeal; })[0];
-      var hshare = Math.round((medic.sumHeal / raidTotalHeal) * 1000) / 10;
-      awards.push(funCard("💚", "The Medic", medic.name, medic.cls,
-        "<b>" + hshare + "%</b> of all guild healing · " + fmtBig(medic.sumHeal)));
-    }
-
-    // (King of <boss> removed — it duplicated the One-trick pony when the top parse was the same person.)
-
-    // 🎯 Mr. Reliable — steady AND GOOD (5k-5k-5k, not 1k-1k-1k). Low variance is only impressive above
-    // the guild average — a flat mediocre line is not an achievement. So: only consider players whose
-    // average is >= the guild DPS average, then pick the steadiest (lowest coefficient of variation).
-    var withSpread = toons.filter(function (t) { return t.fights >= 3; }).map(function (t) {
-      var mean = t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights;
-      var varc = t.dpsList.reduce(function (a, b) { return a + (b - mean) * (b - mean); }, 0) / t.fights;
-      return { t: t, cv: mean > 0 ? Math.sqrt(varc) / mean : 1, mean: mean };
-    });
-    var guildAvgDps = withSpread.length
-      ? withSpread.reduce(function (a, b) { return a + b.mean; }, 0) / withSpread.length
-      : 0;
-    // reliable pool = the good half (>= guild average); wildcard pool = everyone (any level can be swingy)
-    var goodSteady = withSpread.filter(function (x) { return x.mean >= guildAvgDps; });
-    if (goodSteady.length) {
-      var steady = goodSteady.slice().sort(function (a, b) { return a.cv - b.cv; })[0];
-      awards.push(funCard("🎯", "Mr. Reliable", steady.t.name, steady.t.cls,
-        "high &amp; steady · <b>" + fmt(Math.round(steady.mean)) + "</b> DPS every raid, no off nights"));
-    }
-    if (withSpread.length) {
-      // 🎲 Wildcard — highest variance (roulette)
-      var wild = withSpread.slice().sort(function (a, b) { return b.cv - a.cv; })[0];
-      if (!goodSteady.length || wild.t !== goodSteady.slice().sort(function (a, b) { return a.cv - b.cv; })[0].t)
-        awards.push(funCard("🎲", "The Wildcard", wild.t.name, wild.t.cls,
-          "hot-or-cold — biggest swings raid to raid"));
-    }
-
-    // 🎸 One-trick pony — biggest gap between a player's best boss and their own average (shines on one
-    // fight, mortal on the rest). Needs ≥3 kills so it's a real pattern, not a single lucky parse.
-    var tricks = toons.filter(function (t) { return t.fights >= 3; }).map(function (t) {
-      var mean = t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights;
-      var bestBoss = "",
-        bestV = 0;
-      Object.keys(t.byBoss).forEach(function (b) {
-        if (t.byBoss[b] > bestV) { bestV = t.byBoss[b]; bestBoss = b; }
-      });
-      return { t: t, ratio: mean > 0 ? bestV / mean : 1, boss: bestBoss };
-    });
-    if (tricks.length) {
-      var trick = tricks.slice().sort(function (a, b) { return b.ratio - a.ratio; })[0];
-      if (trick.ratio >= 1.4)
-        awards.push(funCard("🎸", "One-trick pony", trick.t.name, trick.t.cls,
-          "a god on <b>" + esc(shortBoss(trick.boss)) + "</b>, mortal elsewhere"));
-    }
-
-    // 📈 Overachiever — above the guild's best-on-that-boss average in the MOST bosses (good everywhere).
-    // We score each person by how many bosses their best beats the guild-median-best on that boss.
-    var bossMed = {}; // boss → median of all players' best DPS on it
-    Object.keys(bossBest).forEach(function (b) {
-      var vals = toons.map(function (t) { return t.byBoss[b] || 0; }).filter(function (x) { return x > 0; }).sort(function (a, c) { return a - c; });
-      bossMed[b] = vals.length ? vals[Math.floor(vals.length / 2)] : 0;
-    });
-    if (toons.length > 2) {
-      var over = toons.map(function (t) {
-        var n = 0;
-        Object.keys(t.byBoss).forEach(function (b) { if (t.byBoss[b] >= (bossMed[b] || 0)) n++; });
-        return { t: t, n: n, cov: Object.keys(t.byBoss).length };
-      }).filter(function (x) { return x.cov >= 3; })
-        .sort(function (a, b) { return b.n / b.cov - a.n / a.cov || b.n - a.n; })[0];
-      if (over && over.n >= 3)
-        awards.push(funCard("📈", "Overachiever", over.t.name, over.t.cls,
-          "above par on <b>" + over.n + "</b> of " + over.cov + " bosses"));
-    }
-
-    // 🐺 Lone wolf — most total damage carried across the scope (volume × presence), the workhorse.
-    if (toons.length) {
-      var wolf = toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0];
-      // avoid duplicating the Baker card if it's the same person (Baker = % share, Wolf = raw volume)
-      var bakerName = raidTotalDmg > 0 && toons.length ? toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[0].name : null;
-      // second-highest if the top is already the Baker
-      var wolfPick = wolf.name === bakerName && toons.length > 1
-        ? toons.slice().sort(function (a, b) { return b.sumDmg - a.sumDmg; })[1]
-        : wolf;
-      awards.push(funCard("🐺", "Lone wolf", wolfPick.name, wolfPick.cls,
-        "<b>" + fmtBig(wolfPick.sumDmg) + "</b> damage over <b>" + wolfPick.fights + "</b> kills"));
-    }
-
-    // ⚡ On strike — tops the meters on the MOST bosses (holds #1 everywhere). "No way to take you from
-    // the top." Counts how many bosses each person's best is the guild's best on that boss.
-    if (toons.length > 2 && Object.keys(bossBest).length) {
-      var strike = toons
-        .map(function (t) {
-          var n = 0;
-          Object.keys(t.byBoss).forEach(function (b) {
-            if (t.byBoss[b] >= (bossBest[b] || 0)) n++;
-          });
-          return { t: t, n: n };
-        })
-        .sort(function (a, b) { return b.n - a.n; })[0];
-      if (strike && strike.n >= 2)
-        awards.push(funCard("⚡", "On strike", strike.t.name, strike.t.cls,
-          "#1 on <b>" + strike.n + "</b> boss" + (strike.n !== 1 ? "es" : "") + " — untouchable at the top"));
-    }
-
-    // 🔥 On a streak — the same player has topped the board multiple lockouts IN A ROW (the persistent
-    // 👑 crown from the Leaderboards). Rewards holding #1 raid after raid, not just one good night.
-    var streaks = computeStreaks();
-    [
-      { s: streaks.dps, unit: "DPS" },
-      { s: streaks.hps, unit: "healing" },
-    ].forEach(function (o) {
-      if (o.s && o.s.name && o.s.count >= 2) {
-        // find the display name + class for this normalized name (from any role's face toons)
-        var face = null;
-        toons.concat(healers).forEach(function (t) {
-          if (normNm(t.name) === o.s.name) face = t;
-        });
-        var nm = face ? face.name : o.s.name;
-        var cl = face ? face.cls : "";
-        awards.push(funCard("🏅", "On a streak", nm, cl,
-          "held <b>#1 " + o.unit + "</b> for <b>" + o.s.count + "</b> raids straight"));
-      }
-    });
-
-    // 👑 Perfect attendance — was in EVERY kill of the scope (any role counts, so a tank qualifies too)
-    // only across ≥2 raid nights — perfect attendance in a single raid is just "showed up", not a feat.
-    var presAward = Object.keys(presence).map(function (k) { return presence[k]; });
-    var maxPres = presAward.reduce(function (m, p) { return Math.max(m, p.kills); }, 0);
-    if (maxPres > 1 && lockCount >= 2) {
-      var present = presAward.filter(function (p) { return p.kills === maxPres; });
-      if (present.length === 1) {
-        // one lone perfect raider — name them
-        awards.push(funCard("👑", "Perfect attendance", present[0].name, present[0].cls,
-          "in all <b>" + maxPres + "</b> kills — never missed"));
-      } else if (present.length > 1) {
-        // several — one summary card celebrating the whole crew (no class colour on a count)
-        awards.push(funCard("👑", "Perfect attendance", present.length + " raiders", "",
-          "never missed a kill · <b>" + maxPres + "/" + maxPres + "</b> each 🧀"));
-      }
-    }
-
-    // ---- SHAME (rat voice, playful). One person can hold only ONE shame card. ----
-    // NOTE: no "lowest single parse" cards (Cliff Diver / Scenic route were removed) — a low parse can be
-    // a mid-fight DEATH, not lack of skill (e.g. Shmurda 913 on Auriaya = he died), and the API gives us
-    // NO `deaths` field to tell them apart. So shame is limited to signals we CAN trust: attendance
-    // (presence, any role) and a consistently low AVERAGE across many kills. Restore the single-parse
-    // cards only if the dev exposes `deaths` (see docs §dev note).
-    var shame = [];
-    var shamed = {};
-    function addShame(name, html) {
-      var k = normNm(name);
-      if (shamed[k]) return; // already shamed elsewhere — don't pile on
-      shamed[k] = true;
-      shame.push(html);
-    }
-
-    // 💤 Ghost — fewest kills attended, using TOTAL presence (any role) so a tank/off-spec night doesn't
-    // read as absence. Only shame someone well below the pack (< 60% of max).
-    var pres = Object.keys(presence).map(function (k) { return presence[k]; });
-    var maxPresence = pres.reduce(function (m, p) { return Math.max(m, p.kills); }, 0);
-    if (maxPresence > 1 && pres.length > 2) {
-      var ghost = pres.slice().sort(function (a, b) { return a.kills - b.kills; })[0];
-      if (ghost.kills < maxPresence * 0.6)
-        addShame(ghost.name, funCard("💤", "Raid ghost", ghost.name, ghost.cls,
-          "only <b>" + ghost.kills + "</b>/" + maxPresence + " kills — " +
-          esc(pickLine(QUIPS.ghost, ghost.name)), true));
-    }
-
-    // 🍺 Last one standing — a DPS REGULAR with the lowest AVERAGE dps (excludes tanks via presence ratio).
-    var dpsRegulars = toons.filter(function (t) {
-      if (t.fights < Math.max(3, Math.ceil(maxFights / 2))) return false; // must be a regular
-      var totalKills = presence[t.key] ? presence[t.key].kills : t.fights;
-      return t.fights >= totalKills * 0.7; // played DPS in ≥70% of their kills (not a part-time tank)
-    });
-    if (dpsRegulars.length > 2) {
-      // pick the lowest-average one that isn't already shamed
-      var ranked = dpsRegulars
-        .map(function (t) {
-          return { t: t, avg: t.dpsList.reduce(function (a, b) { return a + b; }, 0) / t.fights };
-        })
-        .sort(function (a, b) { return a.avg - b.avg; });
-      for (var si = 0; si < ranked.length; si++) {
-        if (shamed[normNm(ranked[si].t.name)]) continue;
-        var sl = ranked[si];
-        addShame(sl.t.name, funCard("🍺", "Last one standing", sl.t.name, sl.t.cls,
-          "there every raid but bottom of the meters · avg <b>" + fmt(Math.round(sl.avg)) +
-          "</b> DPS — present, but not really 🫥", true));
-        break;
-      }
-    }
-
-    // 🧊 Ice cold — below the guild median on the MOST bosses (the opposite of the Overachiever): not one
-    // bad parse, but consistently cold everywhere. Uses each person's best-per-boss vs the boss median.
-    if (toons.length > 2) {
-      var cold = toons
-        .map(function (t) {
-          var below = 0,
-            cov = Object.keys(t.byBoss).length;
-          Object.keys(t.byBoss).forEach(function (b) {
-            if (t.byBoss[b] < (bossMed[b] || 0)) below++;
-          });
-          return { t: t, below: below, cov: cov, ratio: cov ? below / cov : 0 };
-        })
-        .filter(function (x) { return x.cov >= 3 && !shamed[normNm(x.t.name)]; })
-        .sort(function (a, b) { return b.ratio - a.ratio || b.below - a.below; })[0];
-      if (cold && cold.below >= 3)
-        addShame(cold.t.name, funCard("🧊", "Ice cold", cold.t.name, cold.t.cls,
-          "below par on <b>" + cold.below + "</b> of " + cold.cov + " bosses — time to warm up 🔥", true));
-    }
-
-    // Empty state: nothing to award AND nothing to shame → hide the titles/cards and show one centred
+    // Empty state: nothing to award AND nothing to shame -> hide the titles/cards and show one centred
     // rats block (same look as the Leaderboards empty state) instead of two lonely "nothing yet" lines.
     var body = document.getElementById("funBody"),
       empty = document.getElementById("funEmpty");
@@ -731,6 +442,7 @@
     // one grid: positive awards first, then the negative ones (red-tinted) — no separate "shame" section
     awEl.innerHTML = awards.concat(shame).join("");
   }
+
 
   function renderProgress() {
     var el = document.getElementById("progress");

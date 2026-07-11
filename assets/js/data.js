@@ -306,74 +306,15 @@ window.RatsData = (function () {
     return list;
   }
 
-  // ---- per-main PROFILE keys (Path B) — soft login for the raider profile page ----
-  // We NEVER store the raw key, only salt + SHA-256(salt + key) in the plain `profiles` node,
-  // so reading the node leaks nothing. A char key is the lowercased a-z0-9 form of the name.
+  // ---- raider PROFILES (plain `profiles` node) — name/class/alts snapshot for the profile page ----
+  // A char key is the lowercased a-z0-9 form of the name.
   function profKey(name) {
     return String(name || "")
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
   }
-  async function sha256Hex(s) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-  // generate a short, readable random key (officer reads it out / DMs it to the raider)
-  function genProfileKey() {
-    const a = crypto.getRandomValues(new Uint8Array(8));
-    const cs = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no look-alikes (0/O, 1/I/L)
-    let s = "";
-    for (let i = 0; i < a.length; i++) s += cs[a[i] % cs.length];
-    return s.slice(0, 4) + "-" + s.slice(4); // e.g. "K7QP-N2RF"
-  }
-  // Officer: publish (or replace) the hash for a main. Returns the raw key to hand over.
-  async function setProfileKey(name, cls) {
-    if (!fbOn()) throw new Error("Firebase off — can't publish a profile key.");
-    const key = genProfileKey();
-    const salt = ab2b64(crypto.getRandomValues(new Uint8Array(12)));
-    const hash = await sha256Hex(salt + key);
-    await fbPut("profiles/" + profKey(name), { name: name, class: cls || "", salt, hash });
-    return key;
-  }
-  async function clearProfileKey(name) {
-    return fbOn() ? fbDelete("profiles/" + profKey(name)) : Promise.resolve();
-  }
   async function loadProfiles() {
     return (fbOn() ? await fbGetSafe("profiles") : null) || {};
-  }
-
-  // ---- profile-key REQUESTS (plain node) — a guildie asks for a key; the officer page polls + pings ----
-  // poll+announce pattern: the public profile page can't reach the webhook, so it just writes a request
-  // here; the officer/guild page picks it up, posts to #okanor-logs, and flips `announced`.
-  async function requestProfileKey(name, cls) {
-    if (!fbOn()) throw new Error("Firebase off — can't send a request.");
-    await fbPut("keyRequests/" + profKey(name), { name: name, class: cls || "", at: Date.now(), announced: false });
-    return true;
-  }
-  async function loadKeyRequests() {
-    return (fbOn() ? await fbGetSafe("keyRequests") : null) || {};
-  }
-  async function markKeyRequestAnnounced(charKey, rec) {
-    return fbPut("keyRequests/" + charKey, Object.assign({}, rec, { announced: true }));
-  }
-  async function clearKeyRequest(name) {
-    return fbOn() ? fbDelete("keyRequests/" + profKey(name)) : Promise.resolve();
-  }
-
-  // Raider: verify an entered (name, key) against the published hash. Returns the charKey on success, else "".
-  async function verifyProfileKey(name, key) {
-    const ck = profKey(name);
-    const rec = fbOn() ? await fbGet("profiles/" + ck) : null;
-    if (!rec || !rec.salt || !rec.hash) return "";
-    const h = await sha256Hex(
-      rec.salt +
-        String(key || "")
-          .trim()
-          .toUpperCase()
-    );
-    return h === rec.hash ? ck : "";
   }
 
   // download a json file (manual-commit fallback when Firebase is off)
@@ -847,6 +788,9 @@ window.RatsData = (function () {
     mojodaddy: "Mojobimbo", // renamed char: old logs say "Mojodaddy", now "Mojobimbo"
     foougg: "Foug", // renamed DK main: old logs say "Foougg", now "Foug"
     fouug: "Foug", // Hunter alt toon "Fouug" -> roster main "Foug" (same person)
+    nutelaa: "Dknutela", // rerolled to a DK: old logs say "Nutelaa", main is now "Dknutela"
+    nutela: "Dknutela", // ditto, one-"a" spelling seen in the loot data
+    nutelea: "Dknutela", // ditto, seen in the loot alt merge
     solanar: "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
     // add more Discord-nick -> in-game pairs here as needed:
     // "shockaa": "Shockaa",
@@ -864,68 +808,20 @@ window.RatsData = (function () {
     return NAME_ALIASES[_normAlias(name)] || null;
   }
 
-  // ---- GLOBAL dev role override + officer check ------------------------------------------------
-  // Single source of truth for "is this viewer an officer". Live: officer === has the guild key.
-  // On your own machine (file:// or localhost) a floating ⚙ panel lets you preview as Officer or
-  // Guildie without touching the real key — stored in localStorage.ratsDevRole, IGNORED on the live
-  // site. Every officer-aware page should call RatsData.isOfficer() instead of reading the key directly.
+  // ---- officer check ---------------------------------------------------------------------------
+  // Single source of truth for "is this viewer an officer": officer === has the guild key.
+  // Every officer-aware page should call RatsData.isOfficer() instead of reading the key directly.
   const IS_DEV = location.protocol === "file:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   function isDev() { return IS_DEV; }
-  function devRole() {
-    if (!IS_DEV) return "";
-    try { return localStorage.getItem("ratsDevRole") || ""; } catch (e) { return ""; }
-  }
+  function devRole() { return ""; } // dev "view as" override removed — the site has one view now
   function hasGuildKey() {
     try { return !!localStorage.getItem(PASS_LS); } catch (e) { return false; }
   }
-  // the officer check every page uses. Dev override wins locally; real key decides on the live site.
   function isOfficer() {
-    const r = devRole();
-    if (r === "officer") return true;
-    if (r === "guildie") return false;
     return hasGuildKey();
   }
-  function setDevRole(role) {
-    try {
-      if (role) localStorage.setItem("ratsDevRole", role);
-      else localStorage.removeItem("ratsDevRole");
-    } catch (e) {}
-    location.reload(); // pages read isOfficer() at load — reload re-renders in the new role
-  }
-  // Render the floating dev-role panel (once, only in dev). Call RatsData.mountDevRole() on any page.
-  function mountDevRole() {
-    if (!IS_DEV || document.getElementById("ratsDevRole")) return;
-    if (!document.getElementById("ratsDevRoleCss")) {
-      const s = document.createElement("style");
-      s.id = "ratsDevRoleCss";
-      s.textContent =
-        "#ratsDevRole{position:fixed;bottom:14px;right:16px;z-index:99998;background:#1b1d21;border:1px solid #c0943a;border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:'Segoe UI',Roboto,Arial,sans-serif}" +
-        "#ratsDevRole .dr-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#c0943a;margin-bottom:8px}" +
-        "#ratsDevRole .dr-tag{margin-left:auto;font-size:9px;font-weight:800;color:#1b1d21;background:#c0943a;border-radius:8px;padding:1px 6px}" +
-        "#ratsDevRole .dr-btns{display:flex;gap:6px}" +
-        "#ratsDevRole .dr-b{padding:6px 10px;font-size:12px;font-weight:700;color:#9aa0a6;background:#16181c;border:1px solid #2f3137;border-radius:6px;cursor:pointer;font-family:inherit}" +
-        "#ratsDevRole .dr-b:hover{color:#fff;border-color:#c0943a}" +
-        "#ratsDevRole .dr-b.on{background:#c0943a;border-color:#c0943a;color:#1b1d21}" +
-        "#ratsDevRole .dr-reset{width:100%;margin-top:7px;padding:4px;font-size:11px;color:#8a8d93;background:none;border:0;cursor:pointer;font-family:inherit}" +
-        "#ratsDevRole .dr-reset:hover{color:#fff}";
-      document.head.appendChild(s);
-    }
-    const off = isOfficer(), cur = devRole();
-    const el = document.createElement("div");
-    el.id = "ratsDevRole";
-    el.innerHTML =
-      '<div class="dr-hd">⚙ View as <span class="dr-tag">dev</span></div>' +
-      '<div class="dr-btns">' +
-      '<button type="button" class="dr-b' + (off ? " on" : "") + '" data-r="officer">🛡️ Officer</button>' +
-      '<button type="button" class="dr-b' + (!off ? " on" : "") + '" data-r="guildie">🐀 Guildie</button>' +
-      "</div>" +
-      (cur ? '<button type="button" class="dr-reset" data-r="">↺ use real key</button>' : "");
-    el.addEventListener("click", function (e) {
-      const b = e.target.closest("[data-r]");
-      if (b) setDevRole(b.getAttribute("data-r"));
-    });
-    (document.body || document.documentElement).appendChild(el);
-  }
+  function setDevRole() {} // no-op (dev "view as" panel removed)
+  function mountDevRole() {} // no-op (dev "view as" panel removed)
 
   return {
     aliasFor,
@@ -941,15 +837,7 @@ window.RatsData = (function () {
     publishMembers,
     loadMembers,
     profKey,
-    genProfileKey,
-    setProfileKey,
-    clearProfileKey,
     loadProfiles,
-    verifyProfileKey,
-    requestProfileKey,
-    loadKeyRequests,
-    markKeyRequestAnnounced,
-    clearKeyRequest,
     loadRoster,
     loadHistory,
     cachedHistory,

@@ -116,11 +116,11 @@ page loads it by the **in-game toon name**, lowercased. **All three DONE & rende
 
 | Toon | Class | File (rendered) |
 |------|-------|-----------------|
-| **Foougg** | Unholy DK (main) | `images/profile-bg/foug/foougg.png` ✅ |
+| **Foug** | Unholy DK (main) | `images/profile-bg/foug/foug.png` ✅ (was "Foougg" before the rename) |
 | **Sarveil** | Discipline Priest | `images/profile-bg/foug/sarveil.png` ✅ |
 | **Fouug** | Hunter | `images/profile-bg/foug/fouug.png` ✅ (matches `images/commissions/Foug 1.png`) |
 
-### Foougg — Unholy DK (main) · `images/profile-bg/foug/foougg.png` ✅ DONE
+### Foug — Unholy DK (main) · `images/profile-bg/foug/foug.png` ✅ DONE
 
 ```
 Digital fantasy illustration, cinematic 4:1 ultra-wide profile banner / hero strip (e.g. 2400x600), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only, all text added later by the page.

@@ -68,15 +68,16 @@
   background: var(--accent);
   color: var(--surface-2);
 }
-/* the raid + size toggles sit at the right end of the Performance header (raid first, then size).
-   margin-left:auto on the first one floats the whole pair right; the header's gap separates them.
+/* the raid + size + difficulty toggles sit at the right end of the Performance header (raid, size, diff).
+   margin-left:auto on the first one floats the whole group right; the header's gap separates them.
    .sizetog keeps the auto too for the case where no raid selector is shown (single-raid snapshot). */
 .raidtog,
 .sizetog {
   margin-left: auto;
 }
-.raidtog + .sizetog,
-.raidtog ~ .sizetog {
+.raidtog ~ .sizetog,
+.raidtog ~ .difftog,
+.sizetog ~ .difftog {
   margin-left: 0;
 }
 /* let the header wrap the toggles onto a second line on narrow screens instead of overflowing */
@@ -97,10 +98,20 @@
     0 0 0 1px color-mix(in srgb, var(--col, var(--accent)) 18%, transparent),
     0 14px 38px rgba(0, 0, 0, 0.45);
 }
+/* expanded hero: a FIXED height (not max-height) so the art always has a box to fill. The banners are
+   2:1-2.5:1, not the 4:1 STYLE.md asks for, so at page width they're shorter than the box — the art must
+   be stretched over the whole hero (inset:0 + cover) or the hero's own #0c0d0f background shows through
+   as a black bar along the top. Anchored top-right so the character (drawn on the right) stays framed. */
+.hero {
+  height: 300px;
+}
 .hero .heroart {
-  display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  object-position: right top;
 }
 /* mostly-neutral dark fade over the left; class colour only as a thin sliver at the far-left edge */
 .hero::before {
@@ -137,10 +148,17 @@
   bottom: 0;
   width: 46%;
   min-width: 0;
+  box-sizing: border-box; /* keep padding INSIDE the 46% so text can't spill over the art */
+  overflow: hidden; /* hard stop: nothing in the text column crosses into the centered art */
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 clamp(18px, 3vw, 34px);
+}
+/* every text child stays within the column; long words break instead of pushing the box wider */
+.hero .hbody > * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .hero .hname {
   font-size: clamp(22px, 2.6vw, 32px);
@@ -197,20 +215,6 @@
   border-color: #3a5b42;
   color: #8fdf9f;
 }
-.hero .youbadge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 3;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  color: var(--surface-2);
-  background: var(--col, var(--accent));
-  border-radius: 10px;
-  padding: 3px 10px;
-}
-
 /* ---- corner expand/collapse toggle ---- */
 .hero .htoggle {
   position: absolute;
@@ -378,7 +382,9 @@
 /* ============ 3-column body ============ */
 .pgrid {
   display: grid;
-  grid-template-columns: 248px 1fr 250px;
+  /* minmax(0,1fr) on the middle track prevents grid "blowout": without it, wide content in the middle
+     column can force the whole grid past its container so the right column sticks out past the banner. */
+  grid-template-columns: 248px minmax(0, 1fr) 250px;
   gap: 16px;
   align-items: start;
 }
@@ -438,6 +444,11 @@
 }
 
 /* ============ identity rail (each fact once) ============ */
+/* Identity card: keep a steady height whether a raider has 1 fact or 4, so the card doesn't jump
+   between raiders. ~3 rows tall; rows sit at the top, extra space stays empty below. */
+.idcard {
+  min-height: 132px;
+}
 .railrow {
   display: flex;
   align-items: center;
@@ -467,6 +478,45 @@
 }
 .railrow .rv.col {
   color: var(--col, var(--accent));
+}
+
+/* clean "no parses in this scope" state — a calm centered card instead of empty tiles */
+.emptyperf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 26px 22px;
+  gap: 9px;
+}
+.emptyperf .ep-ic {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: var(--col, var(--accent));
+  background: color-mix(in srgb, var(--col, var(--accent)) 12%, transparent);
+}
+.emptyperf .ep-ic svg {
+  width: 26px;
+  height: 26px;
+}
+.emptyperf .ep-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+.emptyperf .ep-sub {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  max-width: 340px;
+  line-height: 1.45;
+}
+.emptyperf .gold {
+  color: var(--accent);
 }
 
 /* ============ stat tiles (mirrors rankings .gs) ============ */
@@ -512,6 +562,48 @@
   font-weight: 700;
   margin-top: 4px;
   color: var(--text-dim-2);
+}
+
+/* ---- TANK tiles: warmer, class-washed, with an inline icon + a big faded shield watermark ---- */
+.tile-t {
+  /* subtle diagonal wash toward the tank's class color so the row reads as "the wall" */
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--tile-col) 14%, transparent), transparent 60%),
+    var(--surface-2);
+  border-color: color-mix(in srgb, var(--tile-col) 26%, var(--border));
+}
+.tile-t .tt-ic {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  color: var(--tile-col);
+  background: color-mix(in srgb, var(--tile-col) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tile-col) 30%, transparent);
+}
+.tile-t .tt-ic svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+.tile-t .v {
+  color: var(--white);
+}
+/* empty tile (no data): recede the whole thing so the "—" doesn't read as a stark white line */
+.tile-s.empty-tile {
+  opacity: 0.72;
+}
+.tile-s.empty-tile .v {
+  color: var(--text-faint);
+  font-weight: 700;
+}
+.tile-t.empty-tile .tt-ic {
+  color: var(--text-dim-2);
+  background: color-mix(in srgb, var(--text-dim-2) 12%, transparent);
+  border-color: color-mix(in srgb, var(--text-dim-2) 20%, transparent);
 }
 /* a medal rank chip that can sit on a tile */
 .rkchip {
@@ -635,9 +727,9 @@
   color: #d39b6a;
 }
 .plist .bn {
-  flex: 0 0 auto;
-  min-width: 150px;
-  max-width: 220px;
+  /* FIXED width (not min/max) so every bar starts at the same x regardless of boss-name length */
+  flex: 0 0 210px;
+  width: 210px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -655,6 +747,19 @@
   background: var(--surface-3);
   overflow: hidden;
 }
+/* tank rows have no damage bar — this just fills the middle so Boss and Off-spec align in their columns */
+.plist .tankspacer {
+  flex: 1 1 120px;
+}
+/* tank list: no bar to align against, so let the boss name take the space it needs (no truncation) */
+.plist-tank .bn {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: none;
+}
+.plist-tank .pspec {
+  white-space: nowrap;
+}
 .plist .pbar > i {
   display: block;
   height: 100%;
@@ -669,21 +774,12 @@
   text-align: right;
 }
 
-/* locked / officer-only cards */
+/* officer-only cards */
 .officer-only {
   display: none;
 }
-.locked-card {
-  border-style: dashed;
-  border-color: var(--border);
-}
-.locked-card .lockmsg {
-  color: var(--text-dim-2);
-  font-size: 13px;
-  font-style: italic;
-}
 
-/* ============ login gate ============ */
+/* ============ typeahead dropdown (shared by the header "jump to raider" search) ============ */
 .ac {
   position: absolute;
   top: 42px;
@@ -722,7 +818,7 @@
   font-size: 13px;
 }
 
-/* officer-only header search — "jump to raider". Dark field + magnifier, reuses the .ac dropdown. */
+/* header search — "jump to raider" (free for all). Dark field + magnifier, reuses the .ac dropdown. */
 .psearch {
   position: relative;
   width: 210px;
@@ -752,7 +848,7 @@
   outline: none;
   border-color: var(--accent);
 }
-/* the shared .ac dropdown is positioned for the taller login field; re-anchor under this control */
+/* re-anchor the shared .ac dropdown under this control */
 .psearch .ac {
   top: calc(var(--ctl-h) + 4px);
 }
@@ -760,53 +856,6 @@
   .psearch {
     width: 150px;
   }
-}
-.modal-ov {
-  position: fixed;
-  inset: 0;
-  z-index: 999;
-  background: rgba(8, 9, 11, 0.82);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.modal-box {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 24px 26px;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6);
-}
-.ll {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 6px;
-}
-.keyfield {
-  position: relative;
-}
-.keyfield .lockic {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  color: var(--accent);
-  pointer-events: none;
-}
-.keyfield input {
-  width: 100%;
-  padding-left: 34px;
-  letter-spacing: 1px;
-  font-weight: 700;
 }
 
 /* stack the 3-col body on narrow screens */
@@ -877,6 +926,13 @@
 .vitality.bad {
   --vt: #ff6b6b;
 }
+/* honest "no data" state — muted, no colored fill (never reads as a real score) */
+.vitality.unknown {
+  --vt: var(--text-faint);
+}
+.hpbar.unknown {
+  background: repeating-linear-gradient(45deg, #17181c 0 8px, #1c1d22 8px 16px);
+}
 
 /* ---- align the three columns on one grid line ----
    Each column (.rail / .main / .side) opens with a .psec header, but they carry different content
@@ -911,6 +967,9 @@
 }
 .psec .vt-status.bad {
   color: #ff6b6b;
+}
+.psec .vt-status.unknown {
+  color: var(--text-dim-2);
 }
 
 /* the health bar itself — dark track + tone-coloured fill with a subtle sheen */
@@ -990,4 +1049,248 @@
 .vfac.bad small {
   color: inherit;
   opacity: 0.75;
+}
+
+/* ============ Honours — derived badges (right rail, under Raid Vitality) ============ */
+.honcard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* Pokémon-style raid-night progression ring */
+.ringrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.ring {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  flex: 0 0 auto;
+}
+.ring-svg {
+  width: 68px;
+  height: 68px;
+  transform: rotate(-90deg);
+}
+.ring-bg {
+  fill: none;
+  stroke: var(--surface-3);
+  stroke-width: 7;
+}
+.ring-fg {
+  fill: none;
+  stroke: var(--col, var(--accent));
+  stroke-width: 7;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--col, var(--accent)) 55%, transparent));
+}
+.ring-in {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.ring-n {
+  color: var(--white);
+  font-size: 20px;
+  font-weight: 800;
+}
+.ring-l {
+  color: var(--text-dim-2);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 2px;
+}
+.ringtxt {
+  min-width: 0;
+}
+.ringttl {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 13px;
+}
+.ringsub {
+  color: var(--text-dim-2);
+  font-size: 11.5px;
+  margin-top: 3px;
+  line-height: 1.35;
+}
+.ringsub b {
+  color: var(--col, var(--accent));
+  font-weight: 800;
+}
+/* light list: tight rows for the guild superlatives */
+.honours {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 4px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.hon {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 4px;
+}
+.hon + .hon {
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.hon-emoji {
+  font-size: 15px;
+  line-height: 1;
+  flex: 0 0 auto;
+  width: 20px;
+  text-align: center;
+  filter: saturate(1.1);
+}
+.hon-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.hon-title {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+.hon-note {
+  color: var(--text-dim-2);
+  font-size: 11px;
+}
+.hon-note b {
+  color: var(--text-dim);
+  font-weight: 700;
+}
+/* which raid/size the award was won in — a quiet tag next to the title */
+.hon-scope {
+  color: var(--text-faint);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-left: 5px;
+}
+
+/* ============ First-run "who are you" screen (no raider targeted / no saved main) ============ */
+.welcome {
+  max-width: 640px;
+  margin: 7vh auto 0;
+  text-align: center;
+  padding: 34px 30px 30px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+}
+.welcome .wc-mark {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.welcome h2 {
+  color: var(--white);
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+/* the permanence warning — boxed + gold-edged so it can't be missed before picking */
+.welcome .wc-sub {
+  color: var(--text-dim);
+  margin: 0 auto 12px;
+  max-width: 500px;
+  line-height: 1.55;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: var(--radius);
+}
+.welcome .wc-sub b {
+  color: var(--accent);
+}
+.welcome .wc-hint {
+  color: var(--text-dim-2);
+  font-size: 13px;
+  margin: 0 auto 20px;
+  max-width: 460px;
+  line-height: 1.5;
+}
+.welcome .wc-hint b {
+  color: var(--accent);
+}
+/* search + Select row */
+.wc-pick {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 440px;
+  margin: 0 auto 18px;
+}
+.wc-field {
+  position: relative;
+  flex: 1;
+  text-align: left;
+}
+.wc-field input {
+  width: 100%;
+}
+/* anchor the shared .ac typeahead dropdown under the field */
+.wc-field .ac {
+  top: calc(var(--ctl-h) + 4px);
+  left: 0;
+  right: 0;
+}
+.wc-pick #wcSelect {
+  flex: 0 0 auto;
+}
+
+/* ---- "set as my main" confirm modal (site-styled Yes / No) ---- */
+#myToonModal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(6, 7, 9, 0.72);
+  backdrop-filter: blur(2px);
+}
+#myToonModal .mt-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+#myToonModal h3 {
+  margin: 0 0 10px;
+  color: var(--white);
+  font-size: 18px;
+}
+#myToonModal .mt-name {
+  color: var(--accent);
+}
+#myToonModal p {
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+#myToonModal p b {
+  color: var(--accent);
+}
+#myToonModal .mt-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
