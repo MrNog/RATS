@@ -4,7 +4,7 @@
 - **Rank:** Warchief
 - **Commissioned:** founding officer (seeded from the original library) · re-specced to Unholy DK 02 Jul 2026
 - **Alts:** Fouug (Hunter) · Sarveil (Disc Priest) · Paladin (Prot) · Mage — see **Alts** section at the bottom.
-- **Toon names:** DK main = **Foougg** · Hunter = **Fouug** · Priest = **Sarveil**. (Profile banners are keyed
+- **Toon names:** DK main = **Foug** (renamed from **Foougg** — old logs/loot still say Foougg) · Hunter = **Fouug** · Priest = **Sarveil**. (Profile banners are keyed
   by these exact toon names — see the BG-prompts table at the bottom.)
 
 ## Locked look (never changes between images)

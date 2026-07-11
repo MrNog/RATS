@@ -845,7 +845,8 @@ window.RatsData = (function () {
     kobe: "Kobee", // Discord "Kobe" -> in-game "Kobee"
     mojo: "Mojobimbo", // Discord "Mojo" -> one of his toons; roster alt->main does the rest
     mojodaddy: "Mojobimbo", // renamed char: old logs say "Mojodaddy", now "Mojobimbo"
-    foug: "Fouug", // Discord "Foug" -> in-game "Fouug" (Hunter)
+    foougg: "Foug", // renamed DK main: old logs say "Foougg", now "Foug"
+    fouug: "Foug", // Hunter alt toon "Fouug" -> roster main "Foug" (same person)
     solanar: "Solanarrage", // Discord "Solanar" -> in-game main pala "Solanarrage"
     // add more Discord-nick -> in-game pairs here as needed:
     // "shockaa": "Shockaa",

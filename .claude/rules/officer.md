@@ -9,7 +9,7 @@ globs: ['officer/**']
 - Roster + history are AES-encrypted (PBKDF2). Always decrypt before display; never log raw ciphertext blobs.
 - Firebase REST base: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
   - Encrypted nodes: `roster`, `history`
-  - Plain nodes: `vacations`, `members`, `changelog`, `gate`
+  - Plain nodes: `vacations`, `members`, `gate`
 - Webhooks: `localStorage.ratsWebhooks` → array of `{ name, url }`. Canonical names: **RatRoster**, **Logs**, **Vacations**, **LoreMaster**. Match by regex — never hardcode a URL.
 - 10-man raids deduplicate per WoW Wed→Wed lockout window. One obligation per lockout per instance, not per raid date.
 

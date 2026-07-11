@@ -10,7 +10,7 @@ You review **RATS** data-layer code against its Firebase cost model and security
 ## The data model (context)
 
 - Firebase Realtime DB via unauthenticated REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`.
-- **Nodes:** `roster` (encrypted), `history` (encrypted), `vacations` (plain, push-keyed), `members` (plain name+class), `changelog` (plain), `gate` (encrypted lock token), `rankings` (plain snapshot), `profiles`/`keyRequests` (plain, hashed keys).
+- **Nodes:** `roster` (encrypted), `history` (encrypted), `vacations` (plain, push-keyed), `members` (plain name+class), `gate` (encrypted lock token), `rankings` (plain snapshot), `profiles`/`keyRequests` (plain, hashed keys).
 - Shared layer is `assets/js/data.js` (`RatsData`): `fbFetch` (12s timeout), `withRetry` (one retry on transient), `fbGet` (throws on real failure), `fbGetSafe` (swallows to null), `fbPut/fbPost/fbDelete`.
 - Free tier ≈ 360 MB/day download; **a REST read pulls the WHOLE node** each time.
 

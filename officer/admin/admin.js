@@ -4,7 +4,7 @@ const WH_RE = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/\S+/;
 // Fixed webhook slots - names are canonical, tools match them by regex
 const HOOKS = [
   { name: "RatRoster", match: /ratroster|roster|raid|comp/i, desc: "Comp tool + History" },
-  { name: "Logs", match: /log|okanor/i, desc: "Changelog, guild alerts, addon notifier" },
+  { name: "Logs", match: /log|okanor/i, desc: "Guild alerts + addon notifier" },
   { name: "Vacations", match: /vacation/i, desc: "Vacation cards" },
   { name: "LoreMaster", match: /loremaster|lore|story/i, desc: "Lore posts" },
 ];

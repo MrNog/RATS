@@ -57,7 +57,7 @@ a.btn:hover, button.btn:hover { border-color: var(--accent); color: var(--white)
 
 .icon-btn { padding: 0; width: var(--ctl-h); justify-content: center }
 
-/* on/off toggle button — gold when .active, dark when off (used on lore, changelog, comp) */
+/* on/off toggle button — gold when .active, dark when off (used on lore, comp) */
 .tbtn { background: var(--surface); border: 1px solid var(--border); color: var(--text-dim); font-weight: 700 }
 .tbtn:hover { color: var(--white); filter: none }
 .tbtn.active { background: var(--accent); border-color: var(--accent); color: var(--surface-2) }

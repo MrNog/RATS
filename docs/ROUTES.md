@@ -22,8 +22,6 @@ officer/                            PRIVATE tools (gated by guild key)
   comp/index.html                   raid comp builder                  (+ comp.css/.js)
   history/index.html                attendance + raid log              (+ history.css/.js)
   lore/index.html                   post raid stories to Discord       (+ lore.css/.js)
-  files/index.html                  officer file links                 (+ files.css/.js)
-  changelog/index.html              dev-log authoring                  (+ changelog.css/.js)
   admin/index.html                  maintainer console                 (+ admin.css/.js)
 assets/                             SHARED
   css/theme.css                     tokens + base (EVERY page)

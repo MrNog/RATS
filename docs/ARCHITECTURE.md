@@ -21,7 +21,7 @@ Each page = its own folder served as `index.html`, with `pagename.css` + `pagena
 links point at explicit `index.html` so routing works on `file://`, any local server, and Pages.
 
 ```
-index.html · index.css · index.js   hub landing + public changelog drawer
+index.html · index.css · index.js   hub landing
 public/      PUBLIC pages (everyone) — keeps the root clean
   addons/    mandatory/recommended addons + NEW badge + update notifier preview
   gallery/   art/lore gallery (gallery.json manifest; .tile masonry, not .card)
@@ -33,8 +33,6 @@ officer/
   comp/      raid comp builder + Save to history + optional toggle  (.wrap width 1280 — the one exception)
   history/   attendance % + raid log (size-aware, optional toggle)
   lore/      post raid stories (markdown + images) to a Discord webhook
-  files/     links to officer files (.ftree tree, not .frow)
-  changelog/ dev-log authoring (public 🌐 flag) → changelog node + #okanor-logs
   admin/     maintainer console (keys, webhooks, roster/history, backup)
 assets/
   css/theme.css      design tokens (:root vars) + base reset — linked on EVERY page
@@ -57,8 +55,7 @@ docs/               THIS folder (gitignored)
 
 ### Public hub
 
-- **index.html** — landing cards (gold line-SVG icons) linking each section. Public **changelog drawer**:
-  reads `changelog` node, shows only `pub` (major) entries, with an **unseen badge** (count clears on open).
+- **index.html** — landing cards (gold line-SVG icons) linking each section.
   Note: the word "Hub" links to pornhub.com — **intentional user edit, do not revert**.
 - **addons.html** — addon cards (host + plugins). **NEW badge** via GitHub API (latest release or default-branch
   commit), clears on Download (`markSeen`). Dev-only preview of the #okanor-logs update embed.
@@ -83,10 +80,7 @@ docs/               THIS folder (gitignored)
   raider's first logged raid**. **Size-aware**: 25-man counts for everyone, 10-man counts for Fangs (+ who played).
   Per-card **Optional toggle** (auto-saves), badges MANDATORY / 💀 FANGS / ⚪ OPTIONAL. Log scrolls after ~7 rows.
   (Officer vacations is the same `public/vacations/` page above — it just shows more once the guild key is present.)
-- **changelog.html** — authors entries to `changelog`; default posts to #okanor-logs; tick **🌐** to also show on
-  the public hub. Officer drawer shows all entries.
 - **lore.html** — post raid stories (markdown + image attachments, multipart) to a chosen webhook.
-- **files.html** — links to the officer Google Drive sheets (new tab).
 - **admin.html** — maintainer console: set keys, webhooks, roster/history, backup. Self-gates with the admin password.
 
 ## 4. Data layer — `assets/js/data.js` (`RatsData`)
@@ -103,7 +97,7 @@ Data is encrypted **in-browser before upload**, so Firebase only holds unreadabl
 
 **localStorage keys:** `ratsGuildKey` (guild key = "is officer"), `ratsGuild` (decrypted roster),
 `ratsHistory` (decrypted history), `ratsWebhooks` (named webhooks), `ratsAdminKey`, plus per-feature caches
-(e.g. `ratsRankCache`, `ratsStaleNotifiedFor`, changelog seen-count).
+(e.g. `ratsRankCache`, `ratsStaleNotifiedFor`).
 
 ## 5. Firebase nodes & COST model
 
@@ -115,7 +109,6 @@ REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<n
 | `history`   | encrypted history blob               | officer (comp/history)     |
 | `vacations` | plain, push-keyed entries            | members + officers         |
 | `members`   | plain name+class (public picker)     | officer publish            |
-| `changelog` | plain entries (`pub` flag)           | officer                    |
 | `gate`      | encrypted lock token                 | admin                      |
 | `rankings`  | computed rankings snapshot (planned) | officer Fetch (see §7)     |
 
@@ -169,7 +162,7 @@ contract and the fallback until the API is live (`RANKINGS_URL`/snapshot node st
 
 - Rankings: wire `fetchData()` to the real API (pull → compute → write snapshot) once the dev ships it;
   smart fetch = `/reports` backfill when history empty, else `/latest`.
-- Apply the §5 localStorage cache pattern to the other public reads (vacations/members/changelog) to cut DB cost.
+- Apply the §5 localStorage cache pattern to the other public reads (vacations/members) to cut DB cost.
 - **Player profile page** (deferred — idea): pick a character → a one-page résumé of that raider. Pulls from
   data we already have + the rankings API: **wow-logs ranking** (boss points / avg / per-boss %), **our own**
   attendance + comp history, and **earned badges** (e.g. "on a 3-raid streak", "Top DPS", "Fang", "perfect

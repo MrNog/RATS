@@ -17,7 +17,7 @@ re-derive the conventions.
 - Root = the **hub** (`index.*`, the public landing). **Public pages** live in `public/`: `public/addons/`,
   `public/gallery/`, `public/vacations/` (and `public/rankings/` when built). The root stays clean: hub · `public/` · `officer/` · `assets/`.
 - `officer/` = **officer tools**, gated by the guild key: `index.*`, `guild/`, `comp/`,
-  `history/`, `lore/`, `files/`, `admin/`, `changelog/`. (Vacations is **one shared page** at `public/vacations/`
+  `history/`, `lore/`, `admin/`. (Vacations is **one shared page** at `public/vacations/`
   that reveals officer controls when the guild key is present — see Vacations rules.)
 - `assets/css/theme.css` + `assets/css/ui.css` = the **design system** (see below) — linked by every page.
 - `assets/js/data.js` = shared data layer (`RatsData`): encryption, gate, Firebase, vacations/members helpers.
@@ -49,7 +49,7 @@ re-derive the conventions.
 
 - Realtime DB via unauthenticated REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
 - Nodes: `roster` (encrypted), `history` (encrypted), `vacations` (plain, push-keyed),
-  `members` (plain name+class, for the public picker), `changelog` (plain), `gate`, `rankings` (plain snapshot).
+  `members` (plain name+class, for the public picker), `gate`, `rankings` (plain snapshot).
 - Officer roster/history are **AES-encrypted** (PBKDF2 from the guild key). The gate overlay (`RatsData.gate()`)
   locks officer pages until the key is entered. "Admin" = anyone with the key (`localStorage.ratsGuildKey`).
 - Members can only write plain nodes (`vacations`). They can't read webhooks/encrypted data — so the
@@ -116,13 +116,6 @@ re-derive the conventions.
   roster). The `vacations` node is plain/world-readable, so this is a UI split, not a security boundary.
 - "Currently away" shows a **progress bar** (day X/N · %). Lists are **boxed collapsible sections**
   (`.seclist`, scroll, sticky header), ordered **chronologically by start date**.
-
-## Changelog / dev-log
-
-- Authored in `officer/changelog/` → writes to the `changelog` node.
-- Default: posts to **#okanor-logs** (the detailed dev log). Tick **🌐 show on public hub** only for **major** updates.
-- **Public hub** drawer shows only `pub` entries (clean, major) + a **notification badge** (unseen count,
-  clears on open). **Officer drawer** shows **all** entries (🌐 marks public ones).
 
 ## Roster (officer/guild/)
 

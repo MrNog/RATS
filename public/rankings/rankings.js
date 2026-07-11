@@ -1264,8 +1264,19 @@
     return s;
   }
 
-  // Resolve a toon name → the PERSON (main). Alts fold into their main. Returns { key, name, cls }.
+  // Apply the shared old-name→current-name alias map (RatsData.NAME_ALIASES) so a RENAMED character's
+  // historical log name resolves to their present in-game name (e.g. "Foougg" → "Foug"). Returns the
+  // current name if aliased, else the input unchanged. This is the single spot renames are patched:
+  // add one line to NAME_ALIASES in data.js and every rankings/attendance view follows.
+  function aliasName(name) {
+    var a = window.RatsData && RatsData.aliasFor ? RatsData.aliasFor(name) : null;
+    return a || name;
+  }
+
+  // Resolve a toon name → the PERSON (main). Renames fold to the current name first, then alts fold
+  // into their main. Returns { key, name, cls }.
   function resolveIdentity(name, fallbackClass) {
+    name = aliasName(name); // rename → current in-game name before alt→main
     var k = normNm(name);
     var am = DATA.altMap || {};
     var a = am[k];

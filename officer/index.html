@@ -88,54 +88,9 @@
         <div class="d">Write tales about the raid — markdown + images — and post them to Discord. For the storytellers
           of the Rats. 🐀</div>
       </a>
-      <a class="tool" href="changelog/index.html">
-        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-            style="width:18px;height:18px;vertical-align:-3px">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-            <line x1="10" y1="9" x2="8" y2="9" />
-          </svg> Changelog / Dev log →</div>
-        <div class="d">Write what changed in the app — updates the hub's Changelog drawer and posts to #okanor-logs on
-          Discord.</div>
-      </a>
-
-      <div class="grouplbl">Resources</div>
-      <a class="tool" href="files/index.html">
-        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
-            style="width:18px;height:18px;vertical-align:-3px">
-            <path
-              d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-          </svg> Officer Files →</div>
-        <div class="d">Shared files for officers — sheets, exports, docs. Hosted here, one-click download. No external
-          drive.</div>
-      </a>
     </div>
     <div class="foot">FOR THE RATS 🧀 — all client-side, nothing leaves your browser except the Discord post.</div>
   </div>
-
-  <!-- Changelog side drawer -->
-  <button id="clogBtn" onclick="toggleClog()" title="What's new">📜 Changelog</button>
-  <div id="clogOv" onclick="toggleClog()"></div>
-  <aside id="clog">
-    <button class="x" onclick="toggleClog()" title="Close">✕</button>
-    <h2>📜 Changelog</h2>
-    <!-- entries load live from Firebase; the blocks below are the offline fallback -->
-    <div id="clogEntries">
-      <div class="cl-entry">
-        <div class="cl-date">June 2026</div>
-        <ul>
-          <li>🏖️ <b>Vacations</b> — self-service time off, day-before reminders &amp; a calendar of who's away.</li>
-          <li>🗓 <b>Raid Comp</b> — build a comp from the roster and post it to Discord.</li>
-          <li>📊 <b>Attendance &amp; History</b> — per-raider %, 25/10-man tracked, vacations excused.</li>
-          <li>👥 <b>Roster</b>, 📁 <b>Officer Files</b>, 📜 <b>Lore</b> &amp; this 🛠️ <b>dev-log</b>.</li>
-        </ul>
-      </div>
-    </div>
-  </aside>
 
   <script src="../assets/js/data.js"></script>
   <script src="index.js"></script>
