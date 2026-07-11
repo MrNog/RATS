@@ -398,6 +398,14 @@
   },
   {
     "cat": "banners",
+    "file": "images/banners/Onyxi+ToC 25.png",
+    "title": "Onyxi+ToC (25-man)",
+    "caption": "",
+    "date": "2026-07",
+    "wide": true
+  },
+  {
+    "cat": "banners",
     "file": "images/banners/onyxia.png",
     "title": "Onyxia's Lair",
     "caption": "",
