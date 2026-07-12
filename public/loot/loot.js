@@ -209,8 +209,19 @@
     Mimiron: 1, "General Vezax": 1, "Yogg-Saron": 1, "Algalon the Observer": 1,
   };
 
-  // A raid LOCKOUT groups both raid nights (we raid Wed + Mon of the same WotLK lockout, which resets
-  // Wednesday). runId is anchored to that lockout's Wednesday, so both nights merge into one run.
+  // A run = ONE RAID ID, not one week. Both nights of the SAME lockout are one run (we
+  // raid Wed + Mon and continue where we left off); but if the ID was RESET between them,
+  // that is a NEW run even though both nights sit in the same Wed->Wed week.
+  //
+  // The addon knows which is which -- its session key carries the server's saved-instance
+  // resetDay (raids) or an entry token (dungeons), so a fresh ID always gets a different
+  // key -- and now EXPORTS it as l.runId. TRUST THAT. The calendar guess below cannot tell
+  // the two apart: it merged a 7-Jul and an 8-Jul run of the same raid into one, which then
+  // showed the same boss (Northrend Beasts) killed twice -- impossible on a single ID.
+  //
+  // lockoutRunId() stays only as the fallback for legacy drops imported before the addon
+  // shipped a real runId, so their grouping (and the ids already stored in Firebase) is
+  // unchanged and they do not re-import as duplicates.
   function lockoutRunId(l) {
     var dt = new Date((l.ts || 0) * 1000);
     var back = (dt.getDay() - 3 + 7) % 7; // days since this lockout's Wednesday (Wed=3)
@@ -221,6 +232,14 @@
     };
     var day = dt.getFullYear() + "-" + z(dt.getMonth() + 1) + "-" + z(dt.getDate());
     return day + "-" + String(l.raid || "").toLowerCase() + "-" + l.size;
+  }
+
+  // The addon's real run id if the drop carries one, else the legacy calendar grouping.
+  // A "lock|..."/"run|..."-derived id (slugged to "lock-ulduar-4-2026-07-15") is the raid
+  // ID fingerprint; anything else is a legacy id we must not rewrite.
+  function runIdOf(l) {
+    var rid = l && l.runId;
+    return rid && typeof rid === "string" && rid !== "" ? rid : lockoutRunId(l);
   }
 
   // Resolve every item's boss from OUR local table (no Wowhead). Returns { kept, skipped }.
@@ -238,7 +257,7 @@
     var lastRealByRun = {}; // runId -> boss name of the most recent real-boss drop
     var fragSeen = {}; // runId|boss -> 1 (fragment de-dupe: one per boss per run)
     arr.forEach(function (l) {
-      l.runId = lockoutRunId(l); // merge both raid nights into one lockout run
+      l.runId = runIdOf(l); // the addon's raid-ID (one run = one ID), else the legacy guess
       var name = l.name || "";
       // NOTE: crafts/patterns/orbs (SKIP_RE) are NO LONGER dropped here -- they DID
       // drop in the raid, so they belong in the loot HISTORY. They just don't count
@@ -1173,6 +1192,13 @@
   // site (the addon credits everything to the master looter), so it must never be
   // overwritten by an import.
   var ENRICH_FIELDS = ["tip", "icon", "quality", "boe", "boss"];
+  // runId is enriched by OVERWRITE, not fill-if-blank. Drops imported before the addon
+  // exported a real run id carry the old calendar-derived id, which merged two raid IDs
+  // in one week into a single run. Those drops are not "missing" a runId -- they have a
+  // WRONG one -- so a fill-if-blank pass would never repair them and a re-import would
+  // look like it did nothing. The addon's id is the raid-ID fingerprint and is never
+  // hand-edited on the site, so the export always wins and re-importing an old run
+  // splits it back apart.
   function mergeLoot(incoming) {
     var key = function (l) {
       return (l.ts || 0) + "|" + l.itemId;
@@ -1202,6 +1228,10 @@
           touched = true;
         }
       });
+      if (l.runId && l.runId !== "" && cur.runId !== l.runId) {
+        cur.runId = l.runId; // re-splits a run the old calendar id had merged
+        touched = true;
+      }
       if (touched) enriched++;
     });
     mergeLoot.enriched = enriched;
