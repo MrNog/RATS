@@ -72,12 +72,19 @@
       "Algalon the Observer",
     ],
     toc: ["Northrend Beasts", "Lord Jaraxxus", "Faction Champions", "Twin Val'kyr", "Anub'arak"],
+    // Onyxia is her own raid, but she is often cleared on a ToC night and wow-logs files her INSIDE
+    // that log (the 10-man of 2026-07-10 is tagged "Trial of the Crusader" and contains her). Listing
+    // her here lets rowsForDiff keep her out of the ToC board and show her on her own.
+    ony: ["Onyxia"],
     icc: [
       "Lord Marrowgar", "Lady Deathwhisper", "Gunship Battle", "Deathbringer Saurfang", "Festergut", "Rotface",
       "Professor Putricide", "Blood Prince Council", "Blood-Queen Lana'thel", "Valithria Dreamwalker",
       "Sindragosa", "The Lich King",
     ],
   };
+  // short label for a raid slug — used when we have to synthesise a tab that the snapshot never wrote
+  var RAID_LABEL = { ulduar: "Ulduar", toc: "ToC", ony: "Ony", icc: "ICC" };
+
   // Sort a list of boss names by the raid's canonical order (unknowns go last, alphabetically).
   function sortBosses(names, raidSlug) {
     var order = BOSS_ORDER[raidSlug] || [];
@@ -141,6 +148,7 @@
     raids: [
       { key: "ulduar", label: "Ulduar" },
       { key: "toc", label: "ToC" },
+      { key: "ony", label: "Ony" },
       { key: "icc", label: "ICC" },
     ],
     mvp: null,
@@ -274,6 +282,15 @@
   }
 
   // Group a raid's scoped logs into WoW lockouts (Wed→Wed), newest first, each with merged bfights.
+  // Only THIS raid's bosses count — a log can carry bosses from another raid (Onyxia is cleared on a
+  // ToC night and wow-logs files her inside the ToC log), and without this she showed up as a 6th boss
+  // on ToC's Guild Progress table and her wipes landed in ToC's wipe count.
+  function isRaidBossName(bn) {
+    var order = BOSS_ORDER[RAID];
+    if (!order || !order.length || !bn) return true;
+    return order.indexOf(bn) >= 0;
+  }
+
   function lockoutsOf(logs) {
     var groups = {};
     logs.forEach(function (l) {
@@ -282,6 +299,7 @@
       if (new Date(l.date) < new Date(g.date)) g.date = l.date; // earliest fight date of the lockout
       if (l.bfights && l.bfights.length) {
         l.bfights.forEach(function (f) {
+          if (!isRaidBossName(f.bn)) return; // a boss from another raid sharing this log
           g.bfights.push(f);
           if (f.kill) g.killed[f.bn] = true;
           else g.wipes++;
@@ -289,6 +307,7 @@
       } else {
         // legacy log (no per-boss fights): fold in the killed list + the per-log wipe count
         (l.bosses || []).forEach(function (bn) {
+          if (!isRaidBossName(bn)) return;
           g.killed[bn] = true;
         });
         g.wipes += l.wipes || 0;
@@ -322,9 +341,13 @@
         if (f.hm) hm++;
       }
     });
-    // guild damage over the lockout's kills (rows[] = per player per kill)
+    // Guild damage over the lockout's kills (rows[] = per player per kill). ONLY this raid's bosses —
+    // bossTime above already counts only this raid's fights, so summing every row in the log divided
+    // the WHOLE night's damage by ONE raid's kill time: on the Onyxia tab that produced a guild dps of
+    // 164,083 (all of ToC's damage over Onyxia's 3m32s).
     (g.logs || []).forEach(function (l) {
       (l.rows || []).forEach(function (r) {
+        if (!isRaidBossName(r.b)) return;
         if (dmg == null) dmg = 0;
         dmg += r.dmg || 0;
       });
@@ -592,11 +615,15 @@
       return true; // all-time
     }
 
+    // Only THIS raid's bosses — a log can carry another raid's bosses (Onyxia is cleared on a ToC night
+    // and wow-logs files her inside the ToC log), and without this she appeared as a 6th row on ToC's
+    // table while the Onyxia tab listed all of ToC's bosses.
     var pb = {};
     allLogs.forEach(function (l) {
       var isCur = lockoutStart(l.date) === curLockKey,
         isBase = inBaseline(l.date);
       (l.bfights || []).forEach(function (f) {
+        if (!isRaidBossName(f.bn)) return;
         var s = pb[f.bn] || (pb[f.bn] = { best: null, cur: null, baseTimes: [], wipesCur: 0, hm: false, first: null, killedEver: false });
         if (f.kill) {
           s.killedEver = true;
@@ -611,6 +638,7 @@
       });
       if (!(l.bfights && l.bfights.length)) {
         (l.bosses || []).forEach(function (bn) {
+          if (!isRaidBossName(bn)) return;
           var s = pb[bn] || (pb[bn] = { best: null, cur: null, baseTimes: [], wipesCur: 0, hm: false, first: null, killedEver: false });
           s.killedEver = true;
           if (!s.first || l.date < s.first) s.first = l.date;
@@ -618,10 +646,15 @@
       }
     });
 
+    // Unknown bosses append to the end — but ONLY when we don't know this raid's boss list at all.
+    // If we do know it, an unlisted boss belongs to another raid and must not be appended (that is what
+    // put Beasts/Jarax/FC/Twins/Anub on the Onyxia table).
     var order = (BOSS_ORDER[RAID] || []).slice();
-    Object.keys(pb).forEach(function (b) {
-      if (order.indexOf(b) < 0) order.push(b);
-    });
+    if (!order.length) {
+      Object.keys(pb).forEach(function (b) {
+        if (order.indexOf(b) < 0) order.push(b);
+      });
+    }
     var tableRows = order
       .filter(function (b) { return pb[b]; })
       .map(function (b) {
@@ -787,11 +820,25 @@
 
   // Filter a rows[] list to the active difficulty on split raids (ToC/ICC); pass through otherwise.
   // Rows predating the `hm` field (legacy) pass through so old data isn't silently dropped.
+  // Is this fight a boss of the raid we're showing? A single log can contain bosses from ANOTHER raid:
+  // the 10-man of 2026-07-10 is tagged "Trial of the Crusader" but has ONYXIA in it (they cleared her
+  // the same night), so her damage/healing was being counted toward the ToC board and inflating
+  // everyone's fight count (which also feeds the attendance gate).
+  // Only filter when we actually know the raid's boss list — an unknown raid keeps every row.
+  function isRaidBoss(r) {
+    var order = BOSS_ORDER[RAID];
+    if (!order || !order.length) return true;
+    if (!r.b) return true; // no boss name — don't drop it on a guess
+    return order.indexOf(r.b) >= 0;
+  }
+
   function rowsForDiff(rows) {
     markTankRows(rows); // flag tank rows on the original array (flag lives on each row, survives filtering)
-    if (!SPLIT_DIFF_RAIDS[RAID]) return rows;
-    var wantHC = PROGDIFF === "hc";
+    var wantHC = SPLIT_DIFF_RAIDS[RAID] && PROGDIFF === "hc";
+    var splitDiff = !!SPLIT_DIFF_RAIDS[RAID];
     return (rows || []).filter(function (r) {
+      if (!isRaidBoss(r)) return false; // a boss from another raid that shares this log (e.g. Onyxia)
+      if (!splitDiff) return true;
       return r.hm == null || !!r.hm === wantHC;
     });
   }
@@ -861,11 +908,20 @@
   }
   // crown pill (N lockouts at #1) — shown after the name when there's no rank-change column (All time),
   // or inside the rank-change column otherwise. lbRow decides where via hasDeltaCol.
+  // 👑 is wrapped so it can be nudged independently — an emoji glyph sits on a lower baseline than
+  // text, so unwrapped it reads as slumping below the "2x" next to it.
   function crownPill(streak) {
-    return streak > 1 ? '<span class="crownmv" title="' + streak + ' weeks at #1">👑' + streak + "x</span>" : "";
+    return streak > 1
+      ? '<span class="crownmv" title="' + streak + ' weeks at #1"><i class="cr">👑</i>' + streak + "x</span>"
+      : "";
   }
+  // The rank-change column (▲▼ / NEW / 👑).
+  //
+  // All time has nothing to put in it — no previous period to compare against, and no crown (that's a
+  // week-over-week streak; see computeLeaderboards) — so the column is dropped entirely there rather
+  // than rendered as dead space. Rows still line up with each other, because EVERY row on that board
+  // drops it; only the cross-period alignment changes, and you can only ever see one period at a time.
   function deltaTag(d, streak) {
-    // All time = no previous period → NO rank-change column at all (the crown moves next to the name).
     if (d === "none") return "";
     var crown = crownPill(streak);
     if (crown && (d == null || d === 0)) return '<span class="mv">' + crown + "</span>";
@@ -882,9 +938,9 @@
     var sizeCls = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "rn";
     // bar follows the RATE (the big number) via barWidths(); coherent with what the eye reads.
     var barPct = p.bar != null ? p.bar : Math.round((p.score || 0) * 100);
-    // All time has no rank-change column → the crown goes next to the name (keeps rows aligned).
-    var noDeltaCol = p.delta === "none";
-    var nameCrown = noDeltaCol ? crownPill(p.streak) : "";
+    // The crown always lives in the rank-change column (see deltaTag), never in the name column —
+    // that column is a fixed width, and a crown inside it stole space from the name (clipping
+    // "Pamevoid" -> "Pamev...") AND shifted the bar's start on All time.
     return (
       '<li class="' +
       sizeCls +
@@ -908,7 +964,6 @@
       '">' +
       esc(p.name) +
       "</span></a>" +
-      nameCrown +
       "</span>" +
       // bar fills the middle
       '<div class="pbar"><i style="width:' +
@@ -923,7 +978,19 @@
       ' <span class="unit">' +
       rateLbl +
       "</span></span>" +
-      '<span class="psub"><span class="ptot">' +
+      '<span class="psub">' +
+      // SCORE — the number the board is actually sorted by. Shown because the big number is the
+      // dps/hps rate, but the ranking blends total output AND the server parse, so without this the
+      // order looks arbitrary ("why is he above me, I have more dps?"). Now every row shows the
+      // number that decided its position.
+      '<span class="pscore" title="' +
+      (metric === "hps"
+        ? "40% output (healing + hps) + 60% server parse"
+        : "70% output (damage + dps) + 30% server parse") +
+      '">' +
+      ((p.score || 0) * 100).toFixed(1) +
+      " pts</span> · " +
+      '<span class="ptot">' +
       fmtBig(p.value) +
       "</span> total" +
       (p.fights ? ' · ×' + p.fights : "") +
@@ -940,7 +1007,44 @@
   // ---- leaderboard engine: aggregate players from logs[].rows for the active raid/size/period -----
   // Runs on every render (toggles just re-render — no network). Metric = AVERAGE across kills, with the
   // player's BEST parse shown alongside. role === "HEALER" → HPS table, everyone else → DPS.
-  var MIN_FIGHTS = { week: 1, month: 3, all: 3 }; // consistency gate: bigger periods need ≥3 fights
+  // CONSISTENCY GATE — a share of the fights that actually happened in THIS scope, not a fixed count.
+  //
+  // Every board is scoped to ONE raid + size (see logsInScope), so "All time" means "all our ToC logs"
+  // or "all our Ulduar logs" — never all raids together — and each scope grows at its own pace. A fixed
+  // number is therefore wrong in both directions at once:
+  //   * ToC 25 today is 1 log = 5 fights. A gate of 10 would empty the board completely.
+  //   * Ulduar 25 is already 29 fights and climbing. At 100 fights, a gate of 10 is a 10% bar — i.e.
+  //     no bar at all, and the small-sample noise it was meant to stop walks straight back in.
+  // Scaling with the scope keeps the bar meaningful forever, with no maintenance.
+  //
+  // Why gate at all: a player with a handful of fights can post a flattering AVERAGE off a couple of
+  // lucky pulls. On Ulduar 25 this is the single biggest source of bad ordering — raising the bar to
+  // 35% of the raid's fights cuts "a lower-dps player outranking someone 500+ dps better" from 28
+  // cases to 10, while still keeping 19 of 27 raiders on the board.
+  //
+  // (Tested alternative that did NOT work: de-weighting total damage. It makes things WORSE — total is
+  // the variance-stable axis; mean dps is the noisy one on small samples. Hence W_TOTAL stays at 0.6.)
+  var MIN_FIGHT_PCT = { week: 0, month: 0.25, all: 0.35 };
+  var MIN_FIGHT_FLOOR = { week: 1, month: 2, all: 2 }; // never lock a brand-new raid's board out
+
+  // Most improved / Needs work compare ONE lockout against the previous one, so they need a small
+  // flat floor (a share of a single week's fights would be meaningless).
+  var IMPROVE_MIN_FIGHTS = 3;
+
+  // fights available in this scope = the most any single player attended (a full-attendance raider).
+  function minFightsFor(period, players) {
+    var scope = 0;
+    (players || []).forEach(function (e) {
+      if (e.fights > scope) scope = e.fights;
+    });
+    var pct = MIN_FIGHT_PCT[period] || 0;
+    var floor = MIN_FIGHT_FLOOR[period] || 1;
+    // The floor must never ask for MORE fights than the raid even has. Onyxia is a ONE-boss raid, so a
+    // flat floor of 2 made her Month and All-time boards permanently empty — unfillable no matter how
+    // often you cleared her (only Week worked, because its floor is 1). Cap the floor at the scope.
+    if (scope > 0 && floor > scope) floor = scope;
+    return Math.max(floor, Math.ceil(pct * scope));
+  }
 
   function logsInScope(period) {
     var rObj = (DATA.raids || []).find(function (r) {
@@ -949,11 +1053,23 @@
     var rKeys = [RAID, rObj && rObj.label].filter(Boolean).map(function (x) {
       return String(x).toLowerCase();
     });
+    var order = BOSS_ORDER[RAID] || [];
     return (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
-      if (!raidMatch) return false;
+      // A log is ALSO in scope if it merely CONTAINS this raid's bosses, even when it's filed under a
+      // different raid — Onyxia is routinely cleared on a ToC night and wow-logs files her inside the
+      // ToC log. Without this, selecting Onyxia would find nothing at all. rowsForDiff then keeps only
+      // her fights, so the two raids never contaminate each other's numbers.
+      if (!raidMatch && order.length) {
+        var hasOne = (l.rows || []).some(function (r) {
+          return r.b && order.indexOf(r.b) >= 0;
+        });
+        if (!hasOne) return false;
+      } else if (!raidMatch) {
+        return false;
+      }
       return inPeriodDays(l.date, period);
     });
   }
@@ -1022,10 +1138,32 @@
   }
 
   // Ranking blend: 60% total volume (damage/healing summed) + 40% rate (bayesian dps/hps). Total
-  // rewards showing up to every raid (Okanor's case); rate keeps burst-per-fight relevant. Both axes
-  // are boss-only (no trash in the feed) and normalized 0–1 against the board's best before blending.
+  // rewards turning up to every raid; rate keeps burst-per-fight relevant. Both axes are boss-only
+  // (no trash in the feed) and normalized 0–1 against the board's best before blending.
   var W_TOTAL = 0.6,
     W_RATE = 0.4;
+
+  // How much the SERVER percentile counts vs the guild-internal score (they sum to 1).
+  // The two boards need DIFFERENT weights, because the two axes have very different spreads on each.
+  //
+  // DPS — 30% server. Damage done is the honest measure of a dps: you did that damage, and it is what
+  //   actually kills the boss. The parse must inform the ranking, not decide it. On the DPS board the
+  //   parse spread is enormous (ToC 25: 25%–81%) while the damage spread is modest, so at 50/50 the
+  //   parse silently became the ONLY thing that mattered: Tchill took #1 on an 81% parse (genuine, but
+  //   on an Arcane Mage over just 4 bosses) while doing the LEAST damage on the board — 8.0M against
+  //   Mojobimbo's 11.7M. His parse was so far ahead it survived even a 40% weight. At 30% a strong
+  //   parse still lifts you, but it can no longer overturn a 46% damage deficit.
+  //
+  // HEAL — 60% server. The opposite problem: healers are not all doing the same job, so their raw totals
+  //   are not directly comparable. Output depends on the ASSIGNMENT (raid healing racks up far bigger
+  //   numbers than tank healing), on overhealing (3.3.5a counts casts into a full health bar), and on
+  //   heal-sniping (a cast that lands a moment late heals nothing). One damage-heavy fight can double a
+  //   healer's average. The percentile compares a healer against others doing the SAME job on the SAME
+  //   boss, so it carries a bit more weight here — but raw healing still counts, and still decides the
+  //   board when the gap is real: on ToC 25 the top healer wins on 6.7M healed with the LOWEST parse of
+  //   the top three (73.6%), ahead of the board's BEST parse (87.7%) on 4.9M. Healer parses also cluster
+  //   tightly (71%–88%), so this axis separates cleanly instead of dominating the way it did on DPS.
+  var W_SERVER = { dps: 0.3, hps: 0.6 };
 
   // Tank fights must NOT count toward DPS — a tank was holding threat, not pumping damage, so its low
   // "dps" unfairly drags the player's average (e.g. Rellik Prot ~1500 dps on 4 bosses).
@@ -1106,43 +1244,60 @@
   function aggregate(logs, unusedMetricKey, wantHealer, minFights) {
     var by = {};
     var guild = rosterSet();
-    var trole = toonRoles(logs); // per-TOON dominant role
     var rateKey = wantHealer ? "h" : "d",
       totKey = wantHealer ? "heal" : "dmg";
     logs.forEach(function (l) {
       rowsForDiff(l.rows).forEach(function (r) {
         var tk = normNm(r.n);
-        var toonIsHealer = trole[tk] === "HEALER";
-        if (wantHealer !== toonIsHealer) return; // this toon belongs to the other table
-        if (toonIsHealer && r.r !== "HEALER") return; // ignore this toon's odd off-role fight
-        if (!toonIsHealer && r.r === "HEALER") return;
-        if (!toonIsHealer && isTankFight(r)) return; // don't count tank fights toward DPS
+        // ROLE IS PER FIGHT — what you actually DID in that pull decides which table the fight counts
+        // toward. If you healed, it counts as healing; if you dealt damage, it counts as damage.
+        //
+        // This used to be decided by the toon's DOMINANT role (roster main-spec first, fight count as a
+        // fallback), and applied absolutely — so anyone whose main spec is a dps spec vanished from the
+        // healing board even on nights they healed. Tchilly (main-spec Shadow) and Sarveil (an alt of
+        // Foug, an Unholy DK) both healed a ToC 10 fight and neither appeared, leaving exactly one healer
+        // on that board. Worse, Sarveil's HEALING was being folded into Foug's DPS row, because the group
+        // key used the main's dominant role.
+        //
+        // The original intent — "don't let a resto druid's one Enhancement night pollute Top DPS" — is
+        // still served: that one fight simply counts on the DPS table, which is where it belongs, and one
+        // fight is not enough to clear the attendance gate anyway.
+        var fightIsHealer = r.r === "HEALER";
+        if (wantHealer !== fightIsHealer) return; // this FIGHT belongs to the other table
+        if (!fightIsHealer && isTankFight(r)) return; // don't count tank fights toward DPS
         // guildies only: the toon OR its resolved main must be in the roster
         var id = resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[tk]) return;
-        // group = main + role (so same-role toons of a person fuse; cross-role stays separate)
-        var gk = id.key + "|" + (toonIsHealer ? "H" : "D");
+        // group = main + role of THIS fight (so a person's dps and healing stay in separate rows)
+        var gk = id.key + "|" + (fightIsHealer ? "H" : "D");
         var e =
           by[gk] ||
-          (by[gk] = { rateSum: 0, total: 0, best: 0, fights: 0, url: l.reportUrl, faces: {} });
+          (by[gk] = {
+            rateSum: 0, total: 0, best: 0, fights: 0, url: l.reportUrl, faces: {},
+            mainName: id.name, // the PERSON — what the row is labelled with
+          });
         var rate = r[rateKey] || 0;
         e.rateSum += rate;
         e.total += r[totKey] || 0;
         e.fights++;
         if (rate > e.best) e.best = rate;
-        // track per-toon fight counts to pick the "face" (most-used toon in this group)
+        // per-toon fight counts: they weight the blended server parse, and pick the class/spec icon
         var f = e.faces[tk] || (e.faces[tk] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
         f.n++;
       });
     });
     var players = Object.keys(by).map(function (gk) {
       var e = by[gk];
-      // face = toon with most fights in this group → its name/class/server% represent the row
+      // The row is a PERSON, so it is labelled with the MAIN's name — the damage on it is summed
+      // across all of that person's toons in this role, so showing one alt's name misrepresents it
+      // (Tchilly's dps row was appearing as "Tchill", his Mage alt).
+      // The class/spec ICON still comes from the most-played toon, because that is the character the
+      // numbers were actually produced on.
       var face = null;
       Object.keys(e.faces).forEach(function (tk) {
         if (!face || e.faces[tk].n > face.n) face = e.faces[tk];
       });
-      e.name = face ? face.name : "?";
+      e.name = e.mainName || (face ? face.name : "?");
       e.class = face ? face.cls : "";
       e.spec = face ? face.spec : "";
       e.faceKey = face ? normNm(face.name) : "";
@@ -1177,29 +1332,73 @@
     maxTotal = maxTotal || 1;
     maxRate = maxRate || 1;
 
+    // gate is a SHARE of this scope's fights (see MIN_FIGHT_PCT) — resolved here, where we finally
+    // know how many fights the scope actually had. minFights arrives as the period name.
+    var gate =
+      typeof minFights === "number" ? minFights : minFightsFor(minFights, players);
     var kept = players.filter(function (e) {
-      return e.fights >= minFights;
+      return e.fights >= gate;
     });
     // internal 60/40 (total volume + bayesian rate), normalized 0–1
     kept.forEach(function (e) {
       e.internal = W_TOTAL * (e.total / maxTotal) + W_RATE * (e.rate / maxRate);
     });
-    // each player's INTERNAL percentile within the guild (rank position 0–1) — the fallback for anyone
-    // without server data, so EVERYONE is scored on the same 0.5·internal + 0.5·percentile scale
-    // (no more "half of two axes" vs "one axis" mismatch that let Tuggers jump the pack).
-    var byInternal = kept.slice().sort(function (a, b) {
-      return a.internal - b.internal;
+    // SERVER AXIS — normalized against the BOARD'S BEST server parse, exactly the way
+    // `internal` is normalized against the board's best volume/rate. That puts the two axes
+    // on the same scale (both "share of the board's best, 0..1") so blending them is valid,
+    // while still preserving the GAPS between players.
+    //
+    // Two things this deliberately does NOT do, because each was a real bug:
+    //
+    //   1. Don't blend the RAW server percentile. Server percentiles cluster low (beating 55%
+    //      of the whole server is a good result) while `internal` tops out at 1.0, so mixing
+    //      the scales silently deflates everyone who HAS server data.
+    //
+    //   2. Don't substitute a player's internal percentile when their server% is missing, and
+    //      don't rank-normalize the axis either.
+    //        * Substituting internal% scored that player against the GUILD while everyone else
+    //          was scored against the SERVER. Foug took #1 on ToC 25 with lower dps (6189 vs
+    //          7468) AND lower total (9.7M vs 11.7M) than Mojobimbo — rewarded for being absent
+    //          from the server feed rather than for performing.
+    //        * Rank-normalizing (i/(n-1)) is ordinal: it throws the gaps away and forces the
+    //          lowest player to a hard 0.0. On the 3-healer ToC board that buried Mortisritual
+    //          in LAST place despite the best HPS, the most healing, and a fine 72.4% parse.
+    //
+    // NO SERVER DATA -> we do NOT invent a parse for them. They are scored on `internal` alone,
+    // i.e. purely on the output we can actually measure. Their score lands on the same 0–1 scale,
+    // so they still compete — they just get no credit and no penalty on an axis we have no reading
+    // for. Foug (no parse, 6189 dps / 9.7M on ToC 25) lands mid-table on merit instead of #1.
+    //
+    // Rejected alternatives, both tested against the real snapshot:
+    //   * MEDIAN stand-in — hands them an invented parse. Fazcafe's fabricated 86.4% beat
+    //     Mortisritual's REAL 72.4%, so a made-up number out-ranked a measured one.
+    //   * Regression fit (predict their parse from their output) — worse. On the 3-point ToC
+    //     healer board it lifted Fazcafe to #2 despite the LOWEST hps and LEAST healing.
+    var srvVals = [];
+    kept.forEach(function (e) {
+      e.srv = groupServerPct(e); // 0–1, or null when NONE of this person's toons are ranked
+      if (e.srv != null) srvVals.push(e.srv);
     });
-    var n = byInternal.length;
-    byInternal.forEach(function (e, i) {
-      e.internalPct = n > 1 ? i / (n - 1) : 1; // 0..1, worst→best
-    });
+    var maxSrv = 0;
+    if (srvVals.length) {
+      srvVals.sort(function (a, b) {
+        return a - b;
+      });
+      maxSrv = srvVals[srvVals.length - 1];
+    }
+    maxSrv = maxSrv || 1;
+
+    // healers lean on the server parse; dps leans 50/50 (see W_SERVER for why)
+    var wSrv = wantHealer ? W_SERVER.hps : W_SERVER.dps;
+    var wInt = 1 - wSrv;
 
     return kept
       .map(function (e) {
-        var srv = serverPctFor(e.name); // 0–1 or null
-        var pctAxis = srv == null ? e.internalPct : srv; // server% if we have it, else internal rank
-        var score = 0.5 * e.internal + 0.5 * pctAxis; // same formula for everyone
+        var srv = e.srv;
+        var score =
+          srv == null
+            ? e.internal // no parse -> judged only on measured output, no invented data
+            : wInt * e.internal + wSrv * (srv / maxSrv);
         return {
           name: e.name,
           class: e.class,
@@ -1220,8 +1419,32 @@
       });
   }
 
-  // Server percentile (0–1) for the FACE toon of a row (the toon that actually parsed on that role).
-  // Server data is per-toon in the API, so we look it up by the toon name — that's why a person's
+  // Server percentile for a whole ROW — a person, whose damage on this board may be summed across
+  // several of their toons. Each toon's parse is weighted by how many fights that toon actually
+  // played, so the row's parse reflects the mix of characters the numbers came from.
+  //
+  // Picking a single "face" toon's parse (the old way) had a cliff: on Ulduar 10, Tchilly (Priest,
+  // 73.8%) led Tchill (Mage, 58.9%) by ONE fight — one more Mage night and the row's parse would
+  // silently drop 15 points and his rank with it. It could also pick a player's WORST toon: Fazcafe
+  // was judged on his Shaman's 7.2% while his Druid parsed 49.8%, purely on fight count.
+  //
+  // Toons with no parse are skipped (not counted as zero — see serverPctFor). If NONE of the
+  // person's toons are ranked, the row has no server axis at all and is scored on output alone.
+  function groupServerPct(e) {
+    var sum = 0,
+      w = 0;
+    Object.keys(e.faces || {}).forEach(function (tk) {
+      var f = e.faces[tk];
+      var p = serverPctFor(f.name);
+      if (p == null) return; // that toon isn't ranked — it contributes nothing, and costs nothing
+      sum += p * f.n;
+      w += f.n;
+    });
+    return w > 0 ? sum / w : null;
+  }
+
+  // Server percentile (0–1) for ONE toon, by its own name (a parse is per character: its class and
+  // spec on that boss). Server data is per-toon in the API, so we look it up by the toon name.
   // DPS line and HEALING line each get their own correct server%. Null → hybrid falls back to internal.
   function serverPctFor(faceName) {
     var sp = DATA.serverPct || {};
@@ -1236,8 +1459,41 @@
     var diffKey = SPLIT_DIFF_RAIDS[slug] ? (PROGDIFF === "hc" ? "hc" : "nm") : null;
     var bucket = (diffKey && bySize[diffKey]) || bySize;
     if (!bucket.players) return null;
+
+    // Look up the FACE TOON'S OWN NAME — never an alias, never the main.
+    //
+    // A server percentile is per CHARACTER (its class + spec on that boss). Alt-merging is correct for
+    // deciding whose ROW this is, but it must never be used to fetch a parse: two toons of the same
+    // person are different classes with different parses. Resolving through NAME_ALIASES here produced
+    // exactly that bug — "Tchill" (Arcane Mage, the toon that actually did the ToC damage) inherited
+    // the parse of "Tchilly" (Shadow Priest, a different character), which put him at #1 on a number
+    // that was not his. NAME_ALIASES is also unsafe for this by construction: it mixes true renames
+    // (foougg -> Foug, the same DK) with alt toons (fouug = a Hunter) and Discord nicks (kobe, mojo),
+    // and even "rerolled" entries (nutelaa -> Dknutela) where the parse belongs to the ABANDONED
+    // character. A miss here is the correct outcome: the toon has no parse, so it gets no server axis.
     var rec = bucket.players[normNm(faceName)];
     if (!rec || rec.avg == null) return null;
+    // The API uses 0 as a NULL: a player who never parsed this raid/size/difficulty is written as
+    // avg:0, bossPoints:0, bosses:{} — not as a genuine 0th-percentile parse. Verified in the live
+    // snapshot: on ToC 25, 103 of 121 players are avg:0 and EVERY one of them has bossPoints:0 and
+    // zero ranked bosses. Taking those at face value scored them as the WORST parser on the server —
+    // an undeserved hard 0 on the axis that's worth half (dps) or 60% (healing) of the score. That is
+    // the mirror image of the missing-data bug, so it gets the same answer: no data, no server axis.
+    if (!rec.avg || !(rec.bossPoints > 0)) return null;
+
+    // A PERFECT 100% is not a parse — it means "nobody to compare against".
+    //
+    // wow-logs still hands back avg:100 (with a suspiciously round bossPoints, e.g. exactly 400 over
+    // 4 bosses) for a class/spec that has too few ranked logs in that raid+size. Its own site says
+    // "No raid comparison data" for those very players. On ToC 10 both Tchilly and Nutelaa came back
+    // at exactly 100.0% — and Tchilly then took #1 on the healing board with LESS hps (2,241 vs 2,741)
+    // and LESS healing (2.4M vs 3.6M) than the runner-up. A percentile with no denominator is not a
+    // measurement, so we treat it like any other missing data: no server axis, scored on real output.
+    //
+    // A genuine world-best parse would be a rounding hair under 100 (99.x); an exact 100.0 across the
+    // board is the tell. We accept anything below the cutoff.
+    if (rec.avg >= 99.99) return null;
+
     return Math.max(0, Math.min(1, rec.avg / 100));
   }
 
@@ -1256,7 +1512,7 @@
 
   // Build dps/hps/mvp for the active toggles, plus the previous period for the arrows.
   function computeLeaderboards() {
-    var minF = MIN_FIGHTS[PERIOD] || 1;
+    var minF = PERIOD; // scope-relative gate, resolved inside aggregate() (see MIN_FIGHT_PCT)
     var cur = logsInScope(PERIOD);
     // previous window: the logs just before the current period (for delta arrows)
     var prev = PERIOD === "all" ? [] : prevWindowLogs(PERIOD);
@@ -1293,13 +1549,21 @@
       });
     });
 
-    // 👑 streak = consecutive lockouts the LATEST lockout's #1 has held #1. Only crown the board's
-    // current #1 if THEY are that streak-holder (the all-time/bayesian #1 may be a different player).
-    var streaks = computeStreaks();
-    if (dps[0] && streaks.dps.name && normNm(dps[0].name) === streaks.dps.name && streaks.dps.count > 1)
-      dps[0].streak = streaks.dps.count;
-    if (hps[0] && streaks.hps.name && normNm(hps[0].name) === streaks.hps.name && streaks.hps.count > 1)
-      hps[0].streak = streaks.hps.count;
+    // 👑 streak = consecutive raid WEEKS the current leader has held #1 — a momentum badge ("who is
+    // hot right now"), computed per lockout regardless of the active period.
+    //
+    // NOT shown on All time. There, #1 is decided by the whole tier, so pinning a week-over-week
+    // streak to that player answers a question the board isn't asking — and it would only appear at
+    // all when the all-time #1 happens to also be the current weekly streak holder, which is a
+    // coincidence, not a fact worth a badge. All time has no rank arrows either (no previous "all
+    // time" to compare against), so its delta column stays empty by design.
+    if (PERIOD !== "all") {
+      var streaks = computeStreaks();
+      if (dps[0] && streaks.dps.name && normNm(dps[0].name) === streaks.dps.name && streaks.dps.count > 1)
+        dps[0].streak = streaks.dps.count;
+      if (hps[0] && streaks.hps.name && normNm(hps[0].name) === streaks.hps.name && streaks.hps.count > 1)
+        hps[0].streak = streaks.hps.count;
+    }
 
     // Bar width follows the SCORE that ranks the board, so it always decreases from #1 down — never
     // someone lower with a longer bar. Scaled between the board's min/max score (min → 18%, max → 100%).
@@ -1349,20 +1613,24 @@
   // Per-person average rate map for a set of logs (dps for dps-toons, hps for healer-toons), keyed by
   // the person (alt→main, split by role) with the face toon's name/class. Returns { key: {name,class,spec,role,avg,fights} }.
   function ratesByPerson(logs) {
-    var trole = toonRoles(logs);
     var guild = rosterSet();
     var by = {};
     logs.forEach(function (l) {
       rowsForDiff(l.rows).forEach(function (r) {
         var tk = normNm(r.n);
-        var isHealer = trole[tk] === "HEALER";
-        if (isHealer && r.r !== "HEALER") return;
-        if (!isHealer && r.r === "HEALER") return;
+        // role per FIGHT, same rule as the leaderboard (see aggregate) — otherwise these panels
+        // would disagree with the board they sit under.
+        var isHealer = r.r === "HEALER";
         if (!isHealer && isTankFight(r)) return; // tank fights don't count toward DPS
         var id = resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[tk]) return;
         var gk = id.key + "|" + (isHealer ? "H" : "D");
-        var e = by[gk] || (by[gk] = { sum: 0, total: 0, fights: 0, role: isHealer ? "HEALER" : "DPS", faces: {} });
+        var e =
+          by[gk] ||
+          (by[gk] = {
+            sum: 0, total: 0, fights: 0, role: isHealer ? "HEALER" : "DPS", faces: {},
+            mainName: id.name, // label the row with the PERSON, same as the leaderboard
+          });
         e.sum += isHealer ? r.h || 0 : r.d || 0;
         e.total += isHealer ? r.heal || 0 : r.dmg || 0;
         e.fights++;
@@ -1403,9 +1671,11 @@
       Object.keys(e.faces).forEach(function (tk) {
         if (!face || e.faces[tk].n > face.n) face = e.faces[tk];
       });
-      e.name = face.name;
+      // name = the PERSON (matches the leaderboard); class/spec = the toon actually played
+      e.name = e.mainName || face.name;
       e.class = face.cls;
       e.spec = face.spec;
+      e.srv = groupServerPct(e); // fight-weighted across their toons, like the board
     });
     return by;
   }
@@ -1435,9 +1705,11 @@
     );
   }
 
-  // server percentile as a display number (e.g. 73.7) or null — for the rich subtitle.
-  function srvPctVal(name) {
-    var p = serverPctFor(name);
+  // Server percentile of a ratesByPerson ROW as a display number (e.g. 73.7), or null.
+  // Reads the row's fight-weighted blend (groupServerPct) — NOT a lookup by row name, which would
+  // now be the MAIN's name and would miss, since parses are stored per toon.
+  function srvPct(row) {
+    var p = row && row.srv;
     return p == null ? null : Math.round(p * 1000) / 10;
   }
 
@@ -1458,9 +1730,11 @@
   }
 
   // improved = biggest % gain vs previous period; needsWork = MIX (declined + below guild avg + low output).
-  // Both require MIN_FIGHTS in each period they use, so a 1-fight fluke can't top the list.
+  // Both need a few fights in EACH period they compare, so a 1-fight fluke can't top the list.
+  // This one compares LOCKOUT to LOCKOUT (one raid week each), not the whole scope, so the
+  // scope-relative gate used by the leaderboards (MIN_FIGHT_PCT) does not apply — a flat floor does.
   function improvedAndNeedsWork(cur, prev) {
-    var minF = MIN_FIGHTS[PERIOD] || 1;
+    var minF = IMPROVE_MIN_FIGHTS;
     var curMap = ratesByPerson(cur);
     // "previous" for improvement = the lockout before the current scope's most recent one. Compare
     // last lockout vs the one before (works with sparse history) rather than a fixed day window.
@@ -1519,7 +1793,7 @@
         name: c.name, class: c.class, spec: c.spec, metric: c.role === "HEALER" ? "hps" : "dps",
         from: Math.round(p.avg), to: Math.round(c.avg), deltaPct: Math.round(pct),
         rate: Math.round(cc.avg), total: cc.total, fights: cc.fights,
-        serverPct: srvPctVal(c.name), rankUp: up != null && up > 0 ? up : null,
+        serverPct: srvPct(c), rankUp: up != null && up > 0 ? up : null,
       });
     });
     improved.sort(function (a, b) {
@@ -1539,7 +1813,7 @@
         name: c.name, class: c.class, spec: c.spec, metric: c.role === "HEALER" ? "hps" : "dps",
         value: Math.round(c.avg), belowPct: belowPct,
         rate: Math.round(c.avg), total: c.total, fights: c.fights,
-        serverPct: srvPctVal(c.name),
+        serverPct: srvPct(c),
       });
     });
     needs.sort(function (a, b) {
@@ -1766,11 +2040,27 @@
 
   // ---- raid selector: built from the raids that appear in the logs, in fixed progression order ----
   // Canonical guild order — never trust the snapshot's array order (older snapshots had ICC first).
-  var RAID_ORDER = ["ulduar", "toc", "icc"];
+  var RAID_ORDER = ["ulduar", "toc", "ony", "icc"];
   var RAID = "";
   function buildRaidSegs() {
     var row = document.getElementById("raidRow");
-    var raids = (DATA.raids || []).slice().sort(function (a, b) {
+    var raids = (DATA.raids || []).slice();
+
+    // A raid that is never its OWN log still deserves a tab if its bosses show up inside someone
+    // else's log. Onyxia is the case: she's cleared on a ToC night and wow-logs files her in the ToC
+    // log, so she never appears in DATA.raids and would have no tab at all.
+    Object.keys(BOSS_ORDER).forEach(function (slug) {
+      if (raids.some(function (r) { return r.key === slug; })) return;
+      var order = BOSS_ORDER[slug];
+      var seen = (DATA.logs || []).some(function (l) {
+        return (l.rows || []).some(function (r) {
+          return r.b && order.indexOf(r.b) >= 0;
+        });
+      });
+      if (seen) raids.push({ key: slug, label: RAID_LABEL[slug] || slug });
+    });
+
+    raids.sort(function (a, b) {
       var ia = RAID_ORDER.indexOf(a.key),
         ib = RAID_ORDER.indexOf(b.key);
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);

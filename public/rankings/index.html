@@ -79,24 +79,16 @@
       <details class="explain">
         <summary>ℹ️ How these rankings work — <span style="color:var(--accent);font-weight:600">(click)</span></summary>
         <div class="exbody">
-          <p>Ranked by a blend of <b>50% raw output</b> (total damage/healing — rewards showing up to every
-            raid) and <b>50% server percentile</b> — how you rank <b>against others of your own class/spec</b>
-            on the server (Warrior vs Warrior, not vs everyone). Fairer across classes: a Warrior in the top
-            2% of Warriors can outrank a class with a higher raw ceiling.</p>
-          <p>The big DPS/HPS number is a <b>bayesian average</b> — a couple of fights get pulled toward the
-            guild mean, so a lucky 1–2 fight spike can't top the board. More fights = your real average shows.</p>
-          <p><b>Only guild members</b> count (pugs excluded). <b>Alts fold into the main</b>, but a person's
-            DPS toon and healer toon stay in their own tables. <b>Tank fights (Protection) don't count</b>
-            toward DPS, and your <b>roster main spec</b> decides which table you're in.</p>
-          <ul>
-            <li><b>📈 Most improved</b> — biggest % jump vs the previous raid.</li>
-            <li><b>📉 Needs work</b> — below the guild average for their role.</li>
-            <li><b>🏅 Records</b> — biggest single parses ever (a short fight like Hodir inflates DPS — that's
-              why the boss is shown).</li>
-          </ul>
-          <p><b>Filters</b> (Week / Month / All, per raid and 25/10-man) are all client-side — no reload.
-            <b>Tanking</b> is coming once the log API exposes damage-taken.</p>
-          <p class="rules-src">Parses &amp; server percentiles from
+          <p>Ranked by the gold <b>pts</b> on each row — a mix of your <b>output</b> in our raids and your
+            <b>server parse</b>. Hover the pts to see the mix for that table.</p>
+          <p class="exnote"><b>No server parse?</b> You're scored on your output alone — no bonus, no
+            penalty.</p>
+          <p class="exnote"><b>You have to show up.</b> A board needs a decent share of that raid's fights,
+            or two lucky pulls beat people who raided all tier.</p>
+          <p class="exnote"><b>Guild only, one row per person</b> — alts fold into the main, but your DPS and
+            healer toons get separate tables. Tank fights don't count toward DPS.</p>
+
+          <p class="rules-src">Each raid is its own board · Parses from
             <a href="https://wow-logs.co.in" target="_blank" rel="noopener">wow-logs.co.in</a>.</p>
         </div>
       </details>

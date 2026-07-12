@@ -186,7 +186,6 @@
         var id = L.resolveIdentity(n, "");
         return guild[id.key] || guild[normNm(n)];
       };
-      var trole = L.toonRoles(logs);
 
       // gather per-PERSON DPS parses (kills only, guildies, non-tank) and the guild totals.
       var perPerson = {}, perHealer = {}, presence = {}, bossBest = {};
@@ -205,7 +204,11 @@
           // presence = attended this kill in ANY role (a raider who TANKED still counts as present)
           var pr = presence[id.key] || (presence[id.key] = { kills: 0, name: r.n, cls: r.c });
           pr.kills++;
-          if (trole[tk] === "HEALER") {
+          // Role is decided PER FIGHT (r.r), not by the toon's dominant/roster role. Using the roster
+          // main-spec meant a dps-spec player who HEALED a night had those fights counted as dps with
+          // ~0 damage: Tchilly (main-spec Shadow) healed a whole ToC 10 and was handed the "Last one
+          // standing" shame award for "avg 37 DPS". Same rule as the leaderboard, so they agree.
+          if (r.r === "HEALER") {
             raidTotalHeal += r.heal || 0;
             var h = faceOf(perHealer, id, r);
             h.sumHeal += r.heal || 0;

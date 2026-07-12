@@ -37,6 +37,17 @@
 .explain .exbody li {
   margin: 4px 0;
 }
+/* de-emphasized aside (the small print) */
+.explain .exnote {
+  font-size: 12px;
+  color: var(--text-dim-2);
+  margin: 8px 0 0;
+}
+.explain .exnote b {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .explain .rules-src {
   margin-top: 12px;
   padding-top: 8px;
@@ -446,7 +457,10 @@
 .mv {
   font-size: 13px;
   font-weight: 800;
-  width: 38px; /* fixed column so ▲/▼/NEW all line up vertically */
+  /* Fixed column so ▲/▼/NEW/👑 all line up vertically AND every bar starts at the same x.
+     It is ALWAYS rendered — empty on All time (no previous period) — because dropping the
+     element there shifted the whole row left. Wide enough for the 👑2x streak pill. */
+  width: 52px;
   text-align: center;
   flex: 0 0 auto;
   display: inline-flex;
@@ -463,19 +477,26 @@
   color: #8a8d93;
   font-size: 14px;
 }
+/* 👑 streak pill — consecutive weeks at #1. The rarest badge on the board, so it reads big.
+   Lives in the .mv column (never the name column, where it used to clip the name). */
 .crownmv {
   color: var(--accent-hi);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 800;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   line-height: 1;
+  letter-spacing: -0.5px; /* pull the "2x" tight against the crown glyph */
 }
-/* crown shown after the name (All time, no rank-change column) */
-.pnamecol .crownmv {
-  margin-left: 7px;
-  flex: 0 0 auto;
+/* the crown glyph itself: emoji sit on a lower baseline than text, so lift it to
+   optically center against the "2x" beside it */
+.crownmv .cr {
+  font-style: normal;
+  display: inline-block;
+  position: relative;
+  top: -2px;
+  margin-right: 1px;
 }
 .mv.new {
   color: #1b1d21;
@@ -488,13 +509,18 @@
   line-height: 1.4;
 }
 /* WIDE board: name gets real room (no truncation), bar fills, big legible value column */
+/* Name column. Fixed width so every bar starts at the same x on EVERY period.
+   Holds the name only — the 👑 streak pill sits in the .mv column instead, so it can never eat
+   into the name's width (that clipped "Pamevoid" -> "Pamev..."). Sized for the longest roster
+   name (12 chars, e.g. "Mortisritual") at the podium's 15px bold, with a little headroom. */
 .pnamecol {
-  flex: 0 0 120px;
-  width: 120px;
+  flex: 0 0 125px;
+  width: 125px;
   display: flex;
   align-items: center;
   min-width: 0;
 }
+/* the name link may shrink/ellipsise only as a last resort */
 .pnamecol > a {
   min-width: 0;
   overflow: hidden;
@@ -516,12 +542,15 @@
   white-space: nowrap;
 }
 /* value column: fixed width, right-aligned, big numbers */
+/* Value column. Fixed width so every row's numbers line up. Sized to the widest realistic subtitle
+   ("100.0 pts · 47.9M total · ×29 · --.-% srv" ≈ 211px) plus the 16px padding — no more, because
+   every pixel here is taken straight off the bar in the middle. */
 .pval {
-  flex: 0 0 168px;
-  width: 168px;
+  flex: 0 0 215px;
+  width: 215px;
   text-align: right;
   line-height: 1.15;
-  padding-left: 16px;
+  padding-left: 8px;
 }
 .pval .prate {
   display: block;
@@ -540,10 +569,18 @@
 .pval .psub {
   display: block;
   font-weight: 500;
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-faint);
   margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* belt-and-braces: never let the subtitle push out of the card */
+}
+/* the SCORE — the number the board is sorted by, so it gets the accent (the big dps/hps number is
+   only one ingredient of it; without this the ordering looks arbitrary) */
+.pval .pscore {
+  color: var(--accent);
+  font-weight: 700;
 }
 .pval .ptot {
   color: var(--text-dim);
