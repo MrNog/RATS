@@ -2076,13 +2076,20 @@
       );
     });
     if (period === "week") {
-      // "previous" = the raided lockout immediately BEFORE the one Week is showing (the latest raided
-      // lockout). Anchor to lockouts, not day-age, so the delta survives the reset-day fallback.
+      // "previous" = the last raided lockout BEFORE the one Week is showing, that actually has fights.
+      // Anchor to lockouts, not day-age, so the delta survives the reset-day fallback. Skip EMPTY
+      // lockouts (a broken/0-boss upload, e.g. 8 Jul '26) and walk further back to the last real raid
+      // — otherwise every player shows NEW because there was nobody in the "previous" lockout to rank.
       var target = weekTargetLock(matched);
       if (!target) return [];
-      var prevLock = null;
+      // group matched logs by lockout, remembering which lockouts hold at least one fight row
+      var lockHasRows = {};
       matched.forEach(function (l) {
         var lk = lockoutStart(l.date);
+        if ((l.rows || []).length) lockHasRows[lk] = true;
+      });
+      var prevLock = null;
+      Object.keys(lockHasRows).forEach(function (lk) {
         if (lk < target && (!prevLock || lk > prevLock)) prevLock = lk;
       });
       if (!prevLock) return [];
