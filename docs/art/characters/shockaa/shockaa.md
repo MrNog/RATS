@@ -40,6 +40,7 @@
 - **The three shamans are deliberately split:** **Shockaa = ELEMENTAL — lightning FROM THE SKY, mace, totem,
   hard flash from above.** Twihnz = Enhancement (dual-wield melee). Fazcafe/Zamorei = Resto (healing water).
   Never blur them.
+- **Discord icon commissioned 15 Jul 2026** — 1:1 face crop (prompt below).
 
 ---
 
@@ -67,4 +68,28 @@ Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember 
 Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 4:1 ultra-wide landscape.
 
 Do NOT include: any lettering, title, name, watermark, logo or insignia; two tails or any extra tail, extra or duplicated limbs/arms/heads, a second weapon, TWO weapons, dual-wielded weapons (that is another shaman's identity), a sword, a shield, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, arms bending the wrong way or twisted behind the body, a detached / floating / over-tilted head, a broken or too-long neck, impossible or unbalanced poses; healing water, green or gold healing light; cute / pretty / soft / dainty styling, pastel or pink colours, chubby / fat / overweight build, floating dust/ember speckle-particles filling the air, speckled noise, heavy haze, a busy left third, modern clothing, human faces, Alliance symbols, excessive bloom that hides the rat, plain white background.
+```
+
+---
+
+## Discord icon prompt — 1:1, NO text
+
+A square **avatar** — head-and-shoulders face crop, readable when downscaled. Export large (1024×1024).
+
+```
+Digital fantasy illustration, square 1:1 avatar / profile icon (1024x1024), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. A tight HEAD-AND-SHOULDERS FACE CROP designed to read at small sizes. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only.
+
+Subject: Shockaa, an anthropomorphic Elemental Shaman rat — a STORMCALLER, seen close-up from the chest up. Storm-grey fur standing on end with static, prominent whiskers, fierce eyes crackling ELECTRIC BLUE-WHITE, lean and hard and weather-beaten, a stern grim expression — NOT cute or soft. Exactly ONE head, one face, two eyes, two ears, natural neck and shoulders; anatomically correct.
+
+Armor / signature: the collar of his heavy weathered storm-mail — dark blue-grey scaled plate hung with bone fetishes, feathers and beaded totem-charms, a spirit-masked pauldron on one shoulder, the edge of a ragged storm-blue cloak. Fine threads of blue-white current arc along his whiskers and the mail collar. No weapon needed in a face crop — if a hand shows, it is a single clawed hand wreathed in faint current near the jaw. NO second face, no floating totem in frame.
+
+Composition: the FACE is dominant and centered, filling most of the square, with a little headroom — large, sharp, high-contrast, instantly readable when shrunk to a small Discord avatar. Simple dark backdrop, no busy props.
+
+Color palette & lighting: storm-grey fur, dark blue-grey mail, bone fetishes, deep storm-dark backdrop. ONE strong ELECTRIC BLUE-WHITE rim light from above-left rakes across his face and mail (the storm's flash), throwing the far side into deep shadow; his eyes and the current glow the same blue. Extremely high contrast so the face pops. Class colour Shaman blue #0070DD tints the whole icon.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on the face; the current is a clean sharp-edged glow, NOT particulate noise.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 1:1 square.
+
+Do NOT include: any lettering, title, name, watermark, logo or insignia; two tails or extra tail, extra or duplicated heads/faces/limbs, a second weapon or dual-wielded weapons, a sword, a shield, malformed/fused hands, wrong finger count; a detached / floating / over-tilted head, a broken or too-long neck; healing water, green or gold healing light; cute / pretty / soft / dainty styling, pastel or pink colours, chubby / fat / overweight build, full-body or wide framing (this is a FACE crop), floating dust/ember speckle-particles, speckled noise, heavy haze, modern clothing, human faces, Alliance symbols, excessive bloom that hides the face, plain white background.
 ```

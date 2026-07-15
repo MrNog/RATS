@@ -85,6 +85,24 @@
   // short label for a raid slug — used when we have to synthesise a tab that the snapshot never wrote
   var RAID_LABEL = { ulduar: "Ulduar", toc: "ToC", ony: "Ony", icc: "ICC" };
 
+  // wow-logs' own raid slugs → our tab keys. The API calls Onyxia "onyxia" and ToC "trial-of-the-crusader",
+  // but our tabs are keyed "ony"/"toc", so a dedicated log never matched by raid (it survived only on boss
+  // containment, which needs a KILL — a wipe night on Onyxia showed nothing). Normalise the API slug to
+  // the tab key everywhere we raid-match. Keys are lowercase.
+  var SLUG_ALIAS = {
+    onyxia: "ony",
+    "onyxias-lair": "ony",
+    "trial-of-the-crusader": "toc",
+    "trial-of-the-grand-crusader": "toc",
+    "icecrown-citadel": "icc",
+  };
+  function raidKeyOf(l) {
+    var s = String(l.raidSlug || "").toLowerCase();
+    if (SLUG_ALIAS[s]) return SLUG_ALIAS[s];
+    var r = String(l.raid || "").toLowerCase();
+    return SLUG_ALIAS[r] || s || r;
+  }
+
   // Sort a list of boss names by the raid's canonical order (unknowns go last, alphabetically).
   function sortBosses(names, raidSlug) {
     var order = BOSS_ORDER[raidSlug] || [];
@@ -169,9 +187,18 @@
   var DATA = SAMPLE;
 
   // Logs tab: group the already-filtered logs by lockout, merge multi-log runs, draw an accordion.
-  function renderLogs(logs, raidLabel) {
+  // `logs` is already deduplicated (canonical per lockout). `dropped` = { droppedId: winnerId } and
+  // `rawLogs` = the pre-dedup list, so we can show "collapsed N duplicate uploads" per lockout.
+  function renderLogs(logs, raidLabel, dropped, rawLogs) {
+    dropped = dropped || {};
     var el = document.getElementById("logs");
     if (!el) return;
+    // how many raw uploads fell into each lockout (for the "N uploads" note)
+    var rawByLock = {};
+    (rawLogs || logs).forEach(function (l) {
+      var k = lockoutStart(l.date);
+      rawByLock[k] = (rawByLock[k] || 0) + 1;
+    });
     if (!logs.length) {
       el.innerHTML =
         '<div class="card" style="color:#6e7178">No ' + esc(raidLabel) + " " + SIZE + "-man logs in this period.</div>";
@@ -207,6 +234,17 @@
             ? ' <span class="lfangs" title="' + fangs + " Warchief's Fangs in this run\">💀 Fangs night</span>"
             : "";
         var mergedBadge = merged ? ' <span class="lmerge" title="Same lockout run">🔗 ' + g.logs.length + " logs</span>" : "";
+        // duplicate uploads collapsed into this lockout's canonical log(s)
+        var rawN = rawByLock[k] || g.logs.length;
+        var dupN = rawN - g.logs.length;
+        var dupBadge =
+          dupN > 0
+            ? ' <span class="ldup" title="' +
+              dupN +
+              " duplicate upload" +
+              (dupN !== 1 ? "s" : "") +
+              ' of the same night collapsed — counted once">🧹 deduped</span>'
+            : "";
 
         var rows = g.logs
           .map(function (l) {
@@ -264,6 +302,7 @@
           esc(fmtDate(g.lock)) +
           "</span>" +
           mergedBadge +
+          dupBadge +
           fangBadge +
           '<span class="lmeta">' +
           bossCount +
@@ -1046,6 +1085,77 @@
     return Math.max(floor, Math.ceil(pct * scope));
   }
 
+  // Two players uploading the SAME raid night make TWO logIds, both "Original" (never ARCHIVED — that
+  // only fires when the same uploader supersedes themselves). The API gives us no uploader field, so we
+  // infer the duplicate from content. Within one lockout (Wed→Wed) + same raid, a log is a DUPLICATE of
+  // another when its killed-boss set is a subset of (or equal to) the other's — i.e. it adds nothing.
+  // We keep the fuller one and drop the redundant. This deliberately does NOT collapse a genuine SPLIT
+  // (two logs of one night with DIFFERENT, complementary bosses — see lockoutStart's #20922+#20925 note):
+  // those overlap in neither direction, so both survive and still merge-display in the Logs tab.
+  // Returns { keep: [logs], dropped: { reportId: winnerReportId } }.
+  function dedupeDuplicates(logs) {
+    var byKey = {};
+    logs.forEach(function (l) {
+      var key = lockoutStart(l.date) + "|" + (l.raidSlug || l.raid || "");
+      (byKey[key] = byKey[key] || []).push(l);
+    });
+    var keep = [],
+      dropped = {};
+    Object.keys(byKey).forEach(function (key) {
+      var grp = byKey[key];
+      if (grp.length < 2) {
+        keep.push(grp[0]);
+        return;
+      }
+      // fullest first, so a later log is only ever dropped in favour of an equal-or-fuller earlier one
+      grp.sort(function (a, b) {
+        return logFullness(b) - logFullness(a);
+      });
+      var survivors = [];
+      grp.forEach(function (l) {
+        var bosses = bossSet(l);
+        var coveredBy = survivors.find(function (s) {
+          return isSubset(bosses, s._bset);
+        });
+        if (coveredBy) {
+          dropped[l.reportId] = coveredBy.reportId; // redundant — a kept log already covers its bosses
+        } else {
+          l._bset = bosses;
+          survivors.push(l);
+        }
+      });
+      survivors.forEach(function (s) {
+        keep.push(s);
+      });
+    });
+    return { keep: keep, dropped: dropped };
+  }
+  function bossSet(l) {
+    var s = {};
+    (l.bosses || []).forEach(function (b) {
+      s[b] = true;
+    });
+    return s;
+  }
+  // true when every boss in `a` is also in `b` (a adds nothing beyond b)
+  function isSubset(a, b) {
+    var ks = Object.keys(a);
+    if (!ks.length) return true; // a wipe-only log is covered by any kill log of the same night
+    return ks.every(function (k) {
+      return b[k];
+    });
+  }
+  // Rank a log's completeness as a single comparable number: kills dominate, then bosses, then boss-time,
+  // then a lower logId wins (older upload = the stable pick when everything else ties).
+  function logFullness(l) {
+    var t = 0;
+    (l.bfights || []).forEach(function (f) {
+      if (f.kill && f.dur) t += f.dur;
+    });
+    var idScore = 1 - Math.min(1, (parseInt(l.reportId, 10) || 0) / 1e12); // lower id → higher score, tiny weight
+    return (l.kills || 0) * 1e6 + (l.bosses ? l.bosses.length : 0) * 1e3 + Math.min(999, t / 60) + idScore;
+  }
+
   function logsInScope(period) {
     var rObj = (DATA.raids || []).find(function (r) {
       return r.key === RAID;
@@ -1054,10 +1164,12 @@
       return String(x).toLowerCase();
     });
     var order = BOSS_ORDER[RAID] || [];
-    return (DATA.logs || []).filter(function (l) {
+    var scoped = (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
-        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
+        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
+        rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
+        rKeys.indexOf(raidKeyOf(l)) >= 0;
       // A log is ALSO in scope if it merely CONTAINS this raid's bosses, even when it's filed under a
       // different raid — Onyxia is routinely cleared on a ToC night and wow-logs files her inside the
       // ToC log. Without this, selecting Onyxia would find nothing at all. rowsForDiff then keeps only
@@ -1072,6 +1184,8 @@
       }
       return inPeriodDays(l.date, period);
     });
+    // Collapse same-night duplicate uploads to one canonical log before any stat aggregation.
+    return dedupeDuplicates(scoped).keep;
   }
   function inPeriodDays(dateStr, period) {
     if (period === "all") return true;
@@ -1862,7 +1976,9 @@
     var scoped = (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       return (
-        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0
+        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
+        rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
+        rKeys.indexOf(raidKeyOf(l)) >= 0
       );
     });
     // group by lockout
@@ -1909,7 +2025,9 @@
     return (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
-        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
+        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
+        rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
+        rKeys.indexOf(raidKeyOf(l)) >= 0;
       if (!raidMatch) return false;
       var dt = new Date(l.date);
       if (isNaN(dt)) return false;
@@ -2032,10 +2150,15 @@
     };
     var logsForSize = (d.logs || []).filter(function (l) {
       var raidMatch =
-        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
+        rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
+        rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
+        rKeys.indexOf(raidKeyOf(l)) >= 0;
       return normSize(l.size) === SIZE && raidMatch && inPeriod(l.date || l.uploadedAt);
     });
-    renderLogs(logsForSize, (rObj && rObj.label) || RAID);
+    // Collapse duplicate uploads here too, so the Logs tab shows the canonical log per lockout (a note
+    // records how many raw uploads it stood in for). Genuine splits are NOT collapsed — see dedupeDuplicates.
+    var dd = dedupeDuplicates(logsForSize);
+    renderLogs(dd.keep, (rObj && rObj.label) || RAID, dd.dropped, logsForSize);
   }
 
   // ---- raid selector: built from the raids that appear in the logs, in fixed progression order ----
