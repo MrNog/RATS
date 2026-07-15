@@ -2601,11 +2601,26 @@
         );
       }
     } catch (e) {
-      // Total failure (thrown from Phase 1 or the guard above): nothing was saved — the console shows
-      // the real HTTP error (e.g. 500 on /meta/seasons). Keep the good snapshot; just warn the officer.
+      // Total failure: nothing was saved, the existing snapshot is kept. Name the CULPRIT rather than
+      // a generic "try again" — a 5xx is the API breaking on its side and no amount of retrying or
+      // key-fiddling by the officer will help, while a 401/403 IS ours to fix.
+      var msg = (e && e.message) || "unknown error";
+      var tail;
+      if (/\b5\d\d\b/.test(msg)) {
+        tail = " The wow-logs API is failing on their end (5xx), not us. Nothing was saved and the " +
+               "rankings below are the last good snapshot. Nothing to fix here -- try again later.";
+      } else if (/\b401\b|\b403\b|rejected/i.test(msg)) {
+        tail = " The API key was rejected. Check the saved key in the admin console.";
+      } else if (/\b429\b|rate/i.test(msg)) {
+        tail = " Rate limited (30/min). Wait a minute and fetch again.";
+      } else if (/failed to fetch|networkerror|load failed/i.test(msg)) {
+        tail = " Could not reach the API at all -- network, DNS or CORS. The rankings below are the " +
+               "last good snapshot.";
+      } else {
+        tail = " Nothing was saved -- the rankings shown may be stale.";
+      }
       setLbl("✗ fetch failed");
-      showMsg("Fetch failed: " + (e && e.message ? e.message : "unknown error") +
-        ". Nothing was saved — the rankings shown may be stale. Try again shortly.");
+      showMsg("Fetch failed: " + msg + "." + tail);
     }
     setTimeout(function () {
       if (b) b.disabled = false;

@@ -10,13 +10,14 @@
    shut out by whoever tops every meter:
      1. COMPETITIVE  — one winner per raid/size (The Baker, On strike, …). The rankings grid shows these.
      2. PODIUM       — 2nd/3rd place on the volume awards (`rank` 2|3). Profile-only.
-     3. SPECIALITY   — top of your own lane: The Wall (tanks), Best <Class>. One holder per class/role.
+     3. SPECIALITY   — top of your own lane: The Wall (tanks), Best <Class>. One holder per class/role. Profile-only.
      4. PERSONAL     — earned against a threshold, not against people: raid clears, boss-count milestones.
 
    API — RatsFun(DATA):
-     .compute({ raid, size, diff, period })  -> { awards:[A], shame:[A], podium:[A] }
+     .compute({ raid, size, diff, period })  -> { awards:[A], shame:[A], podium:[A], speciality:[A] }
         A = { emoji, title, winner, winnerKey, cls, sub, shame, rank? }   (winnerKey = normalized name)
-        `podium` = the runner-ups; the rankings page reads `awards` only, so it stays winner-only.
+        The rankings grid reads `awards` only. `podium` (runner-ups) and `speciality` (Best <Class> /
+        The Wall) are profile-only — forRaider folds them back in so nobody loses a badge.
      .forRaider(name, opts)  -> [A]  every positive honour THIS person holds, no shame. Folds in the
         speciality/personal/clear badges and caps at opts.cap (default 5), rarest first.
      .personalFor(name) / .progressFor(name) -> the milestone / raid-clear badges on their own
@@ -387,6 +388,13 @@
       // ---- SPECIALITY: top of your own lane, not of the whole guild. A hunter is never going to
       // out-damage the raid's best mage, but they can be the best hunter — so these open a podium per
       // class and per role, and a lot more people end up holding something. ----
+      //
+      // These are PROFILE-ONLY: they go in their own `speciality` bucket, NOT in `awards`. The public
+      // Fun & shame grid reads `awards` and would otherwise be swamped with a "Best <Class>" card for
+      // every class — that per-class breakdown belongs on a player's own profile, not the guild wall.
+      // The profile page folds `speciality` back in (forRaider), so nobody loses a badge.
+      var speciality = [];
+      var S = function (emoji, title, e, cls, sub) { speciality.push(A(emoji, title, e, cls, sub)); };
 
       // 🛡️ The Wall — the tank in the most tanked fights (tanks are invisible in every DPS award).
       var tankTally = {};
@@ -403,8 +411,8 @@
       if (tanks.length) {
         var wall = tanks.slice().sort(function (a, b) { return b.n - a.n; })[0];
         if (wall.n >= 3)
-          awards.push(A("🛡️", "The Wall", wall.name, wall.cls,
-            "held the boss on <b>" + Object.keys(wall.bosses).length + "</b> fights — <b>" + wall.n + "</b> tanked kills"));
+          S("🛡️", "The Wall", wall.name, wall.cls,
+            "held the boss on <b>" + Object.keys(wall.bosses).length + "</b> fights — <b>" + wall.n + "</b> tanked kills");
       }
 
       // 🥇 Best <Class> — top average DPS (or HPS for healers) WITHIN each class. One per class, so
@@ -421,9 +429,9 @@
           var peers = byCls[cls];
           if (peers.length < 2) return; // a solo class isn't a contest — no badge
           var best = peers.slice().sort(function (a, b) { return valueOf(b) - valueOf(a); })[0];
-          awards.push(A(emoji, "Best " + cls, best.name, cls,
+          S(emoji, "Best " + cls, best.name, cls,
             "top " + label + " of <b>" + peers.length + "</b> " + esc(cls) + "s · <b>" +
-            fmtVal(valueOf(best)) + "</b>"));
+            fmtVal(valueOf(best)) + "</b>");
         });
       }
       classChamps(toons, function (t) {
@@ -510,7 +518,7 @@
             "below par on <b>" + cold.below + "</b> of " + cold.cov + " bosses — time to warm up 🔥", true));
       }
 
-      return { awards: awards, shame: shame, podium: podium };
+      return { awards: awards, shame: shame, podium: podium, speciality: speciality };
     }
 
     // ---- PERSONAL MILESTONES — earned alone, against a threshold, not against the guild. Nobody is
@@ -616,9 +624,10 @@
             } catch (e) {
               return;
             }
-            // wins first, then the podium runner-ups — so a 1st place always beats a 2nd on the same
-            // title (`seen` keeps only the first card per title).
-            res.awards.concat(res.podium || []).forEach(function (a) {
+            // wins first, then the podium runner-ups, then the speciality "Best <Class>"/tank badges
+            // (public grid hides those, but the profile is exactly where they belong) — `seen` keeps
+            // only the first card per title, so a 1st place always beats a 2nd on the same title.
+            res.awards.concat(res.podium || [], res.speciality || []).forEach(function (a) {
               // the winner is stored by their FACE toon name — resolve to the person before matching
               var wKey = L.resolveIdentity(a.winner, a.cls).key || a.winnerKey;
               if (wKey !== meKey) return;
