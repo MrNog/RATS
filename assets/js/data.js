@@ -313,8 +313,21 @@ window.RatsData = (function () {
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "");
   }
+  // world-readable alt/rank snapshot the public profile page reads (barracksFor's public path). Keyed by
+  // profKey. Published by the officer roster save alongside `members`, so alts stay in sync with the roster.
+  const PROFILES_LS = "ratsProfilesCache", PROFILES_TTL = 30 * 60 * 1000; // 30 min
+  function publishProfiles(map) {
+    try { localStorage.setItem(PROFILES_LS, JSON.stringify({ t: Date.now(), data: map })); } catch (e) {}
+    return fbOn() ? fbPut("profiles", map) : Promise.resolve();
+  }
   async function loadProfiles() {
-    return (fbOn() ? await fbGetSafe("profiles") : null) || {};
+    try {
+      const c = JSON.parse(localStorage.getItem(PROFILES_LS) || "null");
+      if (c && Date.now() - c.t < PROFILES_TTL && c.data && typeof c.data === "object") return c.data;
+    } catch (e) {}
+    const map = (fbOn() ? await fbGetSafe("profiles") : null) || {};
+    try { localStorage.setItem(PROFILES_LS, JSON.stringify({ t: Date.now(), data: map })); } catch (e) {}
+    return map;
   }
 
   // download a json file (manual-commit fallback when Firebase is off)
@@ -837,6 +850,7 @@ window.RatsData = (function () {
     publishMembers,
     loadMembers,
     profKey,
+    publishProfiles,
     loadProfiles,
     loadRoster,
     loadHistory,

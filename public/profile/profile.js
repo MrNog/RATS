@@ -417,6 +417,13 @@
     var mm = on.match(/^(.+?)\s+alt\b/i);
     return mm ? mm[1].trim() : null;
   }
+  // Explicit "<Main> Alt" in the PUBLIC note — the ONLY publicNote form that marks an alt. The note is
+  // mostly spec/profession text, so this must require the literal "alt" keyword (a lenient first-word
+  // parse would misclassify ~60 members). Used for the isAlt GATE; rosterMainOf then resolves the name.
+  function altMainPublicNote(m) {
+    var mm = ((m && m.publicNote) || "").trim().match(/^(.+?)\s+alt\b/i);
+    return mm ? mm[1].trim() : null;
+  }
   function rosterMainOf(m) {
     var on = (m.officerNote || "").trim(),
       mm = on.match(/^(.+?)\s+alt\b/i);
@@ -438,8 +445,13 @@
         return ck(m.name) === k;
       });
       if (me) {
+        // An alt's main link may live in the PUBLIC note on a non-alt rank (e.g. Shackaa: publicNote
+        // "Shockaa Alt", rankIndex 5). Gate ONLY on the explicit "<Main> Alt" form (altMainPublicNote),
+        // NOT rosterMainOf — its lenient first-word parse would misread spec notes as alt links.
         var isAlt = function (m) {
-          return m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m);
+          return (
+            m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m) || !!altMainPublicNote(m)
+          );
         };
         var mainName = isAlt(me) ? rosterMainOf(me) || me.name : me.name;
         var mk = ck(mainName);

@@ -791,7 +791,7 @@
     var q = new URLSearchParams();
     if (RAID) q.set("raid", RAID);
     if (SIZE !== "25") q.set("size", SIZE);
-    if (PERIOD !== "all") q.set("period", PERIOD);
+    if (PERIOD !== "week") q.set("period", PERIOD);
     if (METRIC !== "dps") q.set("metric", METRIC);
     if (PROGDIFF !== "nm") q.set("diff", PROGDIFF);
     if (TAB !== "board") q.set("tab", TAB);
@@ -820,7 +820,7 @@
     syncUrl();
     render();
   }
-  var PERIOD = "all";
+  var PERIOD = "week"; // default view = the current WoW lockout
   function setPeriod(b) {
     PERIOD = b.dataset.p;
     document.querySelectorAll("#periodSegs .seg").forEach(function (s) {
@@ -1164,7 +1164,8 @@
       return String(x).toLowerCase();
     });
     var order = BOSS_ORDER[RAID] || [];
-    var scoped = (DATA.logs || []).filter(function (l) {
+    // step 1 — raid+size match only (period-agnostic), so we can find the latest raided lockout below.
+    var matched = (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
@@ -1182,17 +1183,42 @@
       } else if (!raidMatch) {
         return false;
       }
-      return inPeriodDays(l.date, period);
+      return true;
+    });
+    // step 2 — the "Week" target lockout, scoped to THIS raid+size: the most recent lockout that has logs
+    // and is not in the future. So on reset day (no new logs yet) Week shows last raided week instead of an
+    // empty board, and flips to the current lockout the moment today's log lands. ICC's latest week can
+    // differ from Ulduar's — that's why this is computed per raid+size, not globally.
+    var weekLock = period === "week" ? weekTargetLock(matched) : null;
+    var scoped = matched.filter(function (l) {
+      return inPeriodDays(l.date, period, weekLock);
     });
     // Collapse same-night duplicate uploads to one canonical log before any stat aggregation.
     return dedupeDuplicates(scoped).keep;
   }
-  function inPeriodDays(dateStr, period) {
+  // Latest lockout (Wed→Wed) among these logs that is ≤ the current lockout. null if none.
+  function weekTargetLock(logs) {
+    var now = lockoutStart(new Date().toISOString());
+    var best = null;
+    (logs || []).forEach(function (l) {
+      var lk = lockoutStart(l.date);
+      if (lk > now) return; // ignore future-dated logs (clock skew / bad data)
+      if (!best || lk > best) best = lk;
+    });
+    return best;
+  }
+  function inPeriodDays(dateStr, period, weekLock) {
     if (period === "all") return true;
     var dt = new Date(dateStr);
     if (isNaN(dt)) return true;
+    // WEEK = one WoW lockout (Wed→Wed). The target is `weekLock` (the latest raided lockout for this
+    // scope), NOT a rolling 7 days — so the board shows a whole raid week and never a half-week straddle.
+    if (period === "week") {
+      if (!weekLock) return false;
+      return lockoutStart(dateStr) === weekLock;
+    }
     var days = (Date.now() - dt.getTime()) / 86400000;
-    return days <= (period === "week" ? 7 : 31);
+    return days <= 31;
   }
 
   // Set of guild-member names (normalized). Leaderboards show ONLY guildies — pugs/externals ignored.
@@ -1389,15 +1415,36 @@
           (by[gk] = {
             rateSum: 0, total: 0, best: 0, fights: 0, url: l.reportUrl, faces: {},
             mainName: id.name, // the PERSON — what the row is labelled with
+            seen: {}, // (boss|hm|lockout) → best row so far, to de-dupe the same kill across two uploads
           });
+        // ONE KILL PER (boss + difficulty + lockout). A boss can't be killed twice in a lockout at the
+        // same difficulty — so when the SAME night is uploaded by two people, Onyxia (filed in both the
+        // Onyxia log AND the ToC log) would otherwise count as two fights and inflate the attendance gate,
+        // cutting legit 1-fight raiders off a 1-boss board. ToC's Normal vs Heroic kills of one boss ARE
+        // different fights (different `hm`), so they stay separate. Keep the BEST parse of the duplicate.
+        var fk = (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockoutStart(l.date);
         var rate = r[rateKey] || 0;
-        e.rateSum += rate;
-        e.total += r[totKey] || 0;
-        e.fights++;
-        if (rate > e.best) e.best = rate;
-        // per-toon fight counts: they weight the blended server parse, and pick the class/spec icon
-        var f = e.faces[tk] || (e.faces[tk] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
-        f.n++;
+        var tot = r[totKey] || 0;
+        var prev = e.seen[fk];
+        if (prev) {
+          // same kill seen again (second upload) — replace only if this copy is the better parse
+          if (rate > prev.rate) {
+            e.rateSum += rate - prev.rate;
+            e.total += tot - prev.tot;
+            if (rate > e.best) e.best = rate;
+            prev.rate = rate;
+            prev.tot = tot;
+          }
+        } else {
+          e.seen[fk] = { rate: rate, tot: tot };
+          e.rateSum += rate;
+          e.total += tot;
+          e.fights++;
+          if (rate > e.best) e.best = rate;
+          // per-toon fight counts: they weight the blended server parse, and pick the class/spec icon
+          var f = e.faces[tk] || (e.faces[tk] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
+          f.n++;
+        }
       });
     });
     var players = Object.keys(by).map(function (gk) {
@@ -2014,25 +2061,42 @@
   }
   // logs in the window immediately before the current period (same length back).
   function prevWindowLogs(period) {
-    var span = period === "week" ? 7 : 31;
-    var now = Date.now();
     var rObj = (DATA.raids || []).find(function (r) {
       return r.key === RAID;
     });
     var rKeys = [RAID, rObj && rObj.label].filter(Boolean).map(function (x) {
       return String(x).toLowerCase();
     });
-    return (DATA.logs || []).filter(function (l) {
+    var matched = (DATA.logs || []).filter(function (l) {
       if (String(l.size) !== SIZE) return false;
-      var raidMatch =
+      return (
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
         rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
-        rKeys.indexOf(raidKeyOf(l)) >= 0;
-      if (!raidMatch) return false;
+        rKeys.indexOf(raidKeyOf(l)) >= 0
+      );
+    });
+    if (period === "week") {
+      // "previous" = the raided lockout immediately BEFORE the one Week is showing (the latest raided
+      // lockout). Anchor to lockouts, not day-age, so the delta survives the reset-day fallback.
+      var target = weekTargetLock(matched);
+      if (!target) return [];
+      var prevLock = null;
+      matched.forEach(function (l) {
+        var lk = lockoutStart(l.date);
+        if (lk < target && (!prevLock || lk > prevLock)) prevLock = lk;
+      });
+      if (!prevLock) return [];
+      return matched.filter(function (l) {
+        return lockoutStart(l.date) === prevLock;
+      });
+    }
+    // month: the 31-day window immediately before the current one (unchanged)
+    var now = Date.now();
+    return matched.filter(function (l) {
       var dt = new Date(l.date);
       if (isNaN(dt)) return false;
       var age = (now - dt.getTime()) / 86400000;
-      return age > span && age <= span * 2;
+      return age > 31 && age <= 62;
     });
   }
 
@@ -2142,18 +2206,18 @@
     var rKeys = [RAID, rObj && rObj.label].filter(Boolean).map(function (x) {
       return String(x).toLowerCase();
     });
-    var inPeriod = function (s) {
-      if (PERIOD === "all") return true;
-      var dt = new Date(s);
-      if (isNaN(dt)) return true;
-      return (Date.now() - dt.getTime()) / 86400000 <= (PERIOD === "week" ? 7 : 31);
-    };
-    var logsForSize = (d.logs || []).filter(function (l) {
+    // raid+size match first (period-agnostic), so Week's target lockout is computed the same way the
+    // leaderboards do it (latest raided lockout for this scope) — keeping the Logs tab in agreement.
+    var matched = (d.logs || []).filter(function (l) {
       var raidMatch =
         rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 ||
         rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0 ||
         rKeys.indexOf(raidKeyOf(l)) >= 0;
-      return normSize(l.size) === SIZE && raidMatch && inPeriod(l.date || l.uploadedAt);
+      return normSize(l.size) === SIZE && raidMatch;
+    });
+    var weekLock = PERIOD === "week" ? weekTargetLock(matched) : null;
+    var logsForSize = matched.filter(function (l) {
+      return inPeriodDays(l.date || l.uploadedAt, PERIOD, weekLock);
     });
     // Collapse duplicate uploads here too, so the Logs tab shows the canonical log per lockout (a note
     // records how many raw uploads it stood in for). Genuine splits are NOT collapsed — see dedupeDuplicates.

@@ -134,17 +134,32 @@ function specIconHtml(m) {
 
 // ---- alts / fangs / join dates ----
 // officer-note "<Main> Alt" marks an alt even when the rank isn't "Alt" (e.g. an alt parked on Officer)
+// "<Main> Alt" in the officer note — the explicit, unambiguous alt marker.
 function altMainNote(m) {
   const mm = ((m && m.officerNote) || "").trim().match(/^(.+?)\s+alt\b/i);
   return mm ? mm[1].trim() : null;
 }
-function isAlt(m) {
-  return m.rankIndex === 4 || /alt/i.test(m.rankName || "") || !!altMainNote(m);
+// Explicit "<Main> Alt" in the PUBLIC note — some alts are marked here instead, on a non-alt rank (e.g.
+// Shackaa: publicNote "Shockaa Alt", rankIndex 5). MUST require the literal "alt" keyword: the public note
+// is mostly spec/profession text ("Fury/Arms", "Resto JC", "Shadow"), so a lenient first-word parse would
+// misread ~60 members as alts of their spec. Only the "<name> alt" form is an alt marker here.
+function altMainPublicNote(m) {
+  const mm = ((m && m.publicNote) || "").trim().match(/^(.+?)\s+alt\b/i);
+  return mm ? mm[1].trim() : null;
 }
-// derive the main character for an alt (from "<Main> Alt" in officer/public note)
+function isAlt(m) {
+  return (
+    m.rankIndex === 4 ||
+    /alt/i.test(m.rankName || "") ||
+    !!altMainNote(m) ||
+    !!altMainPublicNote(m) // explicit "<Main> Alt" in the public note (non-alt rank)
+  );
+}
+// derive the main character for an alt. Only called once isAlt() is true, so the lenient first-word
+// fallback here is safe — it just extracts the main name from a note we already know marks an alt.
 function mainOf(m) {
-  const on = altMainNote(m);
-  if (on) return on;
+  const explicit = altMainNote(m) || altMainPublicNote(m);
+  if (explicit) return explicit;
   const pn = (m.publicNote || "").trim();
   if (pn) {
     const t = pn.split(/[\s,/\-(]/)[0];
@@ -194,6 +209,36 @@ function mainsForPicker(roster) {
     .filter((m) => !isAlt(m) && !/pug/i.test(m.rankName || ""))
     .map((m) => ({ name: m.name, class: m.class || "" }));
 }
+// World-readable alt/rank snapshot for the public profile page (barracksFor's public path). Without this
+// the `profiles` node stays empty and every raider with alts shows "lone rat" to non-officers — the alt
+// links only lived in the ENCRYPTED roster, which the public page can't read. Keyed by profKey. A main
+// carries its resolved alts[]; an alt carries mainOf so a visit to the alt redirects to the pack.
+function profilesForPublish(roster) {
+  const key = (n) => (window.RatsData ? RatsData.profKey(n) : normNm(n));
+  const map = {};
+  // index mains by key so we can attach alts, and resolve each alt's main
+  roster.forEach((m) => {
+    if (/pug/i.test(m.rankName || "")) return; // pugs aren't raiders — keep them off profiles
+    map[key(m.name)] = {
+      name: m.name,
+      class: m.class || "",
+      level: m.level || null,
+      rank: m.rankName || "",
+      fang: isFang(m),
+    };
+  });
+  roster.forEach((m) => {
+    if (!isAlt(m)) return;
+    const main = mainOf(m);
+    if (!main) return;
+    const ak = key(m.name), mk = key(main);
+    if (map[ak]) map[ak].mainOf = main; // alt → its main
+    if (map[mk]) {
+      (map[mk].alts = map[mk].alts || []).push({ name: m.name, class: m.class || "", level: m.level || null });
+    }
+  });
+  return map;
+}
 async function autoShare(note) {
   const data = load();
   if (!data || !data.roster || !window.RatsData) return;
@@ -202,6 +247,9 @@ async function autoShare(note) {
     if (res.mode === "firebase") {
       try {
         await RatsData.publishMembers(mainsForPicker(data.roster));
+      } catch (e) {}
+      try {
+        await RatsData.publishProfiles(profilesForPublish(data.roster));
       } catch (e) {}
       if (note) setMsg(note + " - shared with officers");
     } else if (note) {
