@@ -2,7 +2,8 @@
 
 What the wow-logs dev **actually shipped** (v1, read-only, Bearer keys). This is the ground-truth
 reference for building `public/rankings/`. Captured from the live docs + `openapi.json` + a real
-`/health` call on 2026-07-06.
+`/health` call on 2026-07-06. **Updated 2026-07-16 from the dev's fix batch** (see §8 — deaths,
+damageTaken, `?include=`, monthly counter all shipped; re-verify on the next Fetch).
 
 > ⚠️ This is the **real, shipped** API — it differs from the draft we originally proposed (that old
 > `RANKINGS_API_REQUEST.md` draft has been removed; `.claude/rules/rankings.md` still has the old shape).
@@ -58,14 +59,11 @@ https://api.wow-logs.co.in/api/v1
 - **Rate-limit headers** on every response: `X-RateLimit-Limit` (30/min), `X-RateLimit-Remaining` (this
   minute — **DOES** decrement per cost), `X-RateLimit-Cost` (this call's cost), `X-RateLimit-Monthly-Limit`
   (15000), `X-RateLimit-Monthly-Remaining`.
-- ⚠️ **`X-RateLimit-Monthly-Remaining` is BROKEN — always `14999`** regardless of how many calls we make
-  (verified: 3 real `/logs?limit=5` calls = cost 5 each, per-minute Remaining dropped 30→25→… correctly, but
-  Monthly-Remaining stayed 14999 every time). `/health` only returns the *limits*, not usage. So there is **no
-  reliable server-side monthly-usage figure**. We therefore track our own monthly total in Firebase
-  `apiUsage` ({month,count}), bumped by `Σ X-RateLimit-Cost` per Fetch, shown in the Admin console.
-  **📨 TO ASK THE DEV:** *"`X-RateLimit-Monthly-Remaining` seems stuck at 14999 — it never decrements even
-  after many billed calls (per-minute `Remaining` works fine). Is monthly usage tracked/exposed anywhere?
-  A `used`/`remaining` field on `/health` would let us monitor the 15k quota."*
+- ✅ **`X-RateLimit-Monthly-Remaining` FIXED (dev, 2026-07-16)** — was stuck at `14999` no matter how
+  many billed calls we made. Dev says "monthly limits should be fixed now". **Re-verify on the next
+  Fetch** (watch the header decrement); until confirmed we KEEP our own counter in Firebase `apiUsage`
+  ({month,count}, bumped by `Σ X-RateLimit-Cost` per Fetch, shown in the Admin console) — it's cheap
+  insurance and a cross-check even after the fix.
 
 ## 4. Response envelope
 
@@ -167,18 +165,17 @@ data: {
       boss,                // bool
       bossId, bossName,    // canonical boss id + name (bossName is clean, no suffix)
       kill,                // bool
-      hardmode,            // bool | null
-      start,               // ISO
+      start,               // ISO — (no `hardmode` field; dev-confirmed it doesn't exist — use `difficulty`)
       durationSec,         // number
       difficulty,          // ENUM form: "TEN_HC" / "TWENTY_FIVE_HC" …
       players: [ {
-        name, class, spec, role,        // class = full WotLK ("Death Knight"); role = "DPS"/"HEALER"/"TANK"
+        name, class, spec, role,        // class = full WotLK ("Death Knight"); role = "DPS"/"HEALER" ONLY
+                                        // (no TANK by design — dev 2026-07-16; bear/cat not distinguished)
         dps, hps,                       // numbers (floats)
         damage, healing,                // numbers
-        // ⚠️ NULL in the truncated docs sample — CONFIRM against a real full object:
-        deaths, damageTaken, activity, overhealing, biggestHit
-        // with ?include=interrupts   → interrupts (per player)
-        // with ?include=consumables  → consumables { … } (shape TBC — see §8)
+        deaths, damageTaken,            // 🆕 shipped 2026-07-16 — per fight, from summary data (re-verify)
+        // activity, overhealing, biggestHit — DO NOT EXIST (always null)
+        // with ?include=consumables,interrupts → interrupts + consumables{…} (fixed 2026-07-16; shape TBC — see §8)
       } ]
     } ]
   }
@@ -230,11 +227,13 @@ rows, **only 9 are real**. Build history as: fetch each, drop `ARCHIVED`, keep t
 > ⚠️ `logStatus` is **only on the full log detail**, not the `/logs` history list. You must fetch a log
 > to know if it's archived — factor that into the request budget.
 
-## 7.6 Pagination cursor bug (bug-report candidate)
+## 7.6 Pagination cursor bug (reported — dev can't reproduce)
 
-`/logs` `nextCursor` **cycles back to the start** instead of ending. After the last page it hands out a
-cursor that replays page 1. **Do not loop on cursor alone** — dedup by `logId` and stop when a page adds
-**zero new ids** (or when `nextCursor` repeats). Report to `#bug-reports`.
+`/logs` `nextCursor` **cycled back to the start** instead of ending (observed 2026-07-06). Reported;
+dev couldn't reproduce (2026-07-16) and asked for **guild + cursor + curl** if it happens again — capture
+those during the next Fetch if the loop reappears. Our guard stays regardless (it's harmless): **never
+loop on cursor alone** — dedup by `logId` and stop when a page adds **zero new ids** (or `nextCursor`
+repeats). `apiListLogs` already does this.
 
 ## 8. Field trust table (free tier)
 
@@ -248,12 +247,14 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 | `fightId, encounter, boss, bossId, bossName, kill, start, durationSec, difficulty` | fights | ✅ always present |
 | `name, class, spec, role, dps, hps, damage, healing` | players | ✅ **always present** (spec too — not null in real logs) |
 | `bossPoints, averagePercent, bosses{}` | rankings | ✅ present |
-| `hardmode` | fights | ⚠️ **always `null`** — DON'T use it. Use `difficulty` (`_HC`/`_NM`) for hard mode instead |
+| `hardmode` | fights | ❌ **doesn't exist** (dev-confirmed 2026-07-16: "there is no hardmode in fights"). Use `difficulty` (`_HC`/`_NM`) + `GET /meta/difficulties` for labels |
 | `difficulty` | fights | ✅ **per-fight** `TWENTY_FIVE_HC`/`_NM` — the real hard-mode signal (verified) |
 | `durationSec, start` | fights | ✅ on **every** fight incl. wipes — powers timeline, pull-gaps, kill-times |
-| `deaths` | players | ❌ **always `null`** (170/170 + 98/98) — no deaths widget |
-| `activity, damageTaken, overhealing, biggestHit` | players | ❌ **always `null`** — dev-confirmed absent |
-| `interrupts` / `consumables{}` | players | ❌ `?include=` param **returns HTTP 500** — feature broken server-side (bug-report) |
+| `deaths` | players | ✅ **VERIFIED 2026-07-16** (log 23286: real per-fight counts, e.g. 42 deaths in the run) — deaths widgets unlocked |
+| `damageTaken` | players | ✅ **VERIFIED 2026-07-16** — real per-fight totals (tanks ~2-3× a DPS: 2.7M vs ~800K). Powers the squishy award; could sharpen ambiguous-tank detection |
+| `interrupts` | players | ✅ **VERIFIED 2026-07-16** with `?include=interrupts` — real counts (top kicker 20 in one run) |
+| `activity, overhealing, biggestHit` | players | ❌ **always `null`** — dev-confirmed absent |
+| `consumables{}` | players | ⚠️ **shape ships, values DEAD on our logs** (verified 2026-07-16 on 23286 + 22025: block on only ~⅓ of rows, ALL zeros — even known potters). Docs sample (secrets/21704) has real values, so likely only logs processed after the fix get data. Shape: `{potionsUsed, healthstonesUsed, flaskActive, flaskUptime, foodBuff, hadPrepot}` — `potionsUsed` = combat pots only (excludes flasks/food by design, perfect for the Drunkest Rat). **Bug-reported; Drunkest Rat card gates on non-zero data** |
 
 **Structural facts from real logs:**
 - **Wipes (`kill:false`) carry `players: []`** — no parse. Only kills have player rows.
@@ -265,17 +266,17 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 > **Open a bug report** (dev pointed us to `#bug-reports`) for anything that should be there but returns
 > `null` — e.g. if `deaths` or `?include=` fields come back empty. Don't assume; report + confirm.
 
-> **📨 TO ASK THE DEV — deaths & damageTaken (blocks Tanking + half of Fun & Shame).** Both are always
-> `null`, which kills: a **Tanking leaderboard** (no mitigation/survivability metric) AND the fun **Hall of
-> Shame** ideas — "most deaths 💀", per-boss "who died in the wipe", "most damage taken by a non-tank DPS".
-> Message to send: *"Could you expose `deaths` (count per player per fight) and `damageTaken` (total, boss-
-> only) in the players[] payload? Right now both are null. `deaths` powers a wipe/death hall-of-fame and
-> `damageTaken` a tank leaderboard + 'squishy DPS' award. Even just these two would unlock a lot."*
-> Until then: the Tanking tab and any deaths/damage-taken widgets are on hold; Fun & Shame ships with the
-> damage/healing/duration/wipe data we DO have (carry %, consistency, fastest kills, per-boss wipe counts).
+> **✅ ANSWERED 2026-07-16 — deaths & damageTaken SHIPPED.** We asked; the dev delivered:
+> `players[].deaths` and `players[].damageTaken` are now populated per fight from summary data.
+> This unlocks the **Hall of Shame** deaths widgets ("most deaths 💀", "who died in the wipe",
+> "squishy DPS") and a rough **tank/survivability board** (note: `role` still has no TANK — dev says
+> that's by design, roles are DPS/HEALER only; bear/cat aren't distinguished either, so tank detection
+> stays heuristic). **Re-verify both fields on the next Fetch before building** — old logs in our
+> snapshot were saved without them, so a rebuild (or per-log re-pull) is needed to backfill.
 
-> **✅ HARD MODE — USE `difficulty`, NOT `hardmode`.** (Corrected 2026-07-07 by inspecting real logs.)
-> The `fights[].hardmode` bool is always `null` — **ignore it**. But `fights[].difficulty` is **per-fight**
+> **✅ HARD MODE — USE `difficulty`, NOT `hardmode`.** (Corrected 2026-07-07 by inspecting real logs;
+> dev-confirmed 2026-07-16: "there is no hardmode in fights; use fights[].difficulty + /meta/difficulties".)
+> But `fights[].difficulty` is **per-fight**
 > and reliably carries `TWENTY_FIVE_HC` vs `TWENTY_FIVE_NM` (and the 10-man equivalents). That IS the
 > hard-mode signal: verified in real logs — e.g. #21158 XT/Hodir = `_HC`, Kologarn/Thorim/Freya = `_NM`;
 > #20922 XT/IC/Hodir/Thorim = `_HC`. So a boss killed on `_HC` = hard mode. One log mixes HC and NM
@@ -321,30 +322,32 @@ The delivered API is **not** what our old draft / `rules/rankings.md` describe. 
 | 🏆 Top DPS / Top HPS | `fights[].players[].dps/hps` | ✅ |
 | 🏆 Records (best parse) | iterate `/logs/{id}` history, max per boss | ✅ (N calls — cache!) |
 | 🏆 Most improved / Needs work | same player across ≥2 logs over time | ✅ (needs history) |
-| 📊 Guild progress | `fights[].kill/durationSec/bossName` (**NOT `hardmode` — null**) | ⚠️ speed+wipes+milestones only, no HM |
+| 📊 Guild progress | `fights[].kill/durationSec/bossName` + `difficulty` `_HC`/`_NM` for hard mode | ✅ speed+wipes+milestones+HM |
 | 🎉 Fun & shame — wipe counter | `kill:false` = wipe | ✅ (from fights) |
-| 🎉 Fun & shame — deaths | `deaths` | ⚠️ verify, else drop |
-| 🎉 Fun awards (drunk/no-prep/well-fed) | `?include=consumables` | ❓ verify, else drop |
+| 🎉 Fun & shame — deaths | `deaths` | 🆕 shipped 2026-07-16 — verify on next Fetch, then build |
+| 🎉 Fun awards (drunk/no-prep/well-fed) | `?include=consumables` | 🆕 fixed 2026-07-16 — verify shape, then build |
 | 📜 Logs (per-report badges) | `/logs` metadata + fight kill counts | ✅ |
 | Leaderboard columns (Boss Points) | `/rankings` `bossPoints/averagePercent/bosses` | ✅ |
 
 ### What we can build **today** with confirmed fields only
 
-Player = `name, class, spec?, role, dps, hps, damage, healing`. Fight = `encounter, bossName, kill,
-hardmode, start, durationSec, difficulty`. Rankings = `bossPoints, averagePercent, bosses{}`.
+Player = `name, class, spec?, role, dps, hps, damage, healing` (+ `deaths, damageTaken` once re-verified).
+Fight = `encounter, bossName, kill, start, durationSec, difficulty`. Rankings = `bossPoints,
+averagePercent, bosses{}`.
 
 - ✅ **Top DPS / Top HPS** — sort players by `dps` / `hps`.
 - ✅ **MVP** — composite from dps/hps/damage/healing (no `activity`, so weight raw output).
 - ✅ **Records** — max `dps`/`hps` per boss over history (`damage`/`healing` too).
 - ✅ **Most improved / Needs work** — same player's dps/hps across logs over time.
-- ⚠️ **Guild progress** — `durationSec` (speed) + `kill:false` (wipes/boss) + first-kill dates (milestones).
-  **NOT hard-mode** (`hardmode` is null — see the dev note above); a plain kill counter is meaningless.
+- ✅ **Guild progress** — `durationSec` (speed) + `kill:false` (wipes/boss) + first-kill dates (milestones)
+  + **hard mode via `difficulty`** (`_HC`/`_NM` per fight — see the dev note above).
 - ✅ **Wipe counter** (Fun & shame) — count `kill:false` fights per boss/night.
 - ✅ **Logs tab** — per-report badges from `/logs` + fight kill counts.
 - ✅ **Boss Points leaderboard** — straight from `/rankings`.
-- ❌ **Drop / gate**: any award using `activity` (afk/uptime), `biggestHit`, `damageTaken`,
-  `overhealing`. Deaths-based awards and consumable awards = **gate behind a verify** (show only if the
-  field is non-null; otherwise hide the widget — never render an empty/zero shame board).
+- ❌ **Drop / gate**: any award using `activity` (afk/uptime), `biggestHit`, `overhealing` — those
+  truly don't exist. `deaths`, `damageTaken`, and `?include=consumables,interrupts` **shipped 2026-07-16**
+  — still gate them behind a verify (show only if non-null; never render an empty/zero shame board),
+  and remember old logs in our snapshot lack the new fields until re-pulled.
 
 ## 11. Known reference values (2026-07-06)
 

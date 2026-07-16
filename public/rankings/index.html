@@ -51,6 +51,12 @@
 
     <div id="fetchMsg" class="msg err" role="alert" hidden></div>
 
+    <!-- fetch progress — slim bar + step label + ETA, driven by fetchData (officer-only, hidden otherwise) -->
+    <div id="fetchProg" class="fetchprog" hidden>
+      <div class="fp-bar"><i id="fetchProgFill"></i></div>
+      <div class="fp-info"><span id="fetchProgLbl"></span><span id="fetchProgEta"></span></div>
+    </div>
+
     <div class="sticky-controls">
       <div class="row ctrls">
         <span id="raidRow" style="display:inline-flex">
@@ -104,10 +110,12 @@
           <div class="metricbar">
             <button class="mbtn active" data-m="dps" onclick="setMetric(this)">DPS</button>
             <button class="mbtn" data-m="hps" onclick="setMetric(this)">Healing</button>
+            <button class="mbtn" data-m="tank" id="tankTab" hidden onclick="setMetric(this)">Tanking</button>
           </div>
         </div>
         <ol class="lb" id="dps"></ol>
         <ol class="lb" id="hps" hidden></ol>
+        <ol class="lb" id="tank" hidden></ol>
         <!-- empty state: shown (and replaces the rows) when the current filter has no data -->
         <div class="emptyrat" id="boardEmpty" hidden></div>
       </div>

@@ -45,15 +45,20 @@ Base (note the `api.` subdomain and **plural** `guilds`, Bearer key required):
 enum form (`"TWENTY_FIVE_HC"`); the `/rankings` param uses `"25-hc"`.
 
 ### Fields — CONFIRMED available
-- **fights[]:** `encounter`, `bossName`, `boss`, `kill`, `hardmode`, `start`, `durationSec`, `difficulty`
-- **players[]:** `name`, `class` (full WotLK), `spec` (often null), `role`, `dps`, `hps`, `damage`, `healing`
+- **fights[]:** `encounter`, `bossName`, `boss`, `kill`, `start`, `durationSec`, `difficulty`
+  (**no `hardmode`** — dev-confirmed it doesn't exist; hard mode = `difficulty` `_HC`/`_NM`,
+  labels via `GET /meta/difficulties`)
+- **players[]:** `name`, `class` (full WotLK), `spec` (often null), `role` (**DPS/HEALER only, no TANK
+  by design**), `dps`, `hps`, `damage`, `healing`
+- **players[] — shipped 2026-07-16, re-verify on next Fetch:** `deaths`, `damageTaken` (per fight);
+  `?include=consumables,interrupts` now works on `/logs/{logId}` + `/logs/latest`
 - **rankings players[]:** `bossPoints`, `averagePercent`, `bosses{}` (build columns from `data.bossOrder[]`)
 
-### Fields — NOT in the API (dev-confirmed 2026-07-06)
-`activity`, `biggestHit`, and per the dev's "etc" assume `damageTaken`/`overhealing` are absent too.
-`deaths`, `interrupts` (`?include=interrupts`), `consumables` (`?include=consumables`) are **unverified** —
-gate any widget on them (render only if non-null) and open a `#bug-reports` ticket if they come back empty.
+### Fields — NOT in the API (dev-confirmed)
+`activity`, `biggestHit`, `overhealing` — always null, don't build on them.
 **Don't build** MVP/awards that need activity/biggestHit — weight raw dps/hps/damage/healing instead.
+Gate the new deaths/damageTaken/consumables widgets behind a non-null check — old snapshot logs lack them
+until re-pulled.
 
 ### Errors
 `{ "ok": false, "error": { "code", "message" } }` + HTTP status.

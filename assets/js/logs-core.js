@@ -62,11 +62,15 @@
   // --- tank detection (see rankings.js for the full rationale) --------------------------------------
   // A tank held threat, not pumped damage, so its low "dps" must NOT drag a player's DPS average.
   //   1) unambiguous tank spec (Protection) -> always tank;
-  //   2) ambiguous specs (Feral Druid, DK Blood/Frost/Unholy) -> tank only when their dps that fight is
-  //      far below the fight's median dps (a bear/blood tank parses a fraction of a cat/dps).
+  //   2) ambiguous specs (Feral Druid, DK Blood/Frost/Unholy) -> per fight, prefer the damageTaken
+  //      fingerprint when the row carries it (`dt`, in the feed since 2026-07-16): a tank eats several
+  //      times the fight's median (2.7M vs ~800K in real logs), which separates bear from cat cleanly;
+  //   3) rows without `dt` (older snapshots) fall back to the dps heuristic — tank when their dps that
+  //      fight is far below the fight's median dps (a bear/blood tank parses a fraction of a cat/dps).
   var TANK_SPEC = { Protection: true };
   var AMBIG_TANK_SPEC = { "Feral Combat": true, Feral: true, Blood: true, Frost: true, Unholy: true };
   var TANK_DPS_FRAC = 0.55; // below this share of the fight median dps => treat an ambiguous spec as tank
+  var TANK_DT_MULT = 2; // above this multiple of the fight median damageTaken => tanking that fight
 
   // Flag tank rows in-place (adds `_tank` bool). Idempotent — safe to call repeatedly on the same array.
   function markTankRows(rows) {
@@ -78,25 +82,41 @@
       r._tank = false; // default; ambiguous rows resolved below
       (byBoss[r.b] = byBoss[r.b] || []).push(r);
     });
-    // pass 1: mark each ambiguous row low/high for its own fight
+    // pass 1: per fight — the damageTaken fingerprint decides outright when the data exists; rows
+    // without `dt` are marked low/high on dps for the majority fallback below.
     Object.keys(byBoss).forEach(function (b) {
       var pack = byBoss[b];
       var dpsVals = pack.map(function (r) { return r.d || 0; }).sort(function (a, bb) { return a - bb; });
       var mid = dpsVals.length ? dpsVals[Math.floor(dpsVals.length / 2)] : 0;
+      var dtVals = pack.filter(function (r) { return r.dt != null; })
+        .map(function (r) { return r.dt || 0; }).sort(function (a, bb) { return a - bb; });
+      var dtMid = dtVals.length ? dtVals[Math.floor(dtVals.length / 2)] : 0;
       pack.forEach(function (r) {
-        r._low = !!AMBIG_TANK_SPEC[r.s] && mid > 0 && (r.d || 0) < mid * TANK_DPS_FRAC;
+        if (!AMBIG_TANK_SPEC[r.s]) { r._low = false; return; }
+        if (r.dt != null && dtMid > 0 && mid > 0) {
+          // fingerprint needs BOTH halves: soaked ≥2× the fight median AND dps well below the fight
+          // median. Soak alone false-positives on splash-heavy fights (ToC Beasts/Anub'arak: a Frost
+          // DK ate 2.6× median while pumping 5K dps — Impale target, not a tank). A real tank shows
+          // high soak + low dps together (Gathlock: 5.6× soak at 2.3K dps).
+          r._tank = (r.dt || 0) >= dtMid * TANK_DT_MULT && (r.d || 0) < mid * TANK_DPS_FRAC;
+          r._dtDecided = true; // this fight is settled — the dps-majority fallback must not overrule it
+          r._low = false;
+          return;
+        }
+        r._low = mid > 0 && (r.d || 0) < mid * TANK_DPS_FRAC;
       });
     });
-    // pass 2: per player, tank the whole log if low on the majority of their ambiguous fights
+    // pass 2 (fallback for rows without `dt`): per player, tank the whole log if low on the majority
+    // of their ambiguous fights.
     var tally = {}; // normName -> {ambig, low}
     rows.forEach(function (r) {
-      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
+      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER" || r._dtDecided) return;
       var k = normNm(r.n);
       var t = tally[k] || (tally[k] = { ambig: 0, low: 0 });
       t.ambig++; if (r._low) t.low++;
     });
     rows.forEach(function (r) {
-      if (r._tank) return; // already an unambiguous tank
+      if (r._tank || r._dtDecided) return; // already settled (Protection, or fingerprint-decided)
       if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
       var t = tally[normNm(r.n)];
       if (t && t.ambig && t.low * 2 >= t.ambig) r._tank = true; // low on >=half their fights => tank
@@ -223,12 +243,20 @@
       // fold: also count alt toons of this person that are tanks? No — a profile page shows ONE toon's
       // tanking, resolved to the person only for identity. Here we match the viewed toon by name/alias.
       var bossesTanked = {}, tankFights = 0, nights = {}, offSum = 0, offN = 0, offBest = 0, offByBoss = {};
+      // soak/deaths from rows carrying the per-fight extras (in the feed since 2026-07-16) — FC is a
+      // PvP scramble, never tanked, so it feeds neither soak nor deaths (same rule as the tank board).
+      var soaked = 0, soakN = 0, deaths = 0, soakByBoss = {};
       logs.forEach(function (l) {
         var touched = false;
         rowsForDiff(l.rows).forEach(function (r) {
           if (normNm(r.n) !== k) return;
           if (isTankFight(r)) {
             bossesTanked[r.b] = true; tankFights++; touched = true;
+            if (r.dt != null && r.b !== "Faction Champions") {
+              soaked += r.dt || 0; soakN++;
+              deaths += r.dth || 0;
+              if (!soakByBoss[r.b] || (r.dt || 0) > soakByBoss[r.b]) soakByBoss[r.b] = Math.round(r.dt || 0);
+            }
           } else if (r.r !== "HEALER") {
             var v = r.d || 0; offSum += v; offN++; if (v > offBest) offBest = v;
             if (!offByBoss[r.b] || v > offByBoss[r.b]) offByBoss[r.b] = Math.round(v);
@@ -241,6 +269,12 @@
         bossesTanked: Object.keys(bossesTanked),
         tankFights: tankFights,
         nights: Object.keys(nights).length,
+        // null until re-fetched logs carry damageTaken — callers gate the soak/survival tiles on this
+        soakPerFight: soakN ? Math.round(soaked / soakN) : null,
+        soakFights: soakN,
+        tankDeaths: soakN ? deaths : null,
+        survival: soakN ? Math.round(((soakN - Math.min(deaths, soakN)) / soakN) * 100) : null,
+        soakByBoss: soakByBoss,
         offSpecDps: offN ? Math.round(offSum / offN) : null,
         offSpecFights: offN,
         offSpecBest: offN ? Math.round(offBest) : null,

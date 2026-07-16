@@ -829,7 +829,8 @@
     syncUrl();
     render();
   }
-  // one wide board — METRIC picks which leaderboard (DPS or HPS) is shown
+  // one wide board — METRIC picks which leaderboard (DPS, HPS or Tanking) is shown. The Tanking tab
+  // button stays hidden until tank rows with damageTaken exist (computeTankBoard reveals it).
   var METRIC = "dps";
   function setMetric(b) {
     METRIC = b.dataset.m;
@@ -837,9 +838,11 @@
       s.classList.toggle("active", s === b);
     });
     var dpsEl = document.getElementById("dps"),
-      hpsEl = document.getElementById("hps");
+      hpsEl = document.getElementById("hps"),
+      tnkEl = document.getElementById("tank");
     if (dpsEl) dpsEl.hidden = METRIC !== "dps";
     if (hpsEl) hpsEl.hidden = METRIC !== "hps";
+    if (tnkEl) tnkEl.hidden = METRIC !== "tank";
     syncUrl();
     render(); // Records follows the active metric (DPS peaks ⇄ HPS peaks)
   }
@@ -1043,6 +1046,43 @@
       "</li>"
     );
   }
+  // One tank-board row — same skeleton as lbRow (rank · icon · name · bar · value) so the three
+  // boards read as one component. Rate = soaked per tanked fight; subs = fights · deaths · survival.
+  // No delta/score/server columns: the tank pool is small and the metric has no fairness blend.
+  function tankRow(p, i) {
+    var col = classColor(p.class);
+    var cls = i === 0 ? "g" : i === 1 ? "s" : i === 2 ? "b" : "";
+    var sizeCls = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "rn";
+    var barPct = p.bar != null ? p.bar : 100;
+    return (
+      '<li class="' + sizeCls + ' tank">' +
+      '<span class="rank ' + cls + '">' + (i + 1) + "</span>" +
+      cicon(p.class, p.spec) +
+      '<span class="pnamecol">' +
+      '<a href="' + esc(p.reportUrl || "#") + '" target="_blank" rel="noopener" style="text-decoration:none">' +
+      '<span class="pname" style="color:' + col + '">' + esc(p.name) + "</span></a>" +
+      "</span>" +
+      '<div class="pbar"><i style="width:' + barPct + "%;background:" + col + '"></i></div>' +
+      '<span class="pval">' +
+      '<span class="prate">' + fmtBig(p.rate || 0) + ' <span class="unit">soaked/fight</span></span>' +
+      '<span class="psub">' +
+      // Slim sub-line — four short items, no clipping. Deaths are NOT listed: survival% already
+      // encodes them (67% up over ×3 = 1 death — the tooltip spells it out), and 💀 has its own award.
+      '<span class="pscore" title="60% soaked share + 40% server parse">' +
+      ((p.score || 0) * 100).toFixed(1) + " pts</span>" +
+      ' · ×' + p.fights +
+      ' · <span class="psrv" title="fights tanked without dying (' + (p.deaths || 0) + " death" +
+      (p.deaths === 1 ? "" : "s") + ')">' + p.survival + "% up</span>" +
+      // tanks parse too — same server percentile column as the DPS/HPS boards (placeholder keeps rows aligned)
+      (p.serverPct != null
+        ? ' · <span class="psrv" title="percentile vs the whole server">' + p.serverPct.toFixed(1) + "% srv</span>"
+        : ' · <span class="psrv none" title="no server parse for this toon yet">--.-% srv</span>') +
+      "</span>" +
+      "</span>" +
+      "</li>"
+    );
+  }
+
   // ---- leaderboard engine: aggregate players from logs[].rows for the active raid/size/period -----
   // Runs on every render (toggles just re-render — no network). Metric = AVERAGE across kills, with the
   // player's BEST parse shown alongside. role === "HEALER" → HPS table, everyone else → DPS.
@@ -1308,58 +1348,19 @@
   // Tank fights must NOT count toward DPS — a tank was holding threat, not pumping damage, so its low
   // "dps" unfairly drags the player's average (e.g. Rellik Prot ~1500 dps on 4 bosses).
   //
-  // Detecting a tank from the API is hard: `damageTaken`/threat are null, and Feral Combat (Druid) is
-  // BOTH cat-dps and bear-tank under one spec name — the log can't tell them apart. So we combine:
-  //   1) unambiguous tank specs (Protection) → always tank;
-  //   2) AMBIGUOUS specs (Feral Druid, DK Blood/Frost/Unholy) → tank ONLY when their dps on that fight is
-  //      far below the fight's real dps pack (a bear/blood tank parses a fraction of a cat/dps). We flag
-  //      a row as tank when its dps < 55% of the fight's MEDIAN dps among plausible dps rows.
-  // Rows get a computed `_tank` flag (see markTankRows); isTankFight reads it, falling back to spec.
-  var TANK_SPEC = { Protection: true };
-  // specs that can be either dps or tank — resolve by the low-dps heuristic
-  var AMBIG_TANK_SPEC = { "Feral Combat": true, Feral: true, Blood: true, Frost: true, Unholy: true };
-  var TANK_DPS_FRAC = 0.55; // below this share of the fight median dps ⇒ treat an ambiguous spec as tank
+  // Detecting a tank: the API has no TANK role, and Feral Combat (Druid) is BOTH cat-dps and bear-tank
+  // under one spec name. Protection is always a tank; ambiguous specs (Feral, DK Blood/Frost/Unholy)
+  // resolve per fight via the damageTaken fingerprint when the row carries `dt` (a tank soaks ≥2× the
+  // fight median), else via the low-dps majority fallback — full heuristic in logs-core.markTankRows.
+  // Rows get a computed `_tank` flag; isTankFight reads it, falling back to spec.
+  var TANK_SPEC = { Protection: true }; // isTankFight's spec fallback; the full heuristic lives in logs-core
 
-  // Flag tank rows in-place (adds `_tank` bool). Two passes over ONE log's rows:
-  //   pass 1 — per fight, compute each ambiguous row's dps vs the fight's median dps (is this a low parse?);
-  //   pass 2 — per PLAYER, if they were low on the MAJORITY of their ambiguous fights, mark ALL their rows
-  //            in this log as tank. Deciding per-player (not per-boss) keeps a bear tank consistent across
-  //            the run instead of flickering dps/tank when one fight's numbers happen to line up.
-  // Idempotent — safe to call repeatedly on the same rows array.
+  // Flag tank rows in-place (adds `_tank` bool) — delegates to the SHARED implementation in
+  // logs-core.js (RatsLogs.markTankRows), which also uses the per-fight damageTaken fingerprint on
+  // rows that carry `dt` (soaked ≥2× the fight median ⇒ tanking). One implementation, both callers —
+  // the awards and this page must never disagree on who tanked. Idempotent.
   function markTankRows(rows) {
-    if (!rows || !rows.length || rows._tankMarked) return rows;
-    var byBoss = {};
-    rows.forEach(function (r) {
-      if (r.r === "HEALER") { r._tank = false; return; }
-      if (TANK_SPEC[r.s]) { r._tank = true; return; } // unambiguous tank spec
-      r._tank = false; // default; ambiguous rows resolved below
-      (byBoss[r.b] = byBoss[r.b] || []).push(r);
-    });
-    // pass 1: mark each ambiguous row low/high for its own fight
-    Object.keys(byBoss).forEach(function (b) {
-      var pack = byBoss[b];
-      var dpsVals = pack.map(function (r) { return r.d || 0; }).sort(function (a, bb) { return a - bb; });
-      var mid = dpsVals.length ? dpsVals[Math.floor(dpsVals.length / 2)] : 0;
-      pack.forEach(function (r) {
-        r._low = !!AMBIG_TANK_SPEC[r.s] && mid > 0 && (r.d || 0) < mid * TANK_DPS_FRAC;
-      });
-    });
-    // pass 2: per player, tank the whole log if low on the majority of their ambiguous fights
-    var tally = {}; // normName → {ambig, low}
-    rows.forEach(function (r) {
-      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
-      var k = normNm(r.n);
-      var t = tally[k] || (tally[k] = { ambig: 0, low: 0 });
-      t.ambig++; if (r._low) t.low++;
-    });
-    rows.forEach(function (r) {
-      if (r._tank) return; // already an unambiguous tank
-      if (!AMBIG_TANK_SPEC[r.s] || r.r === "HEALER") return;
-      var t = tally[normNm(r.n)];
-      if (t && t.ambig && t.low * 2 >= t.ambig) r._tank = true; // low on ≥half their fights ⇒ tank
-    });
-    try { Object.defineProperty(rows, "_tankMarked", { value: true }); } catch (e) { rows._tankMarked = true; }
-    return rows;
+    return window.RatsLogs && RatsLogs.markTankRows ? RatsLogs.markTankRows(rows) : rows;
   }
   function isTankFight(r) {
     if (r._tank != null) return r._tank; // computed flag wins
@@ -1739,7 +1740,73 @@
 
     DATA.dps = dps;
     DATA.hps = hps;
+    DATA.tank = computeTankBoard(cur);
     DATA.mvp = mvp;
+  }
+
+  // Tank board — soaked damage per tanked fight (the tank's "meter"), with deaths + survival as the
+  // quality read. Only rows flagged as tank fights AND carrying damageTaken count (the field ships
+  // since 2026-07-16), so the board — and its toggle button — stay hidden on pre-fix snapshots.
+  // No fairness blend here: with a handful of tanks sharing fights, soaked/fight IS the honest rate.
+  // Fights with no tankable boss — Faction Champions is a PvP scramble (CC + focus fire, damage lands
+  // on whoever gets trained), so "soaked" there is randomness, not tank work. Excluded from the tank
+  // BOARD only; the rows stay tank-flagged so a Prot's low FC dps still stays off the DPS board.
+  var NO_TANK_FIGHT = { "Faction Champions": true };
+
+  function computeTankBoard(logs) {
+    var guild = rosterSet();
+    var by = {};
+    logs.forEach(function (l) {
+      rowsForDiff(l.rows).forEach(function (r) {
+        if (!isTankRow(r)) return;
+        if (NO_TANK_FIGHT[r.b]) return; // no boss to tank — soak here is noise
+        if (r.dt == null) return; // no damageTaken on this row — pre-fix log, can't rank it
+        var id = resolveIdentity(r.n, r.c);
+        if (guild && !guild[id.key] && !guild[normNm(r.n)]) return;
+        var e = by[id.key] || (by[id.key] = {
+          key: id.key, name: id.name || r.n, tn: r.n, class: r.c, spec: r.s,
+          fights: 0, soaked: 0, deaths: 0, reportUrl: l.reportUrl,
+        });
+        e.fights++;
+        e.soaked += r.dt || 0;
+        e.deaths += r.dth || 0;
+      });
+    });
+    var out = Object.keys(by).map(function (k) {
+      var e = by[k];
+      e.rate = e.fights ? Math.round(e.soaked / e.fights) : 0; // soaked per tanked fight (the big number)
+      e.value = e.soaked;
+      e.survival = e.fights ? Math.round(((e.fights - Math.min(e.deaths, e.fights)) / e.fights) * 100) : 0;
+      // tanks parse too (Boss Points percentile is per character) — show it when the toon is ranked.
+      // Looked up by the TOON's own name, same rule as the DPS/HPS boards (never via alias/main).
+      var sp = serverPctFor(e.tn || e.name);
+      e.serverPct = sp != null ? Math.round(sp * 1000) / 10 : null;
+      e._sp = sp; // 0–1, for the score blend below
+      return e;
+    });
+    // Rank by a BLEND, not raw soak: soak mostly measures who got ASSIGNED the main-tank job — an
+    // off-tank faces the boss less, soaks less, yet can be the better tank (Grunho: less soak but
+    // double the server parse). 60% soak share + 40% server parse; a tank with no parse is scored on
+    // soak alone (same graceful fallback the DPS board uses for unranked toons).
+    var maxRate = out.reduce(function (m, p) { return Math.max(m, p.rate); }, 0) || 1;
+    out.forEach(function (p) {
+      var soakAxis = p.rate / maxRate; // 0–1 within this board
+      p.score = p._sp != null ? soakAxis * 0.6 + p._sp * 0.4 : soakAxis;
+    });
+    out.sort(function (a, b) { return b.score - a.score; });
+    // bar follows the SCORE that ranks the board (same rule as barWidths on the DPS/HPS boards) —
+    // it must always decrease from #1 down. Following soaked/fight instead let a lower row show a
+    // LONGER bar than the one above it (Cryptwall 632K under Grunho 548K), which reads as a bug.
+    // Proportional to the top score, not min-max — min-max made #2 of a 2-tank board a stub.
+    var topScore = out.length ? out[0].score || 1 : 1;
+    out.forEach(function (p) {
+      p.bar = Math.max(6, Math.round((p.score / topScore) * 100));
+    });
+    return out;
+  }
+  // markTankRows sets _tank per row inside rowsForDiff — same flag the awards use.
+  function isTankRow(r) {
+    return r._tank != null ? r._tank : false;
   }
 
   // Records = the biggest single parses in scope (personal peaks), guildies only, matching the active
@@ -2139,6 +2206,24 @@
       ? ""
       : (d.hps || []).map(function (p, i) { return lbRow(p, i, "hps"); }).join("");
 
+    // Tanking board — the toggle button only exists once tank rows with damageTaken exist in scope
+    // (data ships since 2026-07-16; pre-fix snapshots have none). If the tab was active and the scope
+    // change emptied it, fall back to DPS so the board never shows a blank list.
+    var tnkEl2 = document.getElementById("tank"),
+      tnkBtn = document.getElementById("tankTab");
+    var hasTank = !boardEmpty && d.tank && d.tank.length;
+    if (tnkBtn) tnkBtn.hidden = !hasTank;
+    if (tnkEl2) tnkEl2.innerHTML = hasTank ? d.tank.map(function (p, i) { return tankRow(p, i); }).join("") : "";
+    if (!hasTank && METRIC === "tank") {
+      // flip state directly (no setMetric — it re-renders, and we're inside render)
+      METRIC = "dps";
+      document.querySelectorAll(".metricbar .mbtn").forEach(function (s) {
+        s.classList.toggle("active", s.dataset.m === "dps");
+      });
+      dpsEl2.hidden = false;
+      if (tnkEl2) tnkEl2.hidden = true;
+    }
+
     if (emptyEl) {
       if (boardEmpty) {
         var rObj = (DATA.raids || []).filter(function (r) { return r.key === RAID; })[0];
@@ -2353,7 +2438,12 @@
       return null;
     });
     if (!r.ok || !j || j.ok === false) {
-      throw new Error((j && j.error && j.error.message) || "HTTP " + r.status + " on " + path);
+      // carry the HTTP status + API error code on the Error — retry logic keys off err.status,
+      // not message text (the dev's 429 message doesn't reliably contain "429" or "rate").
+      var err = new Error((j && j.error && j.error.message) || "HTTP " + r.status + " on " + path);
+      err.status = r.status;
+      err.code = (j && j.error && j.error.code) || "";
+      throw err;
     }
     return j.data;
   }
@@ -2389,7 +2479,10 @@
   // INCREMENTAL pull. `have` = map of logId → true we already have in the snapshot. We only fetch
   // full payloads for logIds we DON'T have yet. Archived logs are still fetched once (cheap way to
   // learn they're archived) then discarded; if a logId we had is now archived, the caller drops it.
-  // Returns { fresh: [log,…] (new, non-archived), archivedIds: [id,…] (now-archived, to remove) }.
+  // Rate budget: history pages cost `limit` (5!) each, so a rebuild's list pass alone can eat most of
+  // the 30 rpm — a 429 on a log fetch means "window exhausted", so wait it out and retry once rather
+  // than silently skipping (silent skips + a rebuild = destroyed history, 2026-07-16).
+  // Returns { fresh: [log,…] (new, non-archived), archivedIds: [id,…], failedIds: [id,…] (couldn't fetch) }.
   async function apiIncremental(key, opts) {
     opts = opts || {};
     var have = opts.have || {};
@@ -2398,19 +2491,34 @@
       return !have[m.logId];
     });
     var fresh = [],
-      archivedIds = [];
+      archivedIds = [],
+      failedIds = [];
     for (var i = 0; i < toFetch.length; i++) {
       if (opts.onProgress) opts.onProgress(i + 1, toFetch.length);
-      try {
-        var d = await apiGet("/guilds/" + API_GUILD + "/logs/" + toFetch[i].logId, key);
-        if (d.log && d.log.logStatus === "ARCHIVED") archivedIds.push(String(toFetch[i].logId));
-        else if (d.log) fresh.push(d.log);
-      } catch (e) {}
+      var id = toFetch[i].logId;
+      var d = null;
+      for (var attempt = 0; attempt < 2 && !d; attempt++) {
+        try {
+          d = await apiGet("/guilds/" + API_GUILD + "/logs/" + id + "?include=consumables,interrupts", key);
+        } catch (e) {
+          var rated = (e && (e.status === 429 || e.code === "RATE_LIMITED")) ||
+            /429|RATE_LIMITED/i.test(String(e && e.message)); // message match kept as belt-and-braces
+          if (attempt === 0 && rated) {
+            if (opts.onWait) opts.onWait(i + 1, toFetch.length);
+            await new Promise(function (r) { setTimeout(r, 65000); }); // wait out the minute window
+          } else {
+            break; // non-rate-limit error, or the retry failed too
+          }
+        }
+      }
+      if (d && d.log && d.log.logStatus === "ARCHIVED") archivedIds.push(String(id));
+      else if (d && d.log) fresh.push(d.log);
+      else failedIds.push(String(id));
       await new Promise(function (r) {
-        setTimeout(r, 350);
-      }); // stay under 30 rpm
+        setTimeout(r, 2500);
+      }); // ≤24 log-fetches/min, leaving headroom for the history pages' weight
     }
-    return { fresh: fresh, archivedIds: archivedIds };
+    return { fresh: fresh, archivedIds: archivedIds, failedIds: failedIds };
   }
 
   var API_SERVER_ID = 3; // warmane-onyxia
@@ -2487,6 +2595,7 @@
         kills++;
         if (killed.indexOf(f.bossName) < 0) killed.push(f.bossName);
         (f.players || []).forEach(function (p) {
+          var cons = p.consumables || null;
           rows.push({
             n: p.name,
             c: p.class,
@@ -2498,6 +2607,13 @@
             heal: p.healing || 0, // total healing this kill
             b: f.bossName,
             hm: /_HC$/.test(f.difficulty || ""), // Heroic? (for the ToC/ICC leaderboard NM/HC split)
+            // per-fight extras (API ships them since 2026-07-16; null on rows from before — widgets
+            // gate on non-null so old snapshot logs simply don't feed these boards)
+            dth: p.deaths != null ? p.deaths : null, // deaths this kill
+            dt: p.damageTaken != null ? p.damageTaken : null, // damage taken this kill
+            int: p.interrupts != null ? p.interrupts : null, // interrupts this kill
+            pots: cons && cons.potionsUsed != null ? cons.potionsUsed : null, // combat pots (Drunkest Rat)
+            prepot: cons ? !!cons.hadPrepot : null, // popped a pre-pull pot
           });
         });
       } else {
@@ -2572,6 +2688,34 @@
 
   // Officer = anyone with the guild key. Only they see the gold Fetch button.
   var IS_OFFICER = !!localStorage.getItem("ratsGuildKey");
+  // ---- fetch progress bar (slim gold bar + label + ETA under the header) ----------------------
+  // Driven by known step counts: the log fetches are the bulk (paced ~2.5s each; a rate-limit wait
+  // adds 65s to the ETA), server ranks ~1.5s per combo. The bar never goes backwards.
+  var PROG = { el: null, fill: null, lbl: null, eta: null, pct: 0 };
+  function progShow() {
+    PROG.el = document.getElementById("fetchProg");
+    PROG.fill = document.getElementById("fetchProgFill");
+    PROG.lbl = document.getElementById("fetchProgLbl");
+    PROG.eta = document.getElementById("fetchProgEta");
+    PROG.pct = 0;
+    if (PROG.el) PROG.el.hidden = false;
+    progSet(2, "Starting…", null);
+  }
+  function progSet(pct, label, etaSec) {
+    PROG.pct = Math.max(PROG.pct, Math.min(100, pct)); // monotonic — a bar that jumps back reads as broken
+    if (PROG.fill) PROG.fill.style.width = PROG.pct + "%";
+    if (PROG.lbl && label != null) PROG.lbl.textContent = label;
+    if (PROG.eta)
+      PROG.eta.textContent =
+        etaSec == null ? "" : etaSec >= 60 ? "~" + Math.ceil(etaSec / 60) + " min left" : "~" + Math.ceil(etaSec) + "s left";
+  }
+  function progHide(finalMsg) {
+    if (finalMsg) progSet(100, finalMsg, 0);
+    setTimeout(function () {
+      if (PROG.el) PROG.el.hidden = true;
+    }, finalMsg ? 1800 : 0);
+  }
+
   async function fetchData() {
     var b = document.getElementById("fetchBtn"),
       lbl = b && b.querySelector("span");
@@ -2588,6 +2732,7 @@
     if (b) b.disabled = true;
     showMsg("");
     setLbl("Fetching…");
+    progShow();
     API_COST = 0; // reset per-run cost tally (bumped into the monthly usage counter on success)
     try {
       if (!window.RatsData) throw new Error("data.js not loaded");
@@ -2675,9 +2820,24 @@
           maxPages: maxPages,
           onProgress: function (i, n) {
             setLbl((rebuild ? "Log " : "New log ") + i + "/" + n + "…");
+            // logs span 5%→80% of the bar; ETA = remaining logs at the ~2.5s pacing + ranks tail
+            progSet(5 + (i / Math.max(n, 1)) * 75, "Fetching log " + i + " of " + n, (n - i) * 2.5 + 8);
+          },
+          onWait: function (i, n) {
+            setLbl("Rate limit — waiting 65s… (log " + i + "/" + n + ")");
+            progSet(PROG.pct, "Rate limit — waiting out the minute window (log " + i + " of " + n + ")", 65 + (n - i) * 2.5);
           },
         });
-        snap.logs = mergeLogs(rebuild ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
+        // A rebuild REPLACES the log list, so it must be complete: if any fetch failed (rate limit,
+        // 500), starting from [] would SAVE the shrunken list and silently destroy history — that
+        // exact accident wiped 20 logs down to 5 on 2026-07-16 (history pages cost 5 rpm each; the
+        // per-log fetches then ran straight into 429s). Fall back to MERGING into the existing list:
+        // every log that did arrive still lands (with fresh fields), nothing that didn't is lost.
+        var rebuildComplete = !res.failedIds || !res.failedIds.length;
+        snap.logs = mergeLogs(rebuild && rebuildComplete ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
+        if (rebuild && !rebuildComplete)
+          console.warn("Rebuild incomplete — " + res.failedIds.length + " log(s) failed (rate limit?). " +
+            "Merged what arrived instead of replacing; run Rebuild again later for: " + res.failedIds.join(", "));
         // Remember archived ids so we NEVER fetch them again — the API marked them superseded, so a later
         // Fetch would otherwise re-pull each one just to re-learn it's archived (a wasted call per log).
         if (res.archivedIds && res.archivedIds.length) {
@@ -2729,6 +2889,9 @@
           var season = seasonMap[c.slug];
           var apiDiff = c.size + "-" + c.diff; // "25-nm"
           setLbl("Server ranks " + c.slug + " " + c.size + " " + c.diff.toUpperCase() + "…");
+          progSet(80 + (ci / Math.max(comboList.length, 1)) * 18,
+            "Server ranks — " + c.slug + " " + c.size + " " + c.diff.toUpperCase(),
+            (comboList.length - ci) * 1.5);
           var sr = await apiServerRankings(key, c.slug, season, apiDiff);
           await new Promise(function (r) { setTimeout(r, 300); }); // stay under 30 rpm
           if (!sr) continue;
@@ -2794,6 +2957,7 @@
             : "✓ up to date (" + snap.logs.length + ")"
         );
       }
+      progHide(rankErr ? "Done — with warnings" : "Done — " + snap.logs.length + " logs");
     } catch (e) {
       // Total failure: nothing was saved, the existing snapshot is kept. Name the CULPRIT rather than
       // a generic "try again" — a 5xx is the API breaking on its side and no amount of retrying or
@@ -2815,6 +2979,7 @@
       }
       setLbl("✗ fetch failed");
       showMsg("Fetch failed: " + msg + "." + tail);
+      progHide(); // drop the bar immediately — the red banner is the story now
     }
     setTimeout(function () {
       if (b) b.disabled = false;
@@ -2904,17 +3069,19 @@
         s.classList.toggle("active", s.dataset.p === pd);
       });
     }
-    // metric
+    // metric ("tank" restores too — if the scope turns out to have no tank data, render() falls back to DPS)
     var mt = q.get("metric");
-    if (mt === "hps") {
-      METRIC = "hps";
+    if (mt === "hps" || mt === "tank") {
+      METRIC = mt;
       document.querySelectorAll(".metricbar .mbtn").forEach(function (s) {
-        s.classList.toggle("active", s.dataset.m === "hps");
+        s.classList.toggle("active", s.dataset.m === mt);
       });
       var dEl = document.getElementById("dps"),
-        hEl = document.getElementById("hps");
+        hEl = document.getElementById("hps"),
+        tEl = document.getElementById("tank");
       if (dEl) dEl.hidden = true;
-      if (hEl) hEl.hidden = false;
+      if (hEl) hEl.hidden = mt !== "hps";
+      if (tEl) tEl.hidden = mt !== "tank";
     }
     // progress difficulty split (ToC/ICC)
     var df = q.get("diff");

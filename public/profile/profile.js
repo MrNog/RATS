@@ -16,6 +16,13 @@
   var fmt = function (n) {
     return Math.round(Number(n || 0)).toLocaleString("en-US");
   };
+  // compact big number for damage-scale values (soaked): 632400 → "632K", 1.31e6 → "1.3M"
+  var fmtBig = function (n) {
+    n = Number(n || 0);
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+    if (n >= 1e3) return Math.round(n / 1e3) + "K";
+    return String(Math.round(n));
+  };
 
   // ---------- rankings snapshot (the SAME node the rankings page writes) ----------
   // The officer's Fetch on rankings/ writes ONE raw snapshot to Firebase `rankings` (logs[].rows[] +
@@ -205,6 +212,9 @@
     var guild = L.rosterSet();
     var trole = L.toonRoles(logs); // per-toon dominant role
     var people = {}; // personKey|role -> aggregate (own numbers only — no cross-role mixing)
+    var toons = {}; // toonKey|role -> the SAME aggregate shape, per CHARACTER — an alt page reads this
+    // (viewing an alt by its own name must show THAT character's parses, not "no parses": the person
+    // fold files Ninjacaldas's heals under fazcafe, so a lookup by "ninjacaldas" found nothing.)
 
     logs.forEach(function (l) {
       L.rowsForDiff(l.rows).forEach(function (r) {
@@ -216,32 +226,40 @@
         var id = L.resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[tk]) return; // guildies only
 
-        var gk = id.key + "|" + (isHealer ? "H" : "D");
         var rate = isHealer ? r.h || 0 : r.d || 0;
-        var e =
-          people[gk] ||
-          (people[gk] = {
-            key: id.key, name: id.name, cls: id.cls || r.c, spec: r.s || "",
-            role: isHealer ? "H" : "D", metric: isHealer ? "hps" : "dps",
-            raidSlug: l.raidSlug || "", sum: 0, fights: 0, best: 0, byBoss: {},
-          });
-        e.sum += rate;
-        e.fights++;
-        if (rate > e.best) e.best = rate;
-        if (!e.cls) e.cls = r.c;
-        // per-boss BEST for THIS person, in their OWN metric (drives placements + best parse).
-        // rate is a FLOAT (e.g. 3150.14 hps) — round on store so every consumer shows a clean integer.
-        var bb = e.byBoss[r.b];
-        if (!bb || rate > bb.value) e.byBoss[r.b] = { value: Math.round(rate), spec: r.s || "" };
+        function bump(map, mk, nm, cls) {
+          var e =
+            map[mk] ||
+            (map[mk] = {
+              key: mk.split("|")[0], name: nm, cls: cls || r.c, spec: r.s || "",
+              role: isHealer ? "H" : "D", metric: isHealer ? "hps" : "dps",
+              raidSlug: l.raidSlug || "", sum: 0, fights: 0, best: 0, byBoss: {},
+            });
+          e.sum += rate;
+          e.fights++;
+          if (rate > e.best) e.best = rate;
+          if (!e.cls) e.cls = r.c;
+          // per-boss BEST, in the line's OWN metric (drives placements + best parse).
+          // rate is a FLOAT (e.g. 3150.14 hps) — round on store so every consumer shows a clean integer.
+          var bb = e.byBoss[r.b];
+          if (!bb || rate > bb.value) e.byBoss[r.b] = { value: Math.round(rate), spec: r.s || "" };
+        }
+        bump(people, id.key + "|" + (isHealer ? "H" : "D"), id.name, id.cls || r.c);
+        // toon line only when the toon is NOT the person's own name (a main's toon line would just
+        // duplicate their person line and double the memory for nothing)
+        if (tk !== id.key) bump(toons, tk + "|" + (isHealer ? "H" : "D"), r.n, r.c);
       });
     });
 
-    // finalize per-person: average + server percentile (their OWN, once per person).
-    Object.keys(people).forEach(function (gk) {
-      var e = people[gk];
-      e.avg = e.fights ? e.sum / e.fights : 0;
-      var srv = L.serverPctFor(e.name); // 0..1 or null
-      e.serverPct = srv == null ? null : Math.round(srv * 100);
+    // finalize per-person AND per-toon lines: average + server percentile (a parse is per CHARACTER,
+    // so the toon line looks up its own name — same rule as everywhere else).
+    [people, toons].forEach(function (map) {
+      Object.keys(map).forEach(function (gk) {
+        var e = map[gk];
+        e.avg = e.fights ? e.sum / e.fights : 0;
+        var srv = L.serverPctFor(e.name); // 0..1 or null
+        e.serverPct = srv == null ? null : Math.round(srv * 100);
+      });
     });
 
     // sorted DPS / HPS boards (raw average, descending) — findRanked() reads these for standings
@@ -267,26 +285,28 @@
       return rows;
     }
 
-    _deriveCache = { people: people, boards: { dps: board("D", "dps"), hps: board("H", "hps") } };
+    _deriveCache = { people: people, toons: toons, boards: { dps: board("D", "dps"), hps: board("H", "hps") } };
     _deriveKey = key;
     return _deriveCache;
+  }
+  // A name's aggregate line: the PERSON line when the name is a main, else that TOON's own line —
+  // so an alt's page shows the alt's parses (Ninjacaldas's heals), not "no parses".
+  function lineOf(name, roleFlag) {
+    var d = derive(), k = ck(name);
+    return d.people[k + "|" + roleFlag] || d.toons[k + "|" + roleFlag] || null;
   }
 
   function dpsList() { return derive().boards.dps; }
   function hpsList() { return derive().boards.hps; }
   // person aggregate (for byBoss/records), main+role folded. Prefers DPS line, else HPS.
   function personAgg(name) {
-    var p = derive().people,
-      k = ck(name);
-    return p[k + "|D"] || p[k + "|H"] || null;
+    return lineOf(name, "D") || lineOf(name, "H");
   }
   // the rat's single best parse in scope: highest per-boss value across their DPS/HPS lines.
   function bestParseOf(name) {
-    var k = ck(name),
-      p = derive().people,
-      best = null;
+    var best = null;
     ["D", "H"].forEach(function (rf) {
-      var e = p[k + "|" + rf];
+      var e = lineOf(name, rf);
       if (!e) return;
       Object.keys(e.byBoss).forEach(function (bn) {
         var v = e.byBoss[bn].value;
@@ -300,9 +320,10 @@
   }
 
   // ---------- tank awareness ----------
-  // The API has NO tanking metric (damageTaken/threat/deaths are null), so a tank can't be ranked on DPS
-  // or mitigation. We detect tanks and give them a PRESENCE profile (bosses tanked / fights held) instead
-  // of forcing them onto a meaningless DPS ladder. tankStats memoized per (name|scope) like derive().
+  // A tank can't be ranked on DPS, so they get their own profile: damage SOAKED per fight + survival
+  // (from the per-fight damageTaken/deaths the API ships since 2026-07-16), plus the presence stats
+  // (bosses tanked / fights held). Rows from before the fields shipped carry null — the soak tiles
+  // gate on that and the panel degrades to presence-only. Memoized per (name|scope) like derive().
   var _tankCache = {}, _tankKey = "";
   function tankStats(name) {
     if (!L) return { isTank: false };
@@ -591,6 +612,7 @@
     star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2 15 8.7l7.1.8a1 1 0 0 1 .56 1.74l-5.28 4.78 1.45 6.98a1 1 0 0 1-1.48 1.08L12 20.4l-6.3 3.66a1 1 0 0 1-1.48-1.08l1.45-6.98L.4 11.24a1 1 0 0 1 .56-1.74L8 8.7l3-6.5a1 1 0 0 1 1.82 0Z"/></svg>',
     globe: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 7h-3.1a15 15 0 0 0-1.2-4.1A8 8 0 0 1 18.9 9ZM12 4.2c.8 1.1 1.4 2.7 1.7 4.8h-3.4c.3-2.1.9-3.7 1.7-4.8ZM4.6 15A8 8 0 0 1 4 12c0-1 .2-2 .6-3h3.5a20 20 0 0 0 0 6H4.6Zm.5 2h3.1a15 15 0 0 0 1.2 4.1A8 8 0 0 1 5.1 17ZM8.1 9H4.9a8 8 0 0 1 4.4-4.1A15 15 0 0 0 8.1 9Zm3.9 10.8c-.8-1.1-1.4-2.7-1.7-4.8h3.4c-.3 2.1-.9 3.7-1.7 4.8Zm.3-6.8h-3.6a18 18 0 0 1 0-6h3.6a18 18 0 0 1 0 6Zm1.9 8.1a15 15 0 0 0 1.2-4.1h3.1a8 8 0 0 1-4.3 4.1Zm1.5-6.1a20 20 0 0 0 0-6h3.5c.4 1 .6 2 .6 3s-.2 2-.6 3h-3.5Z"/></svg>',
     shield: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.8 4 4.5V11c0 5.2 3.4 8.9 8 11 4.6-2.1 8-5.8 8-11V4.5l-8-2.7Z"/></svg>',
+    heart: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.9-9.9-9.2C.6 9 1.7 5.6 4.6 4.4 6.8 3.5 9.3 4.2 12 6.8c2.7-2.6 5.2-3.3 7.4-2.4 2.9 1.2 4 4.6 2.5 7.4C19.5 16.1 12 21 12 21Z"/></svg>',
     swords: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.7 3.3a1 1 0 0 0-1-.25l-3.2 1a1 1 0 0 0-.44.26L4.7 15.6l-1.9-.4a1 1 0 0 0-.95 1.64l1.9 1.9-1.24 1.24a1 1 0 1 0 1.42 1.42L6.15 20.2l1.9 1.9a1 1 0 0 0 1.64-.95l-.4-1.9L20.7 7.9a1 1 0 0 0 .26-.44l1-3.2a1 1 0 0 0-.26-.96ZM3.3 3.3a1 1 0 0 1 1-.25l3.2 1a1 1 0 0 1 .44.26l4 4-2.83 2.83-4-4a1 1 0 0 1-.26-.44l-1-3.2a1 1 0 0 1 .45-.2Zm11 12.57 2.06-2.06 1.94 1.94 1.9-.4a1 1 0 0 1 .95 1.64l-1.9 1.9 1.24 1.24a1 1 0 1 1-1.42 1.42l-1.24-1.24-1.9 1.9a1 1 0 0 1-1.64-.95l.4-1.9-1.94-1.94Z"/></svg>',
     calendar: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v2H3V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1ZM3 10h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10Zm5 3H6v2h2v-2Zm4 0h-2v2h2v-2Zm4 0h-2v2h2v-2Z"/></svg>',
   };
@@ -1021,6 +1043,12 @@
       h = findRanked(hpsList(), name),
       agg = personAgg(name);
 
+    // Viewing an ALT by its own name: the ranked boards carry the MAIN's row (alts fuse into the
+    // person), so findRanked misses — fall back to the toon's OWN line from derive().toons. The
+    // numbers are the character's; no #rank (the ladder position belongs to the person, not the toon).
+    var dt = !d && lineOf(name, "D");
+    var ht = !h && lineOf(name, "H");
+
     // NO data for this toon in the selected raid/size/diff → one clean empty-state card instead of three
     // sad "no parses" tiles + an empty per-boss list (which reads as broken). Common when viewing an alt
     // on a raid they don't run. Points the user to switch scope or check their main.
@@ -1036,15 +1064,15 @@
     // TYPE (matching rankings): HPS = green (healing), DPS = gold/yellow (damage). See metricTint.
     tiles += rankTile(
       "Avg DPS",
-      d ? metricTint(fmt(d.row.value), "dps") : "—",
-      d ? "#" + d.rank + " · " + (d.row.fights || 0) + " fights" : "no DPS parses in scope",
+      d ? metricTint(fmt(d.row.value), "dps") : dt ? metricTint(fmt(dt.avg), "dps") : "—",
+      d ? "#" + d.rank + " · " + (d.row.fights || 0) + " fights" : dt ? "on this character · " + dt.fights + " fights" : "no DPS parses in scope",
       d ? d.rank : null,
       col, TILE_IC.sword
     );
     tiles += rankTile(
       "Avg HPS",
-      h ? metricTint(fmt(h.row.value), "hps") : "—",
-      h ? "#" + h.rank + " · " + (h.row.fights || 0) + " fights" : "off-spec / no heals",
+      h ? metricTint(fmt(h.row.value), "hps") : ht ? metricTint(fmt(ht.avg), "hps") : "—",
+      h ? "#" + h.rank + " · " + (h.row.fights || 0) + " fights" : ht ? "on this character · " + ht.fights + " fights" : "off-spec / no heals",
       h ? h.rank : null,
       col, TILE_IC.cross
     );
@@ -1081,12 +1109,21 @@
     return html;
   }
 
-  // ---- Performance (TANK) — presence, not parse. The API has no mitigation/threat metric, so we show
-  //      what a tank actually did: bosses tanked, fights held, raid nights. Their off-spec DPS (the few
-  //      fights they weren't tanking) is shown as a secondary tile so it's visible but never their rank.
+
+  // ---- Performance (TANK) — the tank's meter is damage SOAKED, not dealt. Soaked/fight leads
+  //      (the same number as the rankings Tanking board), with survival next to it. Rows saved before
+  //      the API shipped damageTaken (2026-07-16) have no soak data — those tiles gate on it and the
+  //      panel degrades to the presence view (bosses/fights/nights). Off-spec DPS stays secondary.
   function tankPerformanceHtml(name, col) {
     var t = tankStats(name);
     var tiles = "";
+    if (t.soakPerFight != null) {
+      tiles += rankTile("Soaked / fight", metricTint(fmtBig(t.soakPerFight), "dps"),
+        "over " + t.soakFights + (t.soakFights === 1 ? " tanked fight" : " tanked fights"), null, col, TILE_IC.shield);
+      tiles += rankTile("Survival", t.survival + "%",
+        t.tankDeaths ? t.tankDeaths + (t.tankDeaths === 1 ? " death" : " deaths") + " while tanking" : "never died tanking 🧱",
+        null, col, TILE_IC.heart);
+    }
     tiles += rankTile("Bosses tanked", t.bossesTanked.length || "—", t.bossesTanked.length ? "held the front" : "none in scope", null, col, TILE_IC.shield);
     tiles += rankTile("Fights held", t.tankFights || "—", t.tankFights ? "as main tank" : "no tank fights", null, col, TILE_IC.swords);
     tiles += rankTile("Raid nights", t.nights || "—", t.nights ? "anchoring the raid" : "not seen in scope", null, col, TILE_IC.calendar);
@@ -1097,20 +1134,26 @@
     var html = perfHeader();
     html += '<div class="tiles">' + tiles + "</div>";
 
-    // per-boss card: bosses TANKED (canonical order), each with a shield marker + their off-spec dps on
-    // that boss if they also DPS'd it. No damage bar/rank — tanking isn't a damage race.
+    // per-boss card: bosses TANKED (canonical order), each with a shield marker. Value column shows
+    // their biggest SOAK on that boss (the tank's meter) when the data exists, else their off-spec
+    // dps on that boss (pre-2026-07-16 rows have no damageTaken). Never a damage bar/rank.
+    var hasSoak = t.soakPerFight != null;
     var order = L ? L.sortBosses(t.bossesTanked, RAID) : t.bossesTanked;
     var rows = order
       .map(function (bn) {
+        var soak = t.soakByBoss[bn];
         var off = t.offSpecByBoss[bn];
+        var val = soak
+          ? '<span style="color:var(--text-dim-2);font-weight:700">' + fmtBig(soak) + " soaked</span>"
+          : off
+          ? '<span style="color:var(--text-dim-2);font-weight:700">' + fmt(off) + " dps</span>"
+          : "—";
         return (
           '<li><span class="bn">' +
           esc(bn) +
           ' <span class="pspec">🛡 TANKED</span></span>' +
           '<span class="tankspacer"></span>' +
-          '<span class="bv">' +
-          (off ? '<span style="color:var(--text-dim-2);font-weight:700">' + fmt(off) + " dps</span>" : "—") +
-          "</span></li>"
+          '<span class="bv">' + val + "</span></li>"
         );
       })
       .join("");
@@ -1122,7 +1165,9 @@
       '<div class="card" style="margin-top:20px"><div class="cardhd"><span class="ht">' +
       secIcon("boss") +
       "Bosses tanked</span></div>" +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="hsmall">Boss</span><span class="hsmall">Off-spec</span></div>' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="hsmall">Boss</span><span class="hsmall">' +
+      (hasSoak ? "Soaked" : "Off-spec") +
+      "</span></div>" +
       listHtml +
       "</div>";
     return html;

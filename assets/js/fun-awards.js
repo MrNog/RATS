@@ -37,6 +37,9 @@
     "On a streak": "#ff9d3f",
     "Perfect attendance": "#ffd23f",
     "The Wall": "#8fa6c4",
+    "Kick Master": "#ff6b6b",
+    "Drunkest Rat": "#e0a94e",
+    "Immortal Wall": "#8fa6c4",
   };
   // "Best <Class>" cards are hued by the class itself (set at render time), and the profile-only
   // honours (clears, milestones, podium places) fall back to gold — no entry needed here.
@@ -159,7 +162,8 @@
     }
 
     // ---- the award computation. Returns { awards:[A], shame:[A] } (data, never HTML). ----
-    // (deaths & damageTaken are null in the API, so no "most deaths"/"squishy" cards — see WOWLOGS_API.md)
+    // deaths/damageTaken/interrupts/pots ship per fight (API, 2026-07-16) — those boards gate on
+    // non-null rows, so they appear only once re-fetched logs carry the fields (see WOWLOGS_API.md).
     function compute(opts) {
       opts = opts || {};
       var raid = opts.raid,
@@ -456,9 +460,76 @@
         }
       }
 
+      // ---- per-fight extras (deaths / damageTaken / interrupts / pots) — the API ships these since
+      // 2026-07-16, so rows saved before then carry null. Every board here GATES on non-null rows and
+      // simply stays hidden until real data flows in (never render a zero board).
+      var xtr = {}; // key -> { deaths, dt, ints, pots, prepots, nRows, maxDt, name, cls }
+      var xtrRows = 0; // rows that actually carry the new fields
+      logs.forEach(function (l) {
+        L.rowsForDiff(l.rows).forEach(function (r) {
+          if (!isGuildie(r.n)) return;
+          if (r.dth == null && r.dt == null && r.int == null && r.pots == null) return;
+          xtrRows++;
+          var id = L.resolveIdentity(r.n, r.c);
+          var e = xtr[id.key] || (xtr[id.key] = {
+            deaths: 0, dt: 0, ints: 0, pots: 0, prepots: 0, nRows: 0, dpsRows: 0, dpsDt: 0,
+            tankRows: 0, tankDeaths: 0, tankDt: 0,
+            name: r.n, cls: r.c, tankish: false,
+          });
+          e.nRows++;
+          e.deaths += r.dth || 0;
+          e.dt += r.dt || 0;
+          e.ints += r.int || 0;
+          e.pots += r.pots || 0;
+          if (r.prepot) e.prepots++;
+          if (L.isTankFight(r)) {
+            e.tankish = true; // tanked at least one fight — out of the squishy award
+            // Faction Champions has no boss to tank (PvP scramble) — it neither counts as a tanked
+            // fight nor can a death there cost the Immortal Wall.
+            if (r.b !== "Faction Champions") {
+              e.tankRows++;
+              e.tankDeaths += r.dth || 0;
+              e.tankDt += r.dt || 0;
+            }
+          } else if (r.r !== "HEALER") { e.dpsRows++; e.dpsDt += r.dt || 0; }
+        });
+      });
+      var xtras = Object.keys(xtr).map(function (k) { return xtr[k]; });
+
+      // 🗡️ Kick Master — most interrupts across the scope (a real skill signal, not a meter).
+      if (xtrRows) {
+        var kick = xtras.slice().sort(function (a, b) { return b.ints - a.ints; })[0];
+        if (kick && kick.ints >= 5)
+          awards.push(A("🗡️", "Kick Master", kick.name, kick.cls,
+            "<b>" + kick.ints + "</b> interrupts — nothing gets a cast off 🤫"));
+      }
+
+      // 🧱 Immortal Wall — the tank who held the most fights WITHOUT ever dying. Deathless is the
+      // whole point: a runner-up with more fights but a death doesn't beat a clean sheet.
+      if (xtrRows) {
+        var immortal = xtras
+          .filter(function (e) { return e.tankRows >= 3 && e.tankDeaths === 0; })
+          .sort(function (a, b) { return b.tankRows - a.tankRows || b.tankDt - a.tankDt; })[0];
+        if (immortal)
+          awards.push(A("🧱", "Immortal Wall", immortal.name, immortal.cls,
+            "tanked <b>" + immortal.tankRows + "</b> fights · soaked <b>" + fmtBig(immortal.tankDt) +
+            "</b> damage · died <b>0</b> times — unbreakable 🐀"));
+      }
+
+      // 🍺 Drunkest Rat — most combat pots (potionsUsed excludes flasks/food by API design — exactly
+      // the "pots, not flasks" rule). GATED until wow-logs actually populates the counts: our logs
+      // currently return all-zero consumables (dev fixing) — the card appears the first raid it works.
+      if (xtrRows) {
+        var drunk = xtras.slice().sort(function (a, b) { return b.pots - a.pots; })[0];
+        if (drunk && drunk.pots >= 3)
+          awards.push(A("🍺", "Drunkest Rat", drunk.name, drunk.cls,
+            "chugged <b>" + drunk.pots + "</b> combat pots" +
+            (drunk.prepots ? " · pre-potted <b>" + drunk.prepots + "</b>×" : "") + " — hic! 🧀"));
+      }
+
       // ---- SHAME (playful, rat voice). One person can hold only ONE shame card. ----
-      // Limited to signals we CAN trust — attendance and a consistently low AVERAGE. No single-parse
-      // cards: a low parse can be a mid-fight DEATH and the API gives us no `deaths` to tell them apart.
+      // Limited to signals we CAN trust — attendance and a consistently low AVERAGE. Plus, since the
+      // API ships `deaths`/`damageTaken` (2026-07-16), the floor-hugger and squishy cards below.
       var shame = [];
       var shamed = {};
       function addShame(name, card) {
@@ -466,6 +537,32 @@
         if (shamed[k]) return; // already shamed elsewhere — don't pile on
         shamed[k] = true;
         shame.push(card);
+      }
+
+      // 💀 Floor inspector — most deaths across the scope's kills. Needs a clear lead (≥3 deaths)
+      // so one unlucky night doesn't brand anyone. Gated on real data (rows carry `dth` non-null).
+      if (xtrRows && xtras.length > 2) {
+        var dead = xtras.slice().sort(function (a, b) { return b.deaths - a.deaths; })[0];
+        if (dead && dead.deaths >= 3)
+          addShame(dead.name, A("💀", "Floor inspector", dead.name, dead.cls,
+            "died <b>" + dead.deaths + "</b> times — the floor is not lava, stop testing it", true));
+      }
+
+      // 🩸 Squishiest rat — the DPS who ate the most damage per fight. Tank-suspects are excluded:
+      // the API has no TANK role, so anyone flagged tanking a fight (isTankFight) sits this one out —
+      // eating hits is their job. Uses per-fight average so attendance doesn't decide it.
+      if (xtrRows && xtras.length > 2) {
+        var squishies = xtras
+          .filter(function (e) { return !e.tankish && e.dpsRows >= 3; })
+          .map(function (e) { return { e: e, avg: e.dpsDt / e.dpsRows }; })
+          .sort(function (a, b) { return b.avg - a.avg; });
+        for (var qi = 0; qi < squishies.length; qi++) {
+          if (shamed[normNm(squishies[qi].e.name)]) continue;
+          var sq = squishies[qi];
+          addShame(sq.e.name, A("🩸", "Squishiest rat", sq.e.name, sq.e.cls,
+            "ate <b>" + fmtBig(Math.round(sq.avg)) + "</b> damage per fight — the fire is not a buff", true));
+          break;
+        }
       }
 
       // 💤 Raid ghost — fewest kills attended (any role), and well below the pack (< 60% of max).
@@ -479,7 +576,8 @@
             esc(pickLine(QUIPS.ghost, ghost.name)), true));
       }
 
-      // 🍺 Last one standing — a DPS REGULAR with the lowest AVERAGE dps (part-time tanks excluded).
+      // 🪑 Last one standing — a DPS REGULAR with the lowest AVERAGE dps (part-time tanks excluded).
+      // (🍺 is reserved for the Drunkest Rat consumables award.)
       var dpsRegulars = toons.filter(function (t) {
         if (t.fights < Math.max(3, Math.ceil(maxFights / 2))) return false; // must be a regular
         var totalKills = presence[t.key] ? presence[t.key].kills : t.fights;
@@ -494,9 +592,9 @@
         for (var si = 0; si < ranked.length; si++) {
           if (shamed[normNm(ranked[si].t.name)]) continue;
           var sl = ranked[si];
-          addShame(sl.t.name, A("🍺", "Last one standing", sl.t.name, sl.t.cls,
-            "there every raid but bottom of the meters · avg <b>" + fmt(Math.round(sl.avg)) +
-            "</b> DPS — present, but not really 🫥", true));
+          addShame(sl.t.name, A("🪑", "Last one standing", sl.t.name, sl.t.cls,
+            "last on the ranks · avg <b>" + fmt(Math.round(sl.avg)) +
+            "</b> DPS — time to shape up, rat 🐀📈", true));
           break;
         }
       }

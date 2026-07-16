@@ -92,6 +92,31 @@
   margin: 8px 0 0;
 }
 
+/* fetch progress — slim gold bar + step/ETA line while the officer Fetch runs */
+.fetchprog { margin: 8px 0 0; }
+.fetchprog .fp-bar {
+  height: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fetchprog .fp-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.fetchprog .fp-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
 /* sticky filter+tab bar — stays at the top so you can switch raid/size/period/tab while scrolled */
 .sticky-controls {
   position: sticky;
