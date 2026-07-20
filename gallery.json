@@ -580,6 +580,13 @@
   },
   {
     "cat": "icons",
+    "file": "images/icons/mojo.png",
+    "title": "Mojo",
+    "caption": "",
+    "date": "2026-07"
+  },
+  {
+    "cat": "icons",
     "file": "images/icons/nutela.png",
     "title": "Nutela",
     "caption": "",
@@ -592,6 +599,14 @@
     "title": "Okanor Logs",
     "caption": "",
     "date": "2026-06",
+    "people": "okanor"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/okanor.png",
+    "title": "Okanor",
+    "caption": "",
+    "date": "2026-07",
     "people": "okanor"
   },
   {
