@@ -318,6 +318,20 @@
 }
 
 /* ---- Fun & Shame: compact award cards ---- */
+/* intro line + Normal/Heroic toggle share one row (text left, toggle right) */
+.funhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 14px;
+}
+.funhead .sub {
+  flex: 1;
+}
+.funhead #funDiff {
+  flex: none;
+}
 .funcards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));

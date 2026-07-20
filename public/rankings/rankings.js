@@ -472,6 +472,20 @@
   function renderFunShame() {
     var awEl = document.getElementById("funAwards");
     if (!awEl) return;
+    // Normal/Heroic toggle — same shared PROGDIFF as Leaderboards/Guild progress (setProgDiff re-renders
+    // every tab), shown only on split raids (ToC/ICC). Awards already filter by difficulty in fun-awards.js;
+    // this just lets you flip it while on the Fun & shame tab instead of hopping to another tab first.
+    var funDiffEl = document.getElementById("funDiff");
+    if (funDiffEl) {
+      var funSplit = !!SPLIT_DIFF_RAIDS[RAID];
+      funDiffEl.hidden = !funSplit; // toggle only on split raids (ToC/ICC); none on Ulduar/Onyxia
+      funDiffEl.innerHTML = funSplit
+        ? '<div class="metricbar">' +
+          '<button class="mbtn' + (PROGDIFF === "nm" ? " active" : "") + '" onclick="setProgDiff(\'nm\')">Normal</button>' +
+          '<button class="mbtn' + (PROGDIFF === "hc" ? " active" : "") + '" onclick="setProgDiff(\'hc\')">Heroic</button>' +
+          "</div>"
+        : "";
+    }
     var res = { awards: [], shame: [] };
     if (window.RatsFun) {
       try {
