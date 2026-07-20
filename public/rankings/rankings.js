@@ -1127,16 +1127,29 @@
 
   // Two players uploading the SAME raid night make TWO logIds, both "Original" (never ARCHIVED — that
   // only fires when the same uploader supersedes themselves). The API gives us no uploader field, so we
-  // infer the duplicate from content. Within one lockout (Wed→Wed) + same raid, a log is a DUPLICATE of
+  // infer the duplicate from content. Within ONE CALENDAR DAY + same raid, a log is a DUPLICATE of
   // another when its killed-boss set is a subset of (or equal to) the other's — i.e. it adds nothing.
   // We keep the fuller one and drop the redundant. This deliberately does NOT collapse a genuine SPLIT
-  // (two logs of one night with DIFFERENT, complementary bosses — see lockoutStart's #20922+#20925 note):
-  // those overlap in neither direction, so both survive and still merge-display in the Logs tab.
+  // (two logs of one night with DIFFERENT, complementary bosses): those overlap in neither direction,
+  // so both survive and still merge-display in the Logs tab.
+  // The key is calendar DAY + DIFFICULTY, not the WoW lockout. Two reasons a same-lockout log is NOT a
+  // duplicate: (1) a re-clear on a DIFFERENT day is a separate raid night; (2) Normal and Heroic ToC/ICC
+  // are SEPARATE lockouts you can both clear in one week, so a Heroic re-run is never covered by a Normal
+  // clear. Keying on lockout-only wrongly dropped a HC ToC 25 (20 Jul) as "covered by" the Normal full
+  // clear earlier that same week. Same day + same difficulty = genuine double-upload → still collapsed.
   // Returns { keep: [logs], dropped: { reportId: winnerReportId } }.
+  // A log counts as Heroic if ANY of its fights is hardmode (ToC/ICC logs are single-difficulty in
+  // practice; keying a mixed log as "H" keeps it distinct from a pure-Normal log — the safe direction).
+  function logIsHeroic(l) {
+    return (l.bfights || []).some(function (f) {
+      return !!f.hm;
+    });
+  }
   function dedupeDuplicates(logs) {
     var byKey = {};
     logs.forEach(function (l) {
-      var key = lockoutStart(l.date) + "|" + (l.raidSlug || l.raid || "");
+      var day = String(l.date || "").slice(0, 10); // YYYY-MM-DD, same-day uploads only
+      var key = day + "|" + (l.raidSlug || l.raid || "") + "|" + (logIsHeroic(l) ? "H" : "N");
       (byKey[key] = byKey[key] || []).push(l);
     });
     var keep = [],
