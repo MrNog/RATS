@@ -72,12 +72,22 @@
   var TANK_DPS_FRAC = 0.55; // below this share of the fight median dps => treat an ambiguous spec as tank
   var TANK_DT_MULT = 2; // above this multiple of the fight median damageTaken => tanking that fight
 
+  // Fights with no tankable boss. Faction Champions is a PvP scramble — CC + focus fire, damage lands on
+  // whoever gets trained — so nobody tanks it: not by soak (dt measures who got focused) and not by spec
+  // (a Prot warrior's low damage here is Prot damage in a PvP fight, not tank work). Shared by the boards
+  // and the awards so they can never disagree on who tanked.
+  var NO_TANK_FIGHT = { "Faction Champions": true };
+
   // Flag tank rows in-place (adds `_tank` bool). Idempotent — safe to call repeatedly on the same array.
   function markTankRows(rows) {
     if (!rows || !rows.length || rows._tankMarked) return rows;
     var byBoss = {};
     rows.forEach(function (r) {
+      // log truth wins outright when RatsAnalyzer enriched this row (boss-swings-received settle who
+      // tanked far better than any dps-ratio guess). See overlayAnalysis in rankings.js.
+      if (r._logTank != null) { r._tank = !!r._logTank; return; }
       if (r.r === "HEALER") { r._tank = false; return; }
+      if (NO_TANK_FIGHT[r.b]) { r._tank = false; return; } // nobody tanks here — not by dt, not by spec
       if (TANK_SPEC[r.s]) { r._tank = true; return; } // unambiguous tank spec
       r._tank = false; // default; ambiguous rows resolved below
       (byBoss[r.b] = byBoss[r.b] || []).push(r);
@@ -499,6 +509,7 @@
   RatsLogs.normNm = normNm;
   RatsLogs.markTankRows = markTankRows;
   RatsLogs.isTankFight = isTankFight;
+  RatsLogs.NO_TANK_FIGHT = NO_TANK_FIGHT;
   RatsLogs.SPLIT_DIFF_RAIDS = SPLIT_DIFF_RAIDS;
   RatsLogs.BOSS_ORDER = BOSS_ORDER;
   RatsLogs.sortBosses = sortBosses;

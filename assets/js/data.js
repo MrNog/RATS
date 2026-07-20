@@ -667,6 +667,29 @@ window.RatsData = (function () {
     return typeof t === "number" ? t : null;
   }
 
+  // Log-analysis enrichment (world-readable, written by RatsAnalyzer's push). Nested
+  // analysis/{lockout}/{raidSlug}/{size}/{runId} -> { runId, raid, start, bosses{boss{player{...}}} }.
+  // The rankings page overlays log-truth role/spec from this onto the API rows (the wow-logs API has
+  // no TANK role and an unstable per-fight spec).
+  //
+  // Cost rule: cached in localStorage with a 10-min TTL. Within the window a revisit reads ZERO from
+  // Firebase (re-applies the cached node in memory — the overlay itself is free); after 10 min the
+  // next load reads the node again (~20 KB) so a fresh push shows up within the window. This is the
+  // node read on EVERY page load, so the TTL is what keeps it from costing a read per visit.
+  const ANALYSIS_LS = "ratsAnalysisCache", ANALYSIS_TTL = 10 * 60 * 1000; // 10 min
+  async function loadAnalysis() {
+    if (!fbOn()) return null;
+    try {
+      const c = JSON.parse(localStorage.getItem(ANALYSIS_LS) || "null");
+      if (c && Date.now() - c.t < ANALYSIS_TTL) return c.data || null; // fresh cache → no read
+    } catch (e) {}
+    const o = (await fbGetSafe("analysis")) || null;
+    try {
+      localStorage.setItem(ANALYSIS_LS, JSON.stringify({ t: Date.now(), data: o }));
+    } catch (e) {}
+    return o;
+  }
+
   // ---- access gate: block the page until the guild key is entered ----
   let _unlocked = false;
 
@@ -873,6 +896,7 @@ window.RatsData = (function () {
     saveRankings,
     loadRankings,
     loadRankingsVersion,
+    loadAnalysis,
     getPass,
     setPass,
     clearPass,

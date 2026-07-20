@@ -1351,7 +1351,9 @@
   // Detecting a tank: the API has no TANK role, and Feral Combat (Druid) is BOTH cat-dps and bear-tank
   // under one spec name. Protection is always a tank; ambiguous specs (Feral, DK Blood/Frost/Unholy)
   // resolve per fight via the damageTaken fingerprint when the row carries `dt` (a tank soaks ≥2× the
-  // fight median), else via the low-dps majority fallback — full heuristic in logs-core.markTankRows.
+  // fight median AND parses well under it), else via the low-dps majority fallback — full heuristic in
+  // logs-core.markTankRows. Fights with no tankable boss (NO_TANK_FIGHT, e.g. Faction Champions) are
+  // never tank fights for anyone, whatever the spec.
   // Rows get a computed `_tank` flag; isTankFight reads it, falling back to spec.
   var TANK_SPEC = { Protection: true }; // isTankFight's spec fallback; the full heuristic lives in logs-core
 
@@ -1748,10 +1750,8 @@
   // quality read. Only rows flagged as tank fights AND carrying damageTaken count (the field ships
   // since 2026-07-16), so the board — and its toggle button — stay hidden on pre-fix snapshots.
   // No fairness blend here: with a handful of tanks sharing fights, soaked/fight IS the honest rate.
-  // Fights with no tankable boss — Faction Champions is a PvP scramble (CC + focus fire, damage lands
-  // on whoever gets trained), so "soaked" there is randomness, not tank work. Excluded from the tank
-  // BOARD only; the rows stay tank-flagged so a Prot's low FC dps still stays off the DPS board.
-  var NO_TANK_FIGHT = { "Faction Champions": true };
+  // Fights with no tankable boss (Faction Champions) never reach this board: markTankRows leaves every
+  // row there unflagged, so isTankRow already rejects them — see NO_TANK_FIGHT in logs-core.js.
 
   function computeTankBoard(logs) {
     var guild = rosterSet();
@@ -1759,7 +1759,6 @@
     logs.forEach(function (l) {
       rowsForDiff(l.rows).forEach(function (r) {
         if (!isTankRow(r)) return;
-        if (NO_TANK_FIGHT[r.b]) return; // no boss to tank — soak here is noise
         if (r.dt == null) return; // no damageTaken on this row — pre-fix log, can't rank it
         var id = resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[normNm(r.n)]) return;
@@ -2649,8 +2648,8 @@
   // Keep ONLY the raw, source-of-truth fields for persistence. Everything else (dps/hps/mvp/records/
   // improved/bottom/progress/perBoss/wipes/awards/deaths) is derived on render and must NOT be stored,
   // or a stale computed copy would shadow the live recompute.
-  function rawSnapshot(d) {
-    return {
+  function rawSnapshot(d, analysis) {
+    var snap = {
       guild: d.guild,
       realm: d.realm,
       period: d.period,
@@ -2663,6 +2662,79 @@
       mainSpec: d.mainSpec || {},
       serverPct: d.serverPct || {},
     };
+    // stamp log-truth role/spec onto the rows before anything ranks them (no-op without analysis).
+    overlayAnalysis(snap.logs, analysis || d.analysis);
+    return snap;
+  }
+
+  // Overlay log-truth role + spec from RatsAnalyzer's `analysis` node onto the snapshot's rows.
+  // The wow-logs API has no TANK role and a per-fight-unstable spec (Grunho reads Protection on four
+  // bosses, Fury on the fifth); the combat log settles both from boss-swings-received and talent
+  // spells, per run.
+  //
+  // Match is PER LOG, not global: an analysis run is bound to the snapshot log whose start time is
+  // the same raid night (the two ids differ — reportId 23286 vs runId 2026-07-15-toc-2153 — but both
+  // stamp the same pull start, so we pair them by timestamp). A correction for one night must never
+  // leak onto another night's identical (player, boss) row — that was the first bug: the 15 Jul run
+  // was recolouring Cryptwall's 07 Jul rows too.
+  //
+  // Enrichment, never a gate: a log with no analysis pairing, or a row the run doesn't mention, is
+  // left exactly as the API gave it. One `analysis` read per visit (cached with the snapshot).
+  var LOG_MATCH_MS = 2 * 60 * 60 * 1000; // start times within 2h = same night (realm-vs-UTC offset + upload lag)
+
+  function flattenAnalysisRuns(analysis) {
+    // -> [{ start, bosses }] one entry per pushed run, with its start in ms
+    var runs = [];
+    Object.keys(analysis || {}).forEach(function (lid) {
+      var byRaid = analysis[lid] || {};
+      Object.keys(byRaid).forEach(function (slug) {
+        var bySize = byRaid[slug] || {};
+        Object.keys(bySize).forEach(function (size) {
+          var byRun = bySize[size] || {};
+          Object.keys(byRun).forEach(function (runId) {
+            var run = byRun[runId] || {};
+            if (run.bosses) runs.push({ start: (run.start || 0) * 1000, bosses: run.bosses });
+          });
+        });
+      });
+    });
+    return runs;
+  }
+
+  function overlayAnalysis(logs, analysis) {
+    if (!analysis || !logs || !logs.length) return;
+    var runs = flattenAnalysisRuns(analysis);
+    if (!runs.length) return;
+    logs.forEach(function (l) {
+      var logMs = Date.parse(l.date || l.uploadedAt || "");
+      if (isNaN(logMs)) return;
+      // pick the analysis run closest in time, within the window — that is THIS night's run
+      var best = null, bestGap = LOG_MATCH_MS;
+      runs.forEach(function (run) {
+        var gap = Math.abs(run.start - logMs);
+        if (gap <= bestGap) { bestGap = gap; best = run; }
+      });
+      if (!best) return; // no pushed analysis for this night — leave the log untouched
+      (l.rows || []).forEach(function (r) {
+        var players = best.bosses[r.b];
+        var hit = players && players[r.n];
+        if (!hit) {
+          // name might differ only by case/spacing — fall back to normalized lookup within this boss
+          if (players) {
+            var nk = normNm(r.n);
+            Object.keys(players).some(function (pn) {
+              if (normNm(pn) === nk) { hit = players[pn]; return true; }
+              return false;
+            });
+          }
+          if (!hit) return;
+        }
+        if (hit.spec) r.s = hit.spec;      // stable talent-inferred spec beats the API's per-fight one
+        if (hit.role === "HEALER") r.r = "HEALER";
+        else if (hit.role === "DPS") r.r = "DPS";
+        r._logTank = hit.role === "TANK";  // read by markTankRows — log truth where we have it
+      });
+    });
   }
 
   // Merge fresh logs into the existing `logs` list; drop any ids now archived; sort newest-first.
@@ -2912,6 +2984,14 @@
       if (!rankOk && prevServerPct) snap.serverPct = prevServerPct;
 
       snap.generatedAt = new Date().toISOString();
+      // overlay log-truth role/spec here too, so the officer sees the same enriched board a visitor
+      // will (the enrichment is read from Firebase, independent of this Fetch's API pull).
+      try {
+        if (RatsData.loadAnalysis) {
+          var an = await RatsData.loadAnalysis();
+          if (an) { snap.analysis = an; overlayAnalysis(snap.logs, an); }
+        }
+      } catch (e) {}
       DATA = snap;
       var added = res.fresh.length,
         dropped = res.archivedIds.length;
@@ -2998,24 +3078,33 @@
       cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
     } catch (e) {}
 
+    // The log-enrichment (`analysis`) is a SEPARATE Firebase node from the rankings snapshot and is
+    // read on EVERY load — it must never depend on the snapshot cache path (that was the bug: a
+    // cache hit skipped it, so role/spec fixes only appeared right after an officer Fetch). It's a
+    // small node; read it once up front and apply it to whichever snapshot we end up using.
+    var analysis = null;
+    try {
+      if (window.RatsData && RatsData.loadAnalysis) analysis = await RatsData.loadAnalysis();
+    } catch (e) {}
+
     if (!force && cached && cached.data) {
       // cheap version probe — reuse cache unless Firebase has a newer snapshot
       try {
         if (window.RatsData && RatsData.loadRankingsVersion) {
           var ver = await RatsData.loadRankingsVersion();
           if (ver != null && ver === cached.t) {
-            DATA = rawSnapshot(cached.data);
+            DATA = rawSnapshot(cached.data, analysis);
             render();
             return;
           }
         } else {
           // no probe available → fall back to using cache
-          DATA = rawSnapshot(cached.data);
+          DATA = rawSnapshot(cached.data, analysis);
           render();
           return;
         }
       } catch (e) {
-        DATA = rawSnapshot(cached.data);
+        DATA = rawSnapshot(cached.data, analysis);
         render();
         return;
       }
@@ -3026,9 +3115,11 @@
       if (window.RatsData && RatsData.loadRankings) {
         var snap = await RatsData.loadRankings();
         if (snap && snap.data) {
-          DATA = rawSnapshot(snap.data);
+          DATA = rawSnapshot(snap.data, analysis);
+          // cache the RAW snapshot only (not the overlaid rows) so a later analysis update still
+          // re-applies cleanly over fresh rows; analysis is re-read every load anyway.
           try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify({ t: snap.t, data: DATA }));
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ t: snap.t, data: snap.data }));
           } catch (e) {}
         }
       }
