@@ -1446,30 +1446,36 @@
             rateSum: 0, total: 0, best: 0, fights: 0, url: l.reportUrl, faces: {},
             mainName: id.name, // the PERSON — what the row is labelled with
             seen: {}, // (boss|hm|lockout) → best row so far, to de-dupe the same kill across two uploads
+            byLock: {}, // lockoutKey → { rateSum, fights } — feeds the per-raid median (Month/All)
           });
         // ONE KILL PER (boss + difficulty + lockout). A boss can't be killed twice in a lockout at the
         // same difficulty — so when the SAME night is uploaded by two people, Onyxia (filed in both the
         // Onyxia log AND the ToC log) would otherwise count as two fights and inflate the attendance gate,
         // cutting legit 1-fight raiders off a 1-boss board. ToC's Normal vs Heroic kills of one boss ARE
         // different fights (different `hm`), so they stay separate. Keep the BEST parse of the duplicate.
-        var fk = (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockoutStart(l.date);
+        var lockKey = lockoutStart(l.date);
+        var fk = (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockKey;
         var rate = r[rateKey] || 0;
         var tot = r[totKey] || 0;
+        var lb = e.byLock[lockKey] || (e.byLock[lockKey] = { rateSum: 0, fights: 0 });
         var prev = e.seen[fk];
         if (prev) {
           // same kill seen again (second upload) — replace only if this copy is the better parse
           if (rate > prev.rate) {
             e.rateSum += rate - prev.rate;
             e.total += tot - prev.tot;
+            prev.lb.rateSum += rate - prev.rate; // keep the per-lockout bucket in sync (median axis)
             if (rate > e.best) e.best = rate;
             prev.rate = rate;
             prev.tot = tot;
           }
         } else {
-          e.seen[fk] = { rate: rate, tot: tot };
+          e.seen[fk] = { rate: rate, tot: tot, lb: lb };
           e.rateSum += rate;
           e.total += tot;
           e.fights++;
+          lb.rateSum += rate;
+          lb.fights++;
           if (rate > e.best) e.best = rate;
           // per-toon fight counts: they weight the blended server parse, and pick the class/spec icon
           var f = e.faces[tk] || (e.faces[tk] = { name: r.n, cls: r.c, spec: r.s, n: 0 });
@@ -1512,11 +1518,30 @@
     var C = Math.max(3, counts[Math.floor(counts.length / 2)] || 3);
 
     // per-player rate (bayesian) and total; then normalize each axis to the board max and blend.
+    //
+    // MONTH/ALL = MEDIAN OF PER-RAID RATES, not a flat pool of every fight. A month is ~4 raid nights,
+    // so pooling let one huge night (or one padded-attendance night) dominate the average. Instead we
+    // take each lockout's own bayesian-shrunk rate, then the MEDIAN across nights — one off/blowout
+    // night can't swing it. Week spans a single lockout, so its median === its mean (unchanged).
     var maxTotal = 0,
       maxRate = 0;
     players.forEach(function (e) {
       e.mean = e.rateSum / e.fights;
-      e.rate = (e.fights * e.mean + C * globalRate) / (e.fights + C);
+      var locks = Object.keys(e.byLock);
+      if (locks.length > 1) {
+        // one bayesian rate PER raid night (shrink each night toward the global rate), then median
+        var nightly = locks
+          .map(function (k) {
+            var lb = e.byLock[k];
+            return (lb.rateSum + C * globalRate) / (lb.fights + C);
+          })
+          .sort(function (a, b) { return a - b; });
+        var m = nightly.length;
+        e.rate = m % 2 ? nightly[(m - 1) / 2] : (nightly[m / 2 - 1] + nightly[m / 2]) / 2;
+      } else {
+        // single raid night in scope (Week, or a one-raid Month) — plain bayesian mean
+        e.rate = (e.fights * e.mean + C * globalRate) / (e.fights + C);
+      }
       if (e.total > maxTotal) maxTotal = e.total;
       if (e.rate > maxRate) maxRate = e.rate;
     });
