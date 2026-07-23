@@ -473,7 +473,7 @@
           var id = L.resolveIdentity(r.n, r.c);
           var e = xtr[id.key] || (xtr[id.key] = {
             deaths: 0, dt: 0, ints: 0, pots: 0, prepots: 0, nRows: 0, dpsRows: 0, dpsDt: 0,
-            tankRows: 0, tankDeaths: 0, tankDt: 0,
+            tankRows: 0, tankDeaths: 0, tankDthRows: 0, tankDt: 0,
             name: r.n, cls: r.c, tankish: false,
           });
           e.nRows++;
@@ -489,6 +489,11 @@
             if (r.b !== "Faction Champions") {
               e.tankRows++;
               e.tankDeaths += r.dth || 0;
+              // Deaths are only KNOWN on rows where the API actually reported them. `dth` is null on
+              // most rows (the field shipped late), and `null || 0` reads as "died 0 times" -- which
+              // is how a tank who wiped on heroic still collected the deathless Immortal Wall. Count
+              // the rows we can vouch for, so the award can demand real evidence instead of silence.
+              if (r.dth != null) e.tankDthRows++;
               e.tankDt += r.dt || 0;
             }
           } else if (r.r !== "HEALER") { e.dpsRows++; e.dpsDt += r.dt || 0; }
@@ -506,13 +511,21 @@
 
       // 🧱 Immortal Wall — the tank who held the most fights WITHOUT ever dying. Deathless is the
       // whole point: a runner-up with more fights but a death doesn't beat a clean sheet.
+      //
+      // "Deathless" must be PROVEN, not assumed from missing data. `dth` is null on most rows (the
+      // API shipped deaths late), and summing with `|| 0` made an unreported death look like a clean
+      // sheet -- a tank who wiped repeatedly on heroic still collected the badge. So we require a
+      // real sample of rows where deaths were actually reported (tankDthRows), and count the clean
+      // sheet only across those. No death data at all -> no award, rather than a false one.
       if (xtrRows) {
         var immortal = xtras
-          .filter(function (e) { return e.tankRows >= 3 && e.tankDeaths === 0; })
-          .sort(function (a, b) { return b.tankRows - a.tankRows || b.tankDt - a.tankDt; })[0];
+          .filter(function (e) {
+            return e.tankDthRows >= 3 && e.tankDeaths === 0;
+          })
+          .sort(function (a, b) { return b.tankDthRows - a.tankDthRows || b.tankDt - a.tankDt; })[0];
         if (immortal)
           awards.push(A("🧱", "Immortal Wall", immortal.name, immortal.cls,
-            "tanked <b>" + immortal.tankRows + "</b> fights · soaked <b>" + fmtBig(immortal.tankDt) +
+            "tanked <b>" + immortal.tankDthRows + "</b> fights · soaked <b>" + fmtBig(immortal.tankDt) +
             "</b> damage · died <b>0</b> times — unbreakable 🐀"));
       }
 
