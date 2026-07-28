@@ -143,6 +143,14 @@
   },
   {
     "cat": "commissions",
+    "file": "images/commissions/Mijinho.png",
+    "title": "Mijinho",
+    "caption": "",
+    "date": "2026-07",
+    "people": "mijinho"
+  },
+  {
+    "cat": "commissions",
     "file": "images/commissions/NinjaCaldas 1.png",
     "title": "NinjaCaldas #1",
     "caption": "",
@@ -812,6 +820,15 @@
     "caption": "",
     "date": "2026-07",
     "people": "magoluso",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/mijinho/mijinho.png",
+    "title": "Mijinho",
+    "caption": "",
+    "date": "2026-07",
+    "people": "mijinho",
     "wide": true
   },
   {
