@@ -1117,8 +1117,12 @@
   //
   // (Tested alternative that did NOT work: de-weighting total damage. It makes things WORSE — total is
   // the variance-stable axis; mean dps is the noisy one on small samples. Hence W_TOTAL stays at 0.6.)
-  var MIN_FIGHT_PCT = { week: 0, month: 0.25, all: 0.35 };
-  var MIN_FIGHT_FLOOR = { week: 1, month: 2, all: 2 }; // never lock a brand-new raid's board out
+  // ALL TIME is the complete record: no share, no floor, everybody who ever logged a fight is on it.
+  // The gate stays on Week/Month, where a short scope is exactly where a couple of lucky pulls can
+  // fake a flattering average. On All time the sample is long enough to speak for itself, and the
+  // fairness blend already shrinks a small-sample mean toward the guild average.
+  var MIN_FIGHT_PCT = { week: 0, month: 0.25, all: 0 };
+  var MIN_FIGHT_FLOOR = { week: 1, month: 2, all: 0 }; // never lock a brand-new raid's board out
 
   // Most improved / Needs work compare ONE lockout against the previous one, so they need a small
   // flat floor (a share of a single week's fights would be meaningless).
@@ -1130,8 +1134,10 @@
     (players || []).forEach(function (e) {
       if (e.fights > scope) scope = e.fights;
     });
-    var pct = MIN_FIGHT_PCT[period] || 0;
-    var floor = MIN_FIGHT_FLOOR[period] || 1;
+    // `?? 1`, not `|| 1`: All time sets a floor of 0 on purpose (every toon on the board), and
+    // `0 || 1` would quietly turn that into 1.
+    var pct = MIN_FIGHT_PCT[period] ?? 0;
+    var floor = MIN_FIGHT_FLOOR[period] ?? 1;
     // The floor must never ask for MORE fights than the raid even has. Onyxia is a ONE-boss raid, so a
     // flat floor of 2 made her Month and All-time boards permanently empty — unfillable no matter how
     // often you cleared her (only Week worked, because its floor is 1). Cap the floor at the scope.
@@ -1308,11 +1314,24 @@
     return a || name;
   }
 
-  // Resolve a toon name → the PERSON (main). Renames fold to the current name first, then alts fold
-  // into their main. Returns { key, name, cls }.
+  // PER-TOON boards: every character is its own row, under its own name and class.
+  //
+  // Folding alts into the main was wrong in two ways at once, both visible on Shockaa (Shaman) +
+  // Gozuu (Warlock):
+  //   * the row's icon came from whichever toon had the most fights, so a person's row could be
+  //     labelled with the main's name in the main's class colour and carry an ALT's class icon;
+  //   * worse, the one-kill-per (boss|difficulty|lockout) de-dup keyed on the PERSON, so an alt that
+  //     raided a boss the main had already killed in that lockout was discarded as a duplicate
+  //     upload -- Gozuu's two full nights (logs 25676, 26557) vanished from the board entirely.
+  // Keeping each toon separate makes both impossible: one row = one character = one class.
+  var PER_TOON = true;
+
+  // Resolve a toon name → the identity its row is filed under. Renames always fold to the current
+  // in-game name; alt→main folding is what PER_TOON switches off. Returns { key, name, cls }.
   function resolveIdentity(name, fallbackClass) {
     name = aliasName(name); // rename → current in-game name before alt→main
     var k = normNm(name);
+    if (PER_TOON) return { key: k, name: name, cls: fallbackClass || "" };
     var am = DATA.altMap || {};
     var a = am[k];
     if (a && a.main) {
@@ -1454,7 +1473,11 @@
         // cutting legit 1-fight raiders off a 1-boss board. ToC's Normal vs Heroic kills of one boss ARE
         // different fights (different `hm`), so they stay separate. Keep the BEST parse of the duplicate.
         var lockKey = lockoutStart(l.date);
-        var fk = (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockKey;
+        // Keyed on the TOON as well: the same person can legitimately kill one boss twice in a
+        // lockout on two different characters (a main night and an alt night). Without `tk` the
+        // alt's kills read as a duplicate upload of the main's and were dropped -- that is how
+        // Gozuu's two full ToC nights disappeared from Shockaa's row.
+        var fk = tk + "|" + (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockKey;
         var rate = r[rateKey] || 0;
         var tot = r[totKey] || 0;
         var lb = e.byLock[lockKey] || (e.byLock[lockKey] = { rateSum: 0, fights: 0 });
