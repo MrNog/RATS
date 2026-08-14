@@ -420,6 +420,14 @@
   },
   {
     "cat": "banners",
+    "file": "images/banners/ICC 25.png",
+    "title": "Icecrown Citadel (25-man)",
+    "caption": "",
+    "date": "2026-08",
+    "wide": true
+  },
+  {
+    "cat": "banners",
     "file": "images/banners/Onyxi+ToC 25.png",
     "title": "Onyxi+ToC (25-man)",
     "caption": "",
