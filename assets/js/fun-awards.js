@@ -112,7 +112,7 @@
           if (!bf.length) return null;
           return {
             reportId: l.reportId, reportUrl: l.reportUrl, raid: l.raid, raidSlug: l.raidSlug,
-            size: l.size, date: l.date, uploadedAt: l.uploadedAt, fangs: l.fangs,
+            size: l.size, date: l.date, uploadedAt: l.uploadedAt,
             bfights: bf,
             bosses: bf.filter(function (f) { return f.kill; }).map(function (f) { return f.bn; }),
             kills: bf.filter(function (f) { return f.kill; }).length,

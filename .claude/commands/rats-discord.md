@@ -17,13 +17,14 @@ The user's request: `$ARGUMENTS`
 - Voice: filthy-rat / cheese / sewer (see `/rats`). Affectionate banter, never mean. **Never** the word "colleagues".
 
 ## Ranks & roles (WoW guild ranks = Discord roles)
-Progression: **🐀 Sewer Rat → ⚔️ Raider Rat → 💀 Warchief's Fangs → 👑 Warchief Rat** (+ 🎲 Pug Rat).
+Progression: **🐀 Sewer Rat → ⚔️ Raider Rat → 👑 Warchief Rat** (+ 🎲 Pug Rat).
 - 🐀 **Sewer Rat** — new member, **on trial (~2 weeks, don't state the exact time publicly)**, **no raid-signup priority**. Show up + perform → promoted.
 - ⚔️ **Raider Rat** — passed trial; proven raider with **signup priority**.
-- 💀 **Warchief's Fangs** — earned, **invite-only** elite ("the rats who refuse to die").
 - 👑 **Warchief Rat** — officers.
 - 🎲 **Pug Rat** — not in the guild, raids with us only (limited access).
-- Role order top→bottom: Warchief Rat → Warchief's Fangs → Raider Rat → 🤖 Bots → Sewer Rat → Pug Rat → @everyone.
+- Role order top→bottom: Warchief Rat → Raider Rat → 🤖 Bots → Sewer Rat → Pug Rat → @everyone.
+- **💀 Warchief's Fangs is RETIRED** (Sep 2026) — the elite middle tier is gone; everyone who raids is a
+  Raider Rat. Don't re-add it to ranks, roles or tooling. The old art/lore stays as guild history.
 
 ## Onboarding flow (KEEP IT SIMPLE — 2 gates only)
 1. In-game invite → share the Discord link.

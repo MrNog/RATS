@@ -1160,16 +1160,6 @@
   padding: 1px 7px;
   flex: 0 0 auto;
 }
-.lfangs {
-  font-size: 10.5px;
-  font-weight: 800;
-  color: #e0857f;
-  border: 1px solid #5b3a3a;
-  background: #2a1818;
-  border-radius: var(--radius);
-  padding: 1px 7px;
-  flex: 0 0 auto;
-}
 .ldup {
   font-size: 10.5px;
   font-weight: 800;

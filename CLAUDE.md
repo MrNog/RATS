@@ -105,8 +105,8 @@ re-derive the conventions.
 
 ## Vacations rules
 
-- **25-man = mandatory** (counts for everyone since join date); **10-man = optional** (counts for Fangs
-  - whoever actually played). **Vacations are excused.** New members protected by join date.
+- **25-man = mandatory** (counts for everyone since join date); **10-man = optional** (counts only for
+  whoever actually played). **Vacations are excused.** New members protected by join date.
 - **On +add** → post the "will be away" card. **Day before start** → post a reminder. Each flagged so it posts once.
 - **Ended vacations auto-delete** as soon as they're over (keeps the DB tidy).
 - **One shared page** at `public/vacations/` for everyone (no separate officer copy). It detects officer mode by
@@ -119,9 +119,9 @@ re-derive the conventions.
 
 ## Roster (officer/guild/)
 
-- **Fangs** marked with 💀 (`data.fangs`); **join dates** (`data.joined`); import is a **merge** that
-  preserves fangs + join dates and auto-dates new members.
-- One **hierarchy icon** per member, highest wins: 👑 GM > ⭐ Officer > 💀 Fang (never doubled).
+- **Join dates** (`data.joined`); import is a **merge** that preserves join dates and auto-dates new members.
+  (`data.fangs` is a **retired** rank — carried through the merge for history, never read or displayed.)
+- One **hierarchy icon** per member, highest wins: 👑 GM > ⭐ Officer (never doubled).
 - Each row has a 🔗 **Warmane armory** link: `https://armory.warmane.com/character/<Name>/Onyxia/summary`.
 - **Low-level (<80)** toons grouped in a collapsed section at the bottom.
 - Name matching: `NAME_ALIASES` (Discord nick → in-game) + alt→main; exact/alias only, no fuzzy guessing.
@@ -134,7 +134,7 @@ re-derive the conventions.
 
 No attendance here — absences show naturally in the stats. Tabs: **🏆 Leaderboards** (MVP, Top DPS/HPS,
 Most improved, Records), **📊 Guild progress** (week-over-week verdicts, per-boss kill times),
-**🎉 Fun & shame** (deaths, wipe counter, awards), **📜 Logs** (per-report badges, Fangs-night at ≥5 fangs).
+**🎉 Fun & shame** (deaths, wipe counter, awards), **📜 Logs** (per-report badges).
 
 **Data flow (cost-safe):** officer's **🔄 Fetch** (gold, guild-key-gated) calls the wow-logs API, computes,
 writes ONE `rankings` snapshot to Firebase. Public visitors read that snapshot **once per visit** (TTL 30 min)

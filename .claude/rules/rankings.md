@@ -15,7 +15,7 @@ all filters are client-side — zero extra Firebase reads.
 | 🏆 Leaderboards | MVP · Top DPS · Top HPS · Most improved · Needs work · Records |
 | 📊 Guild progress | Week-over-week verdict · per-boss kill times (✅ killed / ⏳ pending / ✖ no-kill) |
 | 🎉 Fun & shame | Deaths · wipe counter · fun awards |
-| 📜 Logs | Per-report badges · 💀 Fangs-night badge at ≥5 fangs · filter by raid+size+period |
+| 📜 Logs | Per-report badges · filter by raid+size+period |
 
 **Top controls:** raid segment selector (from API `raids[]`) · 25/10-man toggle · Week / Month / All.
 

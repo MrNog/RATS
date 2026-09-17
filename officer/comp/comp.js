@@ -362,20 +362,8 @@ function resolveMain(typed) {
   } // alt -> its main
   return m.name; // canonical roster name (merges Kobe/Kobee, etc.)
 }
-// roster-picker icons: 👑 GM (King Rat) · ⭐ officer (Warchief Rat) · 💀 Fang
-function compGuildData() {
-  try {
-    return JSON.parse(localStorage.getItem("ratsGuild") || "null") || {};
-  } catch (e) {
-    return {};
-  }
-}
-function isFangP(m) {
-  const fs = compGuildData().fangs || [],
-    n = (m.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  return fs.some((x) => (x || "").toLowerCase().replace(/[^a-z0-9]/g, "") === n);
-}
-// one icon only, highest rank wins: 👑 GM > ⭐ officer > 💀 Fang (no doubling up)
+// roster-picker icons: 👑 GM (King Rat) · ⭐ officer (Warchief Rat)
+// one icon only, highest rank wins: 👑 GM > ⭐ officer (no doubling up)
 function rankIcon(m) {
   let s = "",
     t = "";
@@ -385,9 +373,6 @@ function rankIcon(m) {
   } else if (m.rankIndex === 1) {
     s = "⭐";
     t = "Officer";
-  } else if (isFangP(m)) {
-    s = "💀";
-    t = "Fang";
   }
   return s ? `<span style="flex:0 0 auto" title="${t}">${s}</span>` : "";
 }

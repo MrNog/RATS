@@ -43,12 +43,14 @@ Horde faction (use Horde spell/term names — the user is Horde). Rat/cheese fla
 
 ## Roster & counting
 
-- **Ranks** (WoW rank = Discord role): Sewer Rat → Raider Rat → Warchief's Fangs →
-  Warchief Rat (+ Pug). Blood-red title art is the **Fangs tier only**.
+- **Ranks** (WoW rank = Discord role): Sewer Rat → Raider Rat → Warchief Rat (+ Pug).
+  **Warchief's Fangs was retired Sep 2026** — don't reintroduce the tier. Existing Fangs
+  hero-art stays as guild history, and blood-red title art stays reserved for it (see
+  `docs/art/STYLE.md`) rather than being reassigned to a live rank.
 - **MAINS count = real people, not toons.** An entry is an ALT if rankIndex 4, OR "alt" in
   the rank name, OR the officer note starts with "<Main> alt". The in-game addon Home and
   the website must give the same count.
-- One hierarchy icon per member, highest wins: 👑 GM > ⭐ Officer > 💀 Fang.
+- One hierarchy icon per member, highest wins: 👑 GM > ⭐ Officer.
 
 ## Loot & raids — data contracts (must match the addon)
 

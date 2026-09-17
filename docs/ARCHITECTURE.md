@@ -77,8 +77,8 @@ docs/               THIS folder (gitignored)
 - **comp.html** — raid comp builder (drag-drop groups), size selector (25/10), **Save to history**, per-member
   optional toggle. Reads spec/class emote IDs from the pasted Raid-Helper JSON.
 - **history.html** — attendance. Each raid = one mandatory day; attendance = days present ÷ raids run **since that
-  raider's first logged raid**. **Size-aware**: 25-man counts for everyone, 10-man counts for Fangs (+ who played).
-  Per-card **Optional toggle** (auto-saves), badges MANDATORY / 💀 FANGS / ⚪ OPTIONAL. Log scrolls after ~7 rows.
+  raider's first logged raid**. **Size-aware**: 25-man counts for everyone, 10-man counts only for who played.
+  Per-card **Optional toggle** (auto-saves), badges MANDATORY / ⚪ OPTIONAL. Log scrolls after ~7 rows.
   (Officer vacations is the same `public/vacations/` page above — it just shows more once the guild key is present.)
 - **lore.html** — post raid stories (markdown + image attachments, multipart) to a chosen webhook.
 - **admin.html** — maintainer console: set keys, webhooks, roster/history, backup. Self-gates with the admin password.
@@ -135,7 +135,7 @@ REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<n
 Public page; **no attendance** (ranking reflects absence naturally). Tabs: **🏆 Leaderboards** (personal: MVP,
 Top DPS/HPS, Most improved, Needs work, Records), **📊 Guild progress** (collective: week-over-week verdict +
 cards + per-boss kill times with killed/⏳pending/✖no-kill states), **🎉 Fun & shame** (deaths, awards, fun
-stats, wipe counter), **📜 Logs** (per-report badges, 💀 Fangs-night at ≥5 fangs, filtered by raid+size+period).
+stats, wipe counter), **📜 Logs** (per-report badges, filtered by raid+size+period).
 
 Top controls: raid segs (from API `raids[]`) · 25/10-man · Week/Month/All. Period semantics on Guild progress:
 **Week** = this lockout vs last lockout; **Month** = per-boss best/avg + trend ("vs month avg"); **All** =

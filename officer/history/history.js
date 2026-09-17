@@ -78,11 +78,6 @@ function joinDateOf(name) {
   for (const k in j) if (normName(k) === n) return j[k];
   return "";
 }
-function isFangName(name) {
-  const fs = guildData().fangs || [],
-    n = normName(name);
-  return fs.some((x) => normName(x) === n);
-}
 // Raid-Helper gives the DISCORD name (with decorations); the roster has the IN-GAME name.
 // Normalize so they match: strip [tags]/(parens), take the part before a "/" (main/alt), drop punctuation.
 function normName(s) {
@@ -212,13 +207,14 @@ function contBadge(r) {
 }
 
 // The per-raid toggle: ⚪ Optional = log-only (history, counts for nobody). Default OFF.
-// When NOT optional: 25-man counts for everyone, 10-man is a 💀 Fang run (counts for Fangs).
+// 25-man is the only obligation. 10-man is always log-only: it counts for whoever
+// actually played it and is never an obligation for anyone.
 function isLogOnly(r) {
-  return !!r.optional;
+  return !!r.optional || raidSize(r) !== 25;
 }
-// raid "kind" for the badge: 'log' | 'mando' (25) | 'fang' (10)
+// raid "kind" for the badge: 'log' | 'mando' (25)
 function raidKind(r) {
-  return isLogOnly(r) ? "log" : raidSize(r) === 25 ? "mando" : "fang";
+  return isLogOnly(r) ? "log" : "mando";
 }
 // a raider on vacation that day -> that raid is excused (no miss, doesn't count)
 function onVacation(name, date) {
@@ -339,15 +335,14 @@ function computeAttendance(raids) {
   });
   const chainList = Object.values(chains);
   const rows = Object.values(map).map((o) => {
-    const joinD = joinDateOf(o.name),
-      fang = isFangName(o.name);
+    const joinD = joinDateOf(o.name);
     // ONE obligation per lockout chain (per weekly reset + instance), worth 1 in the denominator
     // however many nights it took. Credit = nights you attended / nights the run ran — this feeds
     // LOOT COUNCIL, so it measures how much of the run you actually did:
     //   1) came to every night (1/2/3 nights) → 100%.
     //   2) came 1 of 2 nights → 50% — for everyone, whatever the reason.
     // The % carries this (rounded to a whole number); the Runs column shows whole lockouts.
-    //   25-man: obligation for EVERYONE since join date.  10-man: obligation for 💀 Fangs.
+    //   25-man: obligation for EVERYONE since join date.  10-man: counts only for who played.
     //   Joined the guild MID-chain (after night 1) → skip the whole chain, no credit/no fault.
     //   ⚪ Optional (log-only): never counts.
     let denom = 0,
@@ -375,8 +370,8 @@ function computeAttendance(raids) {
       // is this chain an obligation for this person?
       const obligated =
         size === 25
-          ? nAttended > 0 || o.involved.has(firstDate) || fang || !joinD || firstDate >= joinD
-          : nAttended > 0 || fang; // 10-man → Fangs (or anyone who showed)
+          ? nAttended > 0 || o.involved.has(firstDate) || !joinD || firstDate >= joinD
+          : nAttended > 0; // 10-man → only who actually played
       if (!obligated) return;
 
       if (nAttended === 0 && nExcused === nights.length) return; // 🏖️ excused from every night
@@ -439,7 +434,9 @@ function renderAttendance() {
   const lg = document.getElementById("legend");
   // key with context — the full rules live in the "How attendance works" panel above.
   const scope =
-    sf === "10" ? "💀 <b>10-man</b> counts for Fangs" : "🔴 <b>25-man</b> counts for everyone";
+    sf === "10"
+      ? "⚪ <b>10-man</b> is optional — counts only for who played"
+      : "🔴 <b>25-man</b> counts for everyone";
   lg.innerHTML =
     scope +
     ". <b>%</b> = 100% if you showed up (latecomers included); you only lose % by bailing mid-run. " +
@@ -519,11 +516,9 @@ function renderAttendance() {
     const half = r.halves
       ? `<span class="pill half" title="Came the first night but didn't return for a later night of the same run">${r.halves}&times; 2nd day</span>`
       : "";
-    const fang = isFangName(r.name);
-    const fangMark = fang ? `<span title="Fang — expected at all 10-mans" style="cursor:help">💀 </span>` : "";
     const why = `Showed up to ${r.lockouts} of ${r.total} lockout${r.total != 1 ? "s" : ""} that counted. The % reflects how much of each run you did.`;
     html += `<tr${hidden}>
-          <td class="nm" style="color:${col}">${fangMark}${esc(r.name)}</td>
+          <td class="nm" style="color:${col}">${esc(r.name)}</td>
           <td class="attcol"><div class="bar"><i style="width:${r.pct}%;background:${barColor(r.pct)}"></i></div></td>
           <td class="runcol" title="${esc(why)}" style="cursor:help">${r.lockouts} / ${r.total}${ghost}${half}</td>
           <td class="pctcol pct" style="color:${barColor(r.pct)}">${r.pct}%</td>
@@ -1071,9 +1066,7 @@ function kindBadge(r) {
     "font-size:10px;font-weight:800;letter-spacing:.4px;border-radius:10px;padding:1px 8px;flex:0 0 auto;border:1px solid";
   if (k === "mando")
     return `<span style="${s} #6e2e2e;background:#3a1c1c;color:#ff8a8a" title="Mandatory — counts for everyone since they joined">MANDATORY</span>`;
-  if (k === "fang")
-    return `<span style="${s} #5a2e5a;background:#2e1f33;color:#e09ad0" title="Fang run — counts for Warchief's Fangs">💀 FANGS</span>`;
-  return `<span style="${s} #3a3d44;background:#26282d;color:#9aa0a6" title="Optional — log only, counts for nobody">⚪ OPTIONAL</span>`;
+  return `<span style="${s} #3a3d44;background:#26282d;color:#9aa0a6" title="Optional — log only, counts for nobody who didn't play">⚪ OPTIONAL</span>`;
 }
 function optSwitch(r) {
   return `<label class="optsw" onclick="event.stopPropagation()" title="Optional = log only (alt / casual run — doesn't count for attendance)">

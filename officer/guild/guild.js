@@ -132,7 +132,7 @@ function specIconHtml(m) {
   return `<img class="spici" src="${CDN(id)}" alt="${esc(sp)}" title="${esc(sp)} ${esc(m.class)}" loading="lazy">`;
 }
 
-// ---- alts / fangs / join dates ----
+// ---- alts / join dates ----
 // officer-note "<Main> Alt" marks an alt even when the rank isn't "Alt" (e.g. an alt parked on Officer)
 // "<Main> Alt" in the officer note — the explicit, unambiguous alt marker.
 function altMainNote(m) {
@@ -170,26 +170,7 @@ function mainOf(m) {
 function normNm(s) {
   return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
-function fangList() {
-  const d = load();
-  return d && Array.isArray(d.fangs) ? d.fangs : [];
-}
-function isFang(m) {
-  const s = normNm(m.name);
-  return fangList().some((n) => normNm(n) === s);
-}
-function toggleFang(name) {
-  const d = load();
-  if (!d) return;
-  d.fangs = Array.isArray(d.fangs) ? d.fangs : [];
-  const i = d.fangs.findIndex((n) => normNm(n) === normNm(name));
-  if (i >= 0) d.fangs.splice(i, 1);
-  else d.fangs.push(name);
-  save(d);
-  paint();
-  autoShare("&#128128; Fangs updated");
-}
-// Spec override - stored in data.specs { name: specLabel }, survives re-imports (like fangs/joined)
+// Spec override - stored in data.specs { name: specLabel }, survives re-imports (like joined)
 function setSpec(name, spec) {
   const d = load();
   if (!d) return;
@@ -224,7 +205,6 @@ function profilesForPublish(roster) {
       class: m.class || "",
       level: m.level || null,
       rank: m.rankName || "",
-      fang: isFang(m),
     };
   });
   roster.forEach((m) => {
@@ -330,10 +310,12 @@ function showDiff(oldData, nw) {
         ? rankCh.map((c) => `${esc(c.name)}: ${esc(c.from)} &rarr; ${esc(c.to)}`).join("<br>")
         : '<span class="none">none</span>'
     ) +
-    `</div><p class="sub">Fangs, specs &amp; join dates are kept. Nothing is saved until you confirm.</p>`;
+    `</div><p class="sub">Specs &amp; join dates are kept. Nothing is saved until you confirm.</p>`;
 }
 
-// STEP 2 - merge & save (keep fangs, specs + join dates for members still present)
+// STEP 2 - merge & save (keep specs + join dates for members still present)
+// data.fangs is a retired rank: no longer read or shown, but carried through the merge
+// so the historical list survives in the roster blob.
 function confirmImport() {
   if (!pendingImport) return;
   const oldData = load() || {};
@@ -506,7 +488,6 @@ function memberRow(m) {
     .filter(Boolean)
     .join(" - ");
   return `<div class="m" title="${tip}">
-        <span class="fang${isFang(m) ? " on" : ""}" data-name="${esc(m.name)}" title="Toggle Fang (10-man squad)">&#128128;</span>
         <span class="spic" data-name="${esc(m.name)}" data-class="${esc(m.class)}" title="Set spec">${specIconHtml(m)}</span>
         <span class="mn" style="color:${col}">${esc(m.name)}</span>
         <span class="lv">${m.level}</span>
@@ -523,7 +504,6 @@ function paint() {
 
   let roster = data.roster.slice();
   if (document.getElementById("hideAlts").checked) roster = roster.filter((m) => !isAlt(m));
-  if (document.getElementById("fangsOnly").checked) roster = roster.filter(isFang);
   if (rankFilter !== "") roster = roster.filter((m) => String(m.rankIndex) === rankFilter);
   if (q)
     roster = roster.filter(
@@ -541,13 +521,12 @@ function paint() {
     ["Members", all.length],
     ["Mains", all.length - alts],
     ["Alts", alts],
-    ["💀 Fangs", all.filter(isFang).length],
     ["Last import", fmtStale(lastImportMs())],
   ];
   document.getElementById("stats").innerHTML = cards
     .map(
-      (c, i) =>
-        `<div class="stat"><div class="n"${i === 4 ? ' style="font-size:15px;line-height:1.35"' : ""}>${c[1]}</div><div class="l">${c[0]}</div></div>`
+      (c) =>
+        `<div class="stat"><div class="n"${c[0] === "Last import" ? ' style="font-size:15px;line-height:1.35"' : ""}>${c[1]}</div><div class="l">${c[0]}</div></div>`
     )
     .join("");
 
@@ -594,14 +573,8 @@ function boot() {
   sendStaleAlert(); // auto-post to #okanor-logs if the roster has gone stale
 }
 
-// click a fang to toggle, a spec icon to pick (delegated; #roster persists across repaints)
+// click a spec icon to pick (delegated; #roster persists across repaints)
 document.getElementById("roster").addEventListener("click", (e) => {
-  const f = e.target.closest(".fang");
-  if (f) {
-    e.stopPropagation();
-    toggleFang(f.getAttribute("data-name"));
-    return;
-  }
   const sp = e.target.closest(".spic");
   if (sp) {
     e.stopPropagation();

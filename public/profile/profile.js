@@ -90,7 +90,7 @@
   }
   var ck = RatsData.profKey;
   // Profile page is FREE FOR ALL — no login gate, no officer/profile-key layer. The private layer
-  // (alts, rank, fang) renders for everyone straight from the world-readable PROFILES snapshot; the
+  // (alts, rank) renders for everyone straight from the world-readable PROFILES snapshot; the
   // encrypted roster (tenure) simply falls back to "—" for keyless visitors.
 
   // ---------- helpers ----------
@@ -427,7 +427,7 @@
   });
 
   // ---------- barracks (alts↔main) ----------
-  // Public source: PROFILES[charKey] = { name, class, rank, fang, mainOf, alts:[{name,class}] } (officer-published).
+  // Public source: PROFILES[charKey] = { name, class, rank, mainOf, alts:[{name,class}] } (officer-published).
   // Private source (officer/unlock): the decrypted roster's alt→main notes.
   // pack ordering: main first, then highest level, then name.
   function byMainThenLevel(a, b) {
@@ -543,27 +543,19 @@
   }
 
   function rankIconFor(name) {
-    // highest wins: 👑 GM > ⭐ Officer > 💀 Fang. From PROFILES (public) or roster (private).
+    // highest wins: 👑 GM > ⭐ Officer. From PROFILES (public) or roster (private).
     var k = ck(name),
       p = PROFILES[k];
-    var rank = p && p.rank,
-      fang = p && p.fang;
+    var rank = p && p.rank;
     if (!rank && ROSTER && Array.isArray(ROSTER.roster)) {
       var m = ROSTER.roster.find(function (x) {
         return ck(x.name) === k;
       });
-      if (m) {
-        rank = m.rankName || "";
-        var fl = (ROSTER.fangs || []).map(function (n) {
-          return ck(n);
-        });
-        fang = fl.indexOf(k) >= 0;
-      }
+      if (m) rank = m.rankName || "";
     }
-    // RATS ranks: 👑 Guild Master · ⭐ Officer ("Warchief Rat") · 💀 Fang ("Warchief's Fangs").
+    // RATS ranks: 👑 Guild Master · ⭐ Officer ("Warchief Rat").
     if (/guild\s*master|^gm$/i.test(rank || "")) return { em: "👑", t: "Guild Master" };
     if (/officer|warchief\s+rat/i.test(rank || "")) return { em: "⭐", t: "Officer" };
-    if (fang || /fang/i.test(rank || "")) return { em: "💀", t: "Warchief's Fang" };
     return null;
   }
 
@@ -781,7 +773,6 @@
     var ri = rankIconFor(main);
     var rankName = rankLabel(main);
     rows.push(railRow(ri ? ri.em : "🐀", "Guild rank", rankName ? '<span class="rv col">' + esc(rankName) + "</span>" : DASH));
-    rows.push(railRow("💀", "Squad", isFang(main) ? '<span class="rv">Fang</span>' : DASH));
 
     var lad = ladderFor(name); // this TOON's own standing in scope
     rows.push(
@@ -1198,13 +1189,6 @@
     }
     return "";
   }
-  function isFang(name) {
-    var k = ck(name),
-      p = PROFILES[k];
-    if (p && p.fang) return true;
-    if (ROSTER && Array.isArray(ROSTER.fangs)) return ROSTER.fangs.map(ck).indexOf(k) >= 0;
-    return false;
-  }
   // ladder placement: best of DPS / HPS standing from the snapshot
   function ladderFor(name) {
     var dl = dpsList(),
@@ -1411,23 +1395,30 @@
     var hc = slug && L && L.SPLIT_DIFF_RAIDS[slug] && DIFF === "hc" ? " HC" : "";
     return (slug ? raidLabel(slug) + " " : "") + SIZE + "-man" + hc;
   }
-  // pick the initial raid: the raid of the most recent log in the snapshot, else the first listed.
-  // pick the initial raid for a raider: the raid where THIS raider has the most fights (so a tank lands on
-  // the raid they actually tank, not an empty tab). Falls back to the newest log's raid, then the first.
+  // pick the initial raid for a raider: the CURRENT SEASON (Icecrown Citadel) whenever this
+  // raider has any fights there, so every profile opens on the tier the guild is actually
+  // running. Only when they have none does it fall back to the raid they raided most (so an
+  // old member still lands on a populated tab), then the newest log's raid, then the first.
   function defaultRaid(name) {
     var raids = raidList();
     if (!raids.length) return "";
+    var iccObj = raids.filter(function (r) {
+      return /icecrown|^icc$/i.test(r.slug);
+    })[0];
+    var iccSlug = iccObj && iccObj.slug;
     if (name && L) {
       var byRaid = {};
       L.careerStandings(name).forEach(function (x) {
         byRaid[x.raid] = (byRaid[x.raid] || 0) + x.fights;
       });
+      if (iccSlug && (byRaid[iccSlug] || 0) > 0) return iccSlug;
       var bestRaid = "", bestF = 0;
       Object.keys(byRaid).forEach(function (rs) {
         if (byRaid[rs] > bestF && raids.some(function (r) { return r.slug === rs; })) { bestF = byRaid[rs]; bestRaid = rs; }
       });
       if (bestRaid) return bestRaid;
     }
+    if (iccSlug) return iccSlug;
     var newest = null;
     (DATA.logs || []).forEach(function (l) {
       if (!newest || new Date(l.date) > new Date(newest.date)) newest = l;

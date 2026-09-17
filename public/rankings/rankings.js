@@ -218,21 +218,15 @@
         g.logs.sort(function (a, b) {
           return new Date(a.date) - new Date(b.date);
         });
-        // merge: union of bosses killed + best fangs count across the run
-        var union = {},
-          fangs = 0;
+        // merge: union of bosses killed across the run
+        var union = {};
         g.logs.forEach(function (l) {
           (l.bosses || []).forEach(function (b) {
             union[b] = true;
           });
-          if ((l.fangs || 0) > fangs) fangs = l.fangs;
         });
         var bossCount = Object.keys(union).length;
         var merged = g.logs.length > 1;
-        var fangBadge =
-          fangs >= 5
-            ? ' <span class="lfangs" title="' + fangs + " Warchief's Fangs in this run\">💀 Fangs night</span>"
-            : "";
         var mergedBadge = merged ? ' <span class="lmerge" title="Same lockout run">🔗 ' + g.logs.length + " logs</span>" : "";
         // duplicate uploads collapsed into this lockout's canonical log(s)
         var rawN = rawByLock[k] || g.logs.length;
@@ -303,7 +297,6 @@
           "</span>" +
           mergedBadge +
           dupBadge +
-          fangBadge +
           '<span class="lmeta">' +
           bossCount +
           " bosses · " +
@@ -423,7 +416,7 @@
         if (!bf.length) return null;
         return {
           reportId: l.reportId, reportUrl: l.reportUrl, raid: l.raid, raidSlug: l.raidSlug,
-          size: l.size, date: l.date, uploadedAt: l.uploadedAt, fangs: l.fangs,
+          size: l.size, date: l.date, uploadedAt: l.uploadedAt,
           bfights: bf,
           bosses: bf.filter(function (f) { return f.kill; }).map(function (f) { return f.bn; }),
           kills: bf.filter(function (f) { return f.kill; }).length,
@@ -2437,8 +2430,14 @@
       !raids.some(function (r) {
         return r.key === RAID;
       })
-    )
-      RAID = raids[0].key;
+    ) {
+      // Current season = Icecrown Citadel: open there when the snapshot has it, instead of
+      // raids[0] (progression order, so Ulduar) which put the page on a long-dead tier.
+      var icc = raids.filter(function (r) {
+        return /icecrown|^icc$/i.test(r.key);
+      })[0];
+      RAID = (icc && icc.key) || raids[0].key;
+    }
     document.getElementById("raidSegs").innerHTML = raids
       .map(function (r) {
         return (
@@ -2643,11 +2642,10 @@
     return null;
   }
 
-  // Map one raw API log → the compact `logs` entry, tagging Fangs count from the roster name set.
-  // Also captures killed bosses + kill/wipe counts so the Logs tab can group & summarise by lockout.
-  function logEntry(log, fangSet) {
-    var names = {},
-      killed = [],
+  // Map one raw API log → the compact `logs` entry.
+  // Captures killed bosses + kill/wipe counts so the Logs tab can group & summarise by lockout.
+  function logEntry(log) {
+    var killed = [],
       kills = 0,
       wipes = 0,
       firstStart = null,
@@ -2693,16 +2691,7 @@
       } else {
         wipes++;
       }
-      (f.players || []).forEach(function (p) {
-        names[normNm(p.name)] = true;
-      });
     });
-    var fangs = 0;
-    if (fangSet) {
-      Object.keys(names).forEach(function (n) {
-        if (fangSet[n]) fangs++;
-      });
-    }
     return {
       reportId: String(log.logId),
       reportUrl: log.logUrl,
@@ -2711,7 +2700,6 @@
       size: log.size,
       date: firstStart || log.uploadedAt, // real raid date (first fight), not upload time
       uploadedAt: log.uploadedAt,
-      fangs: fangs,
       bosses: killed,
       kills: kills,
       wipes: wipes,
@@ -2813,7 +2801,7 @@
   }
 
   // Merge fresh logs into the existing `logs` list; drop any ids now archived; sort newest-first.
-  function mergeLogs(existing, fresh, archivedIds, fangSet) {
+  function mergeLogs(existing, fresh, archivedIds) {
     var by = {};
     (existing || []).forEach(function (e) {
       by[e.reportId] = e;
@@ -2822,7 +2810,7 @@
       delete by[id];
     });
     (fresh || []).forEach(function (log) {
-      by[String(log.logId)] = logEntry(log, fangSet);
+      by[String(log.logId)] = logEntry(log);
     });
     return Object.keys(by)
       .map(function (k) {
@@ -2886,20 +2874,12 @@
       var key = await RatsData.loadApiKey();
       if (!key) throw new Error("No API key — save one in the Admin console.");
 
-      // roster → Fangs set (badge) + guild-member names (guildies-only) + alt→main map + MAIN SPEC.
-      var fangSet = null,
-        rosterNames = null,
+      // roster → guild-member names (guildies-only) + alt→main map + MAIN SPEC.
+      var rosterNames = null,
         altMap = null,
         mainSpec = null; // normName → roster main spec label (e.g. "Restoration") — decides true role
       try {
         var roster = await RatsData.loadRoster({ interactive: false });
-        var fl = roster && roster.data && Array.isArray(roster.data.fangs) ? roster.data.fangs : [];
-        if (fl.length) {
-          fangSet = {};
-          fl.forEach(function (n) {
-            fangSet[normNm(n)] = true;
-          });
-        }
         var savedSpecs = (roster && roster.data && roster.data.specs) || {};
         var members = roster && Array.isArray(roster.roster) ? roster.roster : [];
         if (members.length) {
@@ -2981,7 +2961,7 @@
         // per-log fetches then ran straight into 429s). Fall back to MERGING into the existing list:
         // every log that did arrive still lands (with fresh fields), nothing that didn't is lost.
         var rebuildComplete = !res.failedIds || !res.failedIds.length;
-        snap.logs = mergeLogs(rebuild && rebuildComplete ? [] : snap.logs, res.fresh, res.archivedIds, fangSet);
+        snap.logs = mergeLogs(rebuild && rebuildComplete ? [] : snap.logs, res.fresh, res.archivedIds);
         if (rebuild && !rebuildComplete)
           console.warn("Rebuild incomplete — " + res.failedIds.length + " log(s) failed (rate limit?). " +
             "Merged what arrived instead of replacing; run Rebuild again later for: " + res.failedIds.join(", "));

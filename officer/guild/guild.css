@@ -108,21 +108,6 @@
 .m:hover {
   border-color: var(--border);
 }
-.fang {
-  cursor: pointer;
-  font-size: 13px;
-  flex: 0 0 auto;
-  opacity: 0.2;
-  filter: grayscale(1);
-  user-select: none;
-}
-.fang.on {
-  opacity: 1;
-  filter: none;
-}
-.fang:hover {
-  opacity: 0.65;
-}
 /* spec icon before the name - click to pick/change */
 .spic {
   cursor: pointer;

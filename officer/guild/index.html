@@ -41,8 +41,6 @@
       </select>
       <button type="button" class="tbtn active" onclick="toggleChk('hideAlts', this)">hide alts</button>
       <input type="checkbox" id="hideAlts" checked hidden>
-      <button type="button" class="tbtn" onclick="toggleChk('fangsOnly', this)">💀 fangs only</button>
-      <input type="checkbox" id="fangsOnly" hidden>
     </div>
 
     <div class="err" id="err"></div>
@@ -57,7 +55,7 @@
         <button class="alt" onclick="closeModal()">✕</button>
       </div>
       <p class="sub">Run the in-game roster export, copy its JSON, and paste it below. It <b>merges</b> with the current
-        data — <b>💀 Fangs</b>, specs and join dates are kept.</p>
+        data — specs and join dates are kept.</p>
       <textarea id="jsonIn" placeholder="Paste the guild roster JSON here…"></textarea>
       <div class="err" id="modalErr"></div>
       <div class="controls">
