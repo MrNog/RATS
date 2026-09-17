@@ -1,0 +1,758 @@
+{
+"49919": {
+"name": "Cryptmaker",
+"icon": "inv_mace_116",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"49949": {
+"name": "Band of the Bone Colossus",
+"icon": "inv_jewelry_ring_83",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"49950": {
+"name": "Frostbitten Fur Boots",
+"icon": "inv_boots_leather_07",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"49960": {
+"name": "Bracers of Dark Reckoning",
+"icon": "inv_bracer_42",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"49964": {
+"name": "Legguards of Lost Hope",
+"icon": "inv_pants_plate_32",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"49975": {
+"name": "Bone Sentinel's Amulet",
+"icon": "inv_jewelry_necklace_53",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"49976": {
+"name": "Bulwark of Smouldering Steel",
+"icon": "inv_shield_72",
+"q": 4,
+"slot": "INVTYPE_SHIELD"
+},
+"49978": {
+"name": "Crushing Coldwraith Belt",
+"icon": "inv_belt_66",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"49981": {
+"name": "Fal'inrush, Defender of Quel'thalas",
+"icon": "inv_weapon_crossbow_38",
+"q": 4,
+"slot": "INVTYPE_RANGEDRIGHT"
+},
+"49982": {
+"name": "Heartpierce",
+"icon": "inv_weapon_shortblade_103",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"49983": {
+"name": "Blood-Soaked Saronite Stompers",
+"icon": "inv_boots_plate_12",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"49985": {
+"name": "Juggernaut Band",
+"icon": "item_icecrownringd",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"49992": {
+"name": "Nibelung",
+"icon": "inv_staff_109",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"49997": {
+"name": "Mithrios, Bronzebeard's Legacy",
+"icon": "inv_mace_117",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50002": {
+"name": "Polar Bear Claw Bracers",
+"icon": "inv_bracer_42",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50012": {
+"name": "Havoc's Call, Blade of Lordaeron Kings",
+"icon": "inv_axe_113",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50028": {
+"name": "Trauma",
+"icon": "inv_mace_118",
+"q": 4,
+"slot": "INVTYPE_WEAPONMAINHAND"
+},
+"50034": {
+"name": "Zod's Repeating Longbow",
+"icon": "inv_weapon_bow_55",
+"q": 4,
+"slot": "INVTYPE_RANGED"
+},
+"50035": {
+"name": "Black Bruise",
+"icon": "inv_weapon_hand_33",
+"q": 4,
+"slot": "INVTYPE_WEAPONMAINHAND"
+},
+"50040": {
+"name": "Distant Land",
+"icon": "inv_staff_107",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50062": {
+"name": "Plague Scientist's Boots",
+"icon": "inv_boots_cloth_25",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"50065": {
+"name": "Icecrown Glacial Wall",
+"icon": "inv_shield_75",
+"q": 4,
+"slot": "INVTYPE_SHIELD"
+},
+"50068": {
+"name": "Rigormortis",
+"icon": "inv_sword_152",
+"q": 4,
+"slot": "INVTYPE_WEAPONMAINHAND"
+},
+"50070": {
+"name": "Glorenzelg, High-Blade of the Silver Hand",
+"icon": "inv_sword_153",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50173": {
+"name": "Shadow Silk Spindle",
+"icon": "inv_misc_thread_01",
+"q": 4,
+"slot": "INVTYPE_HOLDABLE"
+},
+"50178": {
+"name": "Bloodfall",
+"icon": "inv_weapon_staff_109",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50179": {
+"name": "Last Word",
+"icon": "inv_mace_114",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50181": {
+"name": "Dying Light",
+"icon": "inv_staff_106",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50182": {
+"name": "Blood Queen's Crimson Choker",
+"icon": "inv_jewelcrafting_crimsonspinel_02",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50333": {
+"name": "Toskk's Maximized Wristguards",
+"icon": "inv_bracer_41",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50348": {
+"name": "Dislodged Foreign Object",
+"icon": "inv_jewelry_trinket_01",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50349": {
+"name": "Corpse Tongue Coin",
+"icon": "inv_misc_coin_18",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50351": {
+"name": "Tiny Abomination in a Jar",
+"icon": "inv_alchemy_enchantedvial",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50359": {
+"name": "Althor's Abacus",
+"icon": "inv_jewelry_trinket_02",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50360": {
+"name": "Phylactery of the Nameless Lich",
+"icon": "inv_jewelry_trinket_03",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50361": {
+"name": "Sindragosa's Flawless Fang",
+"icon": "inv_jewelry_trinket_06",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50362": {
+"name": "Deathbringer's Will",
+"icon": "inv_jewelry_trinket_04",
+"q": 4,
+"slot": "INVTYPE_TRINKET"
+},
+"50415": {
+"name": "Bryntroll, the Bone Arbiter",
+"icon": "inv_axe_120",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50425": {
+"name": "Oathbinder, Charge of the Ranger-General",
+"icon": "inv_weapon_staff_109",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"50426": {
+"name": "Heaven's Fall, Kryss of a Thousand Lies",
+"icon": "inv_weapon_shortblade_104",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50427": {
+"name": "Bloodsurge, Kel'Thuzad's Blade of Agony",
+"icon": "inv_sword_150",
+"q": 4,
+"slot": "INVTYPE_WEAPONMAINHAND"
+},
+"50428": {
+"name": "Royal Scepter of Terenas II",
+"icon": "inv_mace_115",
+"q": 4,
+"slot": "INVTYPE_WEAPONMAINHAND"
+},
+"50429": {
+"name": "Archus, Greatstaff of Antonidas",
+"icon": "inv_staff_108",
+"q": 4,
+"slot": "INVTYPE_2HWEAPON"
+},
+"49988": {
+"name": "Leggings of Northern Lights",
+"icon": "inv_pants_mail_32",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"49989": {
+"name": "Ahn'kahar Onyx Neckguard",
+"icon": "inv_jewelry_necklace_48",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"49998": {
+"name": "Shadowvault Slayer's Cloak",
+"icon": "item_icecrowncloak",
+"q": 4,
+"slot": "INVTYPE_CLOAK"
+},
+"900004": {
+"name": "Ikfirus's Sack of Wonder",
+"icon": "inv_chest_leather_22",
+"q": 4,
+"slot": "INVTYPE_CHEST"
+},
+"50000": {
+"name": "Scourge Hunter's Vambraces",
+"icon": "inv_bracer_40",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"49999": {
+"name": "Skeleton Lord's Circle",
+"icon": "inv_jewelry_ring_83",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50042": {
+"name": "Gangrenous Leggings",
+"icon": "inv_pants_leather_34",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"50038": {
+"name": "Carapace of Forgotten Kings",
+"icon": "inv_chest_mail_11",
+"q": 4,
+"slot": "INVTYPE_CHEST"
+},
+"50413": {
+"name": "Nerub'ar Stalker's Cord",
+"icon": "inv_belt_60",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50037": {
+"name": "Fleshrending Gauntlets",
+"icon": "inv_gauntlets_86",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50019": {
+"name": "Winding Sheet",
+"icon": "item_icecrowncape",
+"q": 4,
+"slot": "INVTYPE_CLOAK"
+},
+"50021": {
+"name": "Aldriana's Gloves of Secrecy",
+"icon": "inv_gauntlets_79",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50067": {
+"name": "Astrylian's Sutured Cinch",
+"icon": "inv_belt_61",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50071": {
+"name": "Treads of the Wasteland",
+"icon": "inv_boots_mail_06",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"50180": {
+"name": "Lana'thel's Chain of Flagellation",
+"icon": "inv_jewelry_necklace_50",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50188": {
+"name": "Anub'ar Stalker's Gloves",
+"icon": "inv_gauntlets_84",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50187": {
+"name": "Coldwraith Links",
+"icon": "inv_belt_62",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50192": {
+"name": "Scourge Reaver's Legplates",
+"icon": "inv_pants_plate_32",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"50186": {
+"name": "Frostbrood Sapphire Ring",
+"icon": "item_icecrownringa",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50421": {
+"name": "Sindragosa's Cruel Claw",
+"icon": "inv_misc_monsterhorn_03",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50452": {
+"name": "Wodin's Lucky Necklace",
+"icon": "inv_misc_pelt_wolf_ruin_01",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"49979": {
+"name": "Handguards of Winter's Respite",
+"icon": "inv_gauntlets_83",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"49980": {
+"name": "Rusted Bonespike Pauldrons",
+"icon": "inv_shoulder_117",
+"q": 4,
+"slot": "INVTYPE_SHOULDER"
+},
+"49977": {
+"name": "Loop of the Endless Labyrinth",
+"icon": "inv_jewelry_ring_82",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"49967": {
+"name": "Marrowgar's Frigid Eye",
+"icon": "item_icecrownringb",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"49994": {
+"name": "The Lady's Brittle Bracers",
+"icon": "inv_bracer_45",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"49996": {
+"name": "Deathwhisper Raiment",
+"icon": "inv_chest_leather_21",
+"q": 4,
+"slot": "INVTYPE_ROBE"
+},
+"49993": {
+"name": "Necrophotic Greaves",
+"icon": "inv_boots_mail_10",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"49995": {
+"name": "Fallen Lord's Handguards",
+"icon": "inv_gauntlets_85",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"49990": {
+"name": "Ring of Maddening Whispers",
+"icon": "inv_jewelry_ring_ahnqiraj_05",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50009": {
+"name": "Boots of Unnatural Growth",
+"icon": "inv_boots_leather_8",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"50010": {
+"name": "Waistband of Righteous Fury",
+"icon": "inv_belt_70",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50005": {
+"name": "Amulet of the Silent Eulogy",
+"icon": "item_icecrownnecklaced",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50008": {
+"name": "Ring of Rapid Ascent",
+"icon": "inv_jewelry_ring_86",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50014": {
+"name": "Greatcloak of the Turned Champion",
+"icon": "item_icecrowncape",
+"q": 4,
+"slot": "INVTYPE_CLOAK"
+},
+"50015": {
+"name": "Belt of the Blood Nova",
+"icon": "inv_belt_83",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50063": {
+"name": "Lingering Illness",
+"icon": "inv_belt_68",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50056": {
+"name": "Plaguebringer's Stained Pants",
+"icon": "inv_pants_cloth_34",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"50041": {
+"name": "Leather of Stitched Scourge Parts",
+"icon": "inv_pants_leather_35",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"50059": {
+"name": "Horrific Flesh Epaulets",
+"icon": "inv_shoulder_133",
+"q": 4,
+"slot": "INVTYPE_SHOULDER"
+},
+"50064": {
+"name": "Unclean Surgical Gloves",
+"icon": "inv_gauntlets_104",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50060": {
+"name": "Faceplate of the Forgotten",
+"icon": "inv_helmet_154",
+"q": 4,
+"slot": "INVTYPE_HEAD"
+},
+"50061": {
+"name": "Holiday's Grace",
+"icon": "inv_jewelry_necklace_49",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50032": {
+"name": "Death Surgeon's Sleeves",
+"icon": "inv_bracer_47",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50026": {
+"name": "Helm of the Elder Moon",
+"icon": "inv_helmet_148",
+"q": 4,
+"slot": "INVTYPE_HEAD"
+},
+"50030": {
+"name": "Bloodsunder's Bracers",
+"icon": "inv_bracer_60",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50027": {
+"name": "Rot-Resistant Breastplate",
+"icon": "inv_chest_plate22",
+"q": 4,
+"slot": "INVTYPE_CHEST"
+},
+"900048": {
+"name": "Corpse-Impaling Spike",
+"icon": "inv_wand_35",
+"q": 4,
+"slot": "INVTYPE_RANGEDRIGHT"
+},
+"50069": {
+"name": "Professor's Bloodied Smock",
+"icon": "inv_belt_59",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50172": {
+"name": "Sanguine Silk Robes",
+"icon": "inv_chest_cloth_80",
+"q": 4,
+"slot": "INVTYPE_ROBE"
+},
+"50176": {
+"name": "San'layn Ritualist Gloves",
+"icon": "inv_gauntlets_92",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50171": {
+"name": "Shoulders of Frost-Tipped Thorns",
+"icon": "inv_shoulder_111",
+"q": 4,
+"slot": "INVTYPE_SHOULDER"
+},
+"50177": {
+"name": "Mail of Crimson Coins",
+"icon": "inv_chest_mail_15",
+"q": 4,
+"slot": "INVTYPE_CHEST"
+},
+"50175": {
+"name": "Crypt Keeper's Bracers",
+"icon": "inv_bracer_46",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50174": {
+"name": "Incarnadine Band of Mending",
+"icon": "inv_jewelry_ring_84",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50170": {
+"name": "Valanar's Other Signet Ring",
+"icon": "inv_jewelry_ring_81",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50205": {
+"name": "Frostbinder's Shredded Cape",
+"icon": "inv_misc_cape_16",
+"q": 4,
+"slot": "INVTYPE_CLOAK"
+},
+"50418": {
+"name": "Robe of the Waking Nightmare",
+"icon": "inv_chest_cloth_78",
+"q": 4,
+"slot": "INVTYPE_ROBE"
+},
+"50417": {
+"name": "Bracers of Eternal Dreaming",
+"icon": "inv_bracer_40",
+"q": 4,
+"slot": "INVTYPE_WRIST"
+},
+"50202": {
+"name": "Snowstorm Helm",
+"icon": "inv_helmet_169",
+"q": 4,
+"slot": "INVTYPE_HEAD"
+},
+"50199": {
+"name": "Leggings of Dying Candles",
+"icon": "inv_pants_plate_33",
+"q": 4,
+"slot": "INVTYPE_LEGS"
+},
+"50416": {
+"name": "Boots of the Funeral March",
+"icon": "inv_boots_plate_14",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"900063": {
+"name": "Nightmare Ender",
+"icon": "inv_wand_34",
+"q": 4,
+"slot": "INVTYPE_RANGEDRIGHT"
+},
+"50424": {
+"name": "Memory of Malygos",
+"icon": "inv_jewelry_ring_40",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"49986": {
+"name": "Broken Ram Skull Helm",
+"icon": "inv_helmet_158",
+"q": 4,
+"slot": "INVTYPE_HEAD"
+},
+"50036": {
+"name": "Belt of Broken Bones",
+"icon": "inv_belt_62",
+"q": 4,
+"slot": "INVTYPE_WAIST"
+},
+"50023": {
+"name": "Bile-Encrusted Medallion",
+"icon": "item_icecrownnecklaceb",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50074": {
+"name": "Royal Crimson Cloak",
+"icon": "inv_misc_cape_18",
+"q": 4,
+"slot": "INVTYPE_CLOAK"
+},
+"50075": {
+"name": "Taldaram's Plated Fists",
+"icon": "inv_gauntlets_86",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50190": {
+"name": "Grinning Skull Greatboots",
+"icon": "inv_boots_plate_12",
+"q": 4,
+"slot": "INVTYPE_FEET"
+},
+"50185": {
+"name": "Devium's Eternally Cold Ring",
+"icon": "inv_jewelry_ring_86",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"52025": {
+"name": "Vanquisher's Mark of Sanctification",
+"icon": "ability_paladin_shieldofthetemplar",
+"q": 4,
+"slot": "INVTYPE_TOKEN"
+},
+"900073": {
+"name": "Conqueror's Mark of Sanctification",
+"icon": "ability_paladin_shieldofthetemplar",
+"q": 4,
+"slot": "INVTYPE_TOKEN"
+},
+"900074": {
+"name": "Protector's Mark of Sanctification",
+"icon": "ability_paladin_shieldofthetemplar",
+"q": 4,
+"slot": "INVTYPE_TOKEN"
+},
+"50414": {
+"name": "Might of Blight",
+"icon": "inv_jewelry_ring_84",
+"q": 4,
+"slot": "INVTYPE_FINGER"
+},
+"50011": {
+"name": "Gunship Captain's Mittens",
+"icon": "inv_gauntlets_90",
+"q": 4,
+"slot": "INVTYPE_HAND"
+},
+"50195": {
+"name": "Noose of Malachite",
+"icon": "item_icecrownnecklacec",
+"q": 4,
+"slot": "INVTYPE_NECK"
+},
+"50411": {
+"name": "Scourgeborne Waraxe",
+"icon": "inv_axe_113",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50412": {
+"name": "Bloodvenom Blade",
+"icon": "inv_sword_154",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50016": {
+"name": "Rib Spreader",
+"icon": "inv_weapon_shortblade_105",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50184": {
+"name": "Keleseth's Seducer",
+"icon": "inv_weapon_hand_33",
+"q": 4,
+"slot": "INVTYPE_WEAPONOFFHAND"
+},
+"50183": {
+"name": "Lungbreaker",
+"icon": "inv_weapon_shortblade_105",
+"q": 4,
+"slot": "INVTYPE_WEAPON"
+},
+"50423": {
+"name": "Sundial of Eternal Dusk",
+"icon": "inv_offhand_zulaman_d_02",
+"q": 4,
+"slot": "INVTYPE_HOLDABLE"
+}
+}

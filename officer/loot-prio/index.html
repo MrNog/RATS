@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141517" />
+  <link rel="preconnect" href="https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app" crossorigin />
+  <link rel="preconnect" href="https://wow.zamimg.com" crossorigin />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E⚔️%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Loot Priority</title>
+
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="loot-prio.css">
+</head>
+
+<body>
+  <div class="wrap wide">
+    <div class="sticky">
+    <header class="phead">
+      <h1>⚔️ Loot Priority</h1>
+      <p class="sub">Drops that two classes both want, decided <em>before</em> they drop.</p>
+      <div class="stats" id="meta"></div>
+      <div class="nav">
+        <a class="btn" href="../index.html">← Back to Tools</a>
+        <button id="export" class="btn" type="button"
+          title="Copy the Reserved list as text for Discord">⧉ Export reserved</button>
+        <button id="refresh" class="btn" type="button" title="Re-read roster, logs and loot">↻ Refresh</button>
+      </div>
+    </header>
+
+    <p class="creed">
+      <b>Player &gt; class</b> trumps every decision on this sheet — the list is where the
+      call starts, not where it ends.
+      <button type="button" id="why" class="whybtn" aria-expanded="false">why</button>
+    </p>
+
+    <div class="foot" id="whybox" hidden>
+      <p>
+        It cannot see who carried the night, who swapped spec to save a pull, or who has
+        waited three weeks without a drop. Council decides; this only makes it faster.
+      </p>
+      <p>
+        Only items <b>two or more classes</b> compete for are listed. If everyone who can
+        use a drop is the same class they roll it out between themselves, and an item
+        nobody in the raid can use needs no page — both are left off so this stays short
+        enough to read mid-raid.
+      </p>
+      <p>
+        Built live from the guild roster, our logs and the loot history. Post the raid as
+        usual and refresh: winners are struck through and the next name moves up. Pugs are
+        ignored (not on the roster) and anyone who stops showing up drops off. Prio text
+        from the <b>Fusion P4 Loot Prio Sheet</b> (Joardee + Pummel, v1.0), already linked
+        in <code>🟣 General Loot</code>.
+      </p>
+    </div>
+
+    <!-- controls -->
+    <div class="ctl frow">
+      <input id="q" class="inp" type="text" placeholder="Filter item or player…" autocomplete="off" />
+      <div class="tabs" role="group" aria-label="Tier filter">
+        <button class="btn tbtn active" data-tier="all" type="button">All</button>
+        <button class="btn tbtn" data-tier="R" type="button">Reserved</button>
+        <button class="btn tbtn" data-tier="P" type="button">Prio roll</button>
+      </div>
+      <button id="collapse" class="btn" type="button" title="Collapse or expand every group">⊟ Collapse all</button>
+      <label class="mind" title="Hide raiders with fewer raid days than this">
+        min raids
+        <select id="minDays">
+          <option value="1" selected>1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="8">8</option>
+        </select>
+      </label>
+      <span id="count" class="cnt"></span>
+    </div>
+
+    </div>
+
+    <div class="legend">
+      <span><em><b class="lg-first">Name</b></em> gets it now</span>
+      <span><em><span class="sep">&rsaquo;</span></em> next up</span>
+      <span><em><span class="sep drop">&raquo;</span></em> lower group</span>
+      <span><em><i class="offtag">off</i></em> off-spec</span>
+      <span><em><i class="offtag new">new</i></em> few ICC 25 nights</span>
+      <span><em><i class="offtag low">low</i></em> off the pace</span>
+      <span><em><b class="lg-won">Name</b></em> already won</span>
+    </div>
+
+    <div id="grid" class="grid" aria-live="polite"></div>
+
+    <div id="empty" class="empty" hidden>Nothing matches that filter.</div>
+
+  </div>
+
+  <script src="../../assets/js/utils.js"></script>
+  <script src="prio-engine.js"></script>
+  <script src="loot-prio.js"></script>
+</body>
+
+</html>
