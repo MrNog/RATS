@@ -57,8 +57,8 @@ const OPTIONAL = [
 const WA_PACKS = [
   { name: "T7 Pack", raid: "Naxxramas · Obsidian Sanctum · Eye of Eternity", url: "https://wago.io/Dic_mszCj" },
   { name: "T8 Pack", raid: "Ulduar", url: "https://wago.io/wIeM-Q6Qh" },
-  { name: "T9 Pack", raid: "Trial of the Crusader", url: "https://wago.io/ZGexKRmOL", hot: true },
-  { name: "T10 Pack", raid: "Icecrown Citadel", url: "https://wago.io/OQP0SKedt" },
+  { name: "T9 Pack", raid: "Trial of the Crusader", url: "https://wago.io/ZGexKRmOL" },
+  { name: "T10 Pack", raid: "Icecrown Citadel", url: "https://wago.io/OQP0SKedt", hot: true },
 ];
 
 function esc(s) {

@@ -371,11 +371,11 @@
         var k = raidKeyFor(l.raid);
         if (k && (l.ts || 0) > (newestTs[k] || 0)) newestTs[k] = l.ts || 0;
       });
-      // Current season = Trial of the Crusader: default to it whenever it has any loot,
-      // so a stray newer Ony/Naxx drop doesn't yank the default off the progression raid.
+      // Current season = Icecrown Citadel: default to it whenever it has any loot, so a
+      // stray newer Ony/Naxx drop doesn't yank the default off the progression raid.
       var seasonKey = null;
       for (var si = 0; si < ALL_RAIDS.length; si++) {
-        if (/trial of the crusader|^toc$/i.test(ALL_RAIDS[si].key)) { seasonKey = ALL_RAIDS[si].key; break; }
+        if (/icecrown|^icc$/i.test(ALL_RAIDS[si].key)) { seasonKey = ALL_RAIDS[si].key; break; }
       }
       if (seasonKey && (counts[seasonKey] || 0) > 0) {
         RAID = seasonKey;
