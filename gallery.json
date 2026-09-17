@@ -321,6 +321,20 @@
     "date": "2026-07"
   },
   {
+    "cat": "warchief-fangs",
+    "file": "images/warchief-fangs/Fangs End 2.png",
+    "title": "Fangs End #2",
+    "caption": "",
+    "date": "2026-09"
+  },
+  {
+    "cat": "warchief-fangs",
+    "file": "images/warchief-fangs/Fangs End.png",
+    "title": "Fangs End",
+    "caption": "",
+    "date": "2026-09"
+  },
+  {
     "cat": "warchiefs",
     "file": "images/warchiefs/Ardil.png",
     "title": "Ardil",
@@ -335,6 +349,14 @@
     "caption": "",
     "date": "2026-06",
     "people": "foug"
+  },
+  {
+    "cat": "warchiefs",
+    "file": "images/warchiefs/Grunho Banned.png",
+    "title": "Grunho Banned",
+    "caption": "",
+    "date": "2026-09",
+    "people": "grunho"
   },
   {
     "cat": "warchiefs",
