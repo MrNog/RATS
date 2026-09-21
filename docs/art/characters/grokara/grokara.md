@@ -16,21 +16,25 @@
   — built like a pit-fighter, not an assassin. **No hood, face always fully visible.**
 - **Class read:** **Combat Rogue** — sustained, relentless, out in the light. Speed lines and steel, not
   shadow. Motion is his whole identity.
-- **Armor:** stripped-down dark leathers worn for movement — sleeveless studded jerkin over wrapped
-  forearms, a heavy buckled belt hung with throwing knives, one pauldron only (left), the right shoulder
-  bare and scarred. Battle-worn black-and-gold Horde trim. Nothing that would slow him down.
-- **Weapon(s):** **TWO matched fast swords** — ONE in EACH hand, never stacked, never a spare. Straight
-  narrow blades with a faint **yellow-steel edge-glow**, held wide and low in a working guard, or crossed
-  mid-swing. NO daggers (those are Kobe's), NO bow, NO shield.
-- **Signature detail:** **both blades trailing a sharp motion-arc** — a hard clean sweep of light through
-  the air behind the swing, showing he never stops moving. That plus the bare right shoulder.
+- **Armor:** stripped-down dark leathers worn for movement under a **deep blood-red tabard** hanging to the
+  knee — sleeveless studded jerkin, wrapped forearms, a heavy buckled belt hung with throwing knives. Big
+  **asymmetric spiked pauldrons** in dark steel and weathered gold, jutting outward and clearly mismatched
+  left to right. The right shoulder scarred where the plate leaves it bare. Nothing that would slow him down.
+- **Weapon(s):** **TWO large matched AXES** — ONE in EACH hand, never stacked, never a spare. Broad
+  **glacial blue-white** axe heads, translucent like carved ice, each with a jagged crystalline edge and a
+  seam of **coral-pink** running through the blade; heavy and wide, swung not fenced with. Held out to the
+  sides in a working guard, or crossed mid-swing. NO daggers (those are Kobe's), NO swords, NO bow, NO shield.
+- **Signature detail:** **both axe heads trailing a sharp motion-arc** — a hard clean sweep of pale light
+  through the air behind the swing, showing he never stops moving. That plus the bare right shoulder.
 
 ## Palette & key light
 
-- **Palette:** ash-grey fur, black leather, oiled steel, brass buckles, a hard **rogue-yellow** `#FFF569`
-  edge-glow, dust-brown ambient. Class colour Rogue `#FFF569` (the profile strip tints to that yellow).
-- **Key light:** one hard, low, warm **torch-amber** key from the front-right catching the blades and the
-  bare shoulder; cool blue-grey fill behind so the steel reads.
+- **Palette:** ash-grey fur, black leather, a **deep blood-red tabard** falling to the knee, dark steel and
+  weathered gold on the pauldrons, and the **glacial blue-white + coral-pink** of the axes as the one cold
+  accent. Class colour Rogue `#FFF569` — a faint yellow only in the ambient for the profile-strip tint, never
+  on the axes.
+- **Key light:** one hard, low, warm **torch-amber** key from the front-right catching the red tabard and the
+  bare shoulder; the axes carry their own cold pale-blue glow against it. Deep shadow behind.
 
 ## Per-format pose + ambient (SUGGESTIONS, not locks — vary every time)
 
@@ -52,6 +56,12 @@ here so nothing repeats.
 
 ## Notes / history
 
+- **21 Sep 2026 — armas corrigidas para DOIS MACHADOS** (eram espadas na ficha original), a partir de uma
+  screenshot do transmog: machados glaciais azul-brancos com veio coral, tabardo vermelho-sangue, pauldrons
+  espinhados assimétricos. Prompts em [`grokara-banners.md`](grokara-banners.md).
+- **#1 DPS da guild** — 1º de 17 em ICC 10, 6.663 avg, melhor parse 9.612 no Deathbringer Saurfang, e
+  **Kick Master** com 21 interrupts. Render de acordo: ele é o topo da tabela, não mais um da malta.
+- Alt: **Unfrostblood**, Unholy DK — ver [`unfrostblood.md`](unfrostblood.md).
 - **15 Sep 2026 — sheet created.** Joined during the ICC tier; one of the guild's top damage dealers on the
   09 Sep ICC 25 (highest single-fight DPS in that log).
 - Hard rule: **no hood, no shadow-dissolve, no rooftop** — that silhouette belongs to Kobe. Grokara is the

@@ -184,6 +184,14 @@ A square **avatar** — head-and-shoulders **face crop** of the rat, readable at
 strong single rim light, simple dark backdrop (one class-colour glow), no busy props. NO text/logo. Export
 large (e.g. 1024×1024); it will be downscaled to a Discord avatar, so keep the face dominant and high-contrast.
 
+> **⚠️ Say RAT SKULL or you get a lion.** A face crop has no body, so every word about bulk ("heavy jaw",
+> "thick-necked", "imposing", "broad") lands in the **face** and comes back as a wide flat lion/bear head
+> with jowls and a furry ruff — which then looks nothing like that rat's own banner. In ANY close crop,
+> state it outright: a **long, narrow, tapering snout projecting well past the eyes**, a narrow skull,
+> large thin rounded ears, short sleek close-lying fur; and add to the Do-NOT list: *broad / wide / flat /
+> round face, short stubby snout, lion / bear / cat / ape head, heavy square jaw, jowls, fat cheeks, mane,
+> beard, thick fluffy ruff, long shaggy fur.* Say the mass lives in the **shoulders and armor, not the face**.
+
 ### D — iPhone wallpaper (9:19.5 tall portrait) — *NEW*
 A **vertical** phone wallpaper. Full or 3/4 figure composed for portrait: subject lower-center, dramatic
 environment rising above. **Keep the TOP ~20% and the very bottom simpler/darker** so the clock, notifications

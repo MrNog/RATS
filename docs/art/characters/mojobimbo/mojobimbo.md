@@ -1,9 +1,10 @@
-# Mojo — "Disease Carrier"
+# Mojobimbo — "Disease Carrier"
 
 - **Class / spec:** Unholy Death Knight (MAIN)
 - **Rank:** rat
 - **Commissioned:** early card set (see `rats-card-prompts.md`) · sheet + fresh profile banner 02 Jul 2026
-- **Toon name:** **Mojo** (profile banners are keyed by this exact toon name, lowercased).
+- **Toon name:** **Mojobimbo** (profile banners are keyed by this exact toon name, lowercased). Earlier art
+  and logs say "Mojo" / "Mojodaddy" / "Bimbo" — same person, renamed character.
 
 ## Locked look (established identity — keep consistent)
 

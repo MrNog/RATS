@@ -1,10 +1,11 @@
-# Nutelaa — Frost Death Knight
+# Dknutela — Frost Death Knight
 
 - **Class / spec:** Frost Death Knight (MAIN) · **female**
 - **Rank:** rat
 - **Commissioned:** early card set (see `rats-card-prompts.md`) · reroll lore art
   (`images/lore/nutelaa reroll.png`) · sheet + fresh profile banner 02 Jul 2026
-- **Toon name:** **Nutelaa** (profile banners are keyed by this exact toon name, lowercased).
+- **Toon name:** **Dknutela** (profile banners are keyed by this exact toon name, lowercased). Earlier art
+  and logs say "Nutelaa" / "Nutella" / "Nutela" — same person, rerolled into this DK.
 
 ## Locked look (established identity — keep consistent)
 

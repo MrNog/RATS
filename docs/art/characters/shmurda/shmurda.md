@@ -49,6 +49,19 @@ Keep it safe: **hands at chest height or lower, always in clear frame, always se
 open space.** Prefer sword point-down on the pommel, sword carried low at the side, or sword resting on a
 shoulder *pauldron* with the hands still low. His power reads through mass, stance and scale — not a raised blade.
 
+## ⚠️ AI-face rule (learned the hard way, 21 Sep 2026)
+
+**In a 1:1 face crop, say RAT SKULL explicitly or the model gives you a lion.** The first avatar came back
+with a broad flat face, fat cheeks and a furry ruff — nothing like the long-snouted rat on his banner.
+
+Cause: this sheet describes him as "heavy jaw", "thick-necked", "the most imposing". In a full-body shot
+that mass goes into the body; in a **face crop there is no body**, so the generator puts all of it in the
+face. Any word about bulk becomes cheek and jaw.
+
+For any close crop of him: state the **long narrow tapering snout projecting past the eyes**, the narrow
+skull, short sleek fur, and ban the wide/flat/lion/bear/jowls/mane/ruff shapes outright. Say his mass is in
+the **shoulders and armor, not the face**. This applies to every rat, not just Shmurda.
+
 ## Notes / history
 
 - **The only pure-physical, no-magic banner in the set** (with the hunters). That is deliberately his
@@ -78,4 +91,33 @@ Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember 
 Art style: World of Warcraft cinematic concept art, dark heroic-fantasy Horde style, painterly brushwork, ultra-detailed, strictly 4:1 ultra-wide landscape.
 
 Do NOT include: the sword raised overhead, above, behind, across or anywhere near his head; hands lifted above chest height; arms crossing behind or over the skull; the head tilted back, sunk into the shoulders or fused with a pauldron; a sword floating unattached to the hands; any lettering, title, name, watermark, logo or insignia; two tails or any extra tail, extra or duplicated limbs/arms/heads, a second weapon, a shield, a weapon and shield in the same hand, a two-handed greatsword held one-handed, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, arms bending the wrong way or twisted behind the body, a detached / floating / over-tilted head, a broken or too-long neck, impossible or unbalanced poses; ANY MAGICAL GLOW — no runes, no fire, no lightning, no holy light, no shadow energy on him or his blade (he is PURE STEEL); a helm covering his face; other characters or opponents in frame; chubby / fat / overweight build (he is heavy with MUSCLE, not fat); cute / pretty / soft / dainty styling, pastel or pink colours, floating dust/ember speckle-particles filling the air, speckled noise, heavy haze, a busy left third, modern clothing, human faces, Alliance symbols, excessive bloom that hides the rat, plain white background.
+```
+
+---
+
+## Discord profile pic — 1:1, NO text
+
+Face crop que tem de ler a 40 px. A **AI-pose rule** acima vale a dobrar aqui: num quadrado a espada não
+entra de todo — só cara, orelha partida e ombreira. Sem brilho mágico nenhum; ele é aço e mais nada.
+
+Gravar como `images/icons/Shmurda.png` (1024×1024).
+
+```
+Digital fantasy illustration, square 1:1 avatar (1024x1024), World of Warcraft cinematic concept art, dark heroic-fantasy Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. Heavy, grounded, physical — raw steel and weight, NO magic. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only.
+
+Subject: a HEAD-AND-SHOULDERS PORTRAIT of Shmurda, an anthropomorphic Arms Warrior rat — grim, stoic and veteran, NOT cute or soft. HE IS A RAT, with a true rat's head: a LONG, NARROW, TAPERING SNOUT ending in a small pink nose, a SLENDER muzzle, a NARROW skull, and large thin rounded ears set high and wide, one of them BROKEN AND NOTCHED. Short, sleek, close-lying DARK GREY-BROWN fur, weather-beaten but not shaggy, with long white whiskers sweeping back. Small hard eyes lit BRONZE-AMBER, set on either side of the narrow snout. BARE-HEADED — no helm, nothing covering the face. Exactly ONE head, one face, two eyes, two ears — a single rat, no second figure. At the bottom of the frame, one battered DARK STEEL PAULDRON and a dented breastplate edge with chain-and-leather at the joint, scuffed and unpolished, nothing shiny or ornate.
+
+CRITICAL HEAD SHAPE: the skull is a RAT's — long and wedge-shaped in profile, the snout clearly projecting forward well past the eyes, the whole head narrow from the front. Do NOT render a broad, flat, wide or round face; do NOT make it lion-like, bear-like, cat-like or ape-like; do NOT give him a heavy square jaw, a mane, a beard, or a thick fluffy ruff of fur. He is lean and wiry in the face — his mass lives in his shoulders and his armor, NOT in his cheeks or jaw.
+
+Framing: the head and shoulders fill the square, CENTERED, in a slight three-quarter turn with the chin level, looking straight into the lens. The snout points slightly toward the camera so its LENGTH reads clearly. HEAD AND SHOULDERS ONLY — no weapon of any kind in frame, no hands, no sword near, behind, above or across the head; nothing crosses the skull. Bold and high-contrast so it stays readable when shrunk to a small circular avatar. Correct head-to-shoulder proportion, a natural neck, the head sitting properly on the shoulders and clearly separated from the pauldron.
+
+Setting: a simple, flat, very dark backdrop — plain deep charcoal-black with one soft warm glow behind the head. No architecture, no props, no busy detail, nothing competing with the face.
+
+Color palette & lighting: dark grey-brown fur, battered dark steel plate, gouged iron, rust brown, cold steel. ONE hard low FIRE-ORANGE key light raking in from the front-left (smouldering wreckage off-frame), scraping along the LENGTH of the snout, the broken ear, the whiskers and the pauldron, with deep black shadow filling the rest and a faint cool grey rim separating the silhouette from the backdrop. Keep the orange as a rim and edge light — it must not wash the whole face warm. IMPORTANT: he is lit ENTIRELY by the world — there is NO magical glow anywhere on him.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on the bronze-amber eyes and the muzzle.
+
+Art style: World of Warcraft cinematic concept art, dark heroic-fantasy Horde style, painterly brushwork, ultra-detailed, strictly square 1:1.
+
+Do NOT include: a broad, wide, flat or round face; a short or stubby snout; a lion, bear, cat, wolf or ape head; a heavy square jaw, jowls, fat cheeks, a mane, a beard or a thick fluffy ruff of fur; long shaggy fur; a fluffy or cuddly look; any weapon in frame — no sword, no blade, no axe, nothing raised above, behind or across the head; hands or arms in frame; a helm covering his face; any lettering, title, name, watermark, logo or insignia; two heads, a second face or a second figure, extra or duplicated ears or eyes, malformed features; a detached / floating / over-tilted head, a broken or too-long neck, a head sunk into the shoulders or fused with the pauldron; ANY MAGICAL GLOW — no runes, no fire on him, no lightning, no holy light, no shadow energy (he is PURE STEEL); chubby / fat / overweight build (his mass is in the shoulders, not the face); cute / pretty / soft / dainty styling, pastel or pink colours, floating dust/ember particles, speckled noise, heavy haze, a small or indistinct face, a busy cluttered background, modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
 ```

@@ -84,8 +84,24 @@ if (Test-Path $pbgScan) {
     }
   }
 }
-# hand-kept nicks: commission/file spellings -> the in-game toon (which the map above resolves to a main)
-$NICKS = @{ "bimbo" = "mojo"; "nutella" = "nutelaa"; "nutela" = "nutelaa" }
+# hand-kept nicks: commission/file spellings -> the in-game toon (which the map above resolves to a main).
+# These MUST point at a name the profile-bg scan above knows, i.e. a current main's folder. Point one at a
+# retired name and it resolves to nothing: the tag keeps the old spelling and that art shows on nobody's
+# profile. Mojo/Mojodaddy renamed to Mojobimbo, and Nutelaa rerolled into the DK Dknutela, so the old art
+# ("Bimbo 1", "Nutella 2", "Nutelaa Reroll") has to fold into the CURRENT folder names. Same alias set as
+# NAME_ALIASES in assets/js/data.js — keep the two in step.
+$NICKS = @{
+  "bimbo"     = "mojobimbo"
+  "mojo"      = "mojobimbo"
+  "mojodaddy" = "mojobimbo"
+  "nutella"   = "dknutela"
+  "nutelaa"   = "dknutela"
+  "nutela"    = "dknutela"
+  "kobe"      = "kobee"     # Discord "Kobe" -> in-game "Kobee"
+  "foougg"    = "foug"      # renamed DK main
+  "fouug"     = "foug"      # hunter alt of the same person
+  "solanar"   = "solanarrage"
+}
 foreach ($k in $NICKS.Keys) { $alias[(Simplify $k)] = if ($alias.ContainsKey((Simplify $NICKS[$k]))) { $alias[(Simplify $NICKS[$k])] } else { $NICKS[$k] } }
 
 # Resolve the leading name of a filename to a main via $alias (e.g. "Okanor 1" -> okanor,
