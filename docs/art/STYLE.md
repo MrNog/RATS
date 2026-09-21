@@ -53,6 +53,26 @@ images, and Rellik's reserved ruined-battlefield scene.)
   power, NOT a soft angelic look. Same for priests/druids — hardened, never delicate.
 - **Build — lean & muscular, NOT fat:** athletic, wiry, powerful — a **slim, muscular, agile** raider's
   physique. Strong and battle-ready; never chubby, overweight or bulky-gut.
+- **⭐ Build & face VARY PER RAT — they are not one model in different armor.** Within "lean and muscular",
+  a warrior is **not** shaped like a mage. Vary the **build, the head and the snout** with the class and the
+  character, the same way pose and scene vary:
+  - **Plate melee** (Warrior · Prot/Ret Paladin · DK) — heavier and thicker through the neck, chest and
+    shoulders; a **broader, blunter muzzle**, a stronger jaw, a squarer skull. Mass is real here.
+  - **Leather / agile** (Rogue · Feral · Enhancement · Hunter) — wiry and sharp, **lean features**, a
+    **medium, pointed snout**, quick and nervous rather than heavy.
+  - **Cloth casters** (Mage · Warlock · Priest) — the slightest build, **narrow skull**, **fine tapering
+    snout**, gaunt and angular, hollow under the cheekbone.
+  - **Healers / shamans / druids** — anywhere between, chosen per character; an old shaman can be gaunt
+    where a resto druid is broad.
+
+  Then push it further **per rat**, not just per class: scarred, one-eared, grey-muzzled with age, a short
+  brawler's snout on one rogue and a long thin one on another. **Two rats of the same class must not share a
+  face.** If a sheet locks a feature (Mongoloide's brow-scar, Grokara's notched ear), keep that; invent the
+  rest.
+
+  > **Never paste one head sentence into every prompt.** Doing exactly that is what produced five rats with
+  > the identical long forward snout on 21 Sep 2026 — a fix for one bad avatar turned into a template and
+  > flattened everybody. One head description per rat, written for that rat.
 - **CLEAN RENDER (ALWAYS):** clear air — NO floating dust motes, NO ember particles, NO speckled glowing
   dots, NO heavy haze. Razor-sharp focus on the rat's face and hands; faces big and readable; correct
   head-to-body proportion; don't oversize the subject; smooth light, no blown-out bloom.
@@ -184,13 +204,10 @@ A square **avatar** — head-and-shoulders **face crop** of the rat, readable at
 strong single rim light, simple dark backdrop (one class-colour glow), no busy props. NO text/logo. Export
 large (e.g. 1024×1024); it will be downscaled to a Discord avatar, so keep the face dominant and high-contrast.
 
-> **⚠️ Say RAT SKULL or you get a lion.** A face crop has no body, so every word about bulk ("heavy jaw",
-> "thick-necked", "imposing", "broad") lands in the **face** and comes back as a wide flat lion/bear head
-> with jowls and a furry ruff — which then looks nothing like that rat's own banner. In ANY close crop,
-> state it outright: a **long, narrow, tapering snout projecting well past the eyes**, a narrow skull,
-> large thin rounded ears, short sleek close-lying fur; and add to the Do-NOT list: *broad / wide / flat /
-> round face, short stubby snout, lion / bear / cat / ape head, heavy square jaw, jowls, fat cheeks, mane,
-> beard, thick fluffy ruff, long shaggy fur.* Say the mass lives in the **shoulders and armor, not the face**.
+> **⚠️ A face crop needs the head described — but described for THIS rat.** A 1:1 crop has no body, so the
+> model fills the frame from whatever it is given: say nothing about the head and words about bulk ("heavy
+> jaw", "imposing") land in the **face**, returning a wide flat lion/bear head with jowls and a ruff. So do
+> describe the skull here. Just never with the same sentence twice — see **Build & face vary per rat** below.
 
 ### D — iPhone wallpaper (9:19.5 tall portrait) — *NEW*
 A **vertical** phone wallpaper. Full or 3/4 figure composed for portrait: subject lower-center, dramatic

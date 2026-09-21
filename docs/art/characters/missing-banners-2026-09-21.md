@@ -24,7 +24,7 @@ mão livre. Ferreiro, não pirotécnico.
 ```
 Digital fantasy illustration, cinematic 4:1 ultra-wide profile banner / hero strip (e.g. 2400x600), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only, all text added later by the page.
 
-Subject: Jiskob, an anthropomorphic FIRE MAGE rat — grim and deliberate, a smith of flame rather than a showman, NOT cute or soft. Soot-black fur, prominent whiskers, clawed hands, and a true rat's head: a LONG NARROW TAPERING SNOUT projecting well past the eyes, a narrow skull, large thin rounded ears, short sleek close-lying fur. Hard eyes lit hot ORANGE-AMBER. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
+Subject: Jiskob, an anthropomorphic FIRE MAGE rat — grim and deliberate, a smith of flame rather than a showman, NOT cute or soft. Soot-black fur, prominent whiskers, clawed hands. Build and face, specific to him: the SLIGHT, ANGULAR frame of a cloth caster — narrow through the shoulders, gaunt and hollow under the cheekbone, with a fine tapering muzzle of MODERATE length and a thin sharp jaw. He is the lightest-built rat in the guild; nothing about him is heavy. Hard deep-set eyes lit hot ORANGE-AMBER. EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
 
 Armor: a smith's take on battle-robes — heavy CHARCOAL layered cloth over a scorched dark leather apron, blackened iron bracers and shoulder plates, burnt-copper buckles, the hems singed and frayed. Working gear, soot-stained, nothing ornate or wizardly.
 
@@ -53,7 +53,7 @@ ferro abertas à frente dele.
 ```
 Digital fantasy illustration, cinematic 4:1 ultra-wide profile banner / hero strip (e.g. 2400x600), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only, all text added later by the page.
 
-Subject: Yahmom, an anthropomorphic SURVIVAL HUNTER rat — a patient field trapper, watchful and grim, NOT cute or soft. Mottled grey-green fur, prominent whiskers, clawed hands, and a true rat's head: a LONG NARROW TAPERING SNOUT projecting well past the eyes, a narrow skull, large thin rounded ears, short sleek close-lying fur. Hard narrow eyes. A lean, wiry rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
+Subject: Yahmom, an anthropomorphic SURVIVAL HUNTER rat — a patient field trapper, watchful and grim, NOT cute or soft. Mottled grey-green fur, prominent whiskers, clawed hands. Build and face, specific to him: WIRY and weather-toughened, corded forearms and a hard lean frame from living outdoors — broader and tougher than a caster but nowhere near a plate warrior. A MEDIUM POINTED muzzle, a sharp watchful face, one ear torn and scarred from the field. Hard narrow eyes that never stop scanning. EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
 
 Armor: practical field gear — dark mottled HIDE and oiled canvas, a heavy leather TOOL-HARNESS across the chest hung with snares, spare stakes and coiled wire, rusted iron buckles, wrapped forearms, mud-caked boots. Worn, weathered, entirely functional.
 
@@ -82,7 +82,7 @@ aberta, nunca um raio a cair.
 ```
 Digital fantasy illustration, cinematic 4:1 ultra-wide profile banner / hero strip (e.g. 2400x600), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only, all text added later by the page.
 
-Subject: Icycry, an anthropomorphic ELEMENTAL SHAMAN rat whose element is ICE, not lightning — still, cold and composed, NOT cute or soft. Pale grey fur going near-white at the tips, prominent whiskers, clawed hands, and a true rat's head: a LONG NARROW TAPERING SNOUT projecting well past the eyes, a narrow skull, large thin rounded ears, short sleek close-lying fur. Hard clear eyes lit ICE-CYAN. Lean and angular, chin up, standing very still. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
+Subject: Icycry, an anthropomorphic ELEMENTAL SHAMAN rat whose element is ICE, not lightning — still, cold and composed, NOT cute or soft. Pale grey fur going near-white at the tips, prominent whiskers, clawed hands. Build and face, specific to him: an OLD shaman, tall and spare, upright and unhurried — sinewy rather than muscled, with a grey-white muzzle of MODERATE length, a heavy weathered brow and deep creases at the eyes. Age and stillness, not bulk. Hard clear eyes lit ICE-CYAN, chin up. EXACTLY ONE tail, one head, two arms, two legs, well-formed hands.
 
 Armor: heavy shaman MAIL in dark SLATE-BLUE with broad curved shoulder plates, real ice grown along the edges and rivets, bone-and-leather fetishes tied at the belt and forearms, and a tattered ice-grey cloak. Weathered, never polished.
 
