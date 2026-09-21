@@ -72,6 +72,14 @@
       S(p) !== "Enhancement" && !has(FERAL, S(p));
   }
   function healer(p) { return R(p) === "HEALER"; }
+  // Staves. The sheet's "DPS > Healer" line is about stats, but two healers can
+  // never take one: a paladin cannot use a staff at all, and a resto shaman runs
+  // mace + shield, so a two-hander costs them the off-hand and is a downgrade
+  // they would not equip. Both would sit on the ladder blocking someone who wants it.
+  function canStaff(p) {
+    if (C(p) === "Paladin") return false;
+    return !(C(p) === "Shaman" && R(p) === "HEALER");
+  }
   // A healer holding Val'anyr is done with weapons -- the sheet says as much
   // ("Healers should have valanyr"), so they drop off caster weapon ladders.
   function healerNeedsWeapon(p) { return healer(p) && !p.valanyr; }
@@ -112,10 +120,49 @@
     var out = p.role === "HEALER" ? (p.icchps || 0) : (p.iccdps || 0);
     // no ICC record yet: fall back to the old-tier parse so they are not pinned last
     if (!out) out = (p.perf || 0) * 30;
-    // One big night is not a season. Trust the number in proportion to how many ICC
-    // nights it rests on, so a 3-raid newcomer does not displace a 32-raid regular
-    // on a single parse -- they climb as the evidence accumulates.
     return out;
+  }
+
+  // Inside a band, output leads -- but only where output actually separates people.
+  // Kobee and Grokara sat 1% apart with 32 raid days against 4, and the queue was
+  // decided by that 1%. Within this margin the numbers are the same night to night,
+  // so the raider who keeps showing up goes first; a real gap still wins on merit.
+  // rankIndex 0 = King Rat (GM), 1 = Warchief Rat (officer). Everyone below is a
+  // raider. Read from the live roster, so a promotion or a step-down takes effect
+  // on the next refresh with nothing here to edit.
+  function officer(p) {
+    return p.rankIndex === 0 || p.rankIndex === 1;
+  }
+
+  var TIE_BAND = 0.05;
+  function byOutputThenLoyalty(a, b) {
+    var sa = standing(a), sb = standing(b);
+    var best = Math.max(sa, sb);
+    if (best > 0 && Math.abs(sa - sb) / best <= TIE_BAND) {
+      var da = (a.att || 0), db = (b.att || 0);
+      if (da !== db) return db - da;
+    }
+    return sb - sa;
+  }
+
+  // The queue order, in one place. This ran as two copies -- the display trim
+  // re-sorted with its own inline version -- and the copies drifted: the second
+  // still ordered on raw output and quietly undid the attendance tiebreak the
+  // first had applied. One function, both call sites.
+  function rankCandidates(a, b) {
+    return (a.won - b.won) || (a.band - b.band) ||
+      ((a.off ? 1 : 0) - (b.off ? 1 : 0)) ||
+      // two people can both list the same off-spec while only one is actually
+      // filling it lately -- that one goes first
+      ((b.offN || 0) - (a.offN || 0)) ||
+      ((a.unproven ? 1 : 0) - (b.unproven ? 1 : 0)) ||
+      // Guild policy, from the GM: the officers carrying the raid take the
+      // important drops first. It applies INSIDE a band, so the sheet still
+      // decides which classes want an item at all -- an officer never jumps
+      // into a group the sheet did not put them in.
+      ((officer(b.p) ? 1 : 0) - (officer(a.p) ? 1 : 0)) ||
+      byOutputThenLoyalty(a.p, b.p) ||
+      (b.p.score - a.p.score);
   }
 
   // ---- the items we gate, and who the sheet says wants them --------------
@@ -183,7 +230,7 @@
       function (p) { return has(["Shadow", "Balance", "Elemental"], S(p)) ? 0 : 1; }],
 
     ["Archus, Greatstaff of Antonidas", "Lich King", "R", "DPS > healer",
-      function (p) { return caster(p) || healerNeedsWeapon(p); },
+      function (p) { return canStaff(p) && (caster(p) || healerNeedsWeapon(p)); },
       function (p) { return R(p) === "DPS" ? 0 : 1; }],
 
     ["Heaven's Fall, Kryss of a Thousand Lies", "Lich King", "R", "Rogue > rest",
@@ -203,7 +250,8 @@
       function () { return 0; }],
 
     ["Dying Light", "Blood-Queen Lana'thel", "R", "Whoever misses an LK staff/sword",
-      function (p) { return caster(p) || healerNeedsWeapon(p); }, function () { return 0; }],
+      function (p) { return canStaff(p) && (caster(p) || healerNeedsWeapon(p)); },
+      function () { return 0; }],
 
     ["Distant Land", "Festergut", "R", "Feral > Hunter",
       function (p) { return has(FERAL, S(p)) || hunter(p); },
@@ -1233,16 +1281,7 @@
           if (c.off && c.band <= worstMain) c.band = worstMain + 1;
         });
       }
-      cand.sort(function (a, b) {
-        return (a.won - b.won) || (a.band - b.band) ||
-          ((a.off ? 1 : 0) - (b.off ? 1 : 0)) ||
-          // two people can both list the same off-spec while only one is actually
-          // filling it lately -- that one goes first
-          ((b.offN || 0) - (a.offN || 0)) ||
-          ((a.unproven ? 1 : 0) - (b.unproven ? 1 : 0)) ||
-          (standing(b.p) - standing(a.p)) ||
-          (b.p.score - a.p.score);
-      });
+      cand.sort(rankCandidates);
 
       // An item both roles want must SHOW both roles. Keep the best few of each
       // band rather than letting one band fill the whole list -- a healer reading
@@ -1271,14 +1310,7 @@
           var got = bands[b].filter(function (c) { return c.won; }).slice(0, 2);
           shown = shown.concat(live, got);
         });
-        shown.sort(function (a, b) {
-          return (a.won - b.won) || (a.band - b.band) ||
-            ((a.off ? 1 : 0) - (b.off ? 1 : 0)) ||
-            ((b.offN || 0) - (a.offN || 0)) ||
-            ((a.unproven ? 1 : 0) - (b.unproven ? 1 : 0)) ||
-            (standing(b.p) - standing(a.p)) ||
-          (b.p.score - a.p.score);
-        });
+        shown.sort(rankCandidates);
       } else {
         shown = cand;
       }

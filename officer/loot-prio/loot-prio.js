@@ -16,6 +16,7 @@
   // won yet. Slugs are never written by hand: one that merely EXISTS on the CDN can
   // still draw the wrong picture, which is worse than no picture.
   var ICONS = {};
+  var IDS = {};   // item name -> itemId, for the addon's chat links
 
   function iconUrl(slug) {
     return ICON_BASE + "large/" + String(slug || ICON_FALLBACK).toLowerCase() + ".jpg";
@@ -25,6 +26,17 @@
     Object.keys(byId || {}).forEach(function (id) {
       var e = byId[id];
       if (e && e.name && e.icon) ICONS[String(e.name).toLowerCase()] = e.icon;
+      // Keep the id too: the addon needs it to build a real item link. A name
+      // alone only resolves for items the client has already cached, which a
+      // token nobody has looted never is.
+      //
+      // Five entries still carry a placeholder id from before the in-game icon
+      // scan (900004, 900048, 900063, 900073, 900074). Those are not real items,
+      // so asking the client about one can never resolve -- skip them and let the
+      // addon fall back to the item's name.
+      if (e && e.name && Number(id) < 900000) {
+        IDS[String(e.name).toLowerCase()] = id;
+      }
     });
   }
 
@@ -253,13 +265,25 @@
     L.push("--    >>  the sheet drops to a lower group");
     L.push("--    *   off-spec (fills the role, takes leftovers)");
     L.push("--    ()  already won it");
+    L.push("--");
+    L.push("--  Each name carries its class after a | so the addon can colour it the");
+    L.push("--  same way this page does; ic/bo/sl are the item's icon, boss and slot.");
     L.push("-- ============================================================");
     L.push("");
     L.push("OkanvilLootPrio = {");
     L.push("\tgenerated = \"" + (DATA.meta.lastRaid || "") + "\",");
+    // When this file was exported, as a sortable UTC stamp. `generated` is the
+    // last raid it was built from, which is not the same thing: two exports made
+    // on different days from the same last raid share it, and the addon needs to
+    // tell which of two officers' copies is the newer one.
+    L.push("\texported = \"" + new Date().toISOString().replace("T", " ").slice(0, 19) + "\",");
     L.push("\titems = {");
 
-    var list = DATA.items.filter(function (it) { return it.tier === "R"; });
+    // Every contested item, not just the Reserved ones. A prio-roll item still has
+    // an order worth reading out when it drops, and the addon has no other source
+    // for it -- exporting only Reserved left it saying "not on the list" for most
+    // of what the raid actually sees. `r = 1` marks the Reserved ones.
+    var list = DATA.items.slice();
     list.sort(function (a, b) {
       var ga = groupOf(a.item), gb = groupOf(b.item);
       return (ga[1] - gb[1]) || a.item.localeCompare(b.item);
@@ -271,17 +295,35 @@
 
     list.forEach(function (it) {
       var names = [], lastBand = null;
-      it.ladder.forEach(function (p, i) {
+      // Whoever already holds the item is left out entirely, not greyed: in game
+      // this list answers "who gets it now", and a name that can no longer take
+      // it is one more thing to read past mid-raid.
+      it.ladder.filter(function (p) { return !p.won; }).forEach(function (p, i) {
         if (i) names.push(p.band > lastBand ? ">>" : ">");
         lastBand = p.band;
-        var n = p.name;
-        if (p.won) n = "(" + n + " has)";
-        else if (p.offspec) n += "*";
+        // Name|Class, plus the same marks the page shows. The class travels with
+        // the name so the addon colours the list exactly as this page does instead
+        // of printing one flat grey line.
+        // No space in the class token: the addon splits a ladder on whitespace,
+        // and "Death Knight" would break in half and lose its colour.
+        // Only off-spec is marked. "low" and "new" applied to most of the list at
+        // once in game, so they added length without changing a decision -- the
+        // ORDER already says who is ahead.
+        var n = p.name + "|" + String(p.cls || "").replace(/\s+/g, "");
+        if (p.offspec) n += "*";
         names.push(n);
       });
       if (!names.length) return;
+      var slug = ICONS[it.item.toLowerCase()];
+      var iid = IDS[it.item.toLowerCase()];
+      var grp = groupOf(it.item);   // ["Trinkets", 2] -- same slot grouping as the page
       L.push("\t[\"" + q(it.item.toLowerCase()) + "\"] = { n = \"" + q(it.item) +
-        "\", p = \"" + q(names.join(" ")) + "\" },");
+        "\", p = \"" + q(names.join(" ")) + "\"" +
+        (it.boss ? ", bo = \"" + q(it.boss) + "\"" : "") +
+        (slug ? ", ic = \"" + q(slug) + "\"" : "") +
+        (iid ? ", id = " + iid : "") +
+        ", g = \"" + q(grp[0]) + "\", go = " + (grp[1] || 0) +
+        (it.tier === "R" ? ", r = 1" : "") + " },");
     });
 
     L.push("\t},");
