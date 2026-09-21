@@ -56,6 +56,24 @@
     <div id="profile" style="display:none"></div>
   </div>
 
+  <!-- art lightbox: same controls as the gallery page (Esc, arrows, click the backdrop) -->
+  <dialog id="artlb">
+    <div class="lb-count" id="artlbCount"></div>
+    <button class="lb-x" onclick="closeArt()" title="Close (Esc)" aria-label="Close">✕</button>
+    <button class="lb-nav prev" onclick="stepArt(-1)" title="Previous (←)" aria-label="Previous image">‹</button>
+    <button class="lb-nav next" onclick="stepArt(1)" title="Next (→)" aria-label="Next image">›</button>
+    <div class="lb-stage" id="artlbStage">
+      <img id="artlbImg" alt="" />
+      <div class="lb-bar">
+        <div class="lb-txt">
+          <div class="t" id="artlbTitle"></div>
+          <div class="c" id="artlbCap"></div>
+        </div>
+        <a class="lb-dl" id="artlbDl" download>⬇ Download</a>
+      </div>
+    </div>
+  </dialog>
+
   <script src="../../assets/js/utils.js"></script>
   <script src="../../assets/js/data.js"></script>
   <script src="../../assets/js/logs-core.js"></script>

@@ -145,6 +145,8 @@
     // medal — awards / honours section
     honours:
       '<circle cx="12" cy="9" r="6"/><path d="M9 14.5 7 22l5-3 5 3-2-7.5"/>',
+    // framed picture — the raider's art gallery
+    art: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/>',
   };
   function secIcon(key) {
     var body = SEC_ICONS[key];
@@ -1025,6 +1027,105 @@
     );
   }
 
+  // ---- MIDDLE — Art: every picture this rat is tagged in --------------------
+  // The manifest already carries a "people" list (built by scripts/build-gallery.ps1 from the
+  // filename, or tagged by hand for group shots), and it names MAINS. So an alt's profile shows
+  // the same art as its main — the art is of the person, not of the toon.
+  //
+  // Loaded lazily and never awaited: the profile renders on its own data, and this panel appears
+  // when the manifest lands. A raider with no tagged art gets no panel at all, because most of the
+  // roster has none and an empty card on half the profiles reads as a broken page.
+  var ART = null; // null = not loaded yet, [] = loaded and empty/failed
+
+  function artFor(name) {
+    if (!ART || !ART.length) return [];
+    var who = (mainToonOf(name) || name).toLowerCase();
+    return ART.filter(function (it) {
+      var p = it.people;
+      if (!p) return false;
+      // "people" is a comma-separated string in the manifest; tolerate an array too
+      var list = Array.isArray(p) ? p : String(p).split(",");
+      return list.some(function (x) {
+        return String(x).trim().toLowerCase() === who;
+      });
+    });
+  }
+
+  // images/<cat>/<name>.png -> images/_thumb/<cat>/<name>.webp (built by scripts/thumbs.mjs).
+  // The lightbox still opens the full original.
+  function thumbFor(file) {
+    return String(file || "")
+      .replace(/^images\//, "images/_thumb/")
+      .replace(/\.[a-z0-9]+$/i, ".webp");
+  }
+  function artUrl(file) {
+    // the manifest stores repo-root paths; this page sits two levels down
+    return "../../" + String(file || "").split("/").map(encodeURIComponent).join("/");
+  }
+
+  function artHtml(name) {
+    var list = artFor(name);
+    if (!list.length) return "";
+    ART_VIEW = list; // what the lightbox pages through
+    var html =
+      '<div class="psec mt">' + secIcon("art") + "Art" +
+      ' <span class="cnt">— ' + list.length + "</span></div>" +
+      '<div class="card"><div class="artgrid">';
+    list.forEach(function (it, i) {
+      html +=
+        '<button class="artthumb" type="button" onclick="openArt(' + i + ')" ' +
+        'title="' + esc(it.title || "") + '">' +
+        '<img loading="lazy" decoding="async" src="' + artUrl(thumbFor(it.file)) + '" ' +
+        'alt="' + esc(it.title || "") + '" ' +
+        // a thumbnail that was never generated must not leave a broken-image icon
+        "onerror=\"this.closest('.artthumb').style.display='none'\" />" +
+        '<span class="artcap">' + esc(it.title || "") + "</span>" +
+        "</button>";
+    });
+    html += "</div></div>";
+    return html;
+  }
+
+  // ---- art lightbox: same behaviour as the gallery page (click backdrop / Esc / arrows) ----
+  var ART_VIEW = [], ART_CUR = 0;
+
+  function openArt(i) {
+    var it = ART_VIEW[i];
+    if (!it) return;
+    ART_CUR = i;
+    var lb = document.getElementById("artlb");
+    if (!lb) return;
+    document.getElementById("artlbImg").src = artUrl(it.file);
+    document.getElementById("artlbImg").alt = it.title || "";
+    document.getElementById("artlbTitle").textContent = it.title || "";
+    document.getElementById("artlbCap").textContent = it.caption || "";
+    var dl = document.getElementById("artlbDl");
+    dl.href = artUrl(it.file);
+    dl.setAttribute("download", String(it.file).split("/").pop() || "rats-art");
+    document.getElementById("artlbCount").textContent = i + 1 + " / " + ART_VIEW.length;
+    if (!lb.open) lb.showModal();
+  }
+  function stepArt(d) {
+    if (ART_VIEW.length) openArt((ART_CUR + d + ART_VIEW.length) % ART_VIEW.length);
+  }
+  function closeArt() {
+    var lb = document.getElementById("artlb");
+    if (lb && lb.open) lb.close();
+  }
+
+  // Fetch once, then redraw so the panel appears. A failure is silent: the rest of the
+  // profile is unaffected and the panel simply never shows.
+  function loadArt() {
+    if (ART) return;
+    fetch("../../gallery.json", { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (j) {
+        ART = Array.isArray(j) ? j : [];
+        if (ART.length && SELECTED) render();
+      })
+      .catch(function () { ART = []; });
+  }
+
   // ---- MIDDLE — Performance: the only numbers (tiles + per-boss card) ----
   // Tanks get a PRESENCE view (bosses tanked / fights held); everyone else gets the raw DPS/HPS view.
   function performanceHtml(name, col) {
@@ -1483,6 +1584,7 @@
       "</div>" +
       '<div class="main">' +
       performanceHtml(name, col) +
+      artHtml(name) +
       "</div>" +
       '<div class="side">' +
       vitalityHtml(name) +
@@ -1801,6 +1903,26 @@
   window.openMyToonModal = openMyToonModal;
   window.closeMyToonModal = closeMyToonModal;
   window.confirmMyToon = confirmMyToon;
+  window.openArt = openArt;
+  window.stepArt = stepArt;
+  window.closeArt = closeArt;
+
+  // arrow keys page the art lightbox, matching the gallery page
+  document.addEventListener("keydown", function (e) {
+    var lb = document.getElementById("artlb");
+    if (!lb || !lb.open) return;
+    if (e.key === "ArrowLeft") stepArt(-1);
+    else if (e.key === "ArrowRight") stepArt(1);
+  });
+  // click the backdrop or the empty area around the image to close
+  (function () {
+    var lb = document.getElementById("artlb");
+    if (!lb) return;
+    lb.addEventListener("click", function (e) {
+      if (e.target === lb || e.target.id === "artlbStage") lb.close();
+    });
+  })();
 
   boot();
+  loadArt();
 })();

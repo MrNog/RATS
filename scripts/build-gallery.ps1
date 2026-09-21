@@ -156,6 +156,9 @@ if (Test-Path $pbgDir) {
 }
 
 $json = if ($out.Count) { ConvertTo-Json $out -Depth 5 } else { "[]" }
-Set-Content -Path $jsonPath -Value $json -Encoding UTF8
+# Write UTF-8 with NO byte-order mark. `-Encoding UTF8` means BOM-less on the CI runner (pwsh 7)
+# but BOM-ful on Windows PowerShell 5.1, and a BOM makes JSON.parse throw -- so running this
+# script locally would break the gallery for everyone. Be explicit instead of trusting the host.
+[System.IO.File]::WriteAllText($jsonPath, $json + "`n", (New-Object System.Text.UTF8Encoding $false))
 
 Write-Host "`nWrote $($out.Count) item(s) to gallery.json ($count file(s) scanned)." -ForegroundColor Cyan
