@@ -583,8 +583,8 @@
   },
   {
     "cat": "icons",
-    "file": "images/icons/Franzherman.png",
-    "title": "Franzherman",
+    "file": "images/icons/FranzHerman.png",
+    "title": "FranzHerman",
     "caption": "",
     "date": "2026-06",
     "people": "franzherman"
@@ -650,18 +650,18 @@
   },
   {
     "cat": "icons",
-    "file": "images/icons/okanor.png",
-    "title": "Okanor",
-    "caption": "",
-    "date": "2026-07",
-    "people": "okanor"
-  },
-  {
-    "cat": "icons",
     "file": "images/icons/okanor-logs.png",
     "title": "Okanor Logs",
     "caption": "",
     "date": "2026-06",
+    "people": "okanor"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/okanor.png",
+    "title": "Okanor",
+    "caption": "",
+    "date": "2026-07",
     "people": "okanor"
   },
   {
@@ -702,7 +702,7 @@
   },
   {
     "cat": "icons",
-    "file": "images/icons/shockaa.png",
+    "file": "images/icons/Shockaa.png",
     "title": "Shockaa",
     "caption": "",
     "date": "2026-07",
@@ -924,8 +924,8 @@
   },
   {
     "cat": "profile-bg",
-    "file": "images/profile-bg/mongoloide/mongoloide.png",
-    "title": "Mongoloide",
+    "file": "images/profile-bg/mongoloide/mongoloide-ret.png",
+    "title": "Mongoloide Ret",
     "caption": "",
     "date": "2026-09",
     "people": "mongoloide",
@@ -933,8 +933,8 @@
   },
   {
     "cat": "profile-bg",
-    "file": "images/profile-bg/mongoloide/mongoloide-ret.png",
-    "title": "Mongoloide Ret",
+    "file": "images/profile-bg/mongoloide/mongoloide.png",
+    "title": "Mongoloide",
     "caption": "",
     "date": "2026-09",
     "people": "mongoloide",
