@@ -10,6 +10,8 @@ desktop.ini
 
 # local build tooling for the gallery (sharp) — the SITE stays dependency-free.
 # The generated thumbnails in images/_thumb/ ARE committed; the tool that makes them is not.
+# (They only reach the live site because of /.nojekyll — GitHub Pages runs Jekyll by default and
+#  Jekyll drops every path starting with an underscore, so without that file _thumb/ 404s.)
 scripts/node_modules/
 scripts/package-lock.json
 
