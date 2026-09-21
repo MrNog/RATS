@@ -625,6 +625,14 @@
   },
   {
     "cat": "icons",
+    "file": "images/icons/Mongoloide.png",
+    "title": "Mongoloide",
+    "caption": "",
+    "date": "2026-09",
+    "people": "mongoloide"
+  },
+  {
+    "cat": "icons",
     "file": "images/icons/nutela.png",
     "title": "Nutela",
     "caption": "",
@@ -868,6 +876,24 @@
     "caption": "",
     "date": "2026-07",
     "people": "mojobimbo",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/mongoloide/mongoloide-ret.png",
+    "title": "Mongoloide Ret",
+    "caption": "",
+    "date": "2026-09",
+    "people": "mongoloide",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/mongoloide/mongoloide.png",
+    "title": "Mongoloide",
+    "caption": "",
+    "date": "2026-09",
+    "people": "mongoloide",
     "wide": true
   },
   {
