@@ -210,3 +210,23 @@
 .sec.big h2 {
   font-size: 18px;
 }
+
+/* the guild's own addon — the row people should land on first.
+   Every mandatory row already has a gold border, so the difference here is
+   fill and weight rather than another border colour: a tinted panel and a
+   gold spine down the left, which reads as "ours" without shouting over the
+   four rows under it. */
+#list .item.ours {
+  background: linear-gradient(90deg, rgba(192, 148, 58, .14), var(--surface-2) 42%);
+  border-left-width: 3px;
+}
+#list .item.ours .nm {
+  color: var(--accent-hi);
+}
+/* gold where the paladin tag is purple — same shape, so the two read as
+   the same kind of label rather than two inventions. */
+.tag.ours {
+  color: #1a1a1a;
+  background: var(--accent);
+  border-color: var(--accent-hi);
+}

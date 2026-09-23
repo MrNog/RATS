@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141517" />
+  <meta name="description"
+    content="Okanvil — the raid & guild toolkit RATS forged for WotLK 3.3.5a: PuG builder, raid finder, loot council, loot history, snapshots, raid notes and recruiting." />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Okanvil</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <!-- page fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Marcellus&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="okanvil.css">
+</head>
+
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+      stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </symbol>
+    <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </symbol>
+    <symbol id="i-anvil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 10H6a4 4 0 0 1-4-4 1 1 0 0 1 1-1h4" /><path d="M7 5a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1 7 7 0 0 1-7 7H8a1 1 0 0 1-1-1z" /><path d="M9 12v5" /><path d="M15 12v5" /><path d="M5 20a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3 1 1 0 0 1-1 1H6a1 1 0 0 1-1-1" />
+    </symbol>
+  </svg>
+
+  <div class="ok-wrap">
+
+    <header class="top">
+      <div class="top-left">
+        <a class="back" href="../../index.html">← Hub</a>
+        <a class="brand" href="#top" aria-label="Okanvil, back to top">
+          <svg>
+            <use href="#i-anvil" />
+          </svg>
+          <b>Okanvil</b>
+          <span>by Okanor · a RATS Warchief</span>
+        </a>
+      </div>
+      <nav aria-label="Sections">
+        <a href="#pug">PuGs</a>
+        <a href="#council">Loot Council</a>
+        <a href="#loot">Loot</a>
+        <a href="#snapshots">Snapshots</a>
+        <a href="#notes">Notes</a>
+        <a href="#recruit">Recruit</a>
+        <a href="#install">Install</a>
+      </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div>
+        <p class="eyebrow">WotLK 3.3.5a · Warmane</p>
+        <h1>One anvil for the whole raid night.</h1>
+        <p class="lede">Okanvil is the raid &amp; guild toolkit <b>RATS</b> forged for itself: PuG building, loot council,
+          loot history, raid notes and recruiting — in one window, instead of eight addons that don't talk to each
+          other.</p>
+        <div class="cta-row">
+          <a class="ok-btn primary" href="https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip">
+            <svg>
+              <use href="#i-dl" />
+            </svg> Download latest
+          </a>
+          <a class="ok-btn" href="https://github.com/MrNog/Okanvil">Source on GitHub</a>
+        </div>
+        <p class="meta">Free · open source · type <code>/okanvil</code> in game</p>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/home.png"
+          alt="Okanvil home page: guild online list with one-click invite and whisper buttons"></figure>
+    </section>
+
+    <!-- PUG -->
+    <section class="feature" id="pug">
+      <div class="copy">
+        <div class="tag">PuG builder <i>/okanvil → PuG</i></div>
+        <h2>Tired of building your PuG by hand?</h2>
+        <p>Spamming trade, counting heals in your head, retyping the LFM every time someone joins, scrolling whispers
+          to find who said <b>"rsham 5.8k"</b>… Okanvil does the bookkeeping.</p>
+        <div class="chat"><span class="ch">[4. LookingForGroup]</span> <span class="who">[Okanor]</span>: LFM ICC25
+          need 2 Tank 4 Heal 8 Melee 10 Ranged 4.8+ gs <span class="res">(B+O+P res)</span></div>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Tank / Healer / Melee / Ranged slots that fill themselves as people whisper</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>The LFM line rebuilds as you pick — raid, size, min GS, reserves</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Reserve chips: BoE, Orbs, Patterns, Fragments, Shards, Mount, Key</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Reads specs and gearscore off whoever applies</span></li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/pug.png"
+          alt="PuG builder with role columns, min GS and the generated LFM message"></figure>
+    </section>
+
+    <!-- RAID FINDER -->
+    <section class="feature flip" id="finder">
+      <div class="copy">
+        <div class="tag">Raid Finder</div>
+        <h2>Looking for a raid, not a wall of trade spam?</h2>
+        <p>Every LFM in chat becomes one clean row: raid, GS, the roles they still need, whether loot is reserved and
+          <b>what</b> is reserved — and whether you're already saved there.</p>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Decodes raid lingo: <b>B+O+P</b>, <b>HR</b>, <b>DBW</b>, <b>DC</b>, "3Heals 7Dps"</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Hard-reserved items shown as real item links</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>One click to whisper or join; sort by raid, GS, leader or age</span></li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/raidfinder.png"
+          alt="Raid Finder table of live LFM listings with GS, roles, reserved loot and join buttons"></figure>
+    </section>
+
+    <!-- LOOT COUNCIL -->
+    <section class="feature" id="council">
+      <div class="copy">
+        <div class="tag">Loot Council</div>
+        <h2>A loot council people actually trust.</h2>
+        <p>The master looter picks the items, every raider answers <b>BIS · Upgrade · Small · OS · Pass</b> in a popup,
+          and the council sees each answer next to what that raider is wearing — ilvl gap included.</p>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Every officer present gets the board and one vote per item</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>The guild's priority ladder right on the board</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>The ML still decides — votes are advice, not autopilot</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Test mode with your own gear, nothing ever handed out</span></li>
+        </ul>
+      </div>
+      <div class="stack">
+        <figure class="shot"><img src="../../images/okanvil/council-board.png"
+            alt="Council board: answers, equipped item, ilvl gap and council votes"></figure>
+        <figure class="shot"><img src="../../images/okanvil/council-popup.png"
+            alt="Raider popup with BIS, Upgrade, Small, OS and Pass for each item"></figure>
+      </div>
+    </section>
+
+    <!-- LOOT -->
+    <section class="feature flip" id="loot">
+      <div class="copy">
+        <div class="tag">Loot history · Mini Roll</div>
+        <h2>"Who won that ring on Anub'arak?"</h2>
+        <p>Every drop, every boss, every night — who got it and how: <b>MS roll 87</b>, <b>council · BIS</b>, or
+          disenchanted. The Mini Roll window runs the roll-off and records the winner for you.</p>
+        <div class="chat"><span class="ch">[Raid Warning]</span> <span class="who">[Okanor]</span>: Roll <span
+            class="epic">[Acidmaw Treads]</span> -- MAIN SPEC /roll (1-100)</div>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Sessions by raid, boss cards, heroic / 25 badges</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Speed-run auto master-loot to your collectors</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>One-click export to the RATS hub</span></li>
+        </ul>
+      </div>
+      <div class="stack">
+        <figure class="shot"><img src="../../images/okanvil/loot.png"
+            alt="Loot history: Trial of the Crusader heroic session with a card per boss"></figure>
+        <div class="stack pair">
+          <figure class="shot"><img src="../../images/okanvil/roll-beasts.png"
+              alt="Mini Roll: rolls captured for Acidmaw Treads"></figure>
+          <figure class="shot"><img src="../../images/okanvil/roll-anub.png"
+              alt="Mini Roll: winners and rolls for Anub'arak's drops"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- SNAPSHOTS -->
+    <section class="feature" id="snapshots">
+      <div class="copy">
+        <div class="tag">Snapshots</div>
+        <h2>Forgot who was on last week's run?</h2>
+        <p>At the first pull Okanvil takes a <b>snapshot</b> of the raid: every group, every player, their real spec —
+          scanned, not guessed — and who was main tank. Attendance without anyone keeping a spreadsheet.</p>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Automatic — nothing to remember to press</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span><b>Invite</b> the whole roster back for the next run</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Export attendance straight to the hub</span></li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/snapshots.png"
+          alt="Snapshot of an ICC 10 raid split into group cards with class icons and specs"></figure>
+    </section>
+
+    <!-- NOTES -->
+    <section class="feature flip" id="notes">
+      <div class="copy">
+        <div class="tag">Raid notes</div>
+        <h2>Your raid plan, on a timer, in everyone's face.</h2>
+        <p>MRT-format notes per boss, size and difficulty. Timed lines count down in the fight and light up for the
+          person they name — no more "who's on infest 3?".</p>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Follows the room: walk in, the right note opens</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Send to raid, see who has it</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Learns the boss's real spell ids from your own pulls</span></li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/notes.png"
+          alt="The Lich King note with timed infest assignments per player"></figure>
+    </section>
+
+    <!-- RECRUIT -->
+    <section class="feature" id="recruit">
+      <div class="copy">
+        <div class="tag">Recruit</div>
+        <h2>Recruiting while you're busy raiding.</h2>
+        <p>Your advert goes out on its own. Whisper <b>inv</b> and you're guild-invited; ask anything else and you get
+          the Discord link — even when you're AFK. Every conversation lands in an <b>Inbox</b>, so nobody who answered
+          gets lost.</p>
+        <ul class="points">
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Keyword auto-invite and auto-replies</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Inbox with unread count and one-click whisper back</span></li>
+          <li><svg>
+              <use href="#i-check" />
+            </svg><span>Officers share one advert across the guild</span></li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="../../images/okanvil/recruit.png"
+          alt="Recruit page: advert, auto-replies and inbox counter"></figure>
+    </section>
+
+    <!-- SMALL TOOLS -->
+    <section class="tools" id="tools">
+      <h2>And the small stuff that saves a raid.</h2>
+      <p>Things you only notice when they're missing.</p>
+      <div class="grid">
+        <article class="tool wide">
+          <h3>ID Finder</h3>
+          <p>23,000+ items and spells searchable by name — the id you need for a note, a WeakAura or a macro, in one
+            search.</p>
+          <figure class="shot"><img src="../../images/okanvil/idfinder.png"
+              alt="ID Finder search results for Hammer of Ancient Kings"></figure>
+        </article>
+        <article class="tool">
+          <h3>Farm tracker</h3>
+          <p>Gold per hour while you farm: vendor, AH value, coin drops and kills.</p>
+          <figure class="shot"><img src="../../images/okanvil/farm.png" alt="Farm tracker window"></figure>
+        </article>
+        <article class="tool">
+          <h3>Raid Check</h3>
+          <p>Who is missing flask, food or buffs, before the pull.</p>
+          <figure class="shot"><img src="../../images/okanvil/raidcheck.png" alt="Raid Check buff overview"></figure>
+        </article>
+        <article class="tool">
+          <h3>Saved raids on every toon</h3>
+          <p>Hover the minimap button: every character's raid lockouts in one grid — 10, 25, heroic — and when they
+            reset. No logging alts in and out to check who's still free.</p>
+          <div class="lockout" role="img"
+            aria-label="Example tooltip: Okanor saved to ICC 25 heroic and ToGC 25, Okanath saved to ICC 10 and RS 25">
+            <div class="lo-title">Okanvil</div>
+            <div class="lo-head">Saved raids</div>
+            <table>
+              <thead>
+                <tr><th></th><th class="c-pal">Okanor</th><th class="c-dk">Okanath</th></tr>
+              </thead>
+              <tbody>
+                <tr><th>ICC</th><td class="hc">25H</td><td>10</td></tr>
+                <tr><th>ToGC</th><td>25</td><td class="no">—</td></tr>
+                <tr><th>RS</th><td class="no">—</td><td>25</td></tr>
+              </tbody>
+            </table>
+            <div class="lo-foot">resets in 2d 14h</div>
+            <div class="lo-hint">Click: open · Drag: move</div>
+          </div>
+        </article>
+        <article class="tool full">
+          <h3>Marks bar</h3>
+          <p>Raid marks, ready check, pull timer and a shortcut to every Okanvil page, in one bar.</p>
+          <figure class="shot"><img src="../../images/okanvil/marksbar.png"
+              alt="Marks bar with raid target icons and page shortcuts"></figure>
+        </article>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="install" id="install">
+      <div class="intro">
+        <h2>Install in a minute.</h2>
+        <p>Works on the normal and HD 3.3.5a clients. Turn off any module you don't want in <code>Modules</code> — the
+          rest stays out of your way.</p>
+        <div class="cta-row">
+          <a class="ok-btn primary" href="https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip">
+            <svg>
+              <use href="#i-dl" />
+            </svg> Download latest
+          </a>
+        </div>
+        <figure class="shot"><img src="../../images/okanvil/welcome.png"
+            alt="Welcome to Okanvil: pick your modules and turn the marks bar on or off"></figure>
+      </div>
+      <ol class="steps">
+        <li>
+          <div><b>Download the zip</b><span>Always the latest release, straight from GitHub.</span></div>
+        </li>
+        <li>
+          <div><b>Extract it into AddOns</b><span><code>World of Warcraft\Interface\AddOns\Okanvil</code> — if the
+              folder ends in <code>-main</code>, rename it.</span></div>
+        </li>
+        <li>
+          <div><b>Start the game</b><span>Pick your modules in the welcome window, then <code>/okanvil</code> any
+              time.</span></div>
+        </li>
+      </ol>
+    </section>
+
+    <footer class="ok-foot">
+      <span>Okanvil · forged by <b>Okanor</b> for <b>RATS</b></span>
+      <span>World of Warcraft is a trademark of Blizzard Entertainment. Okanvil is a fan-made addon.</span>
+    </footer>
+  </div>
+
+  <!-- Officers only for now: the guild-key gate, the same lock the officer tools
+       use. Remove data.js and the gate call in okanvil.js to open the page to all. -->
+  <script src="../../assets/js/data.js"></script>
+  <script src="okanvil.js"></script>
+</body>
+
+</html>

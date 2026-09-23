@@ -1,6 +1,14 @@
 // dl = direct "always latest" download; gh = source page. Edit freely.
 const ADDONS = [
   {
+    name: "Okanvil",
+    emoji: "⚒️",
+    ours: true, // the guild's own — gets the highlighted row
+    desc: "Our own: raid notes, loot council, invites, logs. /okanvil",
+    dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",
+    gh: "https://github.com/MrNog/Okanvil",
+  },
+  {
     name: "WeakAuras",
     emoji: "✨",
     desc: "Shared raid auras.",
@@ -37,14 +45,6 @@ const ADDONS = [
 // is a one-line change: drop the flag.
 const OPTIONAL = [
   {
-    name: "Okanvil",
-    emoji: "⚒️",
-    desc: "RATS guild toolkit — invites, loot rolls, combat logs, recruit & an ID finder. /okanvil",
-    dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",
-    gh: "https://github.com/MrNog/Okanvil",
-    hidden: true, // in testing — not shown on the public addons page yet
-  },
-  {
     name: "Rats-Redeemer",
     emoji: "⚰️",
     desc: "Battle-res flavour lines. /redeemer",
@@ -70,9 +70,10 @@ function renderList(arr) {
     .filter((a) => !a.hidden) // addons still in testing never reach the public list
     .map((a) => {
       const repo = repoOf(a) || "";
-      return `<div class="item" data-repo="${esc(repo)}">
+      return `<div class="item${a.ours ? " ours" : ""}" data-repo="${esc(repo)}">
     <span class="ic">${a.emoji || ""}</span>
     <span class="nm">${esc(a.name)}</span>
+    ${a.ours ? '<span class="tag ours">Ours</span>' : ""}
     ${a.paladin ? '<span class="tag">Paladins only</span>' : ""}
     <span class="new" style="display:none">⬆ UPDATE</span>
     <span class="desc">${esc(a.desc)}</span>
@@ -221,7 +222,7 @@ document.getElementById("listOptional").innerHTML = renderList(OPTIONAL);
 document.getElementById("listPatch").innerHTML = `<div class="item">
   <span class="ic">🧩</span>
   <span class="nm">patch-y.mpq</span>
-  <span class="desc">Optional visual patch (non-HD). Drop it in <code>World of Warcraft\\Data\\</code> and restart.</span>
+  <span class="desc">Visual patch (non-HD). Drop it in <code>World of Warcraft\\Data\\</code> and restart.</span>
   <span class="acts">
     <a class="primary" href="../../downloads/patch-y.mpq" download>⬇ Download (27 MB)</a>
   </span>
@@ -233,8 +234,8 @@ document.getElementById("listPatch").innerHTML = `<div class="item">
   <span class="acts">
     <a class="primary" href="../../downloads/patch-y-hd.mpq" download>⬇ Download (29 MB)</a>
   </span>
-</div>
-<div class="item">
+</div>`;
+document.getElementById("listExtraDL").innerHTML = `<div class="item">
   <span class="ic">🧲</span>
   <span class="nm">client-HD.torrent</span>
   <span class="desc">Full HD 3.3.5a client via torrent. Open with a torrent client (qBittorrent, etc.) to download.</span>

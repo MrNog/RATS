@@ -1,0 +1,218 @@
+/* Okanvil — the addon's landing page. Built on the shared tokens in
+   assets/css/theme.css; the page adds its own type (an engraved display face,
+   a mono for in-game chat lines) and a few shades of the same gold. */
+
+:root {
+  --ok-display: "Marcellus", "Trajan Pro", Georgia, serif;
+  --ok-body: "Figtree", var(--font);
+  --ok-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  --ok-title: #f3e3bd;          /* headings: the gold, bleached toward parchment */
+  --ok-heading: #f1e6cc;
+  --ok-line-warm: #3a3530;      /* borders around screenshots, a touch warmer than --border */
+  --ok-chat-bg: #0b0c0d;        /* the game's chat frame */
+  --ok-epic: #b66cf2;           /* item names, as the game colours an epic */
+  --ok-wrap: 1120px;
+}
+
+body {
+  background: var(--bg);
+  font-family: var(--ok-body);
+  font-size: 16px;
+  line-height: 1.6;
+  padding-inline: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block }
+a { color: var(--accent-hi) }
+:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 3px }
+
+.ok-wrap { max-width: var(--ok-wrap); margin: 0 auto }
+
+/* ---------- top bar ---------- */
+.top {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.top-left { display: flex; align-items: center; gap: 18px }
+.back { color: var(--text-dim-2); text-decoration: none; font-size: 14px }
+.back:hover { color: var(--accent-hi) }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text) }
+.brand svg { width: 26px; height: 26px; color: var(--accent-hi) }
+.brand b { font-family: var(--ok-display); font-weight: 400; font-size: 22px; color: var(--accent-hi); letter-spacing: .5px }
+.brand span { font-size: 13px; color: var(--text-faint) }
+.top nav { display: flex; gap: 20px; flex-wrap: wrap; font-size: 14px }
+.top nav a { color: var(--text-dim); text-decoration: none }
+.top nav a:hover { color: var(--accent-hi) }
+
+/* ---------- hero ---------- */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px; align-items: center;
+  padding-block: 64px 56px;
+}
+.eyebrow {
+  font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--accent); font-weight: 600; margin: 0 0 14px;
+}
+.hero h1 {
+  font-family: var(--ok-display); font-weight: 400;
+  font-size: clamp(44px, 6vw, 72px); line-height: 1; margin: 0 0 18px;
+  color: var(--ok-title); letter-spacing: .5px;
+  text-wrap: balance;
+}
+.hero .lede { font-size: 19px; color: var(--text-dim); max-width: 34ch; margin: 0 0 28px }
+.hero .lede b { color: var(--text); font-weight: 600 }
+.cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center }
+.ok-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 20px; border-radius: var(--radius);
+  font-weight: 600; font-size: 15px; text-decoration: none;
+  border: 1px solid var(--ok-line-warm); color: var(--text); background: var(--surface);
+}
+.ok-btn:hover { border-color: var(--accent); color: var(--accent-hi) }
+.ok-btn.primary { background: var(--accent); border-color: var(--accent-hi); color: #16120a }
+.ok-btn.primary:hover { background: var(--accent-hi); color: #16120a }
+.ok-btn svg { width: 18px; height: 18px }
+.meta { margin-top: 18px; font-size: 13px; color: var(--text-faint) }
+.meta code { font-family: var(--ok-mono); color: var(--accent-hi); font-size: 12.5px; background: none; padding: 0 }
+
+.shot {
+  margin: 0; border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--ok-line-warm);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .7), 0 0 0 1px rgba(0, 0, 0, .4);
+  background: #0c0d0e; cursor: zoom-in;
+}
+.shot img { width: 100% }
+.hero .shot { transform: perspective(1400px) rotateY(-4deg); transform-origin: left center }
+
+/* ---------- feature sections ---------- */
+.feature {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 56px; align-items: center;
+  padding-block: 72px;
+  border-top: 1px solid var(--border);
+}
+.feature.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr) }
+.feature.flip .copy { order: 2 }
+.tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.tag i { font-style: normal; font-family: var(--ok-mono); letter-spacing: 0; text-transform: none; color: var(--text-faint); font-weight: 400 }
+.feature h2 {
+  font-family: var(--ok-display); font-weight: 400;
+  font-size: clamp(28px, 3.4vw, 40px); line-height: 1.12;
+  margin: 0 0 16px; color: var(--ok-heading); text-wrap: balance;
+}
+.feature p { color: var(--text-dim); margin: 0 0 18px; max-width: 58ch }
+.feature p b { color: var(--text); font-weight: 600 }
+.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px }
+.points li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; color: var(--text); font-size: 15px }
+.points li svg { width: 18px; height: 18px; color: var(--accent-hi); margin-top: 3px }
+
+/* an in-game chat line, the way the addon actually writes it */
+.chat {
+  font-family: var(--ok-mono); font-size: 13px; line-height: 1.5;
+  background: var(--ok-chat-bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px 14px; margin: 0 0 20px;
+  color: #cfd3d6; overflow-x: auto; white-space: nowrap;
+}
+.chat .who { color: #f58cba }
+.chat .ch { color: #ff7f3f }
+.chat .res { color: var(--accent-hi) }
+.chat .epic { color: var(--ok-epic) }
+
+.stack { display: grid; gap: 14px }
+.stack.pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start }
+
+/* ---------- tools grid ---------- */
+.tools { padding-block: 72px; border-top: 1px solid var(--border) }
+.tools > h2 {
+  font-family: var(--ok-display); font-weight: 400; font-size: clamp(28px, 3.4vw, 40px);
+  margin: 0 0 8px; color: var(--ok-heading);
+}
+.tools > p { color: var(--text-dim); margin: 0 0 32px; max-width: 60ch }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px }
+.tool {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+}
+.tool h3 { margin: 0; font-size: 17px; font-weight: 600; color: var(--text) }
+.tool p { margin: 0; color: var(--text-dim); font-size: 14.5px }
+.tool .shot { box-shadow: none; margin-top: auto }
+.tool.wide { grid-column: span 2 }
+.tool.full { grid-column: 1 / -1 }
+
+/* the minimap tooltip, drawn in HTML: the lockout grid Okanvil shows on hover */
+.lockout {
+  margin-top: auto; align-self: start;
+  background: rgba(10, 10, 13, .96);
+  border: 1px solid var(--accent); border-radius: 4px;
+  padding: 12px 14px; font-size: 14px; line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+.lo-title { font-family: var(--ok-display); color: #ffd200; font-size: 17px }
+.lo-head { color: var(--accent); margin: 8px 0 4px }
+.lockout table { border-collapse: collapse }
+.lockout th, .lockout td { padding: 3px 14px 3px 0; text-align: left; font-weight: 400 }
+.lockout thead th { font-size: 13px }
+.lockout tbody th { color: var(--text) }
+.lockout td { color: var(--text) }
+.lockout td.hc { color: #ff8040 }
+.lockout td.no { color: var(--text-faint) }
+.c-pal { color: #f58cba }
+.c-dk { color: #c41f3b }
+.lo-foot { color: var(--text-faint); font-size: 12.5px; margin-top: 8px }
+.lo-hint { color: var(--text-faint); font-size: 12.5px }
+
+/* ---------- install ---------- */
+.install {
+  padding-block: 72px; border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px;
+}
+.install h2 { font-family: var(--ok-display); font-weight: 400; font-size: clamp(28px, 3.4vw, 40px); margin: 0 0 12px; color: var(--ok-heading) }
+.install .intro > p { color: var(--text-dim); margin: 0 0 24px }
+.install .intro .shot { margin-top: 28px; max-width: 460px }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; align-content: start; counter-reset: s }
+.steps li {
+  counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 14px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px;
+}
+.steps li::before {
+  content: counter(s); width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center; font-family: var(--ok-display); font-size: 17px;
+  color: #16120a; background: var(--accent);
+}
+.steps b { color: var(--text) }
+.steps span { color: var(--text-dim); font-size: 14.5px; display: block }
+.steps code, .install code {
+  font-family: var(--ok-mono); font-size: 13px; color: var(--accent-hi);
+  background: var(--ok-chat-bg); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border);
+}
+
+.ok-foot {
+  border-top: 1px solid var(--border); padding-block: 28px 40px;
+  display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  color: var(--text-faint); font-size: 13px;
+}
+.ok-foot b { color: var(--accent-hi); font-weight: 600 }
+
+/* ---------- lightbox ---------- */
+.lb {
+  position: fixed; inset: 0; z-index: 50; background: rgba(6, 6, 7, .92);
+  display: grid; place-items: center; padding: 24px; cursor: zoom-out;
+}
+.lb img { max-width: min(1400px, 100%); max-height: 100%; border-radius: 8px; border: 1px solid var(--ok-line-warm) }
+
+@media (max-width: 880px) {
+  .hero, .feature, .feature.flip, .install { grid-template-columns: minmax(0, 1fr); gap: 28px }
+  .feature.flip .copy { order: 0 }
+  .hero .shot { transform: none }
+  .grid { grid-template-columns: minmax(0, 1fr) }
+  .tool.wide, .tool.full { grid-column: auto }
+  .stack.pair { grid-template-columns: minmax(0, 1fr) }
+  .top nav { display: none }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }

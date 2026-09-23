@@ -11,6 +11,8 @@ relative links by depth (table at the bottom) and fix this map.
 /index.html                         HUB — public landing (Officer Tools card → officer/)
 public/                             PUBLIC pages (everyone)
   addons/index.html                 addons · WeakAuras · patch        (+ addons.css/.js)
+  okanvil/index.html                Okanvil addon landing page        (+ okanvil.css/.js; shots in images/okanvil/)
+                                    OFFICER-GATED until launch (RatsData.gate in okanvil.js)
   gallery/index.html                art/lore gallery                   (+ gallery.css/.js)
   vacations/index.html              vacations — role-aware (see note)  (+ vacations.css/.js)
   profile/index.html                raider profile — armory + badges   (+ profile.css/.js)
@@ -65,6 +67,7 @@ assets/                             SHARED
 | `officer/<tool>/`                  | officer hub   | `../index.html`                                         |
 | `officer/history/`                 | vacations     | `../../public/vacations/index html`                     |
 | `public/<page>/`                   | hub           | `../../index.html`                                      |
+| `officer/index.html`               | okanvil       | `../public/okanvil/index.html` (preview, gated)          |
 | `public/vacations/` (officer mode) | officer hub   | `../../officer/index.html` (set in vacations.js `boot`) |
 
 ## Asset-link prefix by depth (count the folders to `/`)
