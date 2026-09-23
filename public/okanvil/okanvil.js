@@ -1,7 +1,3 @@
-// Officers only until launch: the same guild-key gate the officer tools use.
-// Delete this line (and the data.js include in index.html) to go public.
-if (window.RatsData) RatsData.gate();
-
 // Okanvil landing page: click a screenshot to see it full size; click again or
 // press Esc to close.
 (function () {

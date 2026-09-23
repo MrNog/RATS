@@ -12,7 +12,7 @@ relative links by depth (table at the bottom) and fix this map.
 public/                             PUBLIC pages (everyone)
   addons/index.html                 addons · WeakAuras · patch        (+ addons.css/.js)
   okanvil/index.html                Okanvil addon landing page        (+ okanvil.css/.js; shots in images/okanvil/)
-                                    OFFICER-GATED until launch (RatsData.gate in okanvil.js)
+                                    public, but not linked from the hub until launch
   gallery/index.html                art/lore gallery                   (+ gallery.css/.js)
   vacations/index.html              vacations — role-aware (see note)  (+ vacations.css/.js)
   profile/index.html                raider profile — armory + badges   (+ profile.css/.js)
@@ -67,7 +67,7 @@ assets/                             SHARED
 | `officer/<tool>/`                  | officer hub   | `../index.html`                                         |
 | `officer/history/`                 | vacations     | `../../public/vacations/index html`                     |
 | `public/<page>/`                   | hub           | `../../index.html`                                      |
-| `officer/index.html`               | okanvil       | `../public/okanvil/index.html` (preview, gated)          |
+| `officer/index.html`               | okanvil       | `../public/okanvil/index.html` (preview)                 |
 | `public/vacations/` (officer mode) | officer hub   | `../../officer/index.html` (set in vacations.js `boot`) |
 
 ## Asset-link prefix by depth (count the folders to `/`)
@@ -80,7 +80,7 @@ assets/                             SHARED
 
 ## JS-generated / external URLs (absolute — update on a move)
 
-- `public/addons/addons.js` → `HUB_URL = "https://mrnog.github.io/rats/public/addons/"`
-- `releases.json` → `"hubUrl": "https://mrnog.github.io/rats/public/addons/"` (used by the release notifier)
+- `public/addons/addons.js` → `HUB_URL = "https://mrnog.github.io/RATS/public/addons/"`
+- `releases.json` → `"hubUrl": "https://mrnog.github.io/RATS/public/addons/"` (used by the release notifier)
 - `public/gallery/gallery.js` → image paths are `../../` + the `images/...` path from `gallery.json`
 - `public/addons/addons.js` → patch download `../../downloads/patch-y.mpq`

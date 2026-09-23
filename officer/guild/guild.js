@@ -410,7 +410,7 @@ function postRosterChanges(diff, importDate) {
 }
 
 const STALE_DAYS = 7;
-const HUB_URL = "https://mrnog.github.io/rats/officer/guild/";
+const HUB_URL = "https://mrnog.github.io/RATS/officer/guild/";
 function lastImportMs() {
   const d = load();
   if (!d) return 0;
