@@ -4,6 +4,7 @@ const ADDONS = [
     name: "Okanvil",
     emoji: "⚒️",
     ours: true, // the guild's own — gets the big card with art
+    hidden: true, // until launch, same as the hub card
     art: "../../images/_thumb/hub/okanvil.webp",
     desc: "Our own: raid notes, loot council, invites, logs. /okanvil",
     dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",

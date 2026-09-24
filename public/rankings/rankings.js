@@ -1022,7 +1022,8 @@
   }
   // the raider's banner, framed on the rat -- shared with the Loot page (assets/js/banner-art.js)
   function podiumArt(p, cls) {
-    return window.RatsBanner.html(p.name, p.class, "rk-art " + (cls || "pd-art"));
+    // the podium cards show the banner big; the smaller cards keep the light thumbs
+    return window.RatsBanner.html(p.name, p.class, "rk-art " + (cls || "pd-art"), undefined, !cls);
   }
   function rateOf(p, kind) {
     return kind === "tank" ? fmtBig(p.rate || 0) : fmt(p.rate || 0);

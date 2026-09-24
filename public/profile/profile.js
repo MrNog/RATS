@@ -1491,6 +1491,11 @@
       return;
     }
     prof.style.display = "";
+    // The header tools sit INSIDE the last render; rebuilding #profile would delete them with it
+    // (jump to a raider and the search was gone). Park them back in their row first.
+    var acts0 = document.querySelector(".pt-acts"),
+      row0 = document.querySelector(".ptools");
+    if (acts0 && row0 && acts0.parentNode !== row0) row0.appendChild(acts0);
 
     // pin the raid scope to a valid segment: unset on first render, or stale after a snapshot swap.
     var raids = raidList();

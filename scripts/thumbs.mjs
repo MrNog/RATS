@@ -23,6 +23,31 @@ const THUMB_W = 500;       // thumbnail width in px (2x the ~220px grid cell for
 const QUALITY = 80;        // WebP quality (visually lossless for this content)
 const EXTS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 
+// The hub cards are far wider than a gallery cell (half of an 88vw page on a big screen), so a
+// 500px thumb stretched there reads blurry. Hub art also gets a card-size copy in _thumb/hub-lg/,
+// which the cards offer through srcset; small screens still take the 500px one.
+const CARD_W = 1400;
+const HUB_DIR = path.join("images", "hub");
+// Hub cards whose art lives in a gallery folder instead of images/hub/ (repo-relative, no ext).
+const HUB_EXTRA = new Set([path.join("images", "lore", "Grunho Charge")]);
+// The Rankings podium shows a profile banner at full card height (~260px, so ~520px wide):
+// the 500px thumb is upscaled there. Banners get a 1000px copy in _thumb/profile-bg-lg/.
+const BANNER_W = 1000;
+const BANNER_DIR = path.join("images", "profile-bg");
+
+// The large copy for a source, or null when it has none: { out, width }.
+function largeFor(rel, thumb) {
+  const noExt = rel.slice(0, rel.length - path.extname(rel).length);
+  if (path.dirname(rel) === HUB_DIR || HUB_EXTRA.has(noExt)) {
+    return { out: path.join(THUMB_DIR, "hub-lg", path.basename(thumb)), width: CARD_W };
+  }
+  if (rel.startsWith(BANNER_DIR + path.sep)) {
+    const sub = path.relative(BANNER_DIR, noExt);
+    return { out: path.join(THUMB_DIR, "profile-bg-lg", sub + ".webp"), width: BANNER_W };
+  }
+  return null;
+}
+
 // repo root = parent of this scripts/ folder
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC_DIR = path.join(ROOT, "images");
@@ -64,6 +89,22 @@ async function run() {
 
   for (const src of files) {
     const thumb = thumbPathFor(src);
+    const large = largeFor(path.relative(ROOT, src), thumb);
+    if (large) {
+      try {
+        if (!(await isFresh(src, large.out))) {
+          await mkdir(path.dirname(large.out), { recursive: true });
+          await sharp(src).rotate()
+            .resize({ width: large.width, withoutEnlargement: true })
+            .webp({ quality: QUALITY })
+            .toFile(large.out);
+          console.log(`  + ${path.relative(ROOT, large.out).replace(/\\/g, "/")}  (large)`);
+        }
+      } catch (e) {
+        failed++;
+        console.warn(`  ! failed: ${path.relative(ROOT, large.out)} — ${e.message}`);
+      }
+    }
     try {
       if (await isFresh(src, thumb)) { skipped++; continue; }
       await mkdir(path.dirname(thumb), { recursive: true });

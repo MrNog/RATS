@@ -119,6 +119,12 @@ body {
 .band ~ .wrap, .band ~ main { position: relative; z-index: 1 }
 .band ~ .wrap .phead, .band ~ main .phead { padding-top: 84px }
 
+/* big screens: use the room instead of a narrow column in the middle
+   (bar, footer, hub and every .wrap.wide page follow --wrap-wide) */
+@media (min-width: 1600px) {
+  :root { --wrap-wide: min(88vw, 1800px) }
+}
+
 /* ---------- footer ---------- */
 .site-foot {
   max-width: var(--wrap-wide); margin: 40px auto 0; padding: 26px 20px 40px;

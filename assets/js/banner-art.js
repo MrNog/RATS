@@ -15,6 +15,9 @@
   // images/ sits two folders above this script (assets/js/), whatever page loads it
   var ROOT = new URL("../../images/", document.currentScript.src).href;
   var BASE = ROOT + "_thumb/profile-bg/";
+  // 1000px copies for a card that shows the banner big (the Rankings podium): the 500px thumb
+  // is upscaled there and reads blurry.
+  var BASE_LG = ROOT + "_thumb/profile-bg-lg/";
 
   var CLASS_SLUG = {
     "Death Knight": "deathknight", DK: "deathknight", Druid: "druid", Hunter: "hunter",
@@ -49,16 +52,18 @@
 
   // `main` (optional): the player's main. An alt's art sits in the main's folder
   // (profile-bg/<main>/<alt>), so that is tried first, then <name>/<name>, then the class banner.
-  function html(name, cls, className, main) {
+  // `big` (optional): use the 1000px copies.
+  function html(name, cls, className, main, big) {
+    var base = big ? BASE_LG : BASE;
     var lc = String(name).toLowerCase();
     var mf = main ? String(main).toLowerCase() : lc;
     var src = function (folder) {
-      return BASE + encodeURIComponent(folder) + "/" + encodeURIComponent(lc) + ".webp";
+      return base + encodeURIComponent(folder) + "/" + encodeURIComponent(lc) + ".webp";
     };
     var slug = CLASS_SLUG[cls] || String(cls || "").toLowerCase().replace(/\s+/g, "");
     var chain = [];
     if (mf !== lc) chain.push(src(lc) + "~" + lc + "/" + lc + ".png");
-    if (slug) chain.push(BASE + "_class/" + slug + ".webp~");
+    if (slug) chain.push(base + "_class/" + slug + ".webp~");
     // each step: "url~focus key"; the class banner has no window of its own, so its key is empty
     return (
       '<img class="rb-art ' + (className || "") + '" src="' + src(mf) + '" data-key="' + esc(mf + "/" + lc + ".png") +

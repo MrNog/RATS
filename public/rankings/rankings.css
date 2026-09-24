@@ -1334,10 +1334,6 @@ a.logrow .lgo {
 
 /* the parse must never be the part that gets cut: the sub line may wrap */
 .gc-sub { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35 }
-/* big screens: use the room instead of a narrow column in the middle */
-@media (min-width: 1600px) {
-  .wrap.wide, .site-bar .sb-in { max-width: min(88vw, 1800px) }
-}
 
 /* ---------- card titles: the display face, like the trends & records cards ---------- */
 .board-title {
@@ -1449,3 +1445,7 @@ a.logrow:hover .lgo { background: var(--accent); color: #16120a }
 .fc-name { font-size: clamp(17px, .4vw + 11px, 22px) }
 .fc-sub { font-size: clamp(12px, .15vw + 10px, 14px) }
 .fc-crew img { width: clamp(24px, .5vw + 17px, 30px); height: clamp(24px, .5vw + 17px, 30px) }
+
+/* the banner is framed on the dragon: its head and the fire sit in the top quarter of the art,
+   which the shared centre-35% framing cut off */
+.band img { object-position: center 8% }
