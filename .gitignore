@@ -28,3 +28,10 @@ release-state.json
 docs/*PLAN*.md
 docs/IDEAS.md
 IDEAS.md
+
+# design mocks (local previews, not part of the site)
+_mock/
+
+# dev leftovers: python bytecode and the banner-focus contact sheets
+__pycache__/
+scripts/_focus/

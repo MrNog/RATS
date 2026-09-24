@@ -134,6 +134,8 @@
     return p.rankIndex === 0 || p.rankIndex === 1;
   }
 
+  function luckOf(p) { return p.luck == null ? 1 : p.luck; }
+
   var TIE_BAND = 0.05;
   function byOutputThenLoyalty(a, b) {
     var sa = standing(a), sb = standing(b);
@@ -161,6 +163,10 @@
       // decides which classes want an item at all -- an officer never jumps
       // into a group the sheet did not put them in.
       ((officer(b.p) ? 1 : 0) - (officer(a.p) ? 1 : 0)) ||
+      // Loot luck, still inside the band: whoever the rolls have clearly passed over
+      // goes ahead of someone clearly well served, even on less output. Between
+      // people about even, output decides as before.
+      (luckOf(a.p) - luckOf(b.p)) ||
       byOutputThenLoyalty(a.p, b.p) ||
       (b.p.score - a.p.score);
   }
@@ -1180,6 +1186,51 @@
       });
     });
 
+    // -- loot luck: who has won less, or more, than their ICC nights should have given
+    // them. Output alone kept feeding the same few raiders while someone who lost every
+    // roll stayed where they were. Only ICC 25 gear won since the loot tracking began
+    // counts, and only nights from that day on, so a veteran is not "owed" for nights
+    // nobody was recording. Craft mats, legendary fragments and the disenchant / bank
+    // rows are not a person winning an item.
+    var LUCK_SKIP = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
+    // this many items above / below the raid's rate before it moves anyone
+    var LUCK_MARGIN = 2;
+    function lootDay(ts) {
+      var ms = ts > 1e12 ? ts : ts * 1000;
+      return new Date(ms).toISOString().slice(0, 10);
+    }
+    var lootFrom = "", gotBy = {};
+    loot.forEach(function (l) {
+      if (!l || !l.name || !l.ts) return;
+      if (!/icecrown/i.test(String(l.raid || "")) || String(l.size) !== "25") return;
+      var day = lootDay(l.ts);
+      if (!lootFrom || day < lootFrom) lootFrom = day;
+      var who = String(l.player || "");
+      if (!who || /^(disenchant|bank|_)/i.test(who)) return;
+      if (LUCK_SKIP.test(String(l.name))) return;
+      who = who.toLowerCase();
+      (gotBy[who] = gotBy[who] || []).push({ name: String(l.name), boss: l.boss || "", day: day, icon: l.icon || "" });
+    });
+    var luckNights = 0, luckItems = 0;
+    Object.keys(players).forEach(function (k) {
+      var p = players[k];
+      p.lootNights = lootFrom
+        ? Object.keys(iccAtt[k] || {}).filter(function (d) { return d >= lootFrom; }).length
+        : 0;
+      p.lootItems = gotBy[p.name.toLowerCase()] || [];
+      p.lootWon = p.lootItems.length;
+      luckNights += p.lootNights;
+      luckItems += p.lootWon;
+    });
+    var luckRate = luckNights ? luckItems / luckNights : 0; // items per raider per night
+    Object.keys(players).forEach(function (k) {
+      var p = players[k];
+      p.lootExpected = Math.round(p.lootNights * luckRate * 10) / 10;
+      p.owed = Math.round((p.lootExpected - p.lootWon) * 10) / 10;
+      // 0 = clearly owed, 1 = about even, 2 = clearly well served
+      p.luck = p.owed >= LUCK_MARGIN ? 0 : p.owed <= -LUCK_MARGIN ? 2 : 1;
+    });
+
     // -- build each ladder
     var list = Object.keys(players).map(function (k) { return players[k]; });
     var items = ITEMS.map(function (row) {
@@ -1325,6 +1376,7 @@
             icc: c.p.icc, iccpct: c.p.iccpct, iccdps: c.p.iccdps,
             band: c.band, offspec: !!c.off, won: c.won, low: !!c.low,
             unproven: !!c.unproven, tail: !!c.tail,
+            owed: c.p.owed || 0, luck: luckOf(c.p),
           };
         }),
       };
@@ -1362,6 +1414,7 @@
         raidDays: ND,
         lastRaid: allDays[allDays.length - 1] || "",
         active: list.filter(function (p) { return !p.inactive; }).length,
+        lootFrom: lootFrom, luckRate: luckRate, luckMargin: LUCK_MARGIN,
       },
     };
   }

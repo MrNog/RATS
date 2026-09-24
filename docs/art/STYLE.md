@@ -276,6 +276,20 @@ Interior Horde war-tent or ruined hall, braziers, hanging Horde banners. A kneel
 bestowed a fang-shaped blade/medallion by **Grunho**, officers in a respectful half-circle, warm gold
 light beam on the chosen one. Title `THE FANGS` top-center, RATS logo bottom-right.
 
+### J — Hub card (16:10, NO text)
+The picture on a card of the hub page (`index.html`), one per page it links to. Prompts:
+[`hub/hub-cards.md`](hub/hub-cards.md); saved as `images/hub/<page>.png`.
+
+- **Shown small** (~270px wide on the grid) and **cropped to 16:10 from the center**, so: ONE focal subject
+  or tight group in the CENTER, a simple dark background, a strong silhouette. Detail at the edges is lost.
+- **The scene says what the page does** (a smith at an anvil for Okanvil, a quartermaster over a loot chest
+  for Loot) — no symbols or UI, just the rat doing the thing.
+- **NO text, logo or watermark** — the card prints the title under the image.
+- **Grim tone holds even on light topics:** Vacations is a warrior resting with his armor off, not a beach
+  rat in sunglasses.
+- One dominant key light per card, and **each card a different light colour** (brazier gold, sunset,
+  epic purple, forge orange...) so the grid does not read as one image repeated.
+
 ---
 
 ## 🧱 Reusable prompt block (fill the [BRACKETS])

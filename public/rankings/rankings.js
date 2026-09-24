@@ -242,33 +242,31 @@
 
         var rows = g.logs
           .map(function (l) {
-            var del = IS_OFFICER
-              ? '<button class="logdel" title="Delete this log from the DB (a later Fetch can re-pull it)" ' +
-                'onclick="excludeLog(\'' +
-                esc(l.reportId) +
-                "')\">🗑</button>"
-              : "";
+            var chips = sortBosses(l.bosses || [], l.raidSlug)
+              .map(function (b) {
+                return '<span class="lchip" title="' + esc(b) + '">' + esc(shortBoss(b)) + "</span>";
+              })
+              .join("");
             return (
               '<div class="logrowwrap">' +
               '<a class="logrow" href="' +
               esc(l.reportUrl) +
               '" target="_blank" rel="noopener">' +
-              '<span class="lid">#' +
-              esc(l.reportId) +
-              "</span>" +
-              '<span class="ldate">' +
+              '<span class="lwhen"><span class="ldate">' +
               esc(fmtDate(l.date)) +
-              "</span>" +
-              '<span class="lkw"><b>' +
+              '</span><span class="lid">#' +
+              esc(l.reportId) +
+              "</span></span>" +
+              '<span class="lkw"><span class="lk"><b>' +
               (l.kills || 0) +
-              "</b> kills · " +
+              "</b> kills</span>" +
+              '<span class="lw"><b>' +
               (l.wipes || 0) +
-              " wipes</span>" +
+              "</b> wipes</span></span>" +
               '<span class="lbosses">' +
-              esc(sortBosses(l.bosses || [], l.raidSlug).join(", ") || "—") +
+              (chips || "—") +
               "</span>" +
-              '<span class="lgo">↗</span></a>' +
-              del +
+              '<span class="lgo">Open on wow-logs ↗</span></a>' +
               "</div>"
             );
           })
@@ -448,15 +446,39 @@
     "Perfect attendance": "#ffd23f",
   };
   // Card for one award. The award DATA (who won what) comes from the shared RatsFun module.
-  function funCard(emoji, title, name, cls, sub, shame) {
-    var col = classColor(cls);
+  // A group award ("12 raiders") shows the guild camp instead of one rat, plus a row of the winners' icons.
+  var CREW_SHOWN = 10;
+  function crewHtml(crew) {
+    var icons = crew.slice(0, CREW_SHOWN).map(function (p) {
+      var t = CLASS_ICON[p.cls];
+      return t
+        ? '<img src="https://wow.zamimg.com/images/wow/icons/large/classicon_' + t + '.jpg" alt="" title="' +
+            esc(p.name) + '" style="--cc:' + classColor(p.cls) + "\" onerror=\"this.style.visibility='hidden'\">"
+        : "";
+    });
+    var more = crew.length > CREW_SHOWN ? '<span class="fc-more">+' + (crew.length - CREW_SHOWN) + "</span>" : "";
+    var names = crew.map(function (p) { return p.name; }).join(", ");
+    return '<div class="fc-crew" title="' + esc(names) + '">' + icons.join("") + more + "</div>";
+  }
+  function funCard(emoji, title, name, cls, sub, shame, crew) {
+    var col = cls ? classColor(cls) : "var(--heading)";
     var hue = shame ? "#c05656" : AWARD_HUE[title] || "var(--accent)";
+    // the winner's banner fades in on the right
+    var group = crew && crew.length;
+    var art = group
+      ? '<img class="fc-art" src="../../images/_thumb/hub/hero.webp" alt="" loading="lazy">'
+      : cls
+        ? podiumArt({ name: name, class: cls }, "fc-art")
+        : "";
     return (
-      '<div class="funcard' + (shame ? " shame" : "") + '" style="--fc-hue:' + hue + '">' +
+      '<div class="funcard' + (shame ? " shame" : "") + (art ? " has-art" : "") + '" style="--fc-hue:' + hue + '">' +
+      art +
       '<div class="fc-top"><span class="fc-emoji">' + emoji + "</span>" +
       '<span class="fc-title">' + esc(title) + "</span></div>" +
       '<div class="fc-name" style="color:' + col + '">' + esc(name) + "</div>" +
-      '<div class="fc-sub">' + sub + "</div></div>"
+      '<div class="fc-sub">' + sub + "</div>" +
+      (group ? crewHtml(crew) : "") +
+      "</div>"
     );
   }
   // ---- Fun & Shame — rendered from the SHARED award module (assets/js/fun-awards.js) --------------
@@ -488,7 +510,7 @@
       }
     }
     var toCard = function (a) {
-      return funCard(a.emoji, a.title, a.winner, a.cls, a.sub, a.shame);
+      return funCard(a.emoji, a.title, a.winner, a.cls, a.sub, a.shame, a.crew);
     };
     var awards = res.awards.map(toCard),
       shame = res.shame.map(toCard);
@@ -508,8 +530,15 @@
     }
     if (empty) empty.hidden = true;
     if (body) body.hidden = false;
-    // one grid: positive awards first, then the negative ones (red-tinted) — no separate "shame" section
-    awEl.innerHTML = awards.concat(shame).join("");
+    // two halls: the honours, then the cheeky ones under their own heading
+    awEl.innerHTML = awards.join("");
+    var shEl = document.getElementById("funShame"),
+      shHead = document.getElementById("funShameHead");
+    if (shEl) shEl.innerHTML = shame.join("");
+    if (shHead) shHead.hidden = !shame.length;
+    if (shEl) shEl.hidden = !shame.length;
+    var awHead = document.getElementById("funFameHead");
+    if (awHead) awHead.hidden = !awards.length;
   }
 
 
@@ -619,10 +648,16 @@
       var vEmoji = score > 0 ? "📈" : score < 0 ? "📉" : "➖";
       var vText = score > 0 ? "Sharper than " + word : score < 0 ? "Rougher than " + word : "On par with " + word;
       var bits = [];
-      if (dTime.chip) bits.push(fmtDur(dTime.chip) + " " + (dTime.chip < 0 ? "faster" : "slower") + " clear");
+      if (dBoss.chip) bits.push((dBoss.chip > 0 ? "+" : "−") + Math.abs(Math.round(dBoss.chip * 10) / 10) + " bosses");
+      // a different boss count makes it a different clear: then the time is just more / less boss time
+      if (dTime.chip)
+        bits.push(
+          dBoss.chip
+            ? fmtDur(dTime.chip) + " " + (dTime.chip < 0 ? "less" : "more") + " boss time"
+            : fmtDur(dTime.chip) + " " + (dTime.chip < 0 ? "faster" : "slower") + " clear"
+        );
       if (dWipe.chip) bits.push(Math.abs(Math.round(dWipe.chip * 10) / 10) + " " + (dWipe.chip < 0 ? "fewer" : "more") + " wipes");
       if (dHm.chip) bits.push(Math.abs(Math.round(dHm.chip * 10) / 10) + " " + (dHm.chip > 0 ? "more" : "fewer") + " hard mode" + (Math.abs(dHm.chip) !== 1 ? "s" : ""));
-      if (dBoss.chip) bits.push(Math.abs(Math.round(dBoss.chip * 10) / 10) + " " + (dBoss.chip > 0 ? "more" : "fewer") + " bosses");
 
       // stat grid — Guild DPS · Boss time · Wipes · Bosses · Hard modes
       // Ulduar: mixed HC/NM within a lockout → show a "Hard modes X/N" card. ToC/ICC: the whole run is
@@ -712,7 +747,7 @@
         if (!s.killedEver) {
           return (
             '<tr class="nokill"><td class="bn">' + esc(shortBoss(b)) +
-            '</td><td><span class="nokilltag">✖ not killed</span></td><td></td><td class="num">' + s.wipesCur + "</td><td></td></tr>"
+            '</td><td><span class="nokilltag">✖ not killed</span></td><td></td><td class="num">' + s.wipesCur + "</td></tr>"
           );
         }
         // vs column: this week's kill vs the baseline avg (faster than baseline = green)
@@ -725,13 +760,13 @@
         }
         // NEW KILL = first-ever kill happened this week
         var isNew = s.first && curLockKey && lockoutStart(s.first) === curLockKey;
-        var flags = isNew ? '<span class="better">⭐ NEW KILL</span>' : "";
+        var flags = isNew ? '<span class="newkill">⭐ New kill</span>' : "";
         return (
-          '<tr><td class="bn">' + esc(shortBoss(b)) + " " + hmTag +
+          '<tr><td class="bn">' + esc(shortBoss(b)) + " " + hmTag + flags +
           '</td><td class="num best">' + (s.best != null ? fmtDur(s.best) : "—") +
           "</td><td>" + vs +
           '</td><td class="num">' + s.wipesCur +
-          "</td><td>" + flags + "</td></tr>"
+          "</td></tr>"
         );
       })
       .join("");
@@ -755,7 +790,7 @@
       progHeadClose +
       // per-boss table in its own card below
       '<div class="card" style="padding:4px 14px"><table class="progtbl"><thead><tr>' +
-      "<th>Boss</th><th>Best kill</th><th>" + vsHead + "</th><th>Wipes</th><th></th></tr></thead><tbody>" +
+      "<th>Boss</th><th>Best kill</th><th>" + vsHead + "</th><th>Wipes</th></tr></thead><tbody>" +
       tableRows +
       "</tbody></table></div>" +
       fetchHint +
@@ -955,8 +990,7 @@
           '.jpg" alt="" onerror="this.style.visibility=\'hidden\'">'
       : '<span class="cic"></span>';
   }
-  // crown pill (N lockouts at #1) — shown after the name when there's no rank-change column (All time),
-  // or inside the rank-change column otherwise. lbRow decides where via hasDeltaCol.
+  // crown pill (N lockouts at #1), shown where the rank change goes (see deltaTag).
   // 👑 is wrapped so it can be nudged independently — an emoji glyph sits on a lower baseline than
   // text, so unwrapped it reads as slumping below the "2x" next to it.
   function crownPill(streak) {
@@ -979,115 +1013,113 @@
     if (d < 0) return '<span class="mv down" title="down ' + -d + '">▼' + -d + "</span>";
     return '<span class="mv same" title="held position">=</span>';
   }
-  function lbRow(p, i, metric) {
+  // ---- the boards: a podium for the top three, a grid of compact cards for everyone else ----
+  // One component for DPS, Healing and Tanking; `kind` picks the number shown and its sub-line.
+  // Every card opens the raider's profile. The podium shows the raider's own profile banner
+  // (images/profile-bg/<name>/<name>), else the generic class banner, else the class-colour gradient.
+  function profileHref(p) {
+    return "../profile/index.html?c=" + encodeURIComponent(p.name);
+  }
+  // the raider's banner, framed on the rat -- shared with the Loot page (assets/js/banner-art.js)
+  function podiumArt(p, cls) {
+    return window.RatsBanner.html(p.name, p.class, "rk-art " + (cls || "pd-art"));
+  }
+  function rateOf(p, kind) {
+    return kind === "tank" ? fmtBig(p.rate || 0) : fmt(p.rate || 0);
+  }
+  function unitOf(kind) {
+    return kind === "tank" ? "soaked / fight" : kind === "hps" ? "HPS" : "DPS";
+  }
+  // SCORE is what the board is sorted by — the big number is the rate, but the order blends output
+  // with the server parse, so every card shows the pts that decided its place.
+  function ptsHtml(p, kind) {
+    var how =
+      kind === "tank"
+        ? "60% soaked share + 40% server parse"
+        : kind === "hps"
+          ? "40% output (healing + hps) + 60% server parse"
+          : "70% output (damage + dps) + 30% server parse";
+    return '<span class="pts" title="' + how + '">' + ((p.score || 0) * 100).toFixed(1) + " pts</span>";
+  }
+  function srvHtml(p) {
+    return p.serverPct != null
+      ? '<span class="srv" title="percentile vs the whole server">' + p.serverPct.toFixed(1) + "% srv</span>"
+      : '<span class="srv none" title="no server parse yet">no parse</span>';
+  }
+  // the detail line under the name: what made the score
+  function subOf(p, kind) {
+    var bits = [ptsHtml(p, kind)];
+    if (kind === "tank") {
+      bits.push("×" + p.fights);
+      bits.push(
+        '<span title="fights tanked without dying (' + (p.deaths || 0) + " death" + (p.deaths === 1 ? "" : "s") + ')">' +
+          p.survival + "% up</span>"
+      );
+    } else {
+      bits.push(fmtBig(p.value) + " total");
+      if (p.fights) bits.push("×" + p.fights);
+    }
+    bits.push(srvHtml(p));
+    return bits.join(" · ");
+  }
+
+  function podiumCard(p, i, kind) {
     var col = classColor(p.class);
-    var rateLbl = metric === "hps" ? "HPS" : "DPS";
-    var cls = i === 0 ? "g" : i === 1 ? "s" : i === 2 ? "b" : "";
-    // podium sizing class: r1 biggest, r2 medium, r3 normal, rn smaller (still readable)
-    var sizeCls = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "rn";
-    // bar follows the RATE (the big number) via barWidths(); coherent with what the eye reads.
-    var barPct = p.bar != null ? p.bar : Math.round((p.score || 0) * 100);
-    // The crown always lives in the rank-change column (see deltaTag), never in the name column —
-    // that column is a fixed width, and a crown inside it stole space from the name (clipping
-    // "Pamevoid" -> "Pamev...") AND shifted the bar's start on All time.
+    var place = ["first", "second", "third"][i];
     return (
-      '<li class="' +
-      sizeCls +
-      " " +
-      metric +
-      '">' +
-      '<span class="rank ' +
-      cls +
-      '">' +
-      (i + 1) +
+      '<a class="pod ' + place + '" href="' + profileHref(p) + '" style="--cc:' + col + '">' +
+      podiumArt(p) +
+      '<span class="pd-rank">' + (i + 1) + "</span>" +
+      (kind === "tank" ? "" : '<span class="pd-move">' + deltaTag(p.delta, p.streak) + "</span>") +
+      '<span class="pd-body">' +
+      '<span class="pd-id">' + cicon(p.class, p.spec) + '<span class="pd-name">' + esc(p.name) + "</span></span>" +
+      '<span class="pd-rate">' + rateOf(p, kind) + ' <small>' + unitOf(kind) + "</small></span>" +
+      '<span class="pd-sub">' + subOf(p, kind) + "</span>" +
       "</span>" +
-      deltaTag(p.delta, p.streak) +
+      "</a>"
+    );
+  }
+
+  function gridCard(p, i, kind) {
+    var col = classColor(p.class);
+    var bar = p.bar != null ? p.bar : Math.round((p.score || 0) * 100);
+    return (
+      '<li class="gc" style="--cc:' + col + '">' +
+      '<span class="gc-rank">' + (i + 1) + "</span>" +
       cicon(p.class, p.spec) +
-      // fixed-width name column so every bar starts at the same x
-      '<span class="pnamecol">' +
-      '<a href="' +
-      esc(p.reportUrl || "#") +
-      '" target="_blank" rel="noopener" style="text-decoration:none">' +
-      '<span class="pname" style="color:' +
-      col +
-      '">' +
-      esc(p.name) +
-      "</span></a>" +
+      '<span class="gc-id">' +
+      '<a class="gc-name" href="' + profileHref(p) + '">' + esc(p.name) + "</a>" +
+      // the small card keeps what decides the place — pts and the server parse; the rest is a hover
+      '<span class="gc-sub" title="' + esc(subOf(p, kind).replace(/<[^>]+>/g, "")) + '">' +
+      ptsHtml(p, kind) + " · " + srvHtml(p) + "</span>" +
       "</span>" +
-      // bar fills the middle
-      '<div class="pbar"><i style="width:' +
-      barPct +
-      "%;background:" +
-      col +
-      '"></i></div>' +
-      // fixed value column on the right
-      '<span class="pval">' +
-      '<span class="prate">' +
-      fmt(p.rate || 0) +
-      ' <span class="unit">' +
-      rateLbl +
-      "</span></span>" +
-      '<span class="psub">' +
-      // SCORE — the number the board is actually sorted by. Shown because the big number is the
-      // dps/hps rate, but the ranking blends total output AND the server parse, so without this the
-      // order looks arbitrary ("why is he above me, I have more dps?"). Now every row shows the
-      // number that decided its position.
-      '<span class="pscore" title="' +
-      (metric === "hps"
-        ? "40% output (healing + hps) + 60% server parse"
-        : "70% output (damage + dps) + 30% server parse") +
-      '">' +
-      ((p.score || 0) * 100).toFixed(1) +
-      " pts</span> · " +
-      '<span class="ptot">' +
-      fmtBig(p.value) +
-      "</span> total" +
-      (p.fights ? ' · ×' + p.fights : "") +
-      // server percentile — always render (keeps rows aligned); placeholder --.- when we have no parse.
-      // Real values always show 1 decimal (61 → 61.0) so the column reads consistently.
-      (p.serverPct != null
-        ? ' · <span class="psrv" title="percentile vs the whole server">' + p.serverPct.toFixed(1) + "% srv</span>"
-        : ' · <span class="psrv none" title="no server parse for this player yet">--.-% srv</span>') +
+      '<span class="gc-val"><b>' + rateOf(p, kind) + "</b><small>" + unitOf(kind) + "</small>" +
+      (kind === "tank" ? "" : deltaTag(p.delta, p.streak)) +
       "</span>" +
-      "</span>" +
+      '<i class="gc-bar" style="width:' + bar + '%"></i>' +
       "</li>"
     );
   }
-  // One tank-board row — same skeleton as lbRow (rank · icon · name · bar · value) so the three
-  // boards read as one component. Rate = soaked per tanked fight; subs = fights · deaths · survival.
-  // No delta/score/server columns: the tank pool is small and the metric has no fairness blend.
-  function tankRow(p, i) {
-    var col = classColor(p.class);
-    var cls = i === 0 ? "g" : i === 1 ? "s" : i === 2 ? "b" : "";
-    var sizeCls = i === 0 ? "r1" : i === 1 ? "r2" : i === 2 ? "r3" : "rn";
-    var barPct = p.bar != null ? p.bar : 100;
-    return (
-      '<li class="' + sizeCls + ' tank">' +
-      '<span class="rank ' + cls + '">' + (i + 1) + "</span>" +
-      cicon(p.class, p.spec) +
-      '<span class="pnamecol">' +
-      '<a href="' + esc(p.reportUrl || "#") + '" target="_blank" rel="noopener" style="text-decoration:none">' +
-      '<span class="pname" style="color:' + col + '">' + esc(p.name) + "</span></a>" +
-      "</span>" +
-      '<div class="pbar"><i style="width:' + barPct + "%;background:" + col + '"></i></div>' +
-      '<span class="pval">' +
-      '<span class="prate">' + fmtBig(p.rate || 0) + ' <span class="unit">soaked/fight</span></span>' +
-      '<span class="psub">' +
-      // Slim sub-line — four short items, no clipping. Deaths are NOT listed: survival% already
-      // encodes them (67% up over ×3 = 1 death — the tooltip spells it out), and 💀 has its own award.
-      '<span class="pscore" title="60% soaked share + 40% server parse">' +
-      ((p.score || 0) * 100).toFixed(1) + " pts</span>" +
-      ' · ×' + p.fights +
-      ' · <span class="psrv" title="fights tanked without dying (' + (p.deaths || 0) + " death" +
-      (p.deaths === 1 ? "" : "s") + ')">' + p.survival + "% up</span>" +
-      // tanks parse too — same server percentile column as the DPS/HPS boards (placeholder keeps rows aligned)
-      (p.serverPct != null
-        ? ' · <span class="psrv" title="percentile vs the whole server">' + p.serverPct.toFixed(1) + "% srv</span>"
-        : ' · <span class="psrv none" title="no server parse for this toon yet">--.-% srv</span>') +
-      "</span>" +
-      "</span>" +
-      "</li>"
-    );
+
+  function boardHtml(list, kind) {
+    if (!list || !list.length) return "";
+    // podium order on screen: 2nd · 1st · 3rd, the winner in the middle and tallest
+    var pod = [1, 0, 2]
+      .filter(function (i) {
+        return list[i];
+      })
+      .map(function (i) {
+        return podiumCard(list[i], i, kind);
+      })
+      .join("");
+    var rest = list
+      .slice(3)
+      .map(function (p, j) {
+        return gridCard(p, j + 3, kind);
+      })
+      .join("");
+    return '<div class="podium n' + Math.min(list.length, 3) + '">' + pod + "</div>" +
+      (rest ? '<ol class="lbgrid">' + rest + "</ol>" : "");
   }
 
   // ---- leaderboard engine: aggregate players from logs[].rows for the active raid/size/period -----
@@ -2266,12 +2298,8 @@
       emptyEl = document.getElementById("boardEmpty"),
       secEl = document.getElementById("boardSecondary");
 
-    dpsEl2.innerHTML = boardEmpty
-      ? ""
-      : (d.dps || []).map(function (p, i) { return lbRow(p, i, "dps"); }).join("");
-    hpsEl2.innerHTML = boardEmpty
-      ? ""
-      : (d.hps || []).map(function (p, i) { return lbRow(p, i, "hps"); }).join("");
+    dpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.dps, "dps");
+    hpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.hps, "hps");
 
     // Tanking board — the toggle button only exists once tank rows with damageTaken exist in scope
     // (data ships since 2026-07-16; pre-fix snapshots have none). If the tab was active and the scope
@@ -2280,7 +2308,7 @@
       tnkBtn = document.getElementById("tankTab");
     var hasTank = !boardEmpty && d.tank && d.tank.length;
     if (tnkBtn) tnkBtn.hidden = !hasTank;
-    if (tnkEl2) tnkEl2.innerHTML = hasTank ? d.tank.map(function (p, i) { return tankRow(p, i); }).join("") : "";
+    if (tnkEl2) tnkEl2.innerHTML = hasTank ? boardHtml(d.tank, "tank") : "";
     if (!hasTank && METRIC === "tank") {
       // flip state directly (no setMetric — it re-renders, and we're inside render)
       METRIC = "dps";
@@ -2324,6 +2352,9 @@
           return mvRichRow(p, '<span class="mv down">▼</span>', '<span class="mvpct down" title="' + p.belowPct + '% below the guild average">−' + p.belowPct + "%</span>");
         })
         .join("") || '<li class="mvempty">— everyone at or above par 🧀</li>';
+    // an empty "needs work" is the usual case and says nothing: the card only shows when it has names
+    var needsCard = document.getElementById("bottom").closest(".sec-card");
+    if (needsCard) needsCard.hidden = !(d.bottom && d.bottom.length);
 
     renderFunShame();
     renderProgress();
@@ -2459,31 +2490,6 @@
     });
     syncUrl();
     render();
-  }
-
-  // ---- log delete (officer) ------------------------------------------------------------------
-  // `excludedLogs` is NOT a UI blacklist — an archived log never has rows to show anyway. It exists only
-  // so the fetch can SKIP re-pulling logs the API already flagged ARCHIVED (see fetchData/apiIncremental).
-  // Render filters do not consult it. The trash button below is a hard delete (removes from the DB).
-  // DELETE a log from the snapshot — literally remove it from the DB. It is NOT blacklisted, so the next
-  // Fetch is free to pull it again (that's the point: delete → re-fetch a clean copy). Use this for a bad
-  // capture you want re-pulled. (Truly superseded uploads are dropped automatically via API logStatus.)
-  async function excludeLog(reportId) {
-    reportId = String(reportId);
-    if (!confirm("Delete log #" + reportId + " from the database?\n\nIt is NOT blacklisted — the next Fetch can pull it again.")) return;
-    // remove ONLY from the stored logs. Do not touch excludedLogs (no permanent blacklist).
-    DATA.logs = (DATA.logs || []).filter(function (l) {
-      return String(l.reportId) !== reportId;
-    });
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), data: DATA }));
-    } catch (e) {}
-    if (window.RatsData && RatsData.fbOn && RatsData.fbOn() && RatsData.saveRankings) {
-      try {
-        await RatsData.saveRankings(DATA);
-      } catch (e) {}
-    }
-    render(); // client-side only — toggles unaffected
   }
 
   // ---- wow-logs API client (officer-side Fetch only) ----------------------------------------
@@ -3189,7 +3195,6 @@
   window.setRaid = setRaid;
   window.setMetric = setMetric;
   window.fetchData = fetchData;
-  window.excludeLog = excludeLog;
 
   if (IS_OFFICER) {
     var fw = document.getElementById("fetchWrap");

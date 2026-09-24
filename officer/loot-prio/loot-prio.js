@@ -123,7 +123,9 @@
           (p.offspec ? " — off-spec, takes leftovers" : "") +
           (p.unproven ? " — only " + (p.icc || 0) + " ICC 25 night" + ((p.icc === 1) ? "" : "s") + " so far" : "") +
           (p.low ? " — off the pace for our raid" : "") +
-          (p.tail ? " — holds this group open, last in line until he proves it" : "");
+          (p.tail ? " — holds this group open, last in line until he proves it" : "") +
+          (p.luck === 0 ? " — owed: " + p.owed + " items behind the raid's rate" : "") +
+          (p.luck === 2 ? " — well served: " + Math.abs(p.owed) + " items ahead of the raid's rate" : "");
 
         // The first name that has NOT won it is the one it goes to now.
         var isNext = !p.won && !it.ladder.slice(0, i).some(function (q) { return !q.won; });
@@ -135,6 +137,8 @@
           (p.offspec ? '<i class="offtag">off</i>' : "") +
           (p.unproven ? '<i class="offtag new">new</i>' : "") +
           (p.low ? '<i class="offtag low">low</i>' : "") +
+          (!p.won && p.luck === 0 ? '<i class="offtag owed">owed</i>' : "") +
+          (!p.won && p.luck === 2 ? '<i class="offtag lucky">lucky</i>' : "") +
           "</span>";
       });
     }
@@ -219,6 +223,82 @@
     countEl.textContent = list.length + " of " + DATA.items.length + " items";
   }
 
+  // ---- loot luck: everyone's items won against what their ICC nights should give ----
+  var OPEN_LUCK = {};
+  function renderLuck() {
+    var el = document.getElementById("luck");
+    if (!el || !DATA) return;
+    var m = DATA.meta;
+    var list = Object.keys(DATA.players)
+      .map(function (k) { return DATA.players[k]; })
+      .filter(function (p) { return !p.inactive && p.lootNights > 0; })
+      .sort(function (a, b) { return (b.owed - a.owed) || (b.lootNights - a.lootNights); });
+    if (!m.lootFrom || !list.length) {
+      el.innerHTML = '<div class="empty">No ICC 25 loot recorded yet — import a raid on the Loot page.</div>';
+      return;
+    }
+    var maxAbs = list.reduce(function (x, p) { return Math.max(x, Math.abs(p.owed)); }, 1);
+    var rate = Math.round(m.luckRate * 100) / 100;
+    var head =
+      '<p class="lnote">Since <b>' + esc(m.lootFrom) + "</b> the raid wins about <b>" + rate +
+      "</b> items per raider per ICC 25 night. <b>Owed</b> = what your nights should have given you − what you won. " +
+      "<b>±" + m.luckMargin + "</b> or more moves you inside your group on every ladder. Click a row for the items.</p>";
+    var rows = list.map(function (p) {
+      var tone = p.luck === 0 ? "owed" : p.luck === 2 ? "lucky" : "even";
+      var half = Math.round((Math.abs(p.owed) / maxAbs) * 50);
+      var bar = p.owed >= 0
+        ? '<i class="lb-pos" style="width:' + half + '%"></i>'
+        : '<i class="lb-neg" style="width:' + half + '%"></i>';
+      var open = !!OPEN_LUCK[p.name];
+      var items = open
+        ? '<div class="litems">' + (p.lootItems.length
+          ? p.lootItems.slice().sort(function (a, b) { return a.day < b.day ? 1 : -1; }).map(function (it) {
+            return '<span class="lit"><img src="' + esc(iconUrl(it.icon || ICON_FALLBACK)) + '" alt="" loading="lazy">' +
+              esc(it.name) + '<i>' + esc(it.boss) + " · " + esc(it.day) + "</i></span>";
+          }).join("")
+          : '<span class="lit none">Nothing won yet.</span>') + "</div>"
+        : "";
+      return (
+        '<li class="lrow ' + tone + (open ? " open" : "") + '" data-luck="' + esc(p.name) + '">' +
+        '<b class="lname" style="color:' + classColor(p.cls) + '">' + esc(p.name) + "</b>" +
+        '<span class="lstat"><b>' + p.lootNights + "</b> nights</span>" +
+        '<span class="lstat"><b>' + p.lootWon + "</b> won</span>" +
+        '<span class="lstat"><b>' + p.lootExpected + "</b> expected</span>" +
+        '<span class="lbar"><span class="lb-mid"></span>' + bar + "</span>" +
+        '<span class="lowed">' + (p.owed > 0 ? "+" : "") + p.owed + "</span>" +
+        (p.luck === 0 ? '<i class="offtag owed">owed</i>' : p.luck === 2 ? '<i class="offtag lucky">lucky</i>' : '<i class="offtag even">even</i>') +
+        "</li>" + items
+      );
+    }).join("");
+    el.innerHTML = head + '<ul class="llist">' + rows + "</ul>";
+  }
+  document.getElementById("luck").addEventListener("click", function (e) {
+    var row = e.target.closest(".lrow");
+    if (!row) return;
+    var n = row.getAttribute("data-luck");
+    OPEN_LUCK[n] = !OPEN_LUCK[n];
+    renderLuck();
+  });
+
+  // ---- view: the ladders, or everyone's loot luck ----
+  var VIEW = "items";
+  function setView(v) {
+    VIEW = v;
+    Array.prototype.forEach.call(document.querySelectorAll(".views .vbtn"), function (b) {
+      b.classList.toggle("active", b.getAttribute("data-view") === v);
+    });
+    var items = v === "items";
+    document.getElementById("itemCtl").hidden = !items;
+    document.getElementById("legend").hidden = !items;
+    grid.hidden = !items;
+    if (!items) empty.hidden = true;
+    document.getElementById("luck").hidden = items;
+    if (items) render(); else renderLuck();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".views .vbtn"), function (b) {
+    b.addEventListener("click", function () { setView(b.getAttribute("data-view")); });
+  });
+
   // ---- wire up ------------------------------------------------------
   document.getElementById("q").addEventListener("input", function (e) {
     QUERY = e.target.value.trim().toLowerCase();
@@ -242,6 +322,7 @@
       if (!RAW) return;                 // still loading
       DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
       render();
+      if (VIEW === "luck") renderLuck();
     });
   }
 
@@ -502,6 +583,7 @@
         "<i><b>" + m.raidDays + "</b> raid days</i>" +
         "<i>last raid <b>" + esc(m.lastRaid) + "</b></i>";
       render();
+      if (VIEW === "luck") renderLuck();
     }).catch(function (e) {
       clearInterval(ticker);
       if (refresh) refresh.disabled = false;

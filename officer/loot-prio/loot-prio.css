@@ -338,3 +338,55 @@
   .ctl { gap: 8px }
   .inp { min-width: 0 }
 }
+
+/* ---- loot luck ---- */
+.offtag.owed { color: #7fd99a; border-color: #2f5a3c }
+.offtag.lucky { color: #e0b25a; border-color: #5c4a24 }
+.offtag.even { color: var(--text-faint) }
+[hidden] { display: none !important }
+
+/* the two views: the ladders, or everyone's loot luck */
+.views { display: flex; gap: 4px; margin: 12px 0 10px; border-bottom: 1px solid var(--border) }
+.vbtn {
+  background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; height: auto;
+  padding: 8px 14px 9px; font-size: 13px; font-weight: 700; color: var(--text-dim-2); cursor: pointer;
+}
+.vbtn:hover { color: var(--text); filter: none }
+.vbtn.active { color: var(--text); border-bottom-color: var(--accent) }
+
+#luck { margin-top: 14px }
+.lnote { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; margin: 0 0 12px; max-width: 900px }
+.lnote b { color: var(--text) }
+.llist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden }
+.lrow {
+  display: grid; grid-template-columns: minmax(110px, 1.2fr) repeat(3, 92px) minmax(140px, 2fr) 56px 52px;
+  align-items: center; gap: 12px; padding: 8px 14px; cursor: pointer;
+  border-bottom: 1px solid var(--border); background: var(--surface-2);
+}
+.lrow:hover { background: var(--surface) }
+.lname { font-size: 13.5px }
+.lstat { font-size: 12px; color: var(--text-dim-2); white-space: nowrap }
+.lstat b { color: var(--text); font-variant-numeric: tabular-nums; margin-right: 3px }
+.lbar { position: relative; height: 8px; border-radius: 4px; background: var(--surface) }
+.lb-mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--border-2) }
+.lb-pos, .lb-neg { position: absolute; top: 0; bottom: 0; border-radius: 4px }
+.lb-pos { left: 50%; background: #4fbf72 }
+.lb-neg { right: 50%; background: #d19a3e }
+.lowed { font-weight: 800; font-size: 14px; text-align: right; font-variant-numeric: tabular-nums }
+.lrow.owed .lowed { color: #7fd99a }
+.lrow.lucky .lowed { color: #e0b25a }
+.lrow.even .lowed { color: var(--text-dim) }
+.lrow .offtag { justify-self: start; font-size: 9.5px; padding: 1px 4px }
+.litems { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 12px; background: var(--surface); border-bottom: 1px solid var(--border) }
+.lit {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #c89bff;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 3px 8px 3px 3px;
+}
+.lit img { width: 20px; height: 20px; border-radius: 3px }
+.lit i { font-style: normal; color: var(--text-faint); font-size: 11px }
+.lit.none { color: var(--text-faint); padding: 4px 8px }
+@media (max-width: 760px) {
+  .lrow { grid-template-columns: 1fr auto auto; row-gap: 6px }
+  .lrow .lstat { grid-row: 2 }
+  .lrow .lbar { grid-column: 1 / -1; grid-row: 3 }
+}

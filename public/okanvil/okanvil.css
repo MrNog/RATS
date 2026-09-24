@@ -33,7 +33,17 @@ a { color: var(--accent-hi) }
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   padding-block: 18px;
   border-bottom: 1px solid var(--border);
+  /* stays on screen while scrolling; the shadow + clip paint its background out
+     to the window edges, since the bar itself is only as wide as .ok-wrap */
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(20, 21, 23, .88);
+  box-shadow: 0 0 0 100vmax rgba(20, 21, 23, .88);
+  clip-path: inset(0 -100vmax);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
+/* a nav jump lands below the sticky bar, not under it */
+section[id] { scroll-margin-top: 84px }
 .top-left { display: flex; align-items: center; gap: 18px }
 .back { color: var(--text-dim-2); text-decoration: none; font-size: 14px }
 .back:hover { color: var(--accent-hi) }

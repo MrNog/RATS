@@ -1,15 +1,4 @@
 /* gallery uses the wide tier (.wrap.wide) for the masonry grid */
-h1 {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-}
-h1 .hicon {
-  width: 23px;
-  height: 23px;
-  flex: 0 0 auto;
-  color: var(--accent);
-}
 
 /* tabs + search share one row: tabs flow left, search pinned right (wraps under on narrow) */
 .galbar {
@@ -294,3 +283,141 @@ dialog#lb::backdrop {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* ---------- site makeover (assets/css/site.css) ---------- */
+.phead .gtotal { font-size: 13px; color: var(--text-dim); white-space: nowrap }
+.phead .gtotal b { color: var(--accent-hi); font-size: 18px; font-weight: 800; margin-right: 3px; font-variant-numeric: tabular-nums }
+
+/* tabs: how much each one holds */
+.tab { display: inline-flex; align-items: center; gap: 7px }
+.tab .tn {
+  font-style: normal; font-size: 11px; font-weight: 700; color: var(--text-faint);
+  background: rgba(255, 255, 255, .06); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums;
+}
+.tab.active .tn { color: #16120a; background: rgba(22, 18, 10, .18) }
+
+/* tiles: the title sits on the art, the art grows a little under the pointer */
+.tile { border-color: var(--border); box-shadow: 0 6px 18px -10px rgba(0, 0, 0, .7) }
+.tile img { transition: transform .35s ease }
+.tile:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 16px 34px -14px rgba(0, 0, 0, .85) }
+.tile:hover img { transform: scale(1.04) }
+.tile .meta {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 26px 12px 10px;
+  background: linear-gradient(0deg, rgba(10, 10, 12, .92) 0%, rgba(10, 10, 12, .6) 55%, rgba(10, 10, 12, 0) 100%);
+  pointer-events: none;
+}
+.tile .t { font-size: 14px; text-shadow: 0 1px 6px rgba(0, 0, 0, .9) }
+.tile .c { color: var(--text-dim); text-shadow: 0 1px 4px rgba(0, 0, 0, .9) }
+.tile .tcat {
+  position: absolute; top: 8px; left: 8px; z-index: 1;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--accent-hi);
+  background: rgba(10, 10, 12, .72); border: 1px solid var(--line-warm); border-radius: 999px; padding: 2px 8px;
+  opacity: 0; transform: translateY(-3px); transition: opacity .15s, transform .15s;
+}
+.tile:hover .tcat, .tile:focus-visible .tcat { opacity: 1; transform: none }
+@media (hover: none) { .tile .tcat { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .tile img, .tile .tcat { transition: none } .tile:hover img { transform: none } }
+
+/* the search lives in the header, next to the total, so the tabs get the whole row */
+.phead .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end }
+.phead .gsearch { margin: 0; width: 280px; max-width: 100% }
+.galbar { margin-top: 8px }
+.tab { padding: 5px 10px; gap: 6px; font-size: 12.5px }
+.galbar .tabs { gap: 6px }
+@media (max-width: 760px) { .phead .actions { justify-content: flex-start } .phead .gsearch { width: 100% } }
+
+/* ---------- spotlight + shelves (All) and a tidy grid (one category / a search) ---------- */
+.grid.shelves, .grid.ugrid { position: static; height: auto !important }
+.grid .tile { position: relative; top: auto; left: auto }
+
+/* spotlight: one big story piece, cycled with the arrows / dots */
+.spot {
+  position: relative; overflow: hidden; margin: 6px 0 30px; border-radius: var(--radius-xl);
+  border: 1px solid var(--line-warm); aspect-ratio: 21 / 8; min-height: 280px; max-height: 520px; width: 100%;
+  background: #0c0c0e var(--thumb) center / cover no-repeat;
+  box-shadow: 0 24px 60px -30px rgba(0, 0, 0, .9);
+}
+.spot-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 35% }
+.spot::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, rgba(10, 10, 12, .92) 0%, rgba(10, 10, 12, .55) 38%, rgba(10, 10, 12, 0) 70%),
+    linear-gradient(0deg, rgba(10, 10, 12, .7) 0%, rgba(10, 10, 12, 0) 40%);
+}
+.spot-txt { position: absolute; z-index: 1; left: 36px; bottom: 34px; max-width: min(520px, 60%) }
+.spot-cat { font-size: 11.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--accent) }
+.spot-t {
+  margin: 8px 0 6px; font-family: var(--body); font-weight: 800; font-size: clamp(26px, 2.6vw, 40px);
+  line-height: 1.1; color: var(--heading); text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
+}
+.spot-c { margin: 0 0 4px; color: var(--text-dim); font-size: 14px; line-height: 1.5; text-shadow: 0 1px 6px rgba(0, 0, 0, .9) }
+.spot-acts { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap }
+.spot-nav {
+  position: absolute; z-index: 2; top: 50%; transform: translateY(-50%);
+  width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 26px; line-height: 1;
+  color: var(--text); background: rgba(10, 10, 12, .55); border: 1px solid var(--border-2); cursor: pointer;
+}
+.spot-nav:hover { background: var(--accent); color: #16120a; filter: none }
+.spot-nav.prev { left: 14px }
+.spot-nav.next { right: 14px }
+.spot-dots { position: absolute; z-index: 2; right: 24px; bottom: 20px; display: flex; gap: 6px }
+.spot-dot {
+  width: 8px; height: 8px; padding: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255, 255, 255, .3);
+}
+.spot-dot.on { width: 22px; border-radius: 4px; background: var(--accent) }
+.spot-dot:hover { filter: none; background: var(--accent-hi) }
+
+/* shelves: a titled row per category that slides sideways */
+.shelf { margin: 0 0 26px }
+.sh-hd { display: flex; align-items: center; gap: 10px; margin: 0 0 10px }
+.sh-hd h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--heading); text-transform: none; letter-spacing: 0 }
+.sh-hd .tn {
+  font-style: normal; font-size: 11.5px; font-weight: 700; color: var(--text-faint);
+  background: rgba(255, 255, 255, .06); border-radius: 999px; padding: 1px 8px;
+}
+.sh-hd::after { content: ""; flex: 1; height: 1px; background: var(--line-warm); order: 2 }
+.sh-all {
+  order: 3; background: none; border: 0; height: auto; padding: 2px 0; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; color: var(--accent);
+}
+.sh-all:hover { color: var(--accent-hi); filter: none }
+.sh-wrap { position: relative }
+.sh-row {
+  display: grid; grid-auto-flow: column; grid-auto-columns: clamp(250px, 23%, 380px); gap: 12px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; padding: 2px 2px 10px;
+  scrollbar-width: thin; scrollbar-color: var(--border-2) transparent;
+}
+.sh-row.sq { grid-auto-columns: clamp(150px, 13%, 210px) }
+.sh-row .tile { scroll-snap-align: start }
+.sh-nav {
+  position: absolute; z-index: 3; top: calc(50% - 5px); transform: translateY(-50%);
+  width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 22px; line-height: 1;
+  color: var(--text); background: rgba(10, 10, 12, .8); border: 1px solid var(--border-2); cursor: pointer;
+  opacity: 0; transition: opacity .15s;
+}
+.sh-wrap:hover .sh-nav { opacity: 1 }
+.sh-nav:hover { background: var(--accent); color: #16120a; filter: none }
+.sh-nav.prev { left: -12px }
+.sh-nav.next { right: -12px }
+@media (hover: none) { .sh-nav { display: none } }
+
+/* every card in a row / grid has the same shape; icons are square */
+.shelves .tile img, .ugrid .tile img { aspect-ratio: 16 / 9; height: auto; object-fit: cover; object-position: center 30% }
+.shelves .tile.sq img, .ugrid .tile.sq img { aspect-ratio: 1 / 1; object-position: center }
+
+/* one category or a search: an even grid, no masonry */
+.grid.ugrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(max(260px, calc((100% - 36px) / 4)), 1fr)); gap: 12px; margin-top: 16px }
+.grid.ugrid.sq { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) }
+.grid.ugrid .empty, .grid.shelves .empty { grid-column: 1 / -1 }
+
+@media (max-width: 760px) {
+  .spot { aspect-ratio: 4 / 5; max-height: 460px }
+  .spot::after { background: linear-gradient(0deg, rgba(10, 10, 12, .95) 0%, rgba(10, 10, 12, .5) 50%, rgba(10, 10, 12, 0) 80%) }
+  .spot-txt { left: 18px; right: 18px; bottom: 44px; max-width: none }
+  .spot-nav { display: none }
+  .spot-dots { left: 18px; right: auto; bottom: 18px }
+  .sh-row { grid-auto-columns: 78% }
+  .sh-row.sq { grid-auto-columns: 42% }
+}
+
+.spot-t { text-transform: none; letter-spacing: 0 }

@@ -222,7 +222,52 @@ function setSort(btn) {
   btn.parentNode.querySelectorAll(".seg").forEach((b) => b.classList.toggle("active", b === btn));
   render();
 }
+// Who is away right now, then who leaves in the next two weeks: one card each, the raider's
+// banner behind it. Read-only, so guildies and officers see the same strip.
+function renderAway() {
+  const el = document.getElementById("awayNow");
+  if (!el) return;
+  const soonCut = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+  const now = VACS.filter((v) => status(v) === "active").sort(byProgression);
+  const soon = VACS.filter((v) => status(v) === "soon" && v.start <= soonCut).sort((a, b) => (a.start < b.start ? -1 : 1));
+  if (!now.length && !soon.length) {
+    el.hidden = true;
+    return;
+  }
+  const art = (v) => (window.RatsBanner ? RatsBanner.html(v.name, v.class, "aw-art") : "");
+  const card = (v, isNow) => {
+    const col = CLASS_COLOR[v.class] || "#e8e6e3";
+    let line, bar = "";
+    if (isNow) {
+      const pr = vacProgress(v);
+      line = pr.left > 0 ? "back in <b>" + pr.left + "</b> day" + (pr.left === 1 ? "" : "s") : "back <b>tomorrow</b>";
+      bar = '<div class="aw-bar"><i style="width:' + pr.p + "%;background:" + barColor(pr.p) + '"></i></div>';
+    } else {
+      const d = Math.round((new Date(v.start) - new Date(todayStr())) / 86400000);
+      line = "leaves in <b>" + d + "</b> day" + (d === 1 ? "" : "s");
+    }
+    const dates = fmtDate(v.start) + (v.end && v.end !== v.start ? " – " + fmtDate(v.end) : "");
+    return (
+      '<div class="aw-card' + (isNow ? " now" : "") + '" style="--cc:' + col + '">' + art(v) +
+      '<div class="aw-body"><b class="aw-name" style="color:' + col + '">' + esc(v.name) + "</b>" +
+      '<span class="aw-dates">' + dates + "</span>" +
+      '<span class="aw-line">' + line + "</span>" + bar + "</div></div>"
+    );
+  };
+  el.innerHTML =
+    (now.length
+      ? '<div class="aw-grp"><h2 class="vsec">Away now <i class="aw-n">' + now.length + "</i></h2>" +
+        '<div class="aw-row">' + now.map((v) => card(v, true)).join("") + "</div></div>"
+      : "") +
+    (soon.length
+      ? '<div class="aw-grp"><h2 class="vsec">Leaving soon <i class="aw-n">' + soon.length + "</i></h2>" +
+        '<div class="aw-row">' + soon.map((v) => card(v, false)).join("") + "</div></div>"
+      : "");
+  el.hidden = false;
+}
+
 function render() {
+  renderAway();
   const vs = sortMode === "raider" ? raiderSorted(VACS) : VACS.slice().sort(byProgression);
   document.getElementById("all").innerHTML = table(vs, isOfficer);
   document.getElementById("cntall").textContent = vs.length ? "(" + vs.length + ")" : "";
@@ -404,12 +449,8 @@ async function saveEdit(key) {
   }
 }
 // vacation vs personal-time toggle (segmented, like the 25/10-man toggle)
-let vacType = "vacation";
-function setType(btn) {
-  vacType = btn.dataset.t;
-  btn.parentNode.querySelectorAll(".seg").forEach((b) => b.classList.toggle("active", b === btn));
-  updateDevPreview();
-}
+// every new entry is a vacation; older "personal" entries still render as before
+const vacType = "vacation";
 // typeahead picker (filters as you type, class-coloured)
 let selName = "",
   selClass = "";
@@ -618,78 +659,6 @@ const tomorrowStr = () => {
   return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate());
 };
 
-// ---- live preview — renders the embed like Discord, sends nothing ----
-function relTime(unix) {
-  const a = Math.abs(unix * 1000 - Date.now()),
-    past = unix * 1000 < Date.now(),
-    days = Math.round(a / 86400000);
-  let t;
-  if (days < 1) return "today";
-  else if (days < 14) t = days + " day" + (days !== 1 ? "s" : "");
-  else if (days < 60) t = Math.round(days / 7) + " weeks";
-  else t = Math.round(days / 30) + " months";
-  return past ? t + " ago" : "in " + t;
-}
-function tsChip(unix, style) {
-  const d = new Date(unix * 1000);
-  const txt =
-    style === "R" ? relTime(unix) : d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
-  return `<span style="color:#00a8fc;background:rgba(0,168,252,.14);border-radius:3px;padding:0 3px">${txt}</span>`;
-}
-function previewDesc(raw) {
-  let s = esc(raw);
-  s = s.replace(/&lt;t:(\d+):([dDtTfFR])&gt;/g, (m, u, st) => tsChip(+u, st));
-  s = s.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/_(.+?)_/g, "<i>$1</i>");
-  return s.replace(/\n/g, "<br>");
-}
-function renderEmbedCard(embed, hl) {
-  const hex = "#" + (embed.color || 0).toString(16).padStart(6, "0");
-  let title = esc(embed.title || "");
-  if (hl && hl.name) {
-    const safe = esc(hl.name);
-    title = title.split(safe).join(`<span style="color:${hl.color}">${safe}</span>`);
-  }
-  return `<div style="border-left:4px solid ${hex};background:#2b2d31;border-radius:4px;padding:11px 15px;max-width:440px;font-family:'gg sans','Segoe UI',sans-serif">
-    ${embed.author ? `<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:6px">${esc(embed.author.name)}</div>` : ""}
-    ${embed.title ? `<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:9px" title="Note: real Discord shows the whole title in white — the class colour only appears on the left bar">${title}</div>` : ""}
-    ${embed.description ? `<div style="font-size:14px;color:#dbdee1;line-height:1.45;margin-bottom:8px">${previewDesc(embed.description)}</div>` : ""}
-  </div>`;
-}
-function updateDevPreview() {
-  const box = document.getElementById("devCard");
-  if (!box) return;
-  const typed = document.getElementById("vSearch").value.trim();
-  const picked = selName && selName.toLowerCase() === typed.toLowerCase();
-  const name = picked ? selName : typed,
-    cls = picked ? selClass : "";
-  const start = document.getElementById("vStart").value,
-    end = document.getElementById("vEnd").value,
-    note = document.getElementById("vNote").value.trim();
-  const type = vacType;
-  if (!name || !start) {
-    box.innerHTML =
-      '<div class="empty" style="padding:2px">Pick your character and a From date to preview your card…</div>';
-    return;
-  }
-  if (end && end < start) {
-    box.innerHTML = '<div class="empty" style="padding:2px;color:#ff6b6b">⚠️ "To" is before "From".</div>';
-    return;
-  }
-  const v = { name, class: cls, start, end, note, type };
-  const hl = { name, color: CLASS_COLOR[cls] || "#fff" };
-  const lbl = (icon, t) => `<div class="pv-lbl"><span class="pv-lbl-i">${icon}</span>${t}</div>`;
-  // officers see the extra "reminder · day before" card; guildies just see their away card
-  let cards =
-    '<div class="pv-card">' +
-    lbl("📣", "Posted when added") +
-    renderEmbedCard(buildVacEmbed(v), hl) +
-    "</div>";
-  // everyone sees the day-before reminder card too (not for personal time-off, which has no reminder)
-  if (type !== "personal")
-    cards += '<div class="pv-card">' + lbl("🔔", "Reminder the day before") + renderEmbedCard(buildReminderEmbed(v), hl) + "</div>";
-  box.innerHTML = '<div class="pv-cards">' + cards + "</div>";
-}
-
 // ---- officer-only auto-posting (poll + announce on guildies' behalf) ----
 async function announceNew() {
   const url = vacWebhook();
@@ -805,15 +774,10 @@ async function addVac() {
     document.getElementById("vSearch").value = "";
     selName = "";
     selClass = "";
-    vacType = "vacation";
-    document
-      .querySelectorAll("#typeSegs .seg")
-      .forEach((b) => b.classList.toggle("active", b.dataset.t === "vacation"));
     document.getElementById("vStart").value = "";
     document.getElementById("vEnd").value = "";
     document.getElementById("vNote").value = "";
     if (window.RatsCal) RatsCal.sync();
-    updateDevPreview();
     await reload();
     msg(isOfficer ? "✅ Added " + name + " — shared." : "✅ Done — you're marked away. Have a good one! 🧀", "#7CFC8A");
   } catch (e) {
@@ -855,7 +819,6 @@ document.getElementById("vList").addEventListener("click", (e) => {
   selClass = o.dataset.c;
   document.getElementById("vSearch").value = selName;
   document.getElementById("vList").style.display = "none";
-  updateDevPreview();
 });
 document.addEventListener("click", (e) => {
   if (!e.target.closest("#vSearch") && !e.target.closest("#vList"))
@@ -888,18 +851,8 @@ async function boot() {
     if (att) att.style.display = "inline-flex";
     const cal = document.getElementById("calSection");
     if (cal) cal.style.display = "block";
-    const back = document.getElementById("backLink");
-    if (back) {
-      back.href = "../../officer/index.html";
-      back.textContent = "← Back to Tools";
-    }
   }
   await loadPickerMembers();
-  document.getElementById("previewWrap").style.display = "";
-  ["vSearch", "vStart", "vEnd", "vNote"].forEach((id) =>
-    document.getElementById(id).addEventListener("input", updateDevPreview)
-  );
-  updateDevPreview();
   await reload();
   if (isOfficer) setInterval(reload, 60000); // officers pick up & announce new member-submitted vacations
 }

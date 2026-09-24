@@ -10,121 +10,8 @@ function msg(t, c) {
   e.textContent = t || "";
 }
 
-// Discord webhooks DON'T convert :shortcodes: — we must turn them into real emoji before sending.
-const EMOJI = {
-  crossed_swords: "⚔️",
-  bow_and_arrow: "🏹",
-  shield: "🛡️",
-  dagger: "🗡️",
-  axe: "🪓",
-  hammer: "🔨",
-  hammer_and_pick: "⚒️",
-  wrench: "🔧",
-  gear: "⚙️",
-  skull: "💀",
-  skull_and_crossbones: "☠️",
-  crown: "👑",
-  trophy: "🏆",
-  medal: "🏅",
-  military_medal: "🎖️",
-  first_place: "🥇",
-  second_place: "🥈",
-  third_place: "🥉",
-  fire: "🔥",
-  boom: "💥",
-  zap: "⚡",
-  star: "⭐",
-  star2: "🌟",
-  sparkles: "✨",
-  dizzy: "💫",
-  comet: "☄️",
-  snowflake: "❄️",
-  dragon: "🐉",
-  gem: "💎",
-  ring: "💍",
-  moneybag: "💰",
-  dollar: "💵",
-  100: "💯",
-  muscle: "💪",
-  dart: "🎯",
-  game_die: "🎲",
-  video_game: "🎮",
-  heart: "❤️",
-  broken_heart: "💔",
-  green_heart: "💚",
-  blue_heart: "💙",
-  purple_heart: "💜",
-  yellow_heart: "💛",
-  orange_heart: "🧡",
-  black_heart: "🖤",
-  white_heart: "🤍",
-  sparkling_heart: "💖",
-  two_hearts: "💕",
-  heartpulse: "💗",
-  rat: "🐀",
-  mouse: "🐭",
-  cheese: "🧀",
-  beer: "🍺",
-  beers: "🍻",
-  tada: "🎉",
-  confetti_ball: "🎊",
-  partying_face: "🥳",
-  sob: "😭",
-  joy: "😂",
-  sunglasses: "😎",
-  smiling_imp: "😈",
-  imp: "👿",
-  ghost: "👻",
-  eyes: "👀",
-  rage: "😡",
-  angry: "😠",
-  triumph: "😤",
-  sweat_drops: "💦",
-  point_right: "👉",
-  point_left: "👈",
-  point_up: "👆",
-  point_down: "👇",
-  ok_hand: "👌",
-  thumbsup: "👍",
-  "+1": "👍",
-  thumbsdown: "👎",
-  "-1": "👎",
-  clap: "👏",
-  pray: "🙏",
-  raised_hands: "🙌",
-  wave: "👋",
-  fist: "👊",
-  punch: "👊",
-  hourglass: "⌛",
-  hourglass_flowing_sand: "⏳",
-  alarm_clock: "⏰",
-  lock: "🔒",
-  unlock: "🔓",
-  key: "🔑",
-  scroll: "📜",
-  crossed_flags: "🎌",
-  checkered_flag: "🏁",
-  heavy_check_mark: "✔️",
-  white_check_mark: "✅",
-  x: "❌",
-  warning: "⚠️",
-  exclamation: "❗",
-  question: "❓",
-  rotating_light: "🚨",
-  no_entry: "⛔",
-  no_entry_sign: "🚫",
-  sun: "☀️",
-  sunny: "☀️",
-  full_moon: "🌕",
-  crescent_moon: "🌙",
-  new_moon: "🌑",
-  milky_way: "🌌",
-  rainbow: "🌈",
-};
-// convert :name: -> emoji (skips custom emoji like <:name:123> which is followed by digits)
-function emojify(s) {
-  return String(s).replace(/:([a-z0-9_+\-]{2,}):(?!\d)/g, (m, n) => EMOJI[n] || m);
-}
+// :shortcode: -> emoji, shared with the public chronicles page (assets/js/discord-md.js)
+const emojify = RatsMD.emojify;
 
 function loadHooks() {
   try {
@@ -320,7 +207,16 @@ async function postLore() {
   try {
     const r = await fetch(hook.url, { method: "POST", body: fd }); // no Content-Type — browser sets multipart boundary
     if (r.ok) {
-      msg("✅ Posted to “" + hook.name + "”! 📜");
+      let site = "";
+      if (document.getElementById("pubSite").checked) {
+        try {
+          await publishToSite(raw);
+          site = " …and on the site.";
+        } catch (e) {
+          site = " (the site copy failed: " + e.message + " — use 📜 Site only to retry)";
+        }
+      }
+      msg("✅ Posted to “" + hook.name + "”! 📜" + site);
       loreFiles = [];
       renderThumbs();
     } else {
@@ -331,6 +227,76 @@ async function postLore() {
   }
 }
 
+// ---- the site copy (public/lore/) ----
+// The tale's title: the box if filled, else the story's first "# heading", else its first line.
+function siteTitle(raw) {
+  const typed = document.getElementById("pubTitle").value.trim();
+  if (typed) return typed;
+  const first = (raw.match(/^#{1,3}\s+(.+)$/m) || raw.match(/^(.+)$/m) || ["", "A tale of the Rats"])[1];
+  return first
+    .replace(/:[a-z0-9_+\-]{2,}:/g, "")
+    .replace(/[*_~`]/g, "")
+    .trim()
+    .slice(0, 80);
+}
+
+// A ping means nothing on the site: name it from the mention book instead (unknown ids drop).
+function siteBody(raw) {
+  const book = loadMentions();
+  return raw.replace(/<@(&)?!?(\d+)>/g, (m, role, id) => {
+    const hit = book.find((b) => b.id === id && !!b.role === !!role);
+    return hit ? hit.label : "";
+  });
+}
+
+async function publishToSite(raw) {
+  if (!raw) throw new Error("the story is empty");
+  await RatsData.publishLore({
+    title: siteTitle(raw),
+    body: siteBody(raw),
+    image: document.getElementById("pubImage").value || "",
+    date: new Date().toISOString().slice(0, 10),
+  });
+}
+
+// For a tale already in Discord: put it on the site without posting it again.
+async function publishSiteOnly() {
+  const raw = document.getElementById("body").value.trim();
+  msg("⏳ Publishing on the site…", "#9aa0a6");
+  try {
+    await publishToSite(raw);
+    msg("✅ On the Chronicles page. 📜");
+  } catch (e) {
+    msg("❌ Could not publish on the site: " + e.message, "#ff6b6b");
+  }
+}
+
+// Art for the site copy, from the gallery manifest: lore first, then the other story-worthy sets.
+async function populateSiteImages() {
+  const sel = document.getElementById("pubImage");
+  sel.innerHTML = '<option value="">— no art —</option>';
+  try {
+    const g = await (await fetch("../../gallery.json", { cache: "no-store" })).json();
+    const cats = ["lore", "banners", "warchiefs", "commissions", "wallpaper"];
+    cats.forEach((cat) => {
+      const items = g.filter((it) => it.cat === cat);
+      if (!items.length) return;
+      const grp = document.createElement("optgroup");
+      grp.label = cat[0].toUpperCase() + cat.slice(1);
+      items.forEach((it) => {
+        const o = document.createElement("option");
+        o.value = it.file;
+        o.textContent = it.title || it.file;
+        grp.appendChild(o);
+      });
+      sel.appendChild(grp);
+    });
+  } catch (e) {
+    // no manifest (file://) -> the tale still publishes, just without art
+  }
+}
+
 populateHooks();
 populateMentions();
+populateSiteImages();
 renderPreview();

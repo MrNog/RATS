@@ -440,34 +440,6 @@
 .lb li:last-child {
   border-bottom: 0;
 }
-#dps,
-#hps {
-  max-height: 440px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 6px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--accent) transparent;
-}
-/* gold, thin scrollbar with no native arrows (webkit) */
-#dps::-webkit-scrollbar,
-#hps::-webkit-scrollbar {
-  width: 6px;
-}
-#dps::-webkit-scrollbar-track,
-#hps::-webkit-scrollbar-track {
-  background: transparent;
-}
-#dps::-webkit-scrollbar-thumb,
-#hps::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 3px;
-}
-#dps::-webkit-scrollbar-button,
-#hps::-webkit-scrollbar-button {
-  display: none;
-  height: 0;
-}
 .rank {
   width: 22px;
   text-align: center;
@@ -1246,21 +1218,234 @@ a.logrow .lgo {
   flex: 1 1 auto;
   border-bottom: 0;
 }
-.logdel {
-  flex: 0 0 auto;
-  background: none;
-  border: 1px solid transparent;
-  color: var(--text-faint);
-  cursor: pointer;
-  font-size: 13px;
-  border-radius: var(--radius);
-  padding: 2px 7px;
-  margin-left: 4px;
-  opacity: 0.5;
+
+/* ---------- site makeover (assets/css/site.css) ---------- */
+/* the controls stick just under the shared bar, not under the top of the window */
+.sticky-controls { top: var(--bar-h) }
+
+/* ---------- boards: podium for the top three + a grid of compact cards ---------- */
+.boardlist { padding: 4px 2px 2px }
+
+/* podium: 2nd · 1st · 3rd, the winner taller in the middle. Each card is the raider's banner art,
+   tinted to their class colour (--cc) at the bottom where the numbers sit. */
+.podium {
+  display: grid; grid-template-columns: 1fr 1.18fr 1fr; gap: 14px;
+  align-items: end; margin-bottom: 16px;
 }
-.logdel:hover {
-  opacity: 1;
-  color: #e0857f;
-  border-color: #5b3a3a;
-  background: #2a1818;
+.podium.n1 { grid-template-columns: minmax(0, 420px); justify-content: center }
+.podium.n2 { grid-template-columns: 1fr 1.18fr }
+.pod {
+  position: relative; overflow: hidden; display: flex; align-items: flex-end;
+  min-height: 210px; border-radius: var(--radius-lg);
+  border: 1px solid var(--line-warm); text-decoration: none; color: inherit;
+  background: radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--cc) 35%, #16171a), #121316 75%);
+  transition: transform .15s, border-color .15s, box-shadow .15s;
 }
+.pod.first { min-height: 260px; border-color: var(--accent); box-shadow: 0 0 0 1px rgba(192, 148, 58, .35), 0 20px 50px -24px rgba(192, 148, 58, .45) }
+.pod:hover { transform: translateY(-3px); border-color: var(--cc) }
+.pd-art {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 70% 20%;
+  transition: transform .4s;
+}
+.pod:hover .pd-art { transform: scale(1.03) }
+.pod::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(12, 12, 14, .96) 12%, rgba(12, 12, 14, .55) 45%, rgba(12, 12, 14, 0) 80%);
+}
+.pd-rank {
+  position: absolute; z-index: 1; top: 12px; left: 12px;
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--body); font-weight: 800; font-size: 17px; color: #16120a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .5);
+}
+.pod.first .pd-rank { width: 46px; height: 46px; font-size: 21px; background: linear-gradient(135deg, #f5d98a, #c0943a) }
+.pod.second .pd-rank { background: linear-gradient(135deg, #eef1f4, #9aa3ad) }
+.pod.third .pd-rank { background: linear-gradient(135deg, #e7b98a, #9a5f34) }
+.pd-move { position: absolute; z-index: 1; top: 16px; right: 12px }
+.pd-body { position: relative; z-index: 1; width: 100%; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px }
+.pd-id { display: flex; align-items: center; gap: 9px }
+.pd-id .cic { width: 28px; height: 28px; border-radius: 6px; margin: 0 }
+.pd-name { font-weight: 800; font-size: 20px; color: var(--cc); text-shadow: 0 1px 8px rgba(0, 0, 0, .8) }
+.pod.first .pd-name { font-size: 24px }
+.pd-rate { font-weight: 800; font-size: 30px; line-height: 1.05; color: var(--accent-hi); font-variant-numeric: tabular-nums }
+.pod.first .pd-rate { font-size: 38px }
+.pd-rate small, .gc-val small { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-dim-2); margin-left: 2px }
+.pd-sub { font-size: 12px; color: var(--text-dim) }
+
+/* everyone after the podium */
+.lbgrid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px }
+.gc {
+  position: relative; overflow: hidden;
+  display: grid; grid-template-columns: 26px 30px minmax(0, 1fr) auto; align-items: center; gap: 10px;
+  padding: 11px 12px 13px; border-radius: var(--radius-lg);
+  background: var(--surface-2); border: 1px solid var(--border);
+  transition: border-color .15s;
+}
+.gc:hover { border-color: var(--cc) }
+.gc-rank { font-weight: 800; font-size: 15px; color: var(--text-dim-2); text-align: center; font-variant-numeric: tabular-nums }
+.gc .cic { width: 30px; height: 30px; border-radius: 6px; margin: 0 }
+.gc-id { display: flex; flex-direction: column; min-width: 0 }
+.gc-name { font-weight: 700; font-size: 15px; color: var(--cc); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.gc-name:hover { text-decoration: underline }
+.gc-sub { font-size: 11px; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.gc-val { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; justify-content: flex-end; text-align: right }
+.gc-val b { font-weight: 800; font-size: 18px; color: var(--accent-hi); font-variant-numeric: tabular-nums }
+.gc-val .mv { margin-left: 4px }
+/* how close to the top: a thin class-colour line along the bottom edge */
+.gc-bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--cc); opacity: .75; border-radius: 0 3px 0 0 }
+
+.pts { color: var(--accent); font-weight: 700 }
+.srv { color: #b18cff }
+.srv.none { color: var(--text-faint) }
+
+@media (max-width: 1000px) { .lbgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+@media (max-width: 680px) {
+  .podium, .podium.n2 { grid-template-columns: minmax(0, 1fr) }
+  .pod.first { order: -1 }
+  .pod, .pod.first { min-height: 170px }
+  .lbgrid { grid-template-columns: minmax(0, 1fr) }
+}
+@media (max-width: 680px) { .board-head { flex-wrap: wrap; row-gap: 8px } }
+
+/* ---------- trends & records: compact lists, same feel as the board cards ---------- */
+.sec-grid { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) }
+.sec-card[hidden] { display: none }
+.sec-card .ch {
+  font-family: var(--display); font-weight: 400; font-size: 21px;
+  text-transform: none; letter-spacing: 0; color: var(--heading);
+}
+/* every row the same size: the podium above already does the "top three" moment */
+.sec-card .lb li,
+.sec-card .lb li.r1,
+.sec-card .lb li.r2,
+.sec-card .lb li.r3 {
+  padding: 8px 6px; margin: 0; min-height: 0;
+  border: 0; border-bottom: 1px solid var(--border); border-radius: 0;
+  background: none; box-shadow: none;
+}
+.sec-card .lb li:last-child { border-bottom: 0 }
+.sec-card .lb li .cic { width: 26px; height: 26px }
+.sec-card .lb li .pname { font-size: 14.5px }
+.sec-card .lb li .prate { font-size: 16px }
+.sec-card .lb li.r1 .pname, .sec-card .lb li.r1 .prate { font-size: 16px }
+.recmedal { width: 24px; text-align: center; font-weight: 800; color: var(--text-dim-2); font-variant-numeric: tabular-nums }
+
+/* the parse must never be the part that gets cut: the sub line may wrap */
+.gc-sub { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35 }
+/* big screens: use the room instead of a narrow column in the middle */
+@media (min-width: 1600px) {
+  .wrap.wide, .site-bar .sb-in { max-width: min(88vw, 1800px) }
+}
+
+/* ---------- card titles: the display face, like the trends & records cards ---------- */
+.board-title {
+  font-family: var(--display); font-weight: 400; font-size: 21px;
+  text-transform: none; letter-spacing: 0; color: var(--heading);
+}
+
+/* ---------- guild progress ---------- */
+.progtbl th:nth-child(1) { width: 38% }
+.progtbl th:nth-child(2), .progtbl th:nth-child(3) { width: 22% }
+.progtbl .num, .progtbl .d { font-variant-numeric: tabular-nums }
+.newkill {
+  display: inline-block; margin-left: 8px; vertical-align: 1px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .3px; white-space: nowrap;
+  color: var(--ok); background: rgba(87, 217, 119, .1);
+  border: 1px solid rgba(87, 217, 119, .35); border-radius: 999px; padding: 1px 8px;
+}
+
+/* ---------- fun & shame: a hall of fame, then a hall of shame ---------- */
+.funsec {
+  margin: 4px 0 12px; font-family: var(--display); font-weight: 400; font-size: 24px;
+  color: var(--heading); display: flex; align-items: center; gap: 12px;
+  text-transform: none; letter-spacing: 0;
+}
+.funsec::after { content: ""; flex: 1; height: 1px; background: var(--line-warm) }
+.funsec.shame { margin-top: 28px; color: #e0a0a0 }
+.funsec.shame::after { background: rgba(192, 86, 86, .35) }
+.funsec[hidden], .funcards[hidden] { display: none }
+.funcard { min-height: 112px }
+.funcard.shame { border-color: rgba(192, 86, 86, .28) }
+.funcard:hover { border-color: var(--fc-hue) }
+/* the winner's banner sits on the right and fades out under the text */
+.fc-art {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 62%; height: 100%;
+  object-fit: cover; object-position: 70% 20%; opacity: .55;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 70%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 70%);
+  transition: opacity .2s;
+}
+.funcard:hover .fc-art { opacity: .8 }
+.funcard.shame .fc-art { filter: saturate(.6) }
+.fc-top, .fc-name, .fc-sub { z-index: 1 }
+.fc-title {
+  font-family: var(--display); font-weight: 400; font-size: 15px;
+  text-transform: none; letter-spacing: .2px; color: var(--heading);
+}
+.funcard.shame .fc-title { color: #e0a0a0 }
+.fc-name { text-shadow: 0 1px 8px rgba(0, 0, 0, .85) }
+.funcard.has-art .fc-sub { max-width: 78%; text-shadow: 0 1px 6px rgba(0, 0, 0, .9) }
+
+/* ---------- logs: one card per lockout, one row per upload ---------- */
+#logs { gap: 12px }
+.lockgrp { border-radius: var(--radius-lg); border-color: var(--line-warm) }
+.lockhd { padding: 12px 16px; gap: 12px; height: auto }
+.lockhd .lraid { font-family: var(--display); font-weight: 400; font-size: 19px; color: var(--heading) }
+.lockhd .llock { font-size: 13px }
+.lockhd .lmeta { font-size: 12.5px }
+.lockbody { padding: 4px 16px 8px }
+a.logrow {
+  display: grid; grid-template-columns: 130px 170px minmax(0, 1fr) auto;
+  align-items: center; gap: 16px; padding: 12px 0;
+}
+.lwhen { display: flex; flex-direction: column; gap: 2px }
+a.logrow .ldate { font-size: 14px; font-weight: 700; color: var(--text); min-width: 0 }
+a.logrow .lid { font-size: 11.5px; color: var(--text-faint); min-width: 0 }
+a.logrow .lkw { display: flex; gap: 14px; font-size: 12px; color: var(--text-dim) }
+a.logrow .lkw b { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; margin-right: 3px }
+a.logrow .lk b { color: var(--ok) }
+a.logrow .lw b { color: #ff9b9b }
+a.logrow .lbosses { display: flex; flex-wrap: wrap; gap: 5px; padding: 0; flex: none }
+.lchip {
+  font-size: 11.5px; font-weight: 600; color: #cfd2d6; white-space: nowrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px;
+}
+a.logrow .lgo {
+  font-size: 12px; font-weight: 700; white-space: nowrap; margin: 0;
+  border: 1px solid var(--line-warm); border-radius: var(--radius); padding: 6px 11px;
+  transition: background .15s, color .15s;
+}
+a.logrow:hover .lgo { background: var(--accent); color: #16120a }
+
+@media (max-width: 900px) {
+  a.logrow { grid-template-columns: 1fr auto; row-gap: 10px }
+  a.logrow .lbosses { grid-column: 1 / -1; grid-row: 3 }
+  a.logrow .lgo { grid-column: 2; grid-row: 1 }
+}
+@media (max-width: 680px) {
+  .funsec { font-size: 21px }
+  .progtbl th, .progtbl td { padding-left: 8px; padding-right: 8px }
+  .lockhd { flex-wrap: wrap; row-gap: 4px }
+  .lockhd .lmeta { margin-left: 0; flex-basis: 100%; padding-left: 21px }
+  .funcard { min-height: 96px }
+}
+
+/* a group award: the winners' class icons in an overlapping row */
+.fc-crew { position: relative; z-index: 1; display: flex; align-items: center; margin-top: 6px; padding-left: 4px }
+.fc-crew img {
+  width: 24px; height: 24px; border-radius: 50%; margin-left: -4px;
+  border: 2px solid var(--surface-2); box-shadow: 0 0 0 1px var(--cc);
+}
+.fc-more { margin-left: 6px; font-size: 11.5px; font-weight: 700; color: var(--text-dim) }
+
+/* award grid, fluid: up to four per row, a card never narrower than 240px (fewer columns instead),
+   and the card text scales with the screen between a phone and a very wide monitor */
+.funcards { grid-template-columns: repeat(auto-fill, minmax(max(240px, calc((100% - 36px) / 4)), 1fr)) }
+.funcard { min-height: clamp(104px, 5vw + 40px, 150px); padding: clamp(13px, .6vw, 18px) clamp(14px, .7vw, 20px) clamp(13px, .6vw, 18px) clamp(16px, .8vw, 22px) }
+.fc-emoji { font-size: clamp(19px, .5vw + 12px, 24px) }
+.fc-title { font-size: clamp(15px, .3vw + 11px, 18px) }
+.fc-name { font-size: clamp(17px, .4vw + 11px, 22px) }
+.fc-sub { font-size: clamp(12px, .15vw + 10px, 14px) }
+.fc-crew img { width: clamp(24px, .5vw + 17px, 30px); height: clamp(24px, .5vw + 17px, 30px) }

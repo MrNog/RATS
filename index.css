@@ -1,204 +1,170 @@
-/* root hub — centered splash (theme.css supplies tokens + base) */
-body {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 20px;
-  text-align: center;
-}
+/* root hub — the landing page. Chrome (bar, fonts, footer) comes from assets/css/site.css;
+   this file is the hero, the card grid and the two art bands. */
 
-.brand {
-  margin: 0 0 6px;
-  color: var(--white);
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
+body { font-size: 16px; line-height: 1.6 }
+img { display: block; max-width: 100% }
+a { color: inherit; text-decoration: none }
+
+/* ---------- hero: the guild hall, full bleed ---------- */
+.hero {
+  position: relative; overflow: hidden;
+  min-height: min(78vh, 640px);
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--line-warm);
 }
-.tag {
-  color: var(--text-dim-2);
-  margin: 0 0 26px;
-  font-size: 15px;
+.hero-art {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 40%;
 }
-.gold {
+/* darken toward the copy on the left and into the page at the bottom */
+.hero::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(90deg, rgba(14, 14, 15, .94) 0%, rgba(14, 14, 15, .72) 38%, rgba(14, 14, 15, .1) 70%),
+    linear-gradient(0deg, var(--bg) 0%, transparent 30%);
+}
+.hero-in {
+  position: relative; z-index: 1;
+  width: 100%; max-width: var(--wrap-wide); margin: 0 auto; padding: 72px 20px;
+}
+.hero h1 {
+  margin: 0 0 20px;
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(46px, 6.4vw, 80px); line-height: 1.02;
+  color: var(--title); letter-spacing: .5px;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, .6);
+}
+.hero .lede { max-width: 38ch; margin: 0 0 30px; font-size: 19px; color: var(--lede) }
+.hero .lede b { color: var(--white); font-weight: 600 }
+.cta { display: flex; gap: 12px; flex-wrap: wrap }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 46px; padding: 0 22px; border-radius: var(--radius);
+  font-weight: 600; font-size: 15px;
+  border: 1px solid var(--line-warm); background: rgba(28, 29, 32, .8); color: var(--text);
+}
+.btn:hover { border-color: var(--accent); color: var(--accent-hi) }
+.btn.primary { background: var(--accent); border-color: var(--accent-hi); color: #16120a }
+.btn.primary:hover { background: var(--accent-hi); color: #16120a }
+.btn svg { width: 18px; height: 18px }
+
+/* ---------- body ---------- */
+.wrap-hub { max-width: var(--wrap-wide); margin: 0 auto; padding: 8px 20px 0 }
+
+.grp {
+  margin: 56px 0 18px;
+  font-size: 15px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
   color: var(--accent);
+  display: flex; align-items: center; gap: 14px;
+}
+.grp::before { content: ""; width: 4px; height: 18px; border-radius: 2px; background: var(--accent) }
+.grp::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-warm), transparent) }
+
+/* START HERE — the one card everyone should open first */
+.featured {
+  margin-top: 40px;
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 36px; align-items: center;
+  padding: 32px;
+  border: 1px solid var(--accent); border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(192, 148, 58, .16), var(--surface) 55%);
+  box-shadow: 0 0 0 1px rgba(192, 148, 58, .2), 0 20px 50px -20px rgba(192, 148, 58, .25);
+  transition: transform .15s, box-shadow .15s;
+}
+.featured:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--accent), 0 24px 60px -20px rgba(192, 148, 58, .35) }
+.chip {
+  display: inline-block; margin-bottom: 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: #16120a; background: var(--accent); border-radius: 20px; padding: 3px 11px;
+}
+.featured h2 {
+  margin: 0 0 10px; font-family: var(--display); font-weight: 400;
+  text-transform: none; letter-spacing: 0;
+  font-size: clamp(30px, 3.6vw, 42px); line-height: 1.1; color: var(--heading);
+}
+.featured p { margin: 0 0 22px; color: var(--text-dim); max-width: 44ch }
+.featured p b { color: var(--text); font-weight: 600 }
+.go { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--accent-hi) }
+.go svg { width: 18px; height: 18px; transition: transform .15s }
+.featured:hover .go svg { transform: translateX(4px) }
+.f-shot {
+  border-radius: 10px; overflow: hidden; border: 1px solid var(--line-warm);
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, .8);
+  transform: perspective(1400px) rotateY(-5deg); transform-origin: right center;
 }
 
-.links {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  max-width: 440px;
+/* cards: art on top (16:10), title and line below */
+.grid { display: grid; gap: 18px }
+.grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+.grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+.card {
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color .15s, transform .15s;
 }
-/* small section labels that group the cards */
-.grouplbl {
-  width: 100%;
-  text-align: left;
-  color: var(--text-dim-2);
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 14px 2px 0;
-}
-.links > .grouplbl:first-of-type {
-  margin-top: 6px;
-}
+.card:hover { border-color: var(--accent); transform: translateY(-3px) }
+.card .art { aspect-ratio: 16 / 10; overflow: hidden; background: #111 }
+.card.span2 { grid-column: span 2 }
+.card.span2 .art { aspect-ratio: 32 / 9.6 }
+.card .art img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; transition: transform .3s }
+.card:hover .art img { transform: scale(1.04) }
+.c-body { padding: 16px 18px 18px }
+.c-body h4 { margin: 0 0 6px; font-family: var(--display); font-weight: 400; font-size: 21px; color: var(--heading) }
+.c-body p { margin: 0; font-size: 14.5px; color: var(--text-dim); line-height: 1.5 }
+.c-body p b { color: var(--accent-hi); font-weight: 600 }
 
-a.card {
-  width: 100%;
-  text-decoration: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 20px;
-  text-align: left;
-  transition:
-    border-color 0.15s,
-    transform 0.05s;
-  /* entrance: fade + rise, staggered per card below */
-  opacity: 0;
-  animation: cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+/* the Warchiefs band */
+.chiefs {
+  position: relative; margin: 8px 0 40px; overflow: hidden;
+  border-radius: var(--radius-xl); border: 1px solid var(--line-warm);
 }
-@keyframes cardIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.chiefs img { width: 100%; aspect-ratio: 21 / 8; object-fit: cover; object-position: center 55% }
+.chiefs::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(12, 12, 13, .92) 0%, rgba(12, 12, 13, .1) 55%);
 }
-.links > a.card:nth-of-type(1) {
-  animation-delay: 0.04s;
+.chiefs-cap { position: absolute; left: 32px; bottom: 26px; z-index: 1 }
+.chiefs-cap .eyebrow { margin-bottom: 6px }
+.chiefs-cap h2 {
+  margin: 0 0 4px; font-family: var(--display); font-weight: 400;
+  text-transform: none; letter-spacing: 0; font-size: 38px; color: var(--title);
 }
-.links > a.card:nth-of-type(2) {
-  animation-delay: 0.1s;
-}
-.links > a.card:nth-of-type(3) {
-  animation-delay: 0.16s;
-}
-.links > a.card:nth-of-type(4) {
-  animation-delay: 0.22s;
-}
-.links > a.card:nth-of-type(5) {
-  animation-delay: 0.28s;
-}
-.links > a.card:nth-of-type(6) {
-  animation-delay: 0.34s;
-}
-.grouplbl {
-  opacity: 0;
-  animation: cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.08s forwards;
-}
-/* accessibility: users who ask for less motion get none — and nothing stays invisible */
-@media (prefers-reduced-motion: reduce) {
-  a.card,
-  a.card.featured,
-  .grouplbl {
-    animation: none;
-    opacity: 1;
-  }
-}
-a.card:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
-}
+.chiefs-cap p { margin: 0; color: var(--lede); font-size: 15px; letter-spacing: .04em }
 
-/* officer card — discreet: half-height, thin muted-gold dashed border */
-a.card.officer {
-  border: 1px dashed rgba(192, 148, 58, 0.45);
-  padding: 10px 16px;
+/* officers — a dim strip of the war-table art, dashed like the old officer card */
+.officer {
+  margin-top: 40px; position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 12px; min-height: 96px;
+  padding: 0 22px; border-radius: var(--radius-lg);
+  border: 1px dashed rgba(192, 148, 58, .45);
+  color: var(--text-dim); font-size: 14.5px;
 }
-a.card.officer:hover {
-  border-color: var(--accent);
+.officer > img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 60%; opacity: .35;
+  transition: opacity .2s;
 }
-a.card.officer .t {
-  font-size: 15px;
+.officer::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(20, 21, 23, .92) 25%, rgba(20, 21, 23, .3));
 }
-a.card.officer .d {
-  font-size: 12px;
-  margin-top: 2px;
-}
+.o-copy { position: relative; display: flex; align-items: center; gap: 10px }
+.officer b { color: var(--accent-hi); margin-right: 4px; font-family: var(--display); font-size: 20px; font-weight: 400 }
+.officer svg { width: 18px; height: 18px; color: var(--accent); position: relative }
+.officer .arr { margin-left: auto; transition: transform .15s }
+.officer:hover { border-color: var(--accent) }
+.officer:hover > img { opacity: .5 }
+.officer:hover .arr { transform: translateX(4px) }
 
-/* featured card — the one people should see first (Addons: you need it to raid) */
-a.card.featured {
-  border-color: var(--accent);
-  background: linear-gradient(135deg, rgba(192, 148, 58, 0.14), var(--surface) 60%);
-  box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.25), 0 8px 28px rgba(192, 148, 58, 0.08);
-  /* entrance first, then the infinite breathing glow (delayed so it starts after the fade-in) */
-  animation:
-    cardIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.04s forwards,
-    featuredGlow 3.2s ease-in-out 0.5s infinite;
+@media (max-width: 960px) {
+  .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .featured { grid-template-columns: minmax(0, 1fr) }
+  .f-shot { transform: none }
 }
-/* slow breathing gold glow to pull the eye to START HERE */
-@keyframes featuredGlow {
-  0%,
-  100% {
-    box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.25), 0 8px 28px rgba(192, 148, 58, 0.08);
-  }
-  50% {
-    box-shadow: 0 0 0 1px rgba(192, 148, 58, 0.5), 0 8px 34px rgba(192, 148, 58, 0.22);
-  }
-}
-a.card.featured:hover {
-  box-shadow: 0 0 0 1px var(--accent), 0 10px 32px rgba(192, 148, 58, 0.14);
-}
-a.card .badge {
-  display: inline-block;
-  margin-left: 8px;
-  vertical-align: 2px;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: var(--surface-2);
-  background: var(--accent);
-  border-radius: 9px;
-  padding: 2px 8px;
-}
-a.card .t {
-  color: var(--accent);
-  font-weight: 800;
-  font-size: 18px;
-}
-a.card .d {
-  color: var(--text-dim);
-  font-size: 13px;
-  margin-top: 5px;
-  line-height: 1.45;
-}
-
-#discord {
-  position: fixed;
-  top: 14px;
-  right: 16px;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-dim);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px 10px;
-}
-#discord:hover {
-  border-color: var(--accent);
-  color: var(--white);
-}
-#discord svg {
-  width: 15px;
-  height: 15px;
-}
-.foot {
-  color: var(--text-faint);
-  font-size: 12px;
-  margin-top: 30px;
+@media (max-width: 640px) {
+  .grid.two, .grid.three { grid-template-columns: minmax(0, 1fr) }
+  .card.span2 { grid-column: auto }
+  .card.span2 .art { aspect-ratio: 16 / 10 }
+  .chiefs img { aspect-ratio: 4 / 3 }
+  .featured { padding: 22px }
 }

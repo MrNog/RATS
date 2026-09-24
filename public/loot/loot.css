@@ -1007,3 +1007,133 @@
 .wowtip-sep {
   color: var(--text-dim);
 }
+
+/* ---------- site makeover (assets/css/site.css) ---------- */
+/* ui.css gives every button display:inline-flex, which beats the hidden attribute: without
+   this the officer-only Import button and Priority tab showed for every visitor */
+button[hidden] { display: none }
+/* empty state: centred rat, same feel as the rankings page */
+.lootempty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 240px; text-align: center; gap: 6px;
+}
+.le-emoji { font-size: 44px; line-height: 1; margin-bottom: 6px; opacity: .9 }
+.le-title { font-family: var(--body); font-weight: 800; font-size: 16px; color: var(--text) }
+.le-joke { max-width: 420px; font-size: 13px; line-height: 1.5; color: var(--text-dim) }
+
+/* ---------- By run: the tier's art behind each header, bosses as cards ---------- */
+.run { position: relative; overflow: hidden; padding: 0; border-color: var(--line-warm) }
+.run .rhd { position: relative; min-height: 96px; padding: 16px 20px; gap: 16px; flex-wrap: nowrap }
+.run .rart {
+  position: absolute; top: 0; right: 0; width: 60%; height: 100%; object-fit: cover; object-position: center 40%;
+  opacity: .6; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+}
+.run .rhd > :not(.rart) { position: relative; z-index: 1 }
+.run .rtitle { font-family: var(--display); font-weight: 400; font-size: 22px; color: var(--heading) }
+.run .rhd:hover .rtitle { color: var(--accent-hi) }
+.run .rsize {
+  font-size: 11.5px; font-weight: 700; color: var(--text); white-space: nowrap;
+  border: 1px solid var(--border-2); background: rgba(12, 12, 14, .55); border-radius: 999px; padding: 2px 9px;
+}
+.run .rmeta { color: var(--text-dim); font-size: 13px; text-shadow: 0 1px 4px rgba(0, 0, 0, .8) }
+.run .rcount {
+  font-size: 12.5px; color: var(--accent-hi); text-shadow: 0 1px 4px rgba(0, 0, 0, .8);
+  background: rgba(12, 12, 14, .55); border-radius: 999px; padding: 3px 10px;
+}
+.run.open .rbody {
+  display: block; margin: 0; padding: 14px 16px 6px; border-top: 1px solid var(--border);
+  columns: 2 420px; column-gap: 12px;
+}
+.bossgrp {
+  margin: 0 0 12px; padding: 4px 14px 6px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); break-inside: avoid;
+}
+.bossgrp .bn {
+  margin: 8px 0 4px; font-size: 11.5px; letter-spacing: .08em; color: var(--accent);
+  display: flex; align-items: center; gap: 10px;
+}
+.bossgrp .bn::after { content: ""; flex: 1; height: 1px; background: var(--line-warm) }
+.bossgrp .lootitem { border-bottom-color: var(--border) }
+@media (max-width: 760px) {
+  .run.open .rbody { columns: 1; padding: 12px 12px 2px }
+  .run .rart { width: 100% }
+}
+
+/* ---------- By player: the raider's banner fades in on the right of their card ---------- */
+.plist { grid-template-columns: repeat(auto-fill, minmax(max(260px, calc((100% - 36px) / 4)), 1fr)) }
+.pcard { position: relative; overflow: hidden; min-height: 108px }
+.pcard .part {
+  position: absolute; top: 0; right: 0; width: 62%; height: 100%; object-fit: cover; object-position: 70% 20%;
+  opacity: .55; pointer-events: none; transition: opacity .2s;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+}
+.pcard:hover .part { opacity: .8 }
+.pcard.open .part { width: 36%; opacity: .35 }
+.pcard > :not(.part) { position: relative; z-index: 1 }
+.pcard .pn { font-size: 16px; text-shadow: 0 1px 6px rgba(0, 0, 0, .85) }
+.pcard .pc { font-size: 17px; text-shadow: 0 1px 6px rgba(0, 0, 0, .85) }
+.pcard .pd { text-shadow: 0 1px 4px rgba(0, 0, 0, .9) }
+.pcard:not(.open):hover { border-color: var(--border-2) }
+
+/* Disenchant / Bank: the hub's art (chest on the right of the loot picture, the camp centred) */
+.pcard .part.pool { object-position: 80% 45% }
+.pcard.bank-card .part.pool { object-position: 55% 40% }
+
+/* ---- run header: title line, the run in numbers, the top winners' faces ---- */
+.run .rhead { display: flex; flex-direction: column; gap: 8px; min-width: 0 }
+.run .rline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
+.run .rtitle { font-size: 26px; line-height: 1.1 }
+.run .rstats { display: flex; gap: 6px; flex-wrap: wrap }
+.run .rst {
+  font-size: 12px; color: var(--text-dim); white-space: nowrap;
+  background: rgba(12, 12, 14, .6); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px;
+}
+.run .rst b { color: var(--accent-hi); font-weight: 800; font-variant-numeric: tabular-nums; margin-right: 2px }
+.run .rfaces { display: flex; align-items: center; margin-left: auto; padding-left: 10px }
+.run .rface {
+  position: relative; width: 44px; height: 44px; margin-left: -8px; border-radius: 50%; overflow: hidden;
+  background: var(--surface); border: 2px solid var(--cc); box-shadow: 0 2px 8px rgba(0, 0, 0, .6);
+}
+.run .rface .rface-art { width: 100%; height: 100%; object-fit: cover; object-position: 70% 20% }
+.run .rface i {
+  position: absolute; right: 0; bottom: 0; min-width: 17px; height: 17px; padding: 0 3px; border-radius: 9px;
+  background: #16120a; color: var(--accent-hi); font-style: normal; font-size: 10.5px; font-weight: 800;
+  display: grid; place-items: center; line-height: 1;
+}
+.run .delrun { align-self: center }
+.bossgrp .bnc { font-style: normal; font-weight: 700; letter-spacing: 0; color: var(--text-faint); order: 2 }
+
+/* inside a run every row has the run's date, already in the header: give that room to the name */
+.run .lootitem .wat { display: none }
+.run .lootitem .won, .run .lootitem .disenchant { min-width: 96px }
+@media (max-width: 760px) {
+  .run .rhd { flex-wrap: wrap; min-height: 0 }
+  .run .rfaces { margin-left: 8px; padding-left: 0 }
+  .run .rtitle { font-size: 22px }
+}
+
+/* ---------- Change winner: keyboard-driven picker ---------- */
+.editCard { max-width: 600px; border-color: var(--line-warm); box-shadow: 0 24px 60px rgba(0, 0, 0, .6) }
+.editCard h2 { font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--heading); text-transform: none; letter-spacing: 0 }
+.editCard .edit-head {
+  display: flex; align-items: center; gap: 12px; margin-top: 8px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.editCard .edit-head .iic { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--border-2) }
+.editCard .edit-name { font-size: 16px; font-weight: 800 }
+.editCard .edit-from { margin-top: 10px; padding: 0 2px }
+.picklist { max-height: 320px }
+.picklist .opt { gap: 9px; padding: 8px 12px }
+.picklist .opt .de-ic { width: 18px; height: 18px; border-radius: 4px; flex: none }
+.picklist .opt.hl { background: rgba(192, 148, 58, .2); box-shadow: inset 3px 0 0 var(--accent) }
+.picklist .opt.none { color: var(--text-dim-2); font-weight: 500; font-size: 13px; cursor: default }
+.opt-cur { font-weight: 700; letter-spacing: .02em }
+.kbd-hint { margin: 10px 2px 0; font-size: 11.5px; color: var(--text-faint) }
+.kbd-hint kbd {
+  display: inline-block; min-width: 18px; padding: 1px 5px; margin: 0 2px; text-align: center;
+  font: 700 10.5px/1.5 var(--body, sans-serif); color: var(--text-dim);
+  background: var(--surface); border: 1px solid var(--border-2); border-bottom-width: 2px; border-radius: 4px;
+}

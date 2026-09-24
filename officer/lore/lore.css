@@ -172,3 +172,15 @@ input[type="file"]::file-selector-button:hover {
   font-size: 12px;
   float: right;
 }
+
+/* "Also on the site" box: publish the tale to the public Chronicles page */
+.sitepub {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+.sitepub .chk { display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer }
+.sitepub .chk a { color: var(--accent) }

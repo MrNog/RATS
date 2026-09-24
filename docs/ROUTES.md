@@ -18,18 +18,20 @@ public/                             PUBLIC pages (everyone)
   profile/index.html                raider profile — armory + badges   (+ profile.css/.js)
   rankings/index.html               rankings & hall of fame (public)   (+ rankings.css/.js)
   loot/index.html                   loot history — by run/player/time  (+ loot.css/.js)
+  lore/index.html                   Chronicles of the Sewer — the tales (+ lore.css/.js; chronicles.json)
 officer/                            PRIVATE tools (gated by guild key)
   index.html                        officer landing / menu
   guild/index.html                  roster browser                     (+ guild.css/.js)
   comp/index.html                   raid comp builder                  (+ comp.css/.js)
   history/index.html                attendance + raid log              (+ history.css/.js)
-  lore/index.html                   post raid stories to Discord       (+ lore.css/.js)
+  lore/index.html                   post raid stories to Discord (+ the site) (+ lore.css/.js)
   admin/index.html                  maintainer console                 (+ admin.css/.js)
 assets/                             SHARED
   css/theme.css                     tokens + base (EVERY page)
   css/ui.css                        components (every page except the 2 hubs)
   js/data.js                        RatsData (Firebase, gate, vacations/members/profile-keys)
   js/datepicker.js                  RatsCal
+  js/discord-md.js                  RatsMD — Discord markdown + :emoji: (Lore poster + Chronicles)
   js/utils.js                       optional RatsUtils helpers
 ```
 

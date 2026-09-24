@@ -5,115 +5,166 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#141517" />
-  <link rel="preconnect" href="https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app" crossorigin />
+  <meta name="description"
+    content="RATS — Horde raiding guild on Warmane. Addons, rankings, loot history, chronicles and the guild's art." />
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
   <title>RATS — Guild Hub</title>
 
   <link rel="stylesheet" href="assets/css/theme.css">
+  <link rel="stylesheet" href="assets/css/site.css">
   <link rel="stylesheet" href="index.css">
 </head>
 
 <body>
-  <h1 class="brand">🧀 RATS — Guild Hub</h1>
-  <p class="tag">Gear up, show off, never miss a raid. <span class="gold">🧀 All the cheese, for the rats.</span></p>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="7.5" cy="15.5" r="5.5" />
+      <path d="m21 2-9.6 9.6" />
+      <path d="m15.5 7.5 3 3L22 7l-3-3" />
+    </symbol>
+  </svg>
 
-  <div class="links">
-    <a class="card featured" href="public/addons/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" x2="12" y1="15" y2="3" />
-        </svg> Addons & WeakAuras →<span class="badge">START HERE</span></div>
-      <div class="d">Everything to raid — <b class="gold">one click, always latest</b>.</div>
+  <header class="site-bar" data-root="." data-page="hub"></header>
+
+  <!-- ============ HERO: the guild hall ============ -->
+  <section class="hero">
+    <img class="hero-art" src="images/hub/hero.jpg" alt="">
+    <div class="hero-in">
+      <p class="eyebrow">Horde · WotLK 3.3.5a · Warmane</p>
+      <h1>All the cheese,<br>for the rats.</h1>
+      <p class="lede">The guild hub for <b>RATS</b>. Get the addons you need to raid, check the parses, see who won
+        what, and never get counted absent.</p>
+      <div class="cta">
+        <a class="btn primary" href="public/addons/index.html"><svg>
+            <use href="#i-dl" />
+          </svg>Get the addons</a>
+        <a class="btn" href="public/rankings/index.html">See the rankings</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="wrap-hub">
+
+    <!-- ============ THE WARCHIEFS ============ -->
+    <section class="chiefs">
+      <img src="images/hub/warchiefs.jpg" alt="The RATS Warchiefs standing in a line under the Horde banner"
+        loading="lazy">
+      <div class="chiefs-cap">
+        <p class="eyebrow">Led by</p>
+        <h2>The Warchiefs</h2>
+        <p>Foug · Kobee · Okanor · Grunho · Rellik · Ardil</p>
+      </div>
+    </section>
+
+    <!-- ============ START HERE ============ -->
+    <a class="featured" href="public/addons/index.html">
+      <div class="f-copy">
+        <span class="chip">Start here</span>
+        <h2>Addons &amp; WeakAuras</h2>
+        <p>Everything you need to raid with us, <b>one click and always the latest</b>. Okanvil, DBM, the guild's
+          WeakAuras and the patch.</p>
+        <span class="go">Open the addons <svg>
+            <use href="#i-arrow" />
+          </svg></span>
+      </div>
+      <div class="f-shot"><img src="images/okanvil/home.png" alt="The Okanvil addon's home page" loading="lazy">
+      </div>
     </a>
 
-    <div class="grouplbl">Your stuff</div>
-    <a class="card" href="public/profile/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg> Raider Profile →</div>
-      <div class="d">Your stats, badges &amp; pack — <b class="gold">unlock with your key</b>.</div>
-    </a>
-    <a class="card" href="public/vacations/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="m4.93 4.93 1.41 1.41" />
-          <path d="m17.66 17.66 1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="m6.34 17.66-1.41 1.41" />
-          <path d="m19.07 4.93-1.41 1.41" />
-        </svg> Vacations →</div>
-      <div class="d">Away? Mark your dates — <b class="gold">never counted absent</b>.</div>
+    <!-- ============ YOUR STUFF ============ -->
+    <h3 class="grp">Your stuff</h3>
+    <div class="grid two">
+      <a class="card" href="public/profile/index.html">
+        <div class="art"><img src="images/_thumb/hub/profile.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Raider Profile</h4>
+          <p>Your stats, badges and pack. <b>Unlock it with your key.</b></p>
+        </div>
+      </a>
+      <a class="card" href="public/vacations/index.html">
+        <div class="art"><img src="images/_thumb/hub/vacations.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Vacations</h4>
+          <p>Away? Mark your dates and you are <b>never counted absent</b>.</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- ============ EXPLORE ============ -->
+    <h3 class="grp">Explore</h3>
+    <!-- "two" while the Okanvil card is hidden; back to "three" when it launches -->
+    <div class="grid two">
+      <a class="card" href="public/rankings/index.html">
+        <div class="art"><img src="images/_thumb/hub/rankings.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Rankings &amp; Hall of Fame</h4>
+          <p>Leaderboards, progress, and the <b>fun &amp; shame</b> awards, from our parses.</p>
+        </div>
+      </a>
+      <a class="card" href="public/loot/index.html">
+        <div class="art"><img src="images/_thumb/hub/loot.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Loot History</h4>
+          <p>Who won what, per run and per raider, <b>straight from Okanvil</b>.</p>
+        </div>
+      </a>
+      <a class="card" href="public/lore/index.html">
+        <div class="art"><img src="images/_thumb/lore/Grunho Charge.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Chronicles</h4>
+          <p>The legends of the swarm, <b>told by the Loremaster</b>.</p>
+        </div>
+      </a>
+      <a class="card" href="public/gallery/index.html">
+        <div class="art"><img src="images/_thumb/hub/gallery.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Gallery</h4>
+          <p>Guild art and the stories behind it. <b>Click to view full size.</b></p>
+        </div>
+      </a>
+<!-- Okanvil card: hidden until the addon launches (the page itself stays reachable from officer tools)
+      <a class="card span2" href="public/okanvil/index.html">
+        <div class="art"><img src="images/_thumb/hub/okanvil.webp" alt="" loading="lazy"></div>
+        <div class="c-body">
+          <h4>Okanvil</h4>
+          <p>The raid &amp; guild toolkit we forged ourselves. <b>PuGs, loot council, notes.</b></p>
+        </div>
+      </a>
+      -->
+    </div>
+
+    <!-- ============ OFFICERS ============ -->
+    <a class="officer" href="officer/index.html">
+      <img src="images/_thumb/hub/officer.webp" alt="" loading="lazy">
+      <span class="o-copy"><svg>
+          <use href="#i-key" />
+        </svg><b>Officer Tools</b> roster, comp, attendance and more</span>
+      <svg class="arr">
+        <use href="#i-arrow" />
+      </svg>
     </a>
 
-    <div class="grouplbl">Explore</div>
-    <a class="card" href="public/rankings/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-          <path d="M4 22h16" />
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-        </svg> Rankings &amp; Hall of Fame →</div>
-      <div class="d">Leaderboards, progress &amp; <b class="gold">fun &amp; shame</b> — from our parses.</div>
-    </a>
-    <a class="card" href="public/loot/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <path d="M20 12v10H4V12" />
-          <rect x="2" y="7" width="20" height="5" />
-          <line x1="12" y1="22" x2="12" y2="7" />
-          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-        </svg> Loot History →</div>
-      <div class="d">Who won what, per run &amp; per raider — <b class="gold">from our raids</b>.</div>
-    </a>
-    <a class="card" href="public/gallery/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <circle cx="8.5" cy="8.5" r="1.5" />
-          <path d="m21 15-5-5L5 21" />
-        </svg> Gallery →</div>
-      <div class="d">Guild art &amp; stories — <b class="gold">click to view full size</b>.</div>
-    </a>
+  </main>
 
-    <div class="grouplbl">Officers</div>
-    <a class="card officer" href="officer/index.html">
-      <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" aria-hidden="true" style="width:18px;height:18px;vertical-align:-3px">
-          <path
-            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-        </svg> Officer Tools →</div>
-      <div class="d">Roster, comp, attendance &amp; more — <b class="gold">officers only</b>.</div>
-    </a>
-  </div>
+  <footer class="site-foot">
+    <span>FOR THE RATS 🐀🧀</span>
+    <span>Horde · Warmane Onyxia</span>
+  </footer>
 
-  <div class="foot">FOR THE RATS 🐀🧀</div>
-
-  <a id="discord" href="#" target="_blank" rel="noopener" title="Join our Discord">Discord
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M8 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"></path>
-      <path d="M14 12a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"></path>
-      <path
-        d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833 -1.667 3.5 -3c.667 -1.667 .5 -5.833 -1.5 -11.5c-1.457 -1.015 -3 -1.34 -4.5 -1.5l-.972 1.923a11.913 11.913 0 0 0 -4.053 0l-.975 -1.923c-1.5 .16 -3.043 .485 -4.5 1.5c-2 5.667 -2.167 9.833 -1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2 -2 2 -3">
-      </path>
-      <path d="M7 16.5c3.5 1 6.5 1 10 0"></path>
-    </svg>
-  </a>
-
-  <script src="index.js"></script>
+  <script src="assets/js/nav.js"></script>
 </body>
 
 </html>

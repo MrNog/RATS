@@ -330,6 +330,27 @@ window.RatsData = (function () {
     return map;
   }
 
+  // ---- LORE (plain `lore` node) — chronicles published from the officer Lore tool ----
+  // Push-keyed { title, body (Discord markdown), image (repo path or ""), date (ISO), by }. The public
+  // lore page reads it once per visit (TTL cache) and merges it with the chronicles committed in
+  // public/lore/chronicles.json. Publishing clears the cache so the officer sees the new tale at once.
+  const LORE_LS = "ratsLoreCache", LORE_TTL = 30 * 60 * 1000; // 30 min
+  async function loadLore() {
+    try {
+      const c = JSON.parse(localStorage.getItem(LORE_LS) || "null");
+      if (c && Date.now() - c.t < LORE_TTL && Array.isArray(c.data)) return c.data;
+    } catch (e) {}
+    const o = fbOn() ? await fbGetSafe("lore") : null;
+    const list = o ? Object.keys(o).map((k) => Object.assign({ key: k }, o[k])) : [];
+    try { localStorage.setItem(LORE_LS, JSON.stringify({ t: Date.now(), data: list })); } catch (e) {}
+    return list;
+  }
+  async function publishLore(entry) {
+    const key = await fbPost("lore", entry);
+    try { localStorage.removeItem(LORE_LS); } catch (e) {}
+    return key;
+  }
+
   // download a json file (manual-commit fallback when Firebase is off)
   function download(name, obj) {
     const a = document.createElement("a");
@@ -875,6 +896,8 @@ window.RatsData = (function () {
     profKey,
     publishProfiles,
     loadProfiles,
+    loadLore,
+    publishLore,
     loadRoster,
     loadHistory,
     cachedHistory,

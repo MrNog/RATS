@@ -49,7 +49,9 @@ re-derive the conventions.
 
 - Realtime DB via unauthenticated REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
 - Nodes: `roster` (encrypted), `history` (encrypted), `vacations` (plain, push-keyed),
-  `members` (plain name+class, for the public picker), `gate`, `rankings` (plain snapshot).
+  `members` (plain name+class, for the public picker), `gate`, `rankings` (plain snapshot),
+  `lore` (plain, push-keyed tales published from the officer Lore tool; the Chronicles page merges it
+  with `public/lore/chronicles.json`, which `scripts/build-chronicles.py` builds from `docs/art/chronicles/`).
 - Officer roster/history are **AES-encrypted** (PBKDF2 from the guild key). The gate overlay (`RatsData.gate()`)
   locks officer pages until the key is entered. "Admin" = anyone with the key (`localStorage.ratsGuildKey`).
 - Members can only write plain nodes (`vacations`). They can't read webhooks/encrypted data — so the

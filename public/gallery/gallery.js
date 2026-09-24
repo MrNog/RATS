@@ -117,97 +117,155 @@ searchEl.addEventListener("keydown", (e) => {
   }
 });
 
-const GAP = 14,
-  MINCOL = 220;
-
-function render() {
-  // "classes" = generic class-rat art (not real characters) — hidden from "All"; only shows on its own tab.
-  view = ITEMS.filter((i) => {
-    if (filter === "all") {
-      if (i.cat === "classes") return false;
-    } else if (i.cat !== filter) return false;
-    return matchesQuery(i);
+// how much art each tab holds, and the total in the header. "All" leaves out the generic
+// class art, same as the grid does.
+const CAT_LABEL = Object.fromEntries(CATS.map((c) => [c.id, c.label]));
+function showCounts() {
+  const n = {};
+  const art = ITEMS.filter(isArt);
+  art.forEach((i) => (n[i.cat] = (n[i.cat] || 0) + 1));
+  const all = art.filter((i) => i.cat !== "classes").length;
+  [...tabsEl.children].forEach((t) => {
+    const c = t.dataset.cat === "all" ? all : n[t.dataset.cat] || 0;
+    t.innerHTML = esc(CAT_LABEL[t.dataset.cat]) + `<i class="tn">${c}</i>`;
   });
-  if (!view.length) {
-    grid.classList.add("empty-state");
-    grid.style.height = "";
-    grid.innerHTML = q
-      ? `<div class="empty"><div class="big">🔍🐀</div><p>No art matches "${esc(searchEl.value.trim())}".</p></div>`
-      : `<div class="empty"><div class="big">🖼🐀</div><p>Nothing here yet — art coming soon.</p></div>`;
-    return;
-  }
-  grid.classList.remove("empty-state");
-  grid.innerHTML = view
-    .map(
-      (it, i) => `<div class="tile${it.wide ? " wide" : ""}" data-i="${i}" role="button" tabindex="0"
+  const total = document.getElementById("gtotal");
+  if (total) total.innerHTML = `<b>${all}</b> pieces of guild art`;
+}
+
+// images/icons/ also holds the bots' and tools' avatars (the Discord webhooks, the hub's own tools)
+// and the guild's emblems (Guild RATS 1/2/ICC/ToC/Ulduar). Neither is guild art: the gallery's
+// Icons are the players' own.
+const NOT_ART = /\/icons\/(ratlogs|ratroster|ratloremaster|rankings rat|okanor-logs|vacation rat|guild rats[^/]*)\.[a-z0-9]+$/i;
+const isArt = (i) => !NOT_ART.test(i.file);
+
+// "All" is a spotlight + one shelf per category, in this order. "classes" = generic class-rat
+// art (not real characters): it only shows on its own tab.
+const SHELVES = ["lore", "warchiefs", "profile-bg", "warchief-fangs", "commissions", "banners", "wallpaper", "icons"];
+// the spotlight cycles through the newest big story pieces. The page's band is already Grunho
+// Charge, so that one stays on its shelf instead of showing twice at the top.
+const SPOT_CATS = ["lore", "warchiefs", "wallpaper"];
+const SPOT_MAX = 8;
+const BAND_ART = /\/lore\/grunho charge\./i;
+let spot = [],
+  spotI = 0;
+
+const byNewest = (a, b) => String(b.date || "").localeCompare(String(a.date || ""));
+
+function tileHtml(it, i) {
+  return `<div class="tile${it.cat === "icons" ? " sq" : ""}" data-i="${i}" role="button" tabindex="0"
        aria-label="View ${esc(it.title || "art")}">
     <img src="${esc(enc(thumbFor(it.file)))}" data-full="${esc(enc(it.file))}" alt="${esc(it.title)}"
          loading="lazy" decoding="async"
-         onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full;}else{this.closest('.tile').style.display='none';window.__relayout&&window.__relayout();}" />
+         onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full;}else{this.closest('.tile').remove();}" />
+    ${q && CAT_LABEL[it.cat] ? `<span class="tcat">${esc(CAT_LABEL[it.cat])}</span>` : ""}
     <div class="meta">
       <div class="t">${esc(it.title || "")}</div>
       ${it.caption ? `<div class="c">${esc(it.caption)}</div>` : ""}
     </div>
-  </div>`
-    )
+  </div>`;
+}
+
+function emptyHtml() {
+  return q
+    ? `<div class="empty"><div class="big">🔍🐀</div><p>No art matches "${esc(searchEl.value.trim())}".</p></div>`
+    : `<div class="empty"><div class="big">🖼🐀</div><p>Nothing here yet — art coming soon.</p></div>`;
+}
+
+function spotHtml() {
+  const it = spot[spotI];
+  if (!it) return "";
+  const i = view.indexOf(it);
+  const dots = spot
+    .map((_, k) => `<button class="spot-dot${k === spotI ? " on" : ""}" data-spot="${k}" aria-label="Piece ${k + 1}"></button>`)
     .join("");
-  // re-layout as each image learns its size, then settle
-  grid.querySelectorAll("img").forEach((img) => {
-    if (!img.complete) img.addEventListener("load", layout, { once: true });
-  });
-  layout();
+  return `<section class="spot" style="--thumb:url('${esc(enc(thumbFor(it.file)))}')">
+    <img class="spot-img" src="${esc(enc(it.file))}" alt="${esc(it.title)}" decoding="async" />
+    <div class="spot-txt">
+      <span class="spot-cat">★ ${esc(CAT_LABEL[it.cat] || "")}</span>
+      <h2 class="spot-t">${esc(it.title || "")}</h2>
+      ${it.caption ? `<p class="spot-c">${esc(it.caption)}</p>` : ""}
+      <div class="spot-acts">
+        <button type="button" class="spot-view" data-i="${i}">View full size</button>
+        <a class="btn" href="${esc(enc(it.file))}" download="${esc(it.file.split("/").pop())}">⬇ Download</a>
+      </div>
+    </div>
+    <button type="button" class="spot-nav prev" data-step="-1" aria-label="Previous piece">‹</button>
+    <button type="button" class="spot-nav next" data-step="1" aria-label="Next piece">›</button>
+    <div class="spot-dots">${dots}</div>
+  </section>`;
 }
 
-function layout() {
-  const cards = [...grid.querySelectorAll(".tile")].filter((c) => c.style.display !== "none");
-  if (!cards.length) return;
-  const W = grid.clientWidth;
-  const cols = Math.max(1, Math.floor((W + GAP) / (MINCOL + GAP)));
-  const colW = (W - GAP * (cols - 1)) / cols;
-  const heights = new Array(cols).fill(0);
-  for (const card of cards) {
-    if (card.classList.contains("wide")) {
-      // wide banner: spans 2 columns (full row if only 1 col)
-      const span = Math.min(2, cols);
-      // find the starting column of the span whose tallest column is lowest (keeps banners packed)
-      let best = 0,
-        bestTop = Infinity;
-      for (let s = 0; s <= cols - span; s++) {
-        const top = Math.max(...heights.slice(s, s + span));
-        if (top < bestTop) {
-          bestTop = top;
-          best = s;
-        }
-      }
-      const w = colW * span + GAP * (span - 1);
-      card.style.left = best * (colW + GAP) + "px";
-      card.style.top = bestTop + "px";
-      card.style.width = w + "px";
-      const bottom = bestTop + card.offsetHeight + GAP;
-      for (let k = best; k < best + span; k++) heights[k] = bottom; // level the spanned columns
-    } else {
-      card.style.width = colW + "px";
-      let c = 0;
-      for (let k = 1; k < cols; k++) if (heights[k] < heights[c]) c = k; // shortest column
-      card.style.left = c * (colW + GAP) + "px";
-      card.style.top = heights[c] + "px";
-      heights[c] += card.offsetHeight + GAP;
-    }
+function render() {
+  const art = ITEMS.filter(isArt);
+  // one tidy grid: a single category, or a search across everything
+  if (filter !== "all" || q) {
+    view = art.filter((i) => (filter === "all" ? i.cat !== "classes" : i.cat === filter) && matchesQuery(i));
+    grid.className = "grid ugrid" + (filter === "icons" ? " sq" : "");
+    grid.innerHTML = view.length ? view.map(tileHtml).join("") : emptyHtml();
+    return;
   }
-  grid.style.height = Math.max(...heights) - GAP + "px";
+  // All: the spotlight, then a shelf per category. `view` is every piece in page order, so the
+  // lightbox arrows walk the page the way it reads.
+  view = [];
+  const shelves = SHELVES.map((cat) => {
+    const items = art.filter((i) => i.cat === cat).sort(byNewest);
+    if (!items.length) return "";
+    const start = view.length;
+    view.push(...items);
+    return `<section class="shelf" data-cat="${cat}">
+      <div class="sh-hd">
+        <h2>${esc(CAT_LABEL[cat])}</h2><i class="tn">${items.length}</i>
+        <button type="button" class="sh-all" data-cat="${cat}">See all ›</button>
+      </div>
+      <div class="sh-wrap">
+        <button type="button" class="sh-nav prev" aria-label="Scroll left">‹</button>
+        <div class="sh-row${cat === "icons" ? " sq" : ""}">${items.map((it, k) => tileHtml(it, start + k)).join("")}</div>
+        <button type="button" class="sh-nav next" aria-label="Scroll right">›</button>
+      </div>
+    </section>`;
+  }).join("");
+  spot = art
+    .filter((i) => SPOT_CATS.includes(i.cat) && !BAND_ART.test(i.file))
+    .sort(byNewest)
+    .slice(0, SPOT_MAX);
+  if (spotI >= spot.length) spotI = 0;
+  grid.className = "grid shelves";
+  grid.innerHTML = view.length ? spotHtml() + shelves : emptyHtml();
 }
 
-window.__relayout = layout;
-let rt;
-addEventListener("resize", () => {
-  clearTimeout(rt);
-  rt = setTimeout(layout, 120);
-});
+function setFilter(cat) {
+  filter = cat;
+  [...tabsEl.children].forEach((x) => {
+    const on = x.dataset.cat === cat;
+    x.classList.toggle("active", on);
+    x.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  render();
+  scrollTo({ top: tabsEl.getBoundingClientRect().top + scrollY - 90, behavior: "smooth" });
+}
 
 grid.addEventListener("click", (e) => {
-  const card = e.target.closest(".tile");
-  if (!card) return;
-  open(+card.dataset.i);
+  const t = e.target;
+  const all = t.closest(".sh-all");
+  if (all) return setFilter(all.dataset.cat);
+  const nav = t.closest(".sh-nav");
+  if (nav) {
+    const row = nav.parentNode.querySelector(".sh-row");
+    row.scrollBy({ left: (nav.classList.contains("prev") ? -1 : 1) * row.clientWidth * 0.85, behavior: "smooth" });
+    return;
+  }
+  const sn = t.closest(".spot-nav, .spot-dot");
+  if (sn) {
+    spotI = sn.dataset.spot != null ? +sn.dataset.spot : (spotI + +sn.dataset.step + spot.length) % spot.length;
+    const old = grid.querySelector(".spot");
+    if (old) old.outerHTML = spotHtml();
+    return;
+  }
+  const v = t.closest(".spot-view");
+  if (v) return open(+v.dataset.i);
+  const card = t.closest(".tile");
+  if (card) open(+card.dataset.i);
 });
 // keyboard: tiles are role=button + tabindex, so Enter/Space open the lightbox too
 grid.addEventListener("keydown", (e) => {
@@ -262,6 +320,7 @@ fetch("../../gallery.json", { cache: "no-cache" })
   .then((d) => {
     ITEMS = (Array.isArray(d) ? d : []).map((it) => ({ ...it, file: "../../" + it.file }));
     buildAltMap(ITEMS);
+    showCounts();
     render();
   })
   .catch(() => {

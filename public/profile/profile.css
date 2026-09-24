@@ -1467,3 +1467,141 @@ dialog#artlb::backdrop {
   font-size: 12px;
   font-weight: 700;
 }
+
+/* ---------- site makeover (assets/css/site.css) ---------- */
+/* the raider's banner is the header; this row above it carries the eyebrow + the tools */
+.ptools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 26px 0 0 }
+.ptools .eyebrow { margin: 0 }
+.ptools .pt-acts { margin-left: auto; display: inline-flex; gap: 8px; align-items: center }
+/* section titles in the display face, like every other page */
+.psec, .cardhd .ht {
+  font-family: var(--display); font-weight: 400; font-size: 19px;
+  text-transform: none; letter-spacing: 0; color: var(--heading);
+}
+.psec .sicon, .cardhd .ht .sicon { color: var(--accent); width: 17px; height: 17px }
+.psec .cnt { font-family: var(--body); font-size: 12.5px }
+.psec .vt-status { font-family: var(--body) }
+/* art: real 16:9 tiles, two or three to a row */
+.artgrid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) }
+.artthumb { height: auto }
+.artthumb img { height: auto !important; aspect-ratio: 16 / 9 }
+.artcap { font-size: 12.5px; padding: 22px 10px 8px }
+.welcome h2 { font-family: var(--display); font-weight: 400; font-size: 34px; text-transform: none; letter-spacing: 0; color: var(--heading) }
+
+/* ================= profile layout (mock D): band header · number strip · rail | tabs · art ================= */
+/* the raider's banner behind the header, like every other page's band */
+.band.raider { height: 440px }
+.band.raider[hidden] { display: none }
+.band.raider img { object-position: 75% 28%; opacity: .75 }
+.band.raider::after {
+  background: linear-gradient(90deg, var(--bg) 0%, rgba(20, 21, 23, .85) 34%, rgba(20, 21, 23, .15) 70%, rgba(20, 21, 23, 0) 100%);
+}
+/* no art at all: a wash of the class colour instead of a picture */
+.band.raider.noart img { display: none }
+.band.raider.noart { background: radial-gradient(ellipse at 75% 20%, color-mix(in srgb, var(--col, var(--accent)) 35%, transparent), transparent 65%) }
+.band ~ .wrap .phead.ph { padding-top: 110px }
+
+/* the tools row only shows on the welcome screen; with a raider open they sit in the header */
+.ptools:not(:has(.pt-acts)) { display: none }
+.ptools { justify-content: flex-end }
+.ph .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.ph .pt-acts { margin: 0 }
+.ph h1 { text-transform: none; letter-spacing: 0 }
+.ph .lede i { color: var(--text-dim) }
+.ph-ten { color: var(--text-dim); font-size: .92em; white-space: nowrap }
+.ph .hpills { margin-top: 12px }
+
+/* the number strip: big values, no boxes */
+.stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 26px 0 0;
+  border-top: 1px solid var(--line-warm); border-bottom: 1px solid var(--line-warm);
+}
+.stat { padding: 18px 20px; border-right: 1px solid var(--border); min-width: 0 }
+.stat:last-child { border-right: 0 }
+.stat .v { font-size: 36px; font-weight: 800; line-height: 1.05; color: var(--accent-hi); white-space: nowrap }
+.stat .v small.of { font-size: 13px; font-weight: 700; color: var(--text-dim); margin-left: 5px }
+.stat .v.dim { color: var(--text-faint) }
+.stat .v .rkchip { font-size: 12px; vertical-align: 6px; margin-left: 6px }
+.stat .l { margin-top: 8px; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim-2); font-weight: 700 }
+.stat .s { margin-top: 3px; font-size: 12px; color: var(--text-faint); overflow: hidden; text-overflow: ellipsis }
+
+/* rail | tabs */
+.dos { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 30px; margin-top: 30px; align-items: start }
+.prail {
+  position: sticky; top: calc(var(--bar-h) + 16px); padding: 18px; border-radius: var(--radius-xl);
+  background: var(--surface-2); border: 1px solid var(--line-warm);
+}
+.prail .card { background: none; border: 0; padding: 0; box-shadow: none }
+.prail .psec { margin-top: 20px }
+.prail .psec:first-child { margin-top: 0 }
+
+/* the pack: each toon on its own banner */
+.toon { position: relative; overflow: hidden; min-height: 56px; padding: 8px 12px; background: var(--surface) }
+.toon .toon-art {
+  position: absolute; top: 0; right: 0; width: 75%; height: 100%; object-fit: cover; object-position: 70% 25%;
+  opacity: .55; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%);
+  mask-image: linear-gradient(90deg, transparent, #000 60%);
+}
+.toon:hover .toon-art { opacity: .85 }
+.toon > :not(.toon-art) { position: relative; z-index: 1 }
+.toon .tl { text-shadow: 0 1px 6px rgba(0, 0, 0, .9) }
+.toon .cicon { display: none }
+
+/* tabs */
+.ptabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px }
+.ptabs button {
+  background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; height: auto;
+  padding: 10px 16px; font-size: 14px; font-weight: 700; color: var(--text-dim-2); cursor: pointer;
+}
+.ptabs button:hover { color: var(--text); filter: none }
+.ptabs button.on { color: var(--text); border-bottom-color: var(--accent) }
+.ppane[hidden] { display: none }
+.pscope { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px }
+.plhd { display: flex; justify-content: space-between; margin: 4px 0 6px }
+.ppane .plist li { padding: 11px 0 }
+.ppane .plist .bn { font-size: 14px }
+.ppane .plist .bv { font-size: 15px }
+
+/* honours: medals */
+.ppane .honcard { background: none; border: 0; padding: 0 }
+.ppane .ringrow { margin-bottom: 14px }
+.ppane .honours { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; border: 0; padding: 0 }
+.ppane .hon {
+  flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 14px; border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, rgba(192, 148, 58, .12), transparent 60%), var(--surface-2);
+  border: 1px solid var(--line-warm);
+}
+.ppane .hon + .hon { border-top: 1px solid var(--line-warm) }
+.ppane .hon-emoji { font-size: 22px; width: auto; text-align: left }
+.ppane .hon-title { font-family: var(--display); font-weight: 400; font-size: 17px; color: var(--heading) }
+.ppane .hon-scope { display: block; margin: 2px 0 0; font-family: var(--body); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700 }
+.ppane .hon-note { font-size: 12px; color: var(--text-dim); margin-top: 4px }
+
+/* art: a full-width row at the bottom */
+#profile > .psec.mt { margin-top: 36px; font-size: 24px }
+#profile > .psec.mt + .card { background: none; border: 0; padding: 0 }
+#profile > .psec.mt + .card .artgrid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px }
+
+@media (max-width: 900px) {
+  .dos { grid-template-columns: minmax(0, 1fr) }
+  .prail { position: static }
+  .stat .v { font-size: 30px }
+}
+
+/* the scope toggles and the tools follow the page gold, not the class colour */
+.pscope .seg.active { background: var(--accent); color: #16120a }
+.ph .pt-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.ph .pt-acts .psearch { min-width: 220px }
+@media (max-width: 620px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .stat { border-right: 0; border-bottom: 1px solid var(--border); padding: 14px 12px }
+  .stat .v { font-size: 26px }
+}
+
+/* an empty Performance tab fills the column down to the end of the rail, message centred */
+.dos { align-items: stretch }
+.prail { align-self: start }
+.pmain { display: flex; flex-direction: column; min-height: 100% }
+.pmain .ppane:not([hidden]) { flex: 1; display: flex; flex-direction: column }
+.pmain .emptyperf { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center }

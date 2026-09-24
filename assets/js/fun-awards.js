@@ -15,7 +15,8 @@
 
    API — RatsFun(DATA):
      .compute({ raid, size, diff, period })  -> { awards:[A], shame:[A], podium:[A], speciality:[A] }
-        A = { emoji, title, winner, winnerKey, cls, sub, shame, rank? }   (winnerKey = normalized name)
+        A = { emoji, title, winner, winnerKey, cls, sub, shame, rank?, crew? }   (winnerKey = normalized name;
+            crew = [{ name, cls }] on a card won by a group, e.g. "12 raiders")
         The rankings grid reads `awards` only. `podium` (runner-ups) and `speciality` (Best <Class> /
         The Wall) are profile-only — forRaider folds them back in so nobody loses a badge.
      .forRaider(name, opts)  -> [A]  every positive honour THIS person holds, no shame. Folds in the
@@ -455,8 +456,10 @@
             "in all <b>" + maxPres + "</b> kills — never missed"));
         } else if (present.length > 1) {
           // several — one summary card for the whole crew (no class colour on a count)
-          awards.push(A("👑", "Perfect attendance", present.length + " raiders", "",
-            "never missed a kill · <b>" + maxPres + "/" + maxPres + "</b> each 🧀"));
+          var crewAward = A("👑", "Perfect attendance", present.length + " raiders", "",
+            "never missed a kill · <b>" + maxPres + "/" + maxPres + "</b> each 🧀");
+          crewAward.crew = present.map(function (p) { return { name: p.name, cls: p.cls }; });
+          awards.push(crewAward);
         }
       }
 

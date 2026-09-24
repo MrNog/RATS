@@ -187,12 +187,6 @@
   // Patterns/plans are NOT here: they're personal loot someone wins (and can be epic),
   // so they render as normal editable rows.
   var SKIP_RE = /runed orb|crusader orb|orb of|primordial saronite|alchemist'?s cache/i;
-  // Items that must NOT count against a raider's LOOT PRIORITY — pure craft mats that are rolled
-  // but aren't personal gear: any Val'anyr fragment, all crafting orbs (Runed / Crusader /
-  // Primordial Saronite), and patterns/recipes. NOTE: ToC Trophies DO count (they're set-token
-  // gear upgrades, so winning one spends priority). Superset of SKIP_RE for the craft mats.
-  var PRIORITY_SKIP_RE =
-    /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
   // Fragments of a legendary — always kept; boss resolved by "last real boss killed" (time).
   // Covers Val'anyr fragments (Ulduar, guild pool) and Shard of Shadowmourne (ICC, questline).
   var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne/i;
@@ -261,8 +255,8 @@
       var name = l.name || "";
       // NOTE: crafts/patterns/orbs (SKIP_RE) are NO LONGER dropped here -- they DID
       // drop in the raid, so they belong in the loot HISTORY. They just don't count
-      // toward a raider's loot priority (that exclusion is PRIORITY_SKIP_RE, applied
-      // only on the Priority tab). So we keep them; only true logging dups are dropped.
+      // toward a raider's loot luck on the officer Loot Priority page (its own skip
+      // list). So we keep them; only true logging dups are dropped.
       // AUTO-BANK: orbs/patterns are guild-pool mats -> force player = "Bank" no matter
       // who the addon logged (e.g. the ML looted it to self). They never count for anyone.
       if (BANK_RE.test(name)) l.player = BANK;
@@ -325,9 +319,20 @@
   var RAID = "";
   var SIZE = "25";
   var PERIOD = "all";
-  var HIST = { raids: [] }; // attendance history (loaded lazily for the Priority tab)
-  var ITEM_WEIGHT = 1; // priority points: 1 raid = +1, 1 item = -ITEM_WEIGHT (tune here)
-
+  // empty state for By run / By player: a search that found nothing, or a raid with no drops yet
+  function emptyHtml() {
+    var q = searchQ();
+    var title = q
+      ? "Nothing matches “" + esc(q) + "”"
+      : "No " + esc(RAID || "raid") + " " + SIZE + "-man loot yet";
+    var joke = q
+      ? "Try an item, a boss or a rat's name."
+      : "The first drops land here after the next Okanvil import. The rats are waiting. 🧀";
+    return (
+      '<div class="card lootempty"><div class="le-emoji">🐀</div>' +
+      '<div class="le-title">' + title + '</div><div class="le-joke">' + joke + "</div></div>"
+    );
+  }
   function searchQ() {
     var el = document.getElementById("search");
     return el ? el.value.trim().toLowerCase() : "";
@@ -363,21 +368,21 @@
       var k = raidKeyFor(l.raid);
       if (k) counts[k] = (counts[k] || 0) + 1;
     });
-    // default to the tier with the MOST RECENT loot (by drop timestamp), so the page
-    // opens on the raid you last ran -- not the first tab that happens to have any loot.
+    // default raid: the current season (ICC); without it, the tier with the MOST RECENT loot
+    // (by drop timestamp) -- not the first tab that happens to have any loot.
     if (!RAID) {
       var newestTs = {}; // raid key -> newest drop ts
       (DATA.loot || []).forEach(function (l) {
         var k = raidKeyFor(l.raid);
         if (k && (l.ts || 0) > (newestTs[k] || 0)) newestTs[k] = l.ts || 0;
       });
-      // Current season = Icecrown Citadel: default to it whenever it has any loot, so a
-      // stray newer Ony/Naxx drop doesn't yank the default off the progression raid.
+      // Current season = Icecrown Citadel: always open on it, even before its first import,
+      // so the page never lands on an older tier.
       var seasonKey = null;
       for (var si = 0; si < ALL_RAIDS.length; si++) {
         if (/icecrown|^icc$/i.test(ALL_RAIDS[si].key)) { seasonKey = ALL_RAIDS[si].key; break; }
       }
-      if (seasonKey && (counts[seasonKey] || 0) > 0) {
+      if (seasonKey) {
         RAID = seasonKey;
       } else {
         // fall back to the raid with the newest drop
@@ -639,7 +644,7 @@
     var el = document.getElementById("runs");
     var list = rows();
     if (!list.length) {
-      el.innerHTML = '<div class="card empty">No loot recorded yet for this filter.</div>';
+      el.innerHTML = emptyHtml();
       return;
     }
     // group by runId, newest first
@@ -678,9 +683,43 @@
             return (
               '<div class="bossgrp"><div class="bn">' +
               esc(b) +
-              "</div>" +
+              '<i class="bnc">' + byBoss[b].length + "</i></div>" +
               byBoss[b].map(lootItemHtml).join("") +
               "</div>"
+            );
+          })
+          .join("");
+        // the run at a glance: bosses, items, what went to DE / the bank, and who won most
+        var bosses = order.filter(function (b) { return !/^(trash|unknown)$/i.test(b); }).length;
+        var nDE = 0, nBank = 0, won = {};
+        items.forEach(function (l) {
+          if (l.player === DISENCHANT) nDE++;
+          else if (l.player === BANK) nBank++;
+          else if (l.player) {
+            var who = mainName(l.player);
+            var w = (won[who] = won[who] || { name: who, class: mainClass(who) || l.class, n: 0 });
+            w.n++;
+          }
+        });
+        var top = Object.keys(won)
+          .map(function (n) { return won[n]; })
+          .sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); })
+          .slice(0, 6);
+        var stat = function (n, label) {
+          return n ? '<span class="rst"><b>' + n + "</b> " + label + "</span>" : "";
+        };
+        var stats =
+          stat(bosses, bosses === 1 ? "boss" : "bosses") +
+          stat(items.length, items.length === 1 ? "item" : "items") +
+          stat(nDE, "disenchanted") +
+          stat(nBank, "to the bank");
+        var faces = top
+          .map(function (w) {
+            return (
+              '<span class="rface" style="--cc:' + classColor(w.class) + '" title="' +
+              esc(w.name + " · " + w.n + (w.n === 1 ? " item" : " items")) + '">' +
+              (window.RatsBanner ? window.RatsBanner.html(w.name, w.class, "rface-art") : "") +
+              "<i>" + w.n + "</i></span>"
             );
           })
           .join("");
@@ -696,19 +735,18 @@
           '<span class="caret">' +
           (open ? "▾" : "▸") +
           "</span>" +
+          raidArtHtml(first.raid) +
+          '<div class="rhead"><div class="rline">' +
           '<span class="rtitle">' +
           esc(first.raid || "Raid") +
-          " " +
+          '</span><span class="rsize">' +
           esc(first.size) +
           "-man</span>" +
           '<span class="rmeta">' +
           dateLabel +
-          "</span>" +
-          '<span class="rcount">' +
-          items.length +
-          " item" +
-          (items.length !== 1 ? "s" : "") +
-          "</span>" +
+          "</span></div>" +
+          '<div class="rstats">' + stats + "</div></div>" +
+          (faces ? '<div class="rfaces" aria-label="Top winners">' + faces + "</div>" : "") +
           (IS_OFFICER
             ? '<button class="delrun" title="Delete this whole run" ' +
               "onclick=\"event.stopPropagation();deleteRun('" + esc(k) + "')\">🗑</button>"
@@ -720,6 +758,19 @@
         );
       })
       .join("");
+  }
+
+  // The tier's art (the same pictures as the Addons page's WeakAura packs) fades in behind
+  // a run's header, so a run reads as ICC or Ulduar before the title does.
+  function raidArtHtml(raid) {
+    var r = String(raid || "");
+    var tier = /icecrown|ruby/i.test(r) ? "t10"
+      : /crusader|onyxia/i.test(r) ? "t9"
+        : /ulduar/i.test(r) ? "t8"
+          : /naxx|obsidian|eternity/i.test(r) ? "t7" : "";
+    return tier
+      ? '<img class="rart" src="../../images/_thumb/hub/wa-' + tier + '.webp" alt="" loading="lazy" onerror="this.remove()">'
+      : "";
   }
 
   // remembers which runs the user opened/closed this session (keyed by runId)
@@ -744,18 +795,30 @@
   }
 
   // ---- By player ----
+  // The raider's banner fades in on the right of their card, framed on the rat the same way
+  // as the Rankings cards (assets/js/banner-art.js); their class's banner stands in without one.
+  function playerArtHtml(p) {
+    return window.RatsBanner ? window.RatsBanner.html(p.name, p.class, "part") : "";
+  }
+
+  // Disenchant and Bank are not raiders: they get the hub's art instead -- the loot chest
+  // for Disenchant, the guild camp for the Bank.
+  function poolArtHtml(hubImage) {
+    return '<img class="part pool" src="../../images/_thumb/hub/' + hubImage + '.webp" alt="" loading="lazy" onerror="this.remove()">';
+  }
+
   function renderPlayers() {
     var el = document.getElementById("players");
     var list = rows().filter(function (l) {
       return l.player;
     });
     if (!list.length) {
-      el.innerHTML = '<div class="card empty">No assigned loot yet for this filter.</div>';
+      el.innerHTML = emptyHtml();
       return;
     }
     var by = {};
     list.forEach(function (l) {
-      // group by MAIN so a raider's alts merge into one card (like the Priority tab).
+      // group by MAIN so a raider's alts merge into one card.
       // Remember which toon actually got the item so the expanded list can show it.
       var main = mainName(l.player);
       var p = (by[main] = by[main] ||
@@ -882,6 +945,7 @@
           return (
             '<div class="pcard' + (open ? " open" : "") + (isDE ? " de-card" : "") + (isBank ? " bank-card" : "") +
             '" data-player="' + esc(p.name) + '">' +
+            (isDE ? poolArtHtml("loot") : isBank ? poolArtHtml("hero") : playerArtHtml(p)) +
             '<div class="ph" onclick="togglePlayer(this)">' +
             '<span class="pcaret">' + (open ? "▾" : "▸") + "</span>" +
             '<span class="pn" style="color:' + col + '">' +
@@ -913,8 +977,7 @@
     renderPlayers(); // re-render to swap thumbnails ↔ full editable list
   }
 
-  // ---- Priority (fair loot): attendance × items won ----
-  // alt -> main resolution (same rules as the history/comp tools, via the roster).
+  // ---- alt -> main resolution (same rules as the history/comp tools, via the roster).
   function normName(s) {
     return (s || "").toLowerCase()
       .replace(/\[.*?\]/g, "").replace(/\(.*?\)/g, "") // [SHAKA] / (alt)
@@ -962,167 +1025,6 @@
     var m = guildMember(mainName(name)) || guildMember(name);
     return m && m.class ? m.class : null;
   }
-  // does a history raid match the current raid/size/period filter?
-  function histInScope(r) {
-    var sz = r.size === 10 || r.size === 25 ? r.size : ((r.groups || []).reduce(function (n, g) {
-      return n + ((g.members || []).length);
-    }, 0) > 10 ? 25 : 10);
-    if (String(sz) !== SIZE) return false;
-    if (RAID && RatsData && RatsData.raidKeyOf) {
-      // history desc → canonical key; RAID here is the full instance name
-      var want = RatsData.raidKeyOf(RAID) || RAID;
-      var got = RatsData.raidKeyOf(r.desc || r.raid || r.name || "");
-      if (got && want && got !== want) return false;
-    }
-    if (r.date) {
-      var from = periodStart(), t = dateToTs(r.date);
-      if (from && t && t < from) return false;
-    }
-    return true;
-  }
-  function dateToTs(dateStr) {
-    // history dates are "YYYY-MM-DD"
-    var p = String(dateStr || "").split("-");
-    if (p.length !== 3) return 0;
-    return Math.floor(new Date(+p[0], +p[1] - 1, +p[2]).getTime() / 1000);
-  }
-  function computePriority() {
-    // Window: only count from the FIRST raid we have attendance for (in scope).
-    // Loot older than that has no attendance to compare against, so it's excluded
-    // — this is why there's never a "0 raids but has loot" row.
-    var scoped = (HIST.raids || []).filter(histInScope);
-    var firstTs = scoped.reduce(function (min, r) {
-      var t = dateToTs(r.date);
-      return t && (min === 0 || t < min) ? t : min;
-    }, 0);
-
-    // raids attended per raider (attendance history, in scope)
-    var runs = {}, cls = {};
-    scoped.forEach(function (r) {
-      var seen = {};
-      (r.groups || []).forEach(function (g) {
-        (g.members || []).forEach(function (m) {
-          var who = mainName(m.name);
-          if (!who || seen[who]) return;
-          seen[who] = 1;
-          runs[who] = (runs[who] || 0) + 1;
-          if (m.class && !cls[who]) cls[who] = m.class;
-        });
-      });
-    });
-
-    // items won per raider (loot in scope, AND on/after the attendance window).
-    // Skip guild items (fragments, mats/patterns/orbs) and disenchants.
-    // Keep the actual loot rows per raider so the row can expand to show them.
-    var won = {}; // main name -> [loot rows]
-    rows().forEach(function (l) {
-      if (!l.player || l.player === DISENCHANT || l.player === BANK) return;
-      if (firstTs && l.ts && l.ts < firstTs) return; // loot before we tracked attendance
-      var nm = l.name || "";
-      // craft mats (fragments/orbs/patterns) don't spend priority; ToC trophies DO (gear tokens).
-      if (PRIORITY_SKIP_RE.test(nm)) return;
-      var who = mainName(l.player);
-      (won[who] = won[who] || []).push(l);
-      if (l.class && !cls[who]) cls[who] = l.class;
-    });
-
-    // Only rank people who actually attended (runs > 0). Someone with loot but
-    // no attendance in the window simply doesn't appear — no more phantom rows.
-    // POINTS system: each raid attended = +1, each item won = -ITEM_WEIGHT.
-    // So presence drives priority (3-raid regular > 1-raid guest) and loot
-    // spends it. Higher points = more owed = higher priority.
-    var list = Object.keys(runs).map(function (n) {
-      var rn = runs[n], loot = won[n] || [];
-      return {
-        name: n, runs: rn, items: loot.length, loot: loot,
-        class: mainClass(n) || cls[n],
-        points: rn - loot.length * ITEM_WEIGHT,
-      };
-    });
-    return { list: list, raids: scoped.length, firstTs: firstTs };
-  }
-  function renderPriority() {
-    var el = document.getElementById("priority");
-    if (!el) return;
-    var d = computePriority();
-    if (!d.list.length) {
-      el.innerHTML = '<div class="card empty">No attendance recorded for this filter yet.</div>';
-      return;
-    }
-    // Rank by POINTS (raids − items×weight), descending: most points = top priority.
-    // Presence lifts you, loot spends it — so a 3-raid regular outranks a 1-raid guest.
-    d.list.sort(function (a, b) { return b.points - a.points || b.runs - a.runs; });
-    // scale the bidirectional bar by the biggest swing in either direction
-    var maxAbs = d.list.reduce(function (m, p) { return Math.max(m, Math.abs(p.points)); }, 1);
-
-    var head =
-      '<div class="prio-legend sub">' +
-      '<span class="prio-formula"><b>points</b> = raids attended <b>−</b> items won</span>' +
-      '<span class="prio-key"><i class="dot ok"></i>owed loot' +
-      '<i class="dot vt"></i>got extra</span>' +
-      '<span class="prio-hint">click a row to see items · since attendance tracking began</span>' +
-      "</div>";
-
-    function chip(p) {
-      var col = p.class ? classColor(p.class) : "var(--text)";
-      return '<div class="dchip"><span class="dname" style="color:' + col + '">' + esc(p.name) +
-        '</span><span class="dmeta">' + p.runs + " raids · " + p.items + " items</span>" +
-        '<span class="dscore">' + (p.points > 0 ? "+" : "") + p.points + "</span></div>";
-    }
-    var top3 = d.list.slice(0, 3);            // most points
-    var bottom3 = d.list.slice(-3).reverse(); // fewest points
-    var dash =
-      '<div class="prio-dash">' +
-      '<div class="dcard hi"><div class="dhd">Next in line' +
-      '<span class="dsub">most owed — give priority</span></div>' +
-      top3.map(chip).join("") + "</div>" +
-      '<div class="dcard lo"><div class="dhd">Well served' +
-      '<span class="dsub">won the most for their attendance</span></div>' +
-      bottom3.map(chip).join("") + "</div>" +
-      "</div>";
-
-    var rowsHtml = d.list.map(function (p, i) {
-      var col = p.class ? classColor(p.class) : "var(--text)";
-      // tone: positive points = owed (green); negative = got extra (red); 0 = neutral
-      var tone = p.points > 0 ? "hi" : p.points < 0 ? "lo" : "mid";
-      // bidirectional bar from the centre: + grows right (green, owed),
-      // − grows left (red, got extra). Half-width so each side maxes at 50%.
-      var half = Math.round((Math.abs(p.points) / maxAbs) * 50);
-      var barFill = p.points >= 0
-        ? '<i class="fbar-pos" style="width:' + half + '%"></i>'
-        : '<i class="fbar-neg" style="width:' + half + '%"></i>';
-      var open = !!OPEN_PRIO[p.name];
-      var itemsHtml = open
-        ? '<div class="prow-items" onclick="event.stopPropagation()">' +
-          (p.loot.length
-            ? p.loot.slice().sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); })
-                .map(lootItemHtml).join("")
-            : '<div class="sub" style="padding:6px 2px">No items won yet.</div>') +
-          "</div>"
-        : "";
-      return (
-        '<div class="prow ' + tone + (open ? " open" : "") + '" data-prio="' + esc(p.name) +
-        '" onclick="togglePrio(this)">' +
-        '<span class="prank">' + (open ? "▾" : (i + 1)) + "</span>" +
-        '<span class="pname" style="color:' + col + '">' + esc(p.name) + "</span>" +
-        '<span class="pstat"><b>' + p.runs + "</b> raids</span>" +
-        '<span class="pstat"><b>' + p.items + "</b> items</span>" +
-        '<span class="fbar"><span class="fbar-center"></span>' + barFill + "</span>" +
-        '<span class="pscore ' + tone + '">' + (p.points > 0 ? "+" : "") + p.points + "</span>" +
-        "</div>" + itemsHtml
-      );
-    }).join("");
-    el.innerHTML = head + dash + '<div class="prio-list">' + rowsHtml + "</div>";
-  }
-  // expand a priority row to show the raider's items (like By player)
-  var OPEN_PRIO = {};
-  function togglePrio(row) {
-    var name = row && row.dataset && row.dataset.prio;
-    if (!name) return;
-    OPEN_PRIO[name] = !OPEN_PRIO[name];
-    renderPriority();
-  }
-
   function render() {
     // itemLink() pushes into TIPS on every row it draws; reset first or the array
     // grows without bound across re-renders (every filter/tab click rebuilds the rows).
@@ -1131,7 +1033,6 @@
     buildRaidSegs();
     renderRuns();
     renderPlayers();
-    renderPriority();
   }
 
   // ---- tabs / segments (client-side only) ----
@@ -1142,6 +1043,12 @@
     document.querySelectorAll(".panel").forEach(function (p) {
       p.hidden = p.dataset.panel !== b.dataset.t;
     });
+    // Priority is ICC 25 by definition: the raid/size/period filters and the search
+    // do not apply to it, so they step aside while it is open
+    var prio = b.dataset.t === "priority";
+    document.querySelector(".row.ctrls").hidden = prio;
+    document.querySelector(".searchbar").hidden = prio;
+    if (prio && window.RatsLootPrio) window.RatsLootPrio.open();
   }
   function setRaid(b) {
     RAID = b.dataset.r;
@@ -1674,6 +1581,8 @@
   }
   // typeahead list (same pattern as the vacations picker): vertical rows, class-coloured names.
   // Alts are skipped; raiders are sorted by rank then class then name (headers removed — plain list).
+  // the rows the list shows right now, and which one the keyboard is on
+  var EDIT_OPTS = [], EDIT_HL = -1;
   function buildEditList(q) {
     var el = document.getElementById("editList");
     q = (q || "").toLowerCase();
@@ -1685,31 +1594,78 @@
     var mains = playerChoices().filter(function (p) {
       return !(p.rank === 4 || /alt/i.test(p.rankName || "")); // skip alts entirely
     });
-    var html = special
-      .filter(function (r) {
-        return !q || r.name.toLowerCase().indexOf(q) >= 0;
-      })
-      .map(optHtml)
-      .join("");
-    mains.forEach(function (p) {
-      if (q && p.name.toLowerCase().indexOf(q) < 0) return;
-      html += optHtml({ name: p.name, label: p.name, col: classColor(p.class) });
+    var opts = special.filter(function (r) {
+      // "— unassigned —" only on the full list: typing a name should land on a raider
+      return q ? r.name && r.name.toLowerCase().indexOf(q) >= 0 : true;
     });
-    el.innerHTML = html;
+    // names that START with what was typed come first, so "ko" + Enter lands on Kobee, not Jiskob
+    var starts = function (p) { return q && p.name.toLowerCase().indexOf(q) === 0 ? 0 : 1; };
+    mains
+      .filter(function (p) { return !q || p.name.toLowerCase().indexOf(q) >= 0; })
+      .sort(function (a, b) { return starts(a) - starts(b); })
+      .forEach(function (p) {
+        opts.push({ name: p.name, label: p.name, col: classColor(p.class), cls: p.class });
+      });
+    EDIT_OPTS = opts;
+    // typing: the first match is ready for Enter; the full list starts on the current winner
+    EDIT_HL = q ? (opts.length ? 0 : -1) : opts.findIndex(function (r) { return r.name === pendingWho; });
+    el.innerHTML = opts.length
+      ? opts.map(optHtml).join("")
+      : '<div class="opt none">No raider called “' + esc(q) + "” — Confirm keeps it as typed</div>";
     el.style.display = "block"; // open the floating list
+    scrollEditHl();
   }
-  function optHtml(r) {
+  function optHtml(r, i) {
     var on = r.name === pendingWho;
+    var slug = String(r.cls || "").toLowerCase().replace(/\s+/g, "");
     var ic = r.de
       ? '<img class="de-ic" src="' + iconUrl(DE_ICON, "small") + '" alt="">'
       : r.bank
         ? '<img class="de-ic" src="' + iconUrl(BANK_ICON, "small") + '" alt="">'
-        : "";
+        : slug
+          ? '<img class="de-ic" src="' + iconUrl("classicon_" + slug, "small") + '" alt="" onerror="this.style.visibility=\'hidden\'">'
+          : '<span class="de-ic"></span>';
     return (
-      '<div class="opt' + (on ? " on" : "") + '" style="color:' + r.col + '" ' +
+      '<div class="opt' + (on ? " on" : "") + (i === EDIT_HL ? " hl" : "") + '" data-i="' + i + '" style="color:' + r.col + '" ' +
+      'onmouseenter="hlEditOpt(' + i + ')" ' +
       'onclick="selectWinner(' + JSON.stringify(r.name).replace(/"/g, "&quot;") + ')">' +
-      ic + esc(r.label) + (on ? '<span class="opt-cur">✓</span>' : "") + "</div>"
+      ic + esc(r.label) + (on ? '<span class="opt-cur">✓ current</span>' : "") + "</div>"
     );
+  }
+  function hlEditOpt(i) {
+    EDIT_HL = i;
+    document.querySelectorAll("#editList .opt").forEach(function (o) {
+      o.classList.toggle("hl", Number(o.dataset.i) === i);
+    });
+    scrollEditHl();
+  }
+  function scrollEditHl() {
+    var o = document.querySelector('#editList .opt[data-i="' + EDIT_HL + '"]');
+    if (o && o.scrollIntoView) o.scrollIntoView({ block: "nearest" });
+  }
+  // keyboard: ↑/↓ move through the list, Enter picks (and a second Enter confirms), Esc closes
+  function editKey(e) {
+    var list = document.getElementById("editList");
+    var open = list.style.display !== "none";
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!open) buildEditList("");
+      if (!EDIT_OPTS.length) return;
+      var step = e.key === "ArrowDown" ? 1 : -1;
+      hlEditOpt(EDIT_HL < 0 ? 0 : (EDIT_HL + step + EDIT_OPTS.length) % EDIT_OPTS.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (open && EDIT_HL >= 0 && EDIT_OPTS[EDIT_HL]) selectWinner(EDIT_OPTS[EDIT_HL].name);
+      else confirmEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      if (open) list.style.display = "none";
+      else closeEdit();
+    }
+  }
+  // focusing the field shows everyone, not just the name already typed in it
+  function openEditList() {
+    buildEditList("");
   }
   function filterEditList() {
     var typed = document.getElementById("editSearch").value;
@@ -2034,6 +1990,9 @@
   window.confirmEdit = confirmEdit;
   window.filterEditList = filterEditList;
   window.selectWinner = selectWinner;
+  window.hlEditOpt = hlEditOpt;
+  window.editKey = editKey;
+  window.openEditList = openEditList;
   window.pickDisenchant = pickDisenchant;
   window.pickBank = pickBank;
   // close the suggestion list when clicking outside the search field / list (like vacations)
@@ -2048,7 +2007,6 @@
   window.deleteItem = deleteItem;
   window.setAllRuns = setAllRuns;
   window.togglePlayer = togglePlayer;
-  window.togglePrio = togglePrio;
   window.render = render;
 
   // load our local Ulduar item->boss table (used to resolve boss on import; no Wowhead calls)
@@ -2058,18 +2016,6 @@
       if (r.ok) BOSS_TABLE = await r.json();
     } catch (e) {}
   }
-  // attendance history feeds the Priority tab; needs roster (alt-merge) too
-  async function loadHistoryForPriority() {
-    try {
-      if (window.RatsData && RatsData.loadRoster) await RatsData.loadRoster({ interactive: false });
-      if (window.RatsData && RatsData.loadHistory) {
-        var h = await RatsData.loadHistory({ interactive: false });
-        if (h && Array.isArray(h.raids)) HIST = h;
-      }
-    } catch (e) {}
-    renderPriority();
-  }
-
   // roster is public (read-only) — load it for EVERYONE so alt→main merging +
   // class colors work in "By player" on first paint, not just for officers.
   loadRosterForAssign();
@@ -2077,9 +2023,12 @@
     var ib = document.getElementById("importBtn");
     if (ib) ib.hidden = false;
     var pt = document.getElementById("prioTab");
-    if (pt) pt.hidden = false; // Priority tab is officer-only
+    if (pt) {
+      pt.hidden = false; // Priority tab is officer-only
+      // the old officer Loot Priority page sends officers here with ?tab=priority
+      if (new URLSearchParams(location.search).get("tab") === "priority") setTab(pt);
+    }
     loadBossTable(); // import needs the item->boss table
-    loadHistoryForPriority(); // Priority tab: attendance × loot
   }
   load();
 })();

@@ -643,27 +643,17 @@
 
   // medal-aware stat tile: pass a rank (1/2/3) to colour the chip + accent strip. Optional iconSvg gives
   // it the icon-chip + class-washed look (same family as the tank tiles).
+  // one cell of the number strip under the header: a big value, its label, one line of context.
+  // (col / iconSvg are kept in the signature so every caller stays as it is.)
   function rankTile(lbl, val, sub, rank, col, iconSvg) {
     var chip = rank != null ? ' <span class="rkchip ' + rankClass(rank) + '">#' + rank + "</span>" : "";
-    var ic = iconSvg ? '<span class="tt-ic">' + iconSvg + "</span>" : "";
-    // empty tile (no data): value is a bare em-dash -> mute it so it doesn't read as a stark white bar.
-    var isEmpty = val === "—" || val == null || val === "";
+    // a number this raider does not have (a healer's DPS) is left out of the strip, not shown as "—"
+    if (val === "—" || val == null || val === "") return "";
     return (
-      '<div class="tile-s' +
-      (iconSvg ? " tile-t" : "") +
-      (rank != null ? " accent" : "") +
-      (isEmpty ? " empty-tile" : "") +
-      '" style="--tile-col:' +
-      (col || "var(--accent)") +
-      '">' +
-      ic +
-      '<div class="lbl">' +
-      esc(lbl) +
-      "</div>" +
-      // empty tile: no big value at all (a lone "—" at 26px reads as a stray white line). The sub-text
-      // ("no DPS parses in scope") carries the meaning instead.
-      (isEmpty ? "" : '<div class="v">' + val + chip + "</div>") +
-      (sub ? '<div class="d">' + sub + "</div>" : "") +
+      '<div class="stat">' +
+      '<div class="v num">' + val + chip + "</div>" +
+      '<div class="l">' + esc(lbl) + "</div>" +
+      (sub ? '<div class="s">' + sub + "</div>" : "") +
       "</div>"
     );
   }
@@ -675,9 +665,6 @@
   var HERO_COLLAPSED = false;
   var HERO_USER_SET = false; // true after a manual toggle -> auto-expand no longer overrides
   function heroHtml(name, cls, col, spec, ri, vac) {
-    // FREE FOR ALL — no login, so no "this is you" ownership badge.
-    var youTag = "";
-
     // vacation pill: away now -> "Away until"; else the next upcoming vacation -> "Next vacation"
     var pill = "";
     if (vac) pill = '<span class="hpill away">🏖️ Away until ' + esc(fmtDate(vac.end || vac.start)) + "</span>";
@@ -685,82 +672,55 @@
       var nx = nextVacFor(name);
       if (nx) pill = '<span class="hpill next">📅 Next vacation ' + esc(fmtDate(nx.start)) + "</span>";
     }
-
-    // art cascade: images are grouped per main -> images/profile-bg/<main>/<name>.png.
-    //   <main>/<name>.png (THIS toon only)  ->  generic class banner (_class/<slug>.png)  ->  CSS no-art.
-    // Each 404 steps to the next src; the final 404 flips the hero to .noart (CSS gradient + glyph).
-    // An alt with no art of its own does NOT inherit the main's art — it falls straight to the plain
-    // class banner. The main's art is only ever shown for the main itself.
+    var main = mainToonOf(name) || name; // rank + tenure are the person's, i.e. the main's
+    var rankName = rankLabel(main);
+    var ten = tenureFor(main);
+    return (
+      '<header class="phead ph">' +
+      '<p class="eyebrow">' +
+      (rankName
+        ? '<span style="color:' + rankColor(rankName) + '">' + (ri ? ri.em + " " : "") + esc(rankName) + "</span> · "
+        : "") +
+      "Raider profile</p>" +
+      '<h1 style="color:' + col + '">' + esc(name) + "</h1>" +
+      '<p class="lede">' + esc(cls || "—") + (spec ? " · " + esc(spec) : "") +
+      ' — <i>"' + esc(seededQuip(name)) + '"</i>' +
+      (ten ? ' <span class="ph-ten">· 🧀 ' + esc(ten) + " in the guild</span>" : "") + "</p>" +
+      (pill ? '<div class="hpills">' + pill + "</div>" : "") +
+      '<div class="actions" id="phActs"></div>' +
+      "</header>"
+    );
+  }
+  // The raider's banner fills the band behind the header. Same cascade as always:
+  //   <main>/<name>.png (THIS toon only) -> <name>/<name>.png -> the class banner -> a class-colour wash.
+  // An alt with no art of its own does NOT inherit the main's art.
+  function setBand(name, cls, col) {
+    var band = document.getElementById("pband"),
+      img = document.getElementById("pbandImg");
+    if (!band || !img) return;
     var bg = "../../images/profile-bg/";
     var lc = function (s) {
       return U.enc(String(s).toLowerCase());
     };
-    var main = mainToonOf(name) || name; // this toon's main (itself if it has none)
+    var main = mainToonOf(name) || name;
     var artSrc = bg + lc(main) + "/" + lc(name) + ".png";
-    // The folder is the PLAYER, which we can only guess at via the roster's main — and that guess has
-    // been wrong (folder "kobe" vs main "Kobee"; a toon whose roster main is an alt-named DK). So also
-    // try <name>/<name>.png: a toon's art living in a folder named after ITSELF. Costs one 404 at worst.
     var selfSrc = bg + lc(name) + "/" + lc(name) + ".png";
-    // generic per-class fallback banner (kept in images/profile-bg/_class/<slug>.png); "" if class unknown.
     var clsSlug = CLASS_ICON[cls] || "";
-    var classSrc = clsSlug ? bg + "_class/" + clsSlug + ".png" : "";
-    // build the chain of sources to try after the first, in order, then land on CSS .noart.
     var chain = [];
-    if (selfSrc !== artSrc) chain.push(selfSrc); // same-named folder (main resolved to the wrong name)
-    if (classSrc) chain.push(classSrc); // the plain class banner (no main-art inheritance for alts)
-    // stepper: pop the next candidate off data-chain; when empty, mark the hero .noart.
-    var artOnErr =
-      "var c=(this.dataset.chain||'').split('|').filter(Boolean);" +
-      "if(c.length){this.dataset.chain=c.slice(1).join('|');this.src=c[0];}" +
-      "else{this.closest('.hero').classList.add('noart');}";
-    var chainAttr = chain.length ? ' data-chain="' + chain.join("|") + '"' : "";
-
-    // class icon for the no-art glyph (falls back to the rat emoji if the class is unknown)
-    var iconTag = classIconTag(cls);
-    var glyph = iconTag || "🐀";
-    // big faded class icon behind the banner (only shows in .noart) for depth
-    var ghost = iconTag ? '<span class="heroghost">' + iconTag + "</span>" : "";
-
-    return (
-      '<div class="hero' +
-      (HERO_COLLAPSED ? " collapsed" : "") +
-      '" id="hero" style="--col:' +
-      col +
-      '">' +
-      youTag +
-      '<img class="heroart" src="' +
-      artSrc +
-      '"' +
-      chainAttr +
-      ' alt="" onerror="' +
-      artOnErr +
-      '" onload="heroArtLoaded(this)">' +
-      ghost +
-      '<span class="heroglow"></span>' +
-      '<span class="heroglyph">' +
-      glyph +
-      "</span>" +
-      '<button class="htoggle" type="button" onclick="toggleHero()" title="Expand / collapse banner" aria-label="Toggle banner">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>' +
-      "</button>" +
-      '<div class="hbody">' +
-      '<div class="hname" style="color:' +
-      col +
-      '">' +
-      esc(name) +
-      (ri ? ' <span class="hrank" title="' + esc(ri.t) + '">' + ri.em + "</span>" : "") +
-      "</div>" +
-      '<div class="hmeta">' +
-      esc(cls || "—") +
-      (spec ? " · " + esc(spec) : "") +
-      "</div>" +
-      '<div class="hquip">"' +
-      esc(seededQuip(name)) +
-      '"</div>' +
-      (pill ? '<div class="hpills">' + pill + "</div>" : "") +
-      "</div>" +
-      "</div>"
-    );
+    if (selfSrc !== artSrc) chain.push(selfSrc);
+    if (clsSlug) chain.push(bg + "_class/" + clsSlug + ".png");
+    band.classList.remove("noart");
+    band.style.setProperty("--col", col);
+    img.dataset.chain = chain.join("|");
+    img.onerror = function () {
+      var c = (img.dataset.chain || "").split("|").filter(Boolean);
+      if (c.length) {
+        img.dataset.chain = c.slice(1).join("|");
+        img.src = c[0];
+      } else band.classList.add("noart");
+    };
+    if (img.getAttribute("src") !== artSrc) img.src = artSrc;
+    band.hidden = false;
   }
 
   // ---- LEFT rail — Identity (each fact once) + The Pack (alts) + Armory ----
@@ -770,27 +730,9 @@
   // steady height whether you're on a decked main or a bare alt.
   var DASH = '<span class="rv" style="color:var(--text-faint)">—</span>';
   function identityHtml(name, col) {
-    var main = mainToonOf(name) || name; // person-level facts come from the main
-    var rows = [];
-    var ri = rankIconFor(main);
-    var rankName = rankLabel(main);
-    rows.push(railRow(ri ? ri.em : "🐀", "Guild rank", rankName ? '<span class="rv col">' + esc(rankName) + "</span>" : DASH));
-
-    var lad = ladderFor(name); // this TOON's own standing in scope
-    rows.push(
-      railRow("📊", "Ladder", lad ? '<span class="rv">#' + lad.rank + " of " + lad.total + " " + lad.metric + "</span>" : DASH)
-    );
-
-    var ten = tenureFor(main);
-    if (ten) rows.push(railRow("🧀", "Tenure", '<span class="rv">' + esc(ten) + "</span>"));
-
-    var html = '<div class="psec">' + secIcon("identity") + "Identity</div>";
-    html += rows.length
-      ? '<div class="card idcard">' + rows.join("") + "</div>"
-      : '<div class="card idcard"><span class="empty" style="padding:4px 2px">No profile details yet. 🐀</span></div>';
-
+    var html = "";
     // The Pack (alts)
-    html += '<div class="psec mt">' + secIcon("pack") + 'The Pack <span class="cnt">— alts</span></div>';
+    html += '<div class="psec">' + secIcon("pack") + 'The Pack <span class="cnt">— alts</span></div>';
     var pack = barracksFor(name);
     if (pack && pack.toons.length > 1) {
       html +=
@@ -809,6 +751,7 @@
                 ? ""
                 : ' role="button" tabindex="0" onclick="goToon(\'' + esc(t.name).replace(/'/g, "\\'") + "')\"") +
               ">" +
+              (window.RatsBanner ? window.RatsBanner.html(t.name, t.class, "toon-art", (pack.toons.filter(function (x) { return x.main; })[0] || t).name) : "") +
               cicon(t.class) +
               '<span class="tl"><span style="color:' +
               classColor(t.class) +
@@ -906,8 +849,7 @@
     var p = raidProgress(name);
     var badges = deriveBadges(name);
     var total = badges.length + (p.count > 0 ? 1 : 0);
-    var html = '<div class="psec mt">' + secIcon("honours") + "Honours" +
-      (total ? ' <span class="cnt">— ' + total + "</span>" : "") + "</div>";
+    var html = "";
     if (!total) {
       return html + '<div class="card"><span class="empty" style="padding:4px 2px">No honours yet — get in the logs! 🐀</span></div>';
     }
@@ -1145,7 +1087,7 @@
     // sad "no parses" tiles + an empty per-boss list (which reads as broken). Common when viewing an alt
     // on a raid they don't run. Points the user to switch scope or check their main.
     if (!d && !h && !bestParseOf(name)) {
-      return perfHeader() + emptyPerfCard(name);
+      return { tiles: "", body: '<div class="pscope">' + scopeToggles() + "</div>" + emptyPerfCard(name) };
     }
 
     // this rat's server percentile in scope — drives the parse-tier COLOR on the SERVER tile.
@@ -1188,17 +1130,13 @@
       );
     }
 
-    var html = perfHeader();
-    html += '<div class="tiles">' + tiles + "</div>";
-
-    html +=
-      '<div class="card" style="margin-top:20px"><div class="cardhd"><span class="ht">' +
-      secIcon("boss") +
-      "Per-boss placements</span></div>" +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="hsmall">Boss</span><span class="hsmall">Best</span></div>' +
-      placementList(name) +
-      "</div>";
-    return html;
+    return {
+      tiles: tiles,
+      body:
+        '<div class="pscope">' + scopeToggles() + "</div>" +
+        '<div class="plhd"><span class="hsmall">Boss</span><span class="hsmall">Best</span></div>' +
+        placementList(name),
+    };
   }
 
 
@@ -1223,10 +1161,9 @@
     if (t.offSpecDps != null)
       tiles += rankTile("Off-spec DPS", metricTint(fmt(t.offSpecDps), "dps"), t.offSpecFights + (t.offSpecFights === 1 ? " fight" : " fights") + " on DPS", null, col, TILE_IC.sword);
 
-    var html = perfHeader();
-    html += '<div class="tiles">' + tiles + "</div>";
+    var html = '<div class="pscope">' + scopeToggles() + "</div>";
 
-    // per-boss card: bosses TANKED (canonical order), each with a shield marker. Value column shows
+    // per-boss list: bosses TANKED (canonical order), each with a shield marker. Value column shows
     // their biggest SOAK on that boss (the tank's meter) when the data exists, else their off-spec
     // dps on that boss (pre-2026-07-16 rows have no damageTaken). Never a damage bar/rank.
     var hasSoak = t.soakPerFight != null;
@@ -1254,15 +1191,11 @@
       : '<p class="empty" style="padding:8px 2px">No boss tanked in this scope.</p>';
 
     html +=
-      '<div class="card" style="margin-top:20px"><div class="cardhd"><span class="ht">' +
-      secIcon("boss") +
-      "Bosses tanked</span></div>" +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px"><span class="hsmall">Boss</span><span class="hsmall">' +
+      '<div class="plhd"><span class="hsmall">Boss tanked</span><span class="hsmall">' +
       (hasSoak ? "Soaked" : "Off-spec") +
       "</span></div>" +
-      listHtml +
-      "</div>";
-    return html;
+      listHtml;
+    return { tiles: tiles, body: html };
   }
 
   // ---- rail helpers ----
@@ -1278,6 +1211,16 @@
     );
   }
   // rank name: private roster rankName, else the public profiles snapshot rank
+  // the same rank colours as Okanvil's guild roster (Core/Util.lua RANK_COLORS + the alt colour)
+  function rankColor(rankName) {
+    var r = String(rankName || "").toLowerCase();
+    if (/alt/.test(r)) return "#8fb4d9";
+    if (/king/.test(r)) return "#c659ff";
+    if (/warchief/.test(r)) return "#ff4d4d";
+    if (/raider/.test(r)) return "#ffa030";
+    if (/sewer/.test(r)) return "#ffe049";
+    return "var(--text)";
+  }
   function rankLabel(name) {
     var k = ck(name),
       p = PROFILES[k];
@@ -1562,35 +1505,63 @@
 
     var cls = memberClass(name),
       col = classColor(cls);
-    // whole profile re-themes to the selected toon's class colour: --col drives themed accents and
-    // --accent is overridden so every var(--accent) inside #profile follows the class too. The page
-    // header (outside #profile) keeps the guild gold.
+    // --col is the toon's class colour (the name, the pack, small accents); the page keeps the guild gold
     prof.style.setProperty("--col", col);
-    prof.style.setProperty("--accent", col);
+
     var d = findRanked(dpsList(), name),
       h = findRanked(hpsList(), name);
     var spec = (d && d.row.spec) || (h && h.row.spec) || (PROFILES[ck(name)] && PROFILES[ck(name)].spec) || "";
     var ri = rankIconFor(name);
     var vac = vacFor(name);
 
-    // hero banner on top, then the 3-column body (right column = Raid Vitality panel)
+    var perf = performanceHtml(name, col);
+    var p = raidProgress(name);
+    var raidsCell = p.count
+      ? rankTile("Raids with the guild", p.count + '<small class="of">' + (p.maxed ? "raids" : "of " + p.next) + "</small>",
+          "", null, col, null)
+      : "";
+    var nHon = deriveBadges(name).length + (p.count > 0 ? 1 : 0);
+    // No parses and no raid nights (an alt, a new rat): the strip still says who this is instead of
+    // leaving a hole under the header — level + class, whose alt, honours, art.
+    if (!perf.tiles && !raidsCell) {
+      var pk = barracksFor(name),
+        me = pk && pk.toons.filter(function (t) { return ck(t.name) === ck(name); })[0];
+      var mn = mainToonOf(name);
+      var isAltToon = mn && ck(mn) !== ck(name);
+      var nArt = artFor(name).length;
+      raidsCell =
+        rankTile("Level", me && me.level ? String(me.level) : "—", esc(cls || ""), null, col, null) +
+        (isAltToon
+          ? rankTile("Alt of", '<span style="color:' + classColor(memberClass(mn)) + '">' + esc(mn) + "</span>",
+              "the numbers live on the main", null, col, null)
+          : rankTile("Raids with the guild", "0", "no raid nights logged yet", null, col, null)) +
+        rankTile("Honours", String(nHon), nHon ? "held across the pack" : "none yet — get in the logs", null, col, null) +
+        (nArt ? rankTile("Pieces of art", String(nArt), "in the gallery", null, col, null) : "");
+    }
+    setBand(name, cls, col);
     prof.innerHTML =
       heroHtml(name, cls, col, spec, ri, vac) +
-      '<div class="pgrid" style="--col:' +
-      col +
-      '">' +
-      '<div class="rail">' +
-      identityHtml(name, col) +
-      "</div>" +
-      '<div class="main">' +
-      performanceHtml(name, col) +
-      artHtml(name) +
-      "</div>" +
-      '<div class="side">' +
-      vitalityHtml(name) +
-      honoursHtml(name) +
-      "</div>" +
-      "</div>";
+      (perf.tiles || raidsCell ? '<div class="stats">' + perf.tiles + raidsCell + "</div>" : "") +
+      '<div class="dos" style="--col:' + col + '">' +
+      '<aside class="prail">' + vitalityHtml(name) + identityHtml(name, col) + "</aside>" +
+      '<div class="pmain">' +
+      '<div class="ptabs" role="tablist">' +
+      '<button type="button" class="' + (TAB === "perf" ? "on" : "") + '" onclick="setPTab(\'perf\')">📊 Performance</button>' +
+      '<button type="button" class="' + (TAB === "hon" ? "on" : "") + '" onclick="setPTab(\'hon\')">🏅 Honours' +
+      (nHon ? " · " + nHon : "") + "</button></div>" +
+      '<div class="ppane"' + (TAB === "perf" ? "" : " hidden") + ">" + perf.body + "</div>" +
+      '<div class="ppane"' + (TAB === "hon" ? "" : " hidden") + ">" + honoursHtml(name) + "</div>" +
+      "</div></div>" +
+      artHtml(name);
+    // the Rankings button + Jump to raider live in the header, next to the name
+    var acts = document.querySelector(".pt-acts"),
+      slot = document.getElementById("phActs");
+    if (acts && slot) slot.appendChild(acts);
+  }
+  var TAB = "perf";
+  function setPTab(t) {
+    TAB = t;
+    render();
   }
 
   // hero collapse toggle (exposed for the inline onclick)
@@ -1638,6 +1609,11 @@
     SELECTED = "";
     WC_PICK = "";
     headerSearch(false); // welcome has its own search; keep the header one hidden here
+    var band = document.getElementById("pband");
+    if (band) band.hidden = true;
+    var acts = document.querySelector(".pt-acts"),
+      row = document.querySelector(".ptools");
+    if (acts && row && acts.parentNode !== row) row.appendChild(acts);
     var prof = document.getElementById("profile");
     if (!prof) return;
     try {
@@ -1890,6 +1866,7 @@
 
   // expose the handlers the inline onclick/oninput attributes call
   window.toggleHero = toggleHero;
+  window.setPTab = setPTab;
   window.heroArtLoaded = heroArtLoaded;
   window.setSize = setSize;
   window.setRaid = setRaid;

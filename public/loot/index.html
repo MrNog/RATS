@@ -14,31 +14,33 @@
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
   <!-- page-specific -->
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <link rel="stylesheet" href="loot.css">
+  <link rel="stylesheet" href="prio/prio.css">
 </head>
 
 <body>
+  <header class="site-bar" data-root="../.." data-page="loot"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-loot.jpg" alt=""></div>
+
   <div class="wrap wide">
-    <div class="row">
-      <a class="btn" href="../../index.html">← Back</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 12v10H4V12" />
-          <rect x="2" y="7" width="20" height="5" />
-          <line x1="12" y1="22" x2="12" y2="7" />
-          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-        </svg> RATS — Loot History</h1>
-      <button id="importBtn" onclick="openImport()" hidden style="margin-left:auto">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="17 8 12 3 7 8" />
-          <line x1="12" y1="3" x2="12" y2="15" />
-        </svg>
-        <span>Import loot</span>
-      </button>
-    </div>
+    <header class="phead">
+      <p class="eyebrow">Straight from Okanvil</p>
+      <h1>Loot History</h1>
+      <p class="lede">Every drop our raids have won, run by run and rat by rat. Recorded in game by
+        <b>Okanvil</b>, so nothing gets forgotten.</p>
+      <span class="actions">
+        <button id="importBtn" onclick="openImport()" hidden>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>Import loot</span>
+        </button>
+      </span>
+    </header>
 
     <div class="row ctrls">
       <span id="raidRow" style="display:inline-flex">
@@ -79,11 +81,69 @@
       <div id="players"></div>
     </section>
 
-    <section class="panel" data-panel="priority" hidden>
-      <p class="sub" style="margin:0 0 12px">Who's <b class="gold">owed loot</b> — cross-references
-        <b class="gold">attendance</b> with <b class="gold">items won</b> so regulars who rarely win
-        rise to the top, and frequent winners settle to the bottom.</p>
-      <div id="priority"></div>
+    <!-- officer-only: the BiS priority ladders + loot luck, built by prio/prio.js -->
+    <section class="panel prio" data-panel="priority" id="priority" hidden>
+      <div class="pr-top">
+        <div class="views" role="tablist" aria-label="Priority view">
+          <button class="vbtn active" data-view="bis" type="button" role="tab">⚔️ BiS list</button>
+          <button class="vbtn" data-view="luck" type="button" role="tab">🍀 Loot luck</button>
+        </div>
+        <div class="pr-meta" id="prMeta"></div>
+        <div class="pr-acts">
+          <button id="prExport" class="btn" type="button" title="Copy every ladder as a Lua table for Okanvil">⧉ Export for Okanvil</button>
+          <button id="prRefresh" class="btn" type="button" title="Re-read roster, logs and loot">↻ Refresh</button>
+        </div>
+      </div>
+      <p class="creed">
+        <b>Player &gt; class</b> trumps every decision on this list — it is where the call starts, not where it
+        ends. ICC 25 only.
+        <button type="button" id="prWhy" class="whybtn" aria-expanded="false">why</button>
+      </p>
+      <div class="whybox" id="prWhyBox" hidden>
+        <p>Only items <b>two or more classes</b> want. Post the raid and refresh — winners get struck through,
+          the next name lights up. Pugs and no-shows drop off.</p>
+        <p>Inside a group the order is: <b>officers first</b> (guild policy), then <b>loot luck</b> — someone
+          who has won 2+ items fewer than their ICC nights should have given them goes ahead of someone 2+
+          items ahead — then output, and where two are within 5% the one with more raid days goes ahead.</p>
+        <p class="src">Prio from the <b>Fusion P4 sheet</b> (Joardee + Pummel), built on PTR logs and aimed at
+          Putricide and the Lich King. One guild's data — disagree and say so.</p>
+      </div>
+      <textarea id="prExportBox" class="ta pr-exportbox" readonly hidden></textarea>
+
+      <div id="prBis">
+        <div class="pr-ctl">
+          <input id="prQ" type="text" placeholder="Filter item or player…" autocomplete="off">
+          <div class="segs" role="group" aria-label="Tier filter">
+            <button class="seg tbtn active" data-tier="all" type="button">All</button>
+            <button class="seg tbtn" data-tier="R" type="button">Reserved</button>
+            <button class="seg tbtn" data-tier="P" type="button">Prio roll</button>
+          </div>
+          <button id="prCollapse" class="btn" type="button">⊟ Collapse all</button>
+          <label class="pr-mind" title="Hide raiders with fewer raid days than this">min raids
+            <select id="prMinDays">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+          <span id="prCount" class="pr-count"></span>
+        </div>
+        <div class="pr-legend">
+          <span><b class="lg-first">Name</b> gets it now</span>
+          <span><span class="sep">&rsaquo;</span> next</span>
+          <span><span class="sep drop">&raquo;</span> lower group</span>
+          <span><i class="tag">off</i> off-spec</span>
+          <span><i class="tag new">new</i> few ICC 25 nights</span>
+          <span><i class="tag low">low</i> off the pace</span>
+          <span><i class="tag owed">owed</i> unlucky, moved up</span>
+          <span><i class="tag lucky">lucky</i> well served, moved down</span>
+          <span><b class="lg-won">Name</b> already won</span>
+        </div>
+        <div id="prGrid" aria-live="polite"></div>
+      </div>
+      <div id="prLuck" hidden></div>
     </section>
 
   </div>
@@ -109,7 +169,7 @@
 
   <!-- officer edit-winner overlay -->
   <div id="editOv" class="importOv" onclick="if(event.target===this) closeEdit()">
-    <div class="importCard">
+    <div class="importCard editCard">
       <button class="x" onclick="closeEdit()" title="Close">✕</button>
       <h2>Change winner</h2>
       <p class="sub" id="editItem"></p>
@@ -117,7 +177,7 @@
       <div class="winrow">
         <div class="ac-wrap" style="flex:1 1 auto">
           <input type="text" id="editSearch" placeholder="Type a raider…" autocomplete="off"
-            oninput="filterEditList()" onfocus="filterEditList()">
+            oninput="filterEditList()" onfocus="openEditList()" onkeydown="editKey(event)">
           <div id="editList" class="picklist ac" style="display:none"></div>
         </div>
         <button class="btn de-btn" onclick="pickDisenchant()"
@@ -129,7 +189,8 @@
           <img class="de-ic" src="https://wow.zamimg.com/images/wow/icons/small/achievement_guildperk_mobilebanking.jpg" alt="">
           Bank</button>
       </div>
-      <div class="frow" style="margin-top:14px">
+      <p class="kbd-hint"><kbd>↑</kbd><kbd>↓</kbd> move · <kbd>Enter</kbd> pick, again to confirm · <kbd>Esc</kbd> close</p>
+      <div class="frow" style="margin-top:10px">
         <button class="btn" onclick="closeEdit()" style="flex:1">Cancel</button>
         <button onclick="confirmEdit()" style="flex:1">✔ Confirm</button>
       </div>
@@ -138,7 +199,11 @@
 
   <script src="../../assets/js/utils.js"></script>
   <script src="../../assets/js/data.js"></script>
+  <script src="prio/prio-engine.js"></script>
+  <script src="prio/prio.js"></script>
+  <script src="../../assets/js/banner-art.js"></script>
   <script src="loot.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

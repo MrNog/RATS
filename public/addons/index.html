@@ -14,63 +14,67 @@
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
   <!-- page-specific -->
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <link rel="stylesheet" href="addons.css">
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="row">
-      <a class="btn" href="../../index.html">← Back</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-          <polyline points="7 10 12 15 17 10" />
-          <line x1="12" x2="12" y1="15" y2="3" />
-        </svg> RATS — Addons</h1>
-    </div>
-    <p class="sub">Every download is the <b>latest version</b> straight from the source. A gold <b
-        style="color:var(--accent)">NEW</b> badge means there's an update you haven't downloaded yet — it clears when
-      you hit <b>Download</b>.</p>
+  <header class="site-bar" data-root="../.." data-page="addons"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-addons.jpg" alt=""></div>
 
-    <div class="note">
-      <b>Install:</b> download the <b>.zip</b> → extract → drop the addon folder into
-      <code>World of Warcraft\Interface\AddOns\</code> → <code>/reload</code>. If the extracted folder ends in
-      <code>-main</code> / <code>-master</code>, <b>rename it</b> to remove that suffix.
-    </div>
+  <div class="wrap wide">
+    <header class="phead">
+      <p class="eyebrow">Start here · everything to raid</p>
+      <h1>Addons &amp; WeakAuras</h1>
+      <p class="lede">Every download is the <b>latest version</b> straight from the source. A gold
+        <b class="gold-new">NEW</b> badge means there's an update you haven't downloaded yet — it clears when you
+        hit <b>Download</b>.</p>
+    </header>
 
+    <!-- how to install, in three steps -->
+    <ol class="steps">
+      <li><b>Download</b><span>the <code>.zip</code> of each addon below</span></li>
+      <li><b>Extract</b><span>the folder into <code>Interface\AddOns\</code> in your WoW folder</span></li>
+      <li><b>/reload</b><span>in game, and you are set</span></li>
+    </ol>
+    <p class="steps-hint">Folder ends in <code>-main</code> or <code>-master</code>? <b>Rename it</b> to drop that
+      suffix, or the game will not load it.</p>
 
+    <section class="blk">
+      <div class="blk-hd">
+        <h2>Mandatory addons</h2><span class="blk-tag">Every raider</span>
+      </div>
+      <div id="list" class="cards"></div>
+    </section>
 
+    <section class="blk">
+      <div class="blk-hd">
+        <h2>Visual patch</h2><span class="blk-tag">Every raider</span>
+      </div>
+      <p class="sechint">Goes in <code>World of Warcraft\Data\</code>, <b>not</b> AddOns, then restart the game. Take
+        the one for your client.</p>
+      <div id="listPatch" class="cards two"></div>
+    </section>
 
+    <section class="blk">
+      <div class="blk-hd">
+        <h2>WeakAura tier packs</h2><span class="blk-tag">Important for raids</span>
+      </div>
+      <p class="sechint">Open a pack → copy the code → <code>/wa</code> → <b>Import</b> → paste.</p>
+      <div id="listWA" class="tiers"></div>
+    </section>
 
+    <section class="blk">
+      <div class="blk-hd">
+        <h2>Cool extras</h2><span class="blk-tag quiet">Optional</span>
+      </div>
+      <p class="sechint">Not required, but handy or just fun.</p>
+      <div id="listOptional" class="cards"></div>
+    </section>
 
-    <div class="sec big">
-      <h2>📥 Mandatory addons — every raider</h2>
-    </div>
-    <div id="list"></div>
-
-    <div class="sec big">
-      <h2>🧩 Visual patch — every raider</h2>
-    </div>
-    <p class="sechint">Drop <code>patch-y.mpq</code> in <code>World of Warcraft\Data\</code> (NOT AddOns) → restart.
-      Works on the normal 3.3.5a client. On an HD client take the <b>-hd</b> file instead.</p>
-    <div id="listPatch"></div>
-
-    <div class="sec">
-      <h2>✨ WeakAura tier packs — important for raids</h2>
-    </div>
-    <p class="sechint">Import in-game: open a pack → copy the code → <code>/wa</code> → <b>Import</b> → paste.</p>
-    <div id="listWA"></div>
-
-    <div class="sec">
-      <h2>🐀 Cool extras — optional</h2>
-    </div>
-    <p class="sechint">Not required, but handy or just fun. Install only if you want them.</p>
-    <div id="listOptional"></div>
-    <div id="listExtraDL"></div>
-
-    <div id="alertPreview"></div>
   </div>
 
+  <script src="../../assets/js/nav.js"></script>
   <script src="addons.js"></script>
 </body>
 

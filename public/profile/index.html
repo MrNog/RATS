@@ -14,19 +14,19 @@
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
   <!-- page-specific -->
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <link rel="stylesheet" href="profile.css">
 </head>
 
 <body>
+  <header class="site-bar" data-root="../.." data-page="profile"></header>
+  <!-- the raider's banner behind the header, filled by profile.js (hidden on the welcome screen) -->
+  <div class="band raider" id="pband" aria-hidden="true" hidden><img id="pbandImg" alt=""></div>
+
   <div class="wrap wide">
-    <div class="row">
-      <a class="btn" href="../../index.html">← Back</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg> RATS — Raider Profile</h1>
-      <span style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
+    <!-- the tools; profile.js moves them into the raider's header, and back here for the welcome -->
+    <div class="ptools">
+      <span class="pt-acts">
         <!-- jump to the guild rankings / hall of fame -->
         <a class="btn" href="../rankings/index.html" title="Guild rankings &amp; hall of fame"
           style="display:inline-flex;gap:6px;align-items:center">
@@ -78,7 +78,9 @@
   <script src="../../assets/js/data.js"></script>
   <script src="../../assets/js/logs-core.js"></script>
   <script src="../../assets/js/fun-awards.js"></script>
+  <script src="../../assets/js/banner-art.js"></script>
   <script src="profile.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

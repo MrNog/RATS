@@ -21,7 +21,7 @@ Each page = its own folder served as `index.html`, with `pagename.css` + `pagena
 links point at explicit `index.html` so routing works on `file://`, any local server, and Pages.
 
 ```
-index.html · index.css · index.js   hub landing
+index.html · index.css            hub landing (bar: assets/js/nav.js)
 public/      PUBLIC pages (everyone) — keeps the root clean
   addons/    mandatory/recommended addons + NEW badge + update notifier preview
   gallery/   art/lore gallery (gallery.json manifest; .tile masonry, not .card)

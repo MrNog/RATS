@@ -15,60 +15,6 @@
   flex-shrink: 0;
 }
 
-/* ---- live preview ---- */
-.preview {
-  border-color: #3a4a5b;
-}
-.preview .pv-hd {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.preview .pv-title {
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #9ad0ff;
-}
-/* keep the eye emoji in line with the 12px caption text (emoji ignore letter-spacing and can
-   render oversized); size + vertical-align it explicitly */
-.preview .pv-eye {
-  font-size: 13px;
-  vertical-align: -1px;
-  letter-spacing: 0;
-}
-.preview .pv-sub {
-  font-size: 12px;
-  color: var(--text-dim-2);
-}
-/* the two embed cards sit in a grid that wraps cleanly (no dead space to the right) */
-.pv-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 14px 20px;
-  align-items: start;
-}
-.pv-card {
-  min-width: 0;
-}
-.pv-lbl {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: var(--text-dim-2);
-  margin: 0 0 6px;
-}
-.pv-lbl-i {
-  font-size: 12px;
-}
-
 /* Vacations list header: title on the left, sort toggle on the right */
 .listhd {
   display: flex;
@@ -231,15 +177,13 @@ tr:hover td {
 }
 
 /* Officer page order: put the CALENDAR above the list (the list already ends with closed vacations).
-   Flex-column the wrap and reorder; header/add/preview keep their natural order, calendar jumps up. */
+   Flex-column the wrap and reorder; header / away strip / add form keep their natural order, the
+   calendar jumps up. */
 body.officer .wrap {
   display: flex;
   flex-direction: column;
 }
-body.officer .wrap > .row { order: 0; }
-body.officer .wrap > .sub { order: 1; }
-body.officer .wrap > .card:not(.preview) { order: 2; } /* add-vacation form */
-body.officer .wrap > .preview { order: 3; }
+body.officer .wrap > .card { order: 2; } /* add-vacation form */
 body.officer #calSection { order: 4; }   /* calendar first */
 body.officer .listhd { order: 5; }        /* then the list (closed vacations sink to its bottom) */
 body.officer #allWrap { order: 6; }
@@ -432,3 +376,42 @@ body.officer #allWrap { order: 6; }
   text-overflow: ellipsis;
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* ---------- site makeover (assets/css/site.css) ---------- */
+.vsec {
+  margin: 26px 0 12px; font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--heading);
+  text-transform: none; letter-spacing: 0; display: flex; align-items: center; gap: 10px;
+}
+.vsec::after { content: ""; flex: 1; height: 1px; background: var(--line-warm) }
+.awaynow { margin-top: 4px }
+.awaynow[hidden] { display: none }
+.aw-grp:first-child .vsec { margin-top: 6px }
+.aw-n {
+  font-style: normal; font-family: var(--body); font-size: 12px; font-weight: 700; color: var(--text-faint);
+  background: rgba(255, 255, 255, .06); border-radius: 999px; padding: 1px 8px;
+}
+/* one card per raider, their banner fading in on the right */
+.aw-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px }
+.aw-card {
+  position: relative; overflow: hidden; min-height: 112px; display: flex; align-items: flex-end;
+  border-radius: var(--radius-lg); background: var(--surface-2);
+  border: 1px solid var(--border); border-left: 3px solid var(--cc);
+}
+.aw-card.now { border-color: var(--line-warm); border-left-color: var(--cc) }
+.aw-art {
+  position: absolute; top: 0; right: 0; width: 64%; height: 100%; object-fit: cover; object-position: 70% 20%;
+  opacity: .55; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 75%);
+}
+.aw-card:not(.now) .aw-art { opacity: .35; filter: saturate(.7) }
+.aw-body { position: relative; z-index: 1; width: 100%; padding: 12px 14px 12px; display: flex; flex-direction: column; gap: 3px }
+.aw-name { font-size: 17px; font-weight: 800; text-shadow: 0 1px 8px rgba(0, 0, 0, .85) }
+.aw-dates { font-size: 12px; color: var(--text-dim); text-shadow: 0 1px 4px rgba(0, 0, 0, .9) }
+.aw-line { font-size: 13px; color: var(--text); text-shadow: 0 1px 4px rgba(0, 0, 0, .9) }
+.aw-line b { color: var(--accent-hi); font-variant-numeric: tabular-nums }
+.aw-bar { margin-top: 6px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, .1); overflow: hidden; max-width: 70% }
+.aw-bar i { display: block; height: 100% }
+/* the list heading follows the page's display face */
+.listhd h2.sec { font-family: var(--display); font-weight: 400; font-size: 24px; text-transform: none; letter-spacing: 0; color: var(--heading) }
+#calSection .calnav h2 { font-family: var(--display); font-weight: 400; font-size: 24px; text-transform: none; letter-spacing: 0; color: var(--heading); margin-right: 8px !important }

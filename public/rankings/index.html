@@ -14,40 +14,38 @@
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
   <!-- page-specific -->
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <link rel="stylesheet" href="rankings.css">
 </head>
 
 <body>
+  <header class="site-bar" data-root="../.." data-page="rankings"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-rankings.jpg" alt=""></div>
+
   <div class="wrap wide">
-    <div class="row">
-      <a class="btn" href="../../index.html">← Back</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-          <path d="M4 22h16" />
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-        </svg> RATS — Rankings &amp; Hall of Fame</h1>
-      <span id="fetchWrap" hidden style="margin-left:auto;display:inline-flex;gap:8px;align-items:center">
-        <label for="fetchScope" class="sr-only">How many logs to fetch</label>
-        <select id="fetchScope" title="Last N = incremental (only new logs). All = full rebuild.">
-          <option value="1">Last 5</option>
-          <option value="2">Last 10</option>
-          <option value="3">Last 15</option>
-          <option value="0">All (rebuild)</option>
-        </select>
-        <button id="fetchBtn" onclick="fetchData()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polyline points="23 4 23 10 17 10" />
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-          </svg>
-          <span>Fetch data</span>
-        </button>
-      </span>
-    </div>
+    <header class="phead">
+      <p class="eyebrow">From our parses</p>
+      <h1>Rankings &amp; Hall of Fame</h1>
+      <p class="lede">Who tops the meters, who is climbing, how the guild progresses, and the <b>fun &amp; shame</b>
+        awards. Straight from our logs.</p>
+        <span id="fetchWrap" class="actions" hidden>
+          <label for="fetchScope" class="sr-only">How many logs to fetch</label>
+          <select id="fetchScope" title="Last N = incremental (only new logs). All = full rebuild.">
+            <option value="1">Last 5</option>
+            <option value="2">Last 10</option>
+            <option value="3">Last 15</option>
+            <option value="0">All (rebuild)</option>
+          </select>
+          <button id="fetchBtn" onclick="fetchData()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+            <span>Fetch data</span>
+          </button>
+        </span>
+    </header>
 
     <div id="fetchMsg" class="msg err" role="alert" hidden></div>
 
@@ -113,9 +111,9 @@
             <button class="mbtn" data-m="tank" id="tankTab" hidden onclick="setMetric(this)">Tanking</button>
           </div>
         </div>
-        <ol class="lb" id="dps"></ol>
-        <ol class="lb" id="hps" hidden></ol>
-        <ol class="lb" id="tank" hidden></ol>
+        <div class="boardlist" id="dps"></div>
+        <div class="boardlist" id="hps" hidden></div>
+        <div class="boardlist" id="tank" hidden></div>
         <!-- empty state: shown (and replaces the rows) when the current filter has no data -->
         <div class="emptyrat" id="boardEmpty" hidden></div>
       </div>
@@ -153,12 +151,15 @@
     <section class="panel" data-panel="fun" hidden>
       <div class="funhead">
         <p class="sub" style="margin:0"><b class="gold">The cheese awards.</b> Superlatives from the parse
-          data — who carries, who's steady, who tops the meters, and who needs to warm up. Red cards are the
-          cheeky ones — all in good rat fun. 🧀</p>
+          data — who carries, who's steady, who tops the meters, and who needs to warm up. The shame is
+          all in good rat fun. 🧀</p>
         <div id="funDiff"></div>
       </div>
       <div id="funBody">
+        <h2 class="funsec" id="funFameHead">Hall of Fame</h2>
         <div class="funcards" id="funAwards"></div>
+        <h2 class="funsec shame" id="funShameHead">Hall of Shame</h2>
+        <div class="funcards" id="funShame"></div>
       </div>
       <div class="card emptyrat" id="funEmpty" hidden></div>
     </section>
@@ -176,6 +177,8 @@
   <!-- shared logs plumbing + the ONE source of truth for the Fun & Shame superlatives -->
   <script src="../../assets/js/logs-core.js"></script>
   <script src="../../assets/js/fun-awards.js"></script>
+  <script src="../../assets/js/nav.js"></script>
+  <script src="../../assets/js/banner-art.js"></script>
   <script src="rankings.js"></script>
 </body>
 

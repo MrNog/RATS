@@ -1,0 +1,227 @@
+{
+ "alturas/alturas.png": {
+  "x": 1.0,
+  "y": 0.345,
+  "z": 1.235
+ },
+ "ardil/ardil.png": {
+  "x": 1.0,
+  "y": 0.45,
+  "z": 1.195
+ },
+ "coizinho/coizinho.png": {
+  "x": 1.0,
+  "y": 0.387,
+  "z": 1.385
+ },
+ "cryptwall/cryptwall.png": {
+  "x": 0.855,
+  "y": 0.265,
+  "z": 1.372
+ },
+ "dknutela/dknutela.png": {
+  "x": 1.0,
+  "y": 0.716,
+  "z": 1.103
+ },
+ "fazcafe/fazcafe.png": {
+  "x": 0.9,
+  "y": 0.0,
+  "z": 1.35
+ },
+ "foug/foug.png": {
+  "x": 1.0,
+  "y": 0.616,
+  "z": 1.262
+ },
+ "foug/fouug.png": {
+  "x": 1.0,
+  "y": 0.241,
+  "z": 1.106
+ },
+ "foug/sarveil.png": {
+  "x": 1.0,
+  "y": 0.122,
+  "z": 1.559
+ },
+ "franzherman/franzherman.png": {
+  "x": 0.949,
+  "y": 0.474,
+  "z": 1.655
+ },
+ "gathlock/gathlock.png": {
+  "x": 0.922,
+  "y": 0.909,
+  "z": 1.38
+ },
+ "grokara/grokara.png": {
+  "x": 1.0,
+  "y": 0.793,
+  "z": 1.389
+ },
+ "grokara/unfrostblood.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.303
+ },
+ "grunho/grunho.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.45
+ },
+ "hartlinz/hartlinz.png": {
+  "x": 0.84,
+  "y": 0.296,
+  "z": 1.7
+ },
+ "icycry/icycry.png": {
+  "x": 1.0,
+  "y": 0.724,
+  "z": 1.487
+ },
+ "jiskob/jiskob.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.4
+ },
+ "khaddash/khaddash.png": {
+  "x": 0.8,
+  "y": 0.0,
+  "z": 1.45
+ },
+ "kinven/kinven.png": {
+  "x": 0.812,
+  "y": 0.329,
+  "z": 1.636
+ },
+ "kobee/kobee.png": {
+  "x": 0.523,
+  "y": 0.648,
+  "z": 1.364
+ },
+ "lecoque/lecoque.png": {
+  "x": 0.5,
+  "y": 0.5,
+  "z": 1.0
+ },
+ "liyondry/liyondry.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.066
+ },
+ "magoluso/magoluso.png": {
+  "x": 1.0,
+  "y": 0.144,
+  "z": 1.646
+ },
+ "mijinho/mijinho.png": {
+  "x": 1.0,
+  "y": 0.105,
+  "z": 1.364
+ },
+ "mojobimbo/mojobimbo.png": {
+  "x": 1.0,
+  "y": 0.513,
+  "z": 1.445
+ },
+ "mongoloide/mongoloide-ret.png": {
+  "x": 1.0,
+  "y": 0.5,
+  "z": 1.25
+ },
+ "mongoloide/mongoloide.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.292
+ },
+ "okanor/okanata.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.09
+ },
+ "okanor/okanath.png": {
+  "x": 1.0,
+  "y": 0.813,
+  "z": 1.051
+ },
+ "okanor/okanor.png": {
+  "x": 0.939,
+  "y": 0.18,
+  "z": 1.587
+ },
+ "okanor/okanstorm.png": {
+  "x": 1.0,
+  "y": 0.106,
+  "z": 1.255
+ },
+ "okanor/okanthorn.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.051
+ },
+ "onetreeheals/onetreeheals.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.416
+ },
+ "pamevoid/pamevoid.png": {
+  "x": 1.0,
+  "y": 0.811,
+  "z": 1.043
+ },
+ "radnah/radnah.png": {
+  "x": 1.0,
+  "y": 0.248,
+  "z": 1.266
+ },
+ "rellik/rellik.png": {
+  "x": 1.0,
+  "y": 0.331,
+  "z": 1.476
+ },
+ "setanegra/setanegra.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.015
+ },
+ "shmurda/shmurda.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.043
+ },
+ "shockaa/shockaa.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.022
+ },
+ "solanarrage/solanarrage.png": {
+  "x": 1.0,
+  "y": 0.0,
+  "z": 1.277
+ },
+ "tchilly/tchilly.png": {
+  "x": 0.667,
+  "y": 0.424,
+  "z": 1.523
+ },
+ "twihnz/twihnz.png": {
+  "x": 0.965,
+  "y": 0.685,
+  "z": 1.487
+ },
+ "yahmom/yahmom.png": {
+  "x": 1.0,
+  "y": 0.779,
+  "z": 1.339
+ },
+ "yakiroo/yakiroo.png": {
+  "x": 0.906,
+  "y": 0.43,
+  "z": 1.658
+ },
+ "zamorei/zamorei.png": {
+  "x": 1.0,
+  "y": 0.046,
+  "z": 1.43
+ }
+}
