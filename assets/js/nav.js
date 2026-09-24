@@ -4,7 +4,19 @@
 // (links stay relative, so the site works on file://, a local server and GitHub Pages);
 // data-page marks the current link; data-area="officer" switches to the officer tools.
 (function () {
-  const DISCORD_URL = "https://discord.gg/v7Unzr7tUZ"; // the button hides when this is empty
+  // The invite is set on the Admin page and lives in Firebase `config/discordInvite`; this is the
+  // fallback until that read lands. The last value seen is kept per browser so the bar draws it
+  // at once, and Firebase is read once per browser session (a ~40-byte node).
+  const DISCORD_DEFAULT = "https://discord.gg/f75wq2Xbda";
+  const DISCORD_NODE = "https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/config/discordInvite.json";
+  const DISCORD_LS = "ratsDiscordUrl";
+  const DISCORD_SS = "ratsDiscordChecked";
+  const INVITE_RE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
+  let DISCORD_URL = DISCORD_DEFAULT;
+  try {
+    const c = localStorage.getItem(DISCORD_LS);
+    if (c && INVITE_RE.test(c)) DISCORD_URL = c;
+  } catch (e) {}
 
   const PUBLIC = [
     ["addons", "Addons", "public/addons/index.html"],
@@ -75,4 +87,25 @@
     const open = bar.classList.toggle("open");
     btn.setAttribute("aria-expanded", open ? "true" : "false");
   });
+
+  let checked = false;
+  try {
+    checked = sessionStorage.getItem(DISCORD_SS) === "1";
+  } catch (e) {}
+  if (!checked && typeof fetch === "function") {
+    fetch(DISCORD_NODE, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((v) => {
+        try {
+          sessionStorage.setItem(DISCORD_SS, "1");
+        } catch (e) {}
+        if (typeof v !== "string" || !INVITE_RE.test(v)) return;
+        try {
+          localStorage.setItem(DISCORD_LS, v);
+        } catch (e) {}
+        const a = bar.querySelector(".sb-discord");
+        if (a) a.href = v;
+      })
+      .catch(() => {});
+  }
 })();

@@ -616,6 +616,27 @@ window.RatsData = (function () {
     try { localStorage.removeItem(API_KEY_LS); } catch (e) {}
   }
 
+  // ---- Discord invite: public, so stored plain in `config/discordInvite` (the site bar reads it) ----
+  // Accepts a full invite link or just the code ("f75wq2Xbda").
+  const INVITE_RE = /^https:\/\/(discord\.gg|discord\.com\/invite)\/[\w-]+$/;
+  function normInvite(v) {
+    v = (v || "").trim().replace(/\/+$/, "");
+    if (/^[\w-]+$/.test(v)) v = "https://discord.gg/" + v;
+    v = v.replace(/^(https?:\/\/)?(www\.)?/, "https://");
+    return INVITE_RE.test(v) ? v : null;
+  }
+  async function saveDiscordInvite(v) {
+    const url = normInvite(v);
+    if (!url) throw new Error("That isn't a Discord invite (discord.gg/… or just the code).");
+    if (!fbOn()) throw new Error("Firebase off.");
+    await fbPut("config/discordInvite", url);
+    try { localStorage.setItem("ratsDiscordUrl", url); } catch (e) {}
+    return url;
+  }
+  async function loadDiscordInvite() {
+    return fbOn() ? await fbGetSafe("config/discordInvite") : null;
+  }
+
   // ---- API-usage monitor ----------------------------------------------------------------------------
   // The wow-logs server's X-RateLimit-Monthly-Remaining header is UNRELIABLE — it stays pinned at 14999
   // no matter how many calls we make (only the per-MINUTE Remaining actually decrements). See the dev
@@ -913,6 +934,8 @@ window.RatsData = (function () {
     saveApiKey,
     loadApiKey,
     clearApiKey,
+    saveDiscordInvite,
+    loadDiscordInvite,
     loadApiUsage,
     bumpApiUsage,
     checkApiUsage,

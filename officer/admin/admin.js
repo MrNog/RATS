@@ -120,7 +120,35 @@ function showConsole() {
   renderHooks();
   renderStatus();
   prefillApiKey();
+  prefillDiscordInvite();
   refreshApiUsage();
+}
+
+async function prefillDiscordInvite() {
+  const el = document.getElementById("discordInvite");
+  if (!el) return;
+  try {
+    const v = await RatsData.loadDiscordInvite();
+    if (v) el.value = v;
+  } catch (e) {}
+}
+
+async function saveDiscordInvite() {
+  const el = document.getElementById("discordInvite");
+  try {
+    const url = await RatsData.saveDiscordInvite(el.value);
+    el.value = url;
+    msg("Discord invite saved — the site bar uses it for every visitor.");
+  } catch (e) {
+    msg("Couldn't save: " + (e && e.message ? e.message : e), "#ff6b6b");
+  }
+}
+
+function testDiscordInvite() {
+  let v = (document.getElementById("discordInvite").value || "").trim();
+  if (!v) { msg("Paste an invite first.", "#ff6b6b"); return; }
+  if (/^[\w-]+$/.test(v)) v = "https://discord.gg/" + v;
+  window.open(v, "_blank", "noopener");
 }
 
 // Prefill the API-key field from the shared (encrypted) store — localStorage first, Firebase once.

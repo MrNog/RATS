@@ -73,6 +73,17 @@
       </div>
 
       <div class="card">
+        <h2>&#128279; Discord invite</h2>
+        <p class="sub">The link behind the <strong style="color:#fff">Discord</strong> button in the site bar. Paste a
+          full invite or just the code. Saves to Firebase &#8212; every visitor gets it, no commit needed.</p>
+        <div class="frow">
+          <input type="text" id="discordInvite" placeholder="https://discord.gg/&#8230; (or just the code)" autocomplete="off">
+          <button type="button" class="dark" onclick="testDiscordInvite()">Open</button>
+          <button class="btn" onclick="saveDiscordInvite()">&#128190; Save invite</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>&#128227; Discord webhooks</h2>
         <p class="sub">Names are <strong style="color:#fff">fixed</strong> &#8212; tools find the right hook by name.
           Only paste/edit the URL. Leave blank to disable. Stored only in your browser &#8212; never committed.</p>
