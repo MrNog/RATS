@@ -1490,9 +1490,16 @@ dialog#artlb::backdrop {
 
 /* ================= profile layout (mock D): band header · number strip · rail | tabs · art ================= */
 /* the raider's banner behind the header, like every other page's band */
-.band.raider { height: 440px }
+/* The band grows with the screen so it keeps roughly the banners' own shape (~2.4:1): at a fixed 440px
+   a wide screen made it ~4.3:1, and "cover" then zoomed each banner until only a head and a shoulder
+   were left. The foot fades later too, so more of the picture shows before it melts into the page. */
+.band.raider { height: clamp(440px, 42vw, 980px) }
 .band.raider[hidden] { display: none }
-.band.raider img { object-position: 75% 28%; opacity: .75 }
+.band.raider img {
+  object-position: 75% 20%; opacity: .85;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+}
 .band.raider::after {
   background: linear-gradient(90deg, var(--bg) 0%, rgba(20, 21, 23, .85) 34%, rgba(20, 21, 23, .15) 70%, rgba(20, 21, 23, 0) 100%);
 }

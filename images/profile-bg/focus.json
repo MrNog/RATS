@@ -144,10 +144,15 @@
   "y": 0.813,
   "z": 1.051
  },
- "okanor/okanor.png": {
+ "okanor/okanor-v1.png": {
   "x": 0.939,
   "y": 0.18,
   "z": 1.587
+ },
+ "okanor/okanor.png": {
+  "x": 1.0,
+  "y": 1.0,
+  "z": 1.218
  },
  "okanor/okanstorm.png": {
   "x": 1.0,
