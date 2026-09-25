@@ -320,6 +320,20 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/ToC Heroic Jaraxxus.png",
+    "title": "ToC Heroic Jaraxxus",
+    "caption": "",
+    "date": "2026-09"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/ToGC Anubarak.png",
+    "title": "ToGC Anubarak",
+    "caption": "",
+    "date": "2026-09"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Val'anyr.png",
     "title": "Val'anyr",
     "caption": "",
@@ -386,6 +400,14 @@
   },
   {
     "cat": "warchiefs",
+    "file": "images/warchiefs/Foug Hunter.png",
+    "title": "Foug Hunter",
+    "caption": "",
+    "date": "2026-09",
+    "people": "foug"
+  },
+  {
+    "cat": "warchiefs",
     "file": "images/warchiefs/Foug.png",
     "title": "Foug",
     "caption": "",
@@ -415,6 +437,14 @@
     "caption": "",
     "date": "2026-07",
     "people": "kobee"
+  },
+  {
+    "cat": "warchiefs",
+    "file": "images/warchiefs/Okanor v1.png",
+    "title": "Okanor V #1",
+    "caption": "",
+    "date": "2026-09",
+    "people": "okanor"
   },
   {
     "cat": "warchiefs",
