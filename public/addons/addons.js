@@ -4,7 +4,6 @@ const ADDONS = [
     name: "Okanvil",
     emoji: "⚒️",
     ours: true, // the guild's own — gets the big card with art
-    hidden: true, // until launch, same as the hub card
     art: "../../images/_thumb/hub/okanvil.webp",
     desc: "Our own: raid notes, loot council, invites, logs. /okanvil",
     dl: "https://github.com/MrNog/Okanvil/releases/latest/download/Okanvil.zip",
@@ -25,8 +24,8 @@ const ADDONS = [
     gh: "https://github.com/Zidras/DBM-Warmane",
   },
   {
-    // Goes once Okanvil is live (its loot council replaces this): add `hidden: true`.
     name: "RCLootCouncil",
+    hidden: true, // Okanvil's loot council replaces it
     emoji: "🎲",
     desc: "Loot council voting and distribution, Warmane 3.3.5 build.",
     dl: "https://github.com/MrNog/RCLlootCouncil---WARMANE---3.3.5/archive/refs/heads/main.zip",
