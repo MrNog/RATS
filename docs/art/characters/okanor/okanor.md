@@ -182,3 +182,34 @@ an alt look when the commission is specifically for that toon. Each alt's profil
 - **Palette / light:** dark leather and fur, bone accents, deep shadow · feral emerald-into-orange (`#FF7C0A`) off the claws.
 - **Scenes:** low predatory feral lunge, half-shifted, claws leading (banner DONE); mid-leap feral roar in an
   ancient grove / overgrown ruin — defiant, never slaying.
+
+### Warchief portrait card v2 (Val'anyr, 21:9, name + title) — 2026-09-25
+
+Replaces `images/warchiefs/Okanor.png`, which still shows the pre-lock look (ivory armor, halo, cathedral).
+Personality beat: the guild's planner and tool-maker, the one who keeps every run smooth. He stands at the
+raid-plan table in a war-tent, not on a battlefield. **Rendered and live** as `images/warchiefs/Okanor.png`
+(old pre-lock card kept as `Okanor v1.png`).
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen character card (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay.
+
+Subject: Okanor, an anthropomorphic Holy Paladin rat — dark fur, prominent whiskers, sharp intelligent amber-lit eyes under a heavy brow, a strong medium-length muzzle and a square jaw, clawed hands; a stern, hardened frontline healer, a dark knight who wields the Light — calm, focused, the one who has already thought three pulls ahead. NOT a soft angelic saint. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Heavy battle-worn DARK plate — charcoal and blackened iron with bronze-gold trim and burning AMBER runes glowing like forge-fire along every seam, scuffed and dented (NOT ivory, white or pale). NO halo, NO wings.
+
+His gear — exactly TWO objects: (1) in his RIGHT hand ONE legendary titan-forged one-handed WARHAMMER (NOT a mace), held upright with its head resting on the table's edge: a heavy BLOCK-SHAPED head with TWO FLAT square striking faces, pale silver-steel wrapped in broad bands of polished GOLD, fine straight keeper-runes glowing soft pale BLUE-WHITE, a small gold crest on top, a long slender leather-wrapped haft with gold rings and a heavy gold pommel. (2) ONE Horde-crested shield with amber rune-glow on its crest, LEANING against the side of the table beside him, not held. NO other weapons.
+
+Pose: he stands at a heavy war-table, leaning slightly over it, LEFT hand flat on a large map with one claw pointing at a marker, head turned to look out of the frame toward the viewer as if about to explain the plan. Full standing figure from head to boots in the central third: face large, clear and readable, correct head-to-body proportion, NOT oversized — headroom above for the title and floor below. Joints bend naturally, weight believable.
+
+The table: a hand-drawn map of a frozen citadel spread across it, small carved raid markers (skull, star, circle, cross) placed on it, a few rolled parchments with columns of timings and numbers, a quill in an inkpot, a small brass hourglass. Everything lies ON the table — nothing floats.
+
+Setting: the inside of a Horde war-tent at night — heavy hide walls, wooden poles, a hanging blood-red Horde banner behind him, two iron braziers burning low, the tent flap half open onto a dark snowy camp with distant watch-fires.
+
+Visual identity: brush-stroke name "OKANOR" centered across the TOP CENTER directly above the rat, sandy tan-gold (#C8A96E), rough hand-painted brush lettering with bristle texture and grunge edges; below it, wide-spaced subtitle "THE LIGHTKEEPER"; below that a small Horde insignia flanked by short gold lines —⧖—. Small "RATS" + Horde insignia watermark BOTTOM-RIGHT, faint glow.
+
+Color palette & lighting: charcoal plate, bronze-gold trim, burning amber runes (#C8A96E), warm brazier orange, the blood-red banner, deep shadow. Key light: warm amber from his runes and the braziers; the hammer's calm pale blue-white and gold glow as a cool secondary accent lighting the map. High contrast, readable mid-tones, warm and grounded.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO sparks, NO heavy haze, NO blown-out bloom. Razor-sharp focus on his face, hands and the hammer head.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: the hammer drawn as a round ball-headed mace, a spiked morningstar, a flanged mace, a flail, a maul or an axe; a second hammer; the shield held in the same hand as the hammer; a floating book, tome, libram or anything floating; ivory / white / pale armor, a halo, wings, holy rays, an angelic soft healer; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated or broken joints, a floating or over-tilted head, a broken or too-long neck; gore, blood, enemies; the name anywhere but top-center; cute / pretty / soft styling, pastel or pink colours, chubby / fat build; floating particles, speckled noise, heavy haze; modern clothing, screens, computers, human faces, Alliance symbols, excessive bloom, plain white background.
+```

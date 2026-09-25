@@ -185,3 +185,80 @@ Art style: World of Warcraft cinematic concept art, dark-souls Horde style, pain
 
 Do NOT include: any lettering, title, name, watermark, logo or insignia; two tails or any extra tail, extra or duplicated limbs/arms/heads, extra or duplicated weapons, a gun, an arrow nocked or bow drawn, malformed/fused hands, wrong finger count; over-rotated/hyper-extended/broken joints, arms bending the wrong way or twisted behind the body, a detached/floating/over-tilted head, a broken or too-long neck, impossible or unbalanced poses; cute/pretty/soft/dainty styling, pastel or pink colours, chubby/fat/overweight build, floating dust/ember particles, speckled noise, heavy haze, a busy left third, modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
 ```
+
+## 2026-09-25 — Unholy DK refresh (Warchiefs page)
+
+The Warchiefs art still showed him as the old Hunter (bow, furs). Three new pieces. A **tartan kilt panel**
+under the plate is carried over from the Hunter look as the nod to his Scottish roots (the group image already
+has it). Personality for any scene: the funniest rat on voice, tilts fast and loud ("ahhhhww, I'm tilted so
+fast!"), and a veteran who can play any class at the top.
+
+### 1 · Group image edit — NOT NEEDED
+
+`images/warchiefs/Warchiefs 5.png` already is the same line-up with Foug as the DK; it replaced
+`images/hub/warchiefs.jpg` (hub card + the Warchiefs page hero) on 2026-09-25. The edit prompt is kept below
+only in case the line-up changes again.
+
+```
+Edit the attached image. Change ONLY the rat on the far LEFT, under the green brush-lettered name "FOUG". Keep EVERYTHING else exactly as it is: the other five rats (Kobee, Okanor, Grunho, Rellik, Ardil), all six brush-lettered names with their colours and positions, the Horde banner, the burning city, the red sky, the lighting, the framing and the painting style. Do not move, crop, restyle or re-render anything else.
+
+Replace Foug's old hunter look (bow, quiver, fur mantle) with Foug as an UNHOLY DEATH KNIGHT, in the same spot, at the same height and scale, standing and facing the viewer like the others: dark fur, prominent whiskers, eyes glowing COLD NECROTIC GREEN, a rugged weathered veteran's face. Heavy battle-worn dark Death Knight plate — blackened iron with a bone-grey cast, spiked pauldrons, a tattered dark cloak, cold necrotic-green rune-glow along the seams — and a dark green-and-black TARTAN kilt panel hanging below the plate (his Scottish roots). TWO one-handed runeswords, ONE in each hand, held low and point-down at his sides, blades etched with glowing green runes. A small hunched risen ghoul crouched at his feet. EXACTLY ONE tail, one head, two arms, two legs.
+
+NO bow, NO quiver, NO arrows, NO shield, NO third weapon, NO two-handed sword. Keep the green name "FOUG" above him exactly as it is.
+```
+
+### 2 · Warchief portrait card — `images/warchiefs/Foug.png` (21:9, name + title) ✅ DONE
+
+Rendered first try (Acherus at dusk, crossed runeswords, tartan kilt, ghoul). The old Hunter card is kept as
+`images/warchiefs/Foug Hunter.png`.
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen character card (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay.
+
+Subject: Foug, an anthropomorphic Unholy Death Knight rat — dark fur, prominent whiskers, eyes glowing COLD NECROTIC GREEN, clawed hands; a rugged, weathered, battle-hardened veteran with a scarred muzzle, a lean hard jaw and a wry, knowing half-grin: the old soldier who has seen everything and still finds it funny. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Heavy battle-worn DARK Death Knight plate — blackened iron with a faint bone-grey cast, corroded edges, spiked pauldrons, a tattered dark cloak, cold necrotic-green rune-glow running the seams — and a dark green-and-black TARTAN kilt panel hanging below the breastplate (his Scottish roots).
+
+Weapons — exactly TWO: ONE one-handed RUNESWORD in EACH hand, both blades etched with runes glowing cold necrotic green. He holds them CROSSED LOW in an X in front of his knees, points toward the ground, relaxed and ready. NO shield, NO bow, NO third weapon, NOT one two-handed sword.
+
+Beside him: a hunched risen GHOUL crouched at his left boot, bony and grey, its eyes glowing the same green, looking up at him like a loyal hound.
+
+Pose: a grounded veteran's stance, feet apart, weight settled, chin slightly raised, looking straight out of the frame with that half-grin. Full standing figure in the central third: face large, clear and readable, correct head-to-body proportion, NOT oversized — headroom above for the title and floor below.
+
+Setting: the edge of Acherus, the Ebon Hold — the floating necropolis — at dusk, high above a snow-blasted Northrend: dark stone battlements, runed obelisks glowing faint green, a vast cold valley and frozen peaks far below, a teal-and-violet sky with the last thin line of orange sunset on the horizon.
+
+Visual identity: brush-stroke name "FOUG" centered across the TOP CENTER directly above the rat, sandy tan-gold (#C8A96E), rough hand-painted brush lettering with bristle texture and grunge edges; below it, wide-spaced subtitle "THE PROPHET"; below that a small Horde insignia flanked by short gold lines —⧖—. Small "RATS" + Horde insignia watermark BOTTOM-RIGHT, faint glow.
+
+Color palette & lighting: blackened iron, bone-grey, tartan green-and-black, deep shadow. COLD NECROTIC-GREEN rune and blade glow as the key light on him; cold teal dusk ambient behind; a thin warm sunset rim on his left shoulder so the silhouette separates from the sky. High contrast, readable mid-tones — NOT a black image.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on the face and hands; the rune glow is a clean edge-light, NOT dripping plague.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: a bow, quiver, arrows or furs (that was his old Hunter look); a shield; a third weapon; one big two-handed sword; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count, hands in the middle of a blade; over-rotated or broken joints, a floating or over-tilted head, a broken or too-long neck; plague clouds, dripping slime, toxic-green sludge; gore, blood, corpses; the name anywhere but top-center; cute / pretty / soft styling, pastel or pink colours, chubby / fat build; floating particles, speckled noise, heavy haze; modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
+```
+
+### 3 · Profile banner v2 — `images/profile-bg/foug/foug.png` (21:9, NO text) ✅ DONE
+
+v1 is a near-black strip where only one green blade reads. v2: brighter, a war-cry in a blizzard (his loud,
+funny side), the ghoul lunging with him. Rendered and live (replaced v1 in place).
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen profile banner (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only.
+
+Subject: Foug, an anthropomorphic Unholy Death Knight rat — dark fur, prominent whiskers, eyes glowing COLD NECROTIC GREEN, clawed hands; a rugged, scarred, battle-hardened veteran. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Heavy battle-worn DARK Death Knight plate — blackened iron with a bone-grey cast, spiked pauldrons, a tattered dark cloak whipping in the wind, cold green rune-glow along the seams — and a dark green-and-black TARTAN kilt panel below the breastplate, snapping in the gale.
+
+Weapons — exactly TWO: ONE one-handed RUNESWORD in EACH hand, blades glowing cold necrotic green. NO shield, NO bow, NO third weapon, NOT a two-hander.
+
+Pose: a full-throated WAR-CRY mid-charge — head thrown forward, jaws wide open in a roar, whiskers flared; the right runesword swept back low behind his hip, the left thrust forward and up, arm extended. Body turned three-quarters toward the LEFT of the frame, leaning into the wind. A gaunt risen GHOUL lunges forward on all fours beside his legs, green eyes blazing. Joints bend naturally, the head sits naturally on the neck, weight believable.
+
+Composition: 21:9 strip. Foug fills the RIGHT portion, an upper-body-to-knee crop, face large and readable. The LEFT third stays darker and low-detail — blowing snow over dim rock — as negative space for text. Camera slightly low.
+
+Setting: a snow-blasted Northrend ridge in a blizzard at twilight — jagged dark rock, drifts of snow, snow streaking sideways across the frame BEHIND him, the faint outline of a far spire in the storm.
+
+Color palette & lighting: blackened iron, bone-grey, tartan green-and-black, cold blue-white snow. COLD NECROTIC-GREEN from the blades, runes and eyes is the dominant glow and lights his roaring face from below; a cool pale twilight fills the storm so the scene has readable MID-TONES — NOT a black image, the armor and the ghoul must read clearly.
+
+Render quality: CLEAN and crisp — NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom; snow only as soft streaks in the background, NEVER a speckle over his face. Razor-sharp focus on the face, hands and blades.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: any lettering, title, name, watermark, logo or insignia; a bow, quiver, arrows or furs; a shield; a third weapon; one big two-handed sword; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated or broken joints, a floating or over-tilted head, a broken or too-long neck; plague clouds, dripping slime; gore, blood, corpses, enemies; the subject centered or filling the left third; an almost-black image; cute / pretty / soft styling, pastel or pink colours, chubby / fat build; speckled noise, heavy haze; modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
+```

@@ -26,10 +26,27 @@ ART = {
     "grunho-the-five-day-exile": "images/warchiefs/Grunho Banned.png",
     "foug-three-deaths": "images/lore/foug dk reroll.png",
     "ninjacaldas-turning": "images/lore/ninja shama reroll.png",
-    "trial-of-the-crusader": "images/banners/ToC 25.png",
-    "heroic-toc-first-kill": "images/banners/ToGC 25.png",
-    "togc-10-tribute-to-insanity": "images/banners/ToC 10.png",
+    "trial-of-the-crusader": "images/wallpaper/Rats ToC 4k.png",
+    "heroic-toc-first-kill": "images/lore/ToC Heroic Jaraxxus.png",
+    "togc-10-tribute-to-insanity": "images/lore/ToGC Anubarak.png",
     "lich-king-10-kill": "images/lore/Kingslayers alt.png",
+    "foug-new-era": "images/lore/The paladin Fight.png",
+    "nutelaa-soul-reforged": "images/lore/nutelaa reroll.png",
+    "yogg-saron-madness": "images/lore/Yogg Sanity.png",
+    "razorscale-chained-drake": "images/lore/Razor Achiv.png",
+    "grunho-the-pardon": "images/lore/Grunho love.png",
+    "when-the-gate-learned-to-choose": "images/warchief-fangs/Fangs End.png",
+}
+
+# The day a tale was posted, for tales added here after they went out on Discord (the commit date
+# would be the day they were copied in, not the day they were told).
+DATES = {
+    "foug-new-era": "2026-06-27",
+    "nutelaa-soul-reforged": "2026-06-27",
+    "yogg-saron-madness": "2026-06-30",
+    "razorscale-chained-drake": "2026-07-01",
+    "when-the-gate-learned-to-choose": "2026-09-19",
+    "grunho-the-pardon": "2026-09-22",
 }
 
 
@@ -130,7 +147,7 @@ def main():
             "title": title,
             "body": for_site(body),
             "image": ART.get(slug, ""),
-            "date": first_commit_date(os.path.join("docs", "art", "chronicles", name)),
+            "date": DATES.get(slug) or first_commit_date(os.path.join("docs", "art", "chronicles", name)),
         }
         if slug in EXTRA_ART:
             tale["images"] = EXTRA_ART[slug]
