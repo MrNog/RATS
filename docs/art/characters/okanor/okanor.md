@@ -63,6 +63,54 @@ locked look survives whatever the scene's ambient light is.
   FLANGED head, NOT a round ball mace" for a cleaner weapon.
 - Appears in the group/Fangs line-ups (paladin gold glow) — see STYLE.md Templates G/H.
 
+### Val'anyr variant (the guild's legendary — use when the piece is about it, or on request)
+
+Swap ONLY the war-mace for Val'anyr; the shield and everything else stay locked. Describe it by SHAPE —
+the word "mace" makes models draw a round ball head, so the prompt must say **WARHAMMER, NOT a mace**:
+
+> in his RIGHT hand ONE legendary titan-forged one-handed WARHAMMER (NOT a mace): a heavy BLOCK-SHAPED head
+> with TWO FLAT square striking faces, pale silver-steel wrapped in broad bands of polished GOLD, fine
+> straight keeper-runes glowing soft pale BLUE-WHITE, a small gold crest on top, a long slender
+> leather-wrapped haft with gold rings and a heavy gold pommel. A calm clean silver-gold and blue-white
+> radiance on the metal, not fire, not particles.
+
+Negatives to add: *a round ball-headed mace, a spiked morningstar, a flanged mace, a flail, a two-handed
+maul, an axe blade on the hammer*. List its blue-white glow in the lighting so it reads apart from his amber
+runes. Look is from memory of the in-game model — check it against a reference render.
+
+- **Used in:** `chronicles/lich-king-10-kill.md` (both prompts; art in `images/lore/Kingslayers*.png`) ·
+  profile banner v2 (below).
+
+### Profile banner v2 (Val'anyr, 21:9, no text) — 2026-09-25
+
+The site's banners are actually ~21:9 (2.3–2.5:1), not the 4:1 in STYLE.md. v1 (`okanor.png`) is standing,
+facing left, flanged mace raised, amber cathedral. v2 changes all of it: kneeling radiant strike, Val'anyr
+driven into the ice, Icecrown ramparts at night, cold blue vs his amber. **Rendered and live** as
+`images/profile-bg/okanor/okanor.png` (2026-09-25); v1 kept as `okanor-v1.png`. The Val'anyr shape
+description worked first time — reuse it.
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen profile banner (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only.
+
+Subject: Okanor, an anthropomorphic Holy Paladin rat — dark fur, prominent whiskers, sharp fierce amber-lit eyes under a heavy brow, a strong medium-length muzzle and a square jaw, clawed hands; a stern, hardened frontline healer, a dark-knight who wields the Light, NOT a soft angelic saint. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Heavy battle-worn DARK plate — charcoal and blackened iron with bronze-gold trim and burning AMBER runes glowing like forge-fire along every seam, frost-rimed, scuffed and dented (NOT ivory, white or pale).
+
+Weapons — exactly TWO objects: (1) in his RIGHT hand ONE legendary titan-forged one-handed WARHAMMER (NOT a mace): a heavy BLOCK-SHAPED head with TWO FLAT square striking faces, pale silver-steel wrapped in broad bands of polished GOLD, fine straight keeper-runes glowing soft pale BLUE-WHITE, a small gold crest on top, a long slender leather-wrapped haft with gold rings and a heavy gold pommel. (2) ONE Horde-crested shield on his LEFT forearm, amber rune-glow on the crest. NO other weapons; one item per hand, never stacked.
+
+Pose: a kneeling radiant strike, the instant of impact. He drops onto his left knee on the ice, body turned three-quarters toward the LEFT of the frame, and drives the flat face of the warhammer straight down into the frozen flagstones in front of him with his right hand, arm extended and elbow slightly bent. His left forearm holds the shield braced upright beside him, rim resting on the ice. Head up, jaw set, eyes looking past the camera into the dark. Where the hammer strikes, a single clean RING of golden light races outward across the frost, cracking the rime in a perfect circle. Joints bend naturally, the head sits naturally on the neck, weight believable.
+
+Composition: 21:9 strip. Okanor fills the RIGHT portion of the frame, a bust-to-knee crop, face large and readable. The LEFT third stays DARK and low-detail — empty night, dim frozen stone fading to black — as negative space for text. Low camera at ice level, slightly below him.
+
+Setting: the outer ramparts of a colossal frozen citadel at night — black saronite battlements rimed with ice, a sheer drop into cloud beyond the wall, a distant jagged spire barely visible against the dark sky, thin snow blowing past in the far background only.
+
+Color palette & lighting: charcoal plate, bronze-gold trim, burning amber runes (#C8A96E), cold ice-blue and black stone. Dominant GOLD/AMBER key light from his runes and the ring of light, rising from below and catching his muzzle, the shield rim and the hammer; the hammer's own calm pale blue-white and gold glow as a smaller secondary accent; cold blue night as the only other light. High contrast, dark desaturated environment so he reads clearly.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO sparks, NO heavy haze, NO blown-out bloom; the ring of light is a smooth clean band, not particles. Razor-sharp focus on his face, hands and the hammer head.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: any lettering, title, name, watermark, logo or insignia outside the shield crest; the hammer drawn as a round ball-headed mace, a spiked morningstar, a flanged mace, a flail, a two-handed maul or an axe; two tails or any extra tail, extra or duplicated limbs/arms/heads, extra or duplicated weapons, a weapon and shield in the SAME hand, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, arms bending the wrong way, a detached / floating / over-tilted head, a broken or too-long neck, impossible or unbalanced poses; a floating book / tome / libram; ivory / white / pale armor, angelic soft healer, wings, halo; cute / pretty / soft / dainty styling, pastel or pink colours, chubby / fat / overweight build; floating dust/ember particles, speckled noise, heavy haze, busy snowfall in front of him; the subject centered or filling the left third; a roof or hall overhead; gore, blood, enemies; modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
+```
+
 ### Approved desktop-wallpaper prompt (16:9, text-free)
 
 ```

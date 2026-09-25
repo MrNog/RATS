@@ -90,11 +90,12 @@ a:hover .read::after { transform: translateX(4px) }
 
 /* ---------- one tale ---------- */
 .reader { padding-bottom: 20px }
-.r-art { margin: 0; height: min(52vh, 520px); position: relative; overflow: hidden; background: #0f0f10 }
-.r-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 35% }
+/* The tale's cover, big: most of the first screen is the art, the title rising out of its foot. */
+.r-art { margin: 0; height: min(62vh, 640px); position: relative; overflow: hidden; background: #0f0f10 }
+.r-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 40% }
 .r-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, var(--bg) 0%, transparent 55%) }
 .r-art:empty { height: 40px }
-.r-in { max-width: 740px; margin: -90px auto 0; padding: 0 22px; position: relative; z-index: 1 }
+.r-in { max-width: 900px; margin: -90px auto 0; padding: 0 22px; position: relative; z-index: 1 }
 .r-art:empty + .r-in { margin-top: 30px }
 .r-back { display: inline-block; margin-bottom: 26px; color: var(--text-dim-2); text-decoration: none; font-size: 14px }
 .r-back:hover { color: var(--accent-hi) }
@@ -104,7 +105,7 @@ a:hover .read::after { transform: translateX(4px) }
   text-wrap: balance;
 }
 .r-body { font-family: var(--lo-book); font-size: 20px; line-height: 1.75; color: var(--lo-ink) }
-.r-body p { margin: 0 0 1.1em }
+.r-body p { margin: 0 0 1.1em; text-align: justify; hyphens: auto; -webkit-hyphens: auto }
 .r-body strong { color: var(--white); font-weight: 500 }
 .r-body em { color: #c8bfae }
 .r-body h2, .r-body h3, .r-body h4 {
@@ -122,7 +123,7 @@ a:hover .read::after { transform: translateX(4px) }
 /* a drop cap on the first real paragraph */
 .r-body > p.opening::first-letter {
   float: left; font-family: var(--lo-display); font-size: 3.4em; line-height: .9;
-  padding: 6px 10px 0 0; color: var(--accent-hi);
+  padding: 6px 18px 0 0; color: var(--accent-hi);
 }
 
 .r-nav {
@@ -135,9 +136,42 @@ a:hover .read::after { transform: translateX(4px) }
 .r-nav #rNext { text-align: right }
 .r-nav a:empty { visibility: hidden }
 
+/* ---------- special tales ---------- */
+.special {
+  display: inline-block; margin: 0 0 12px; padding: 5px 12px; border-radius: 999px;
+  border: 1px solid rgba(224, 184, 96, .55); background: rgba(224, 184, 96, .08);
+  color: var(--accent-hi); font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+}
+.special[hidden] { display: none }
+.featured.is-special { border-color: rgba(224, 184, 96, .55); box-shadow: 0 0 0 1px rgba(224, 184, 96, .18), 0 18px 50px rgba(0, 0, 0, .45) }
+
+/* pictures inside a tale: wider than the text column, like plates in a book */
+.inline-art { margin: 2em -60px 2.2em }
+.inline-art img { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 18px 50px rgba(0, 0, 0, .55) }
+.inline-art figcaption { margin-top: 10px; text-align: center; color: var(--text-dim-2); font-family: var(--lo-book); font-style: italic; font-size: 16px }
+
+/* the roll of names at the end of a special tale */
+.roll { margin: 3em 0 1em; padding-top: 2em; border-top: 1px solid var(--border) }
+.roll h2 { font-family: var(--lo-display); font-weight: 400; color: var(--accent-hi); text-align: center; letter-spacing: .06em; margin: 0 0 .3em; font-size: 30px }
+.roll-sub { text-align: center; color: var(--text-dim-2); margin: 0 0 1.4em; font-family: var(--lo-book); font-style: italic; font-size: 16px }
+.roll-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px }
+.roll-card { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #1b1c1f center / cover no-repeat }
+.roll-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(10, 10, 12, .92) 0%, rgba(10, 10, 12, .1) 60%) }
+.roll-card span { position: absolute; left: 10px; bottom: 8px; z-index: 1; color: var(--white); font-weight: 600; font-size: 14px }
+.roll-card:first-child { outline: 1px solid var(--accent-hi) }
+.roll-card:first-child span::before { content: "👑 " }
+
 .foot { max-width: var(--lo-wrap); margin: 30px auto 0; padding: 26px 20px 40px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 13px }
 
+/* big screens: a wider column and a slightly larger book face, so the line length stays comfortable */
+@media (min-width: 1600px) {
+  .r-in { max-width: 1040px }
+  .r-body { font-size: 21px }
+}
+
 @media (max-width: 900px) {
+  .inline-art { margin-left: 0; margin-right: 0 }
+  .roll-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
   .featured { grid-template-columns: minmax(0, 1fr) }
   .featured .art { min-height: 0; aspect-ratio: 16 / 9 }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }

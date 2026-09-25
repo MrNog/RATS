@@ -309,6 +309,30 @@
     "date": "2026-06"
   },
   {
+    "cat": "lore",
+    "file": "images/lore/Kingslayers alt.png",
+    "title": "Kingslayers Alt",
+    "caption": "",
+    "date": "2026-09",
+    "people": "grunho,okanor,rellik,kobee,onetreeheals,shmurda,lecoque,tchilly,cryptwall,yahmom"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/Kingslayers Rite.png",
+    "title": "Kingslayers Rite",
+    "caption": "The old rite of the Sewer, performed on the fallen king.",
+    "date": "2026-09",
+    "people": "grunho,okanor,rellik,kobee,onetreeheals,shmurda,lecoque,tchilly,cryptwall,yahmom"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/Kingslayers.png",
+    "title": "Kingslayers",
+    "caption": "The ten Kingslayers on the Frozen Throne after the 10-man Lich King kill.",
+    "date": "2026-09",
+    "people": "grunho,okanor,rellik,kobee,onetreeheals,shmurda,lecoque,tchilly,cryptwall,yahmom"
+  },
+  {
     "cat": "warchief-fangs",
     "file": "images/warchief-fangs/Fangs 1.png",
     "title": "Fangs #1",

@@ -56,13 +56,18 @@ function artHtml(t) {
     : '<div class="art"><span class="rat">🐀</span></div>';
 }
 
+// A special tale carries a label ("Kingslayer") and heads the page whatever its date.
+function specialLabel(t) {
+  return t.special ? "👑 Special chronicle" + (t.special.label ? " · " + t.special.label : "") : "";
+}
+
 function renderList() {
   const [first, ...rest] = TALES;
   document.getElementById("featured").innerHTML = first
-    ? `<a class="featured" href="#${encodeURIComponent(first.id)}">
+    ? `<a class="featured${first.special ? " is-special" : ""}" href="#${encodeURIComponent(first.id)}">
         ${artHtml(first)}
         <div class="copy">
-          <span class="chip">Latest tale</span>
+          <span class="chip">${esc(specialLabel(first) || "Latest tale")}</span>
           <h2>${esc(first.title)}</h2>
           <span class="date">${esc(fmtDate(first.date))}</span>
           <p class="teaser">${esc(teaser(first.body, 260))}</p>
@@ -85,6 +90,49 @@ function renderList() {
     .join("");
 }
 
+// Pictures inside the tale: each follows the paragraph that holds its "after" phrase, or closes the
+// tale when there is none (or the phrase is not found).
+function placeExtraArt(box, images) {
+  for (const im of images || []) {
+    if (!im || !im.src) continue;
+    const fig = document.createElement("figure");
+    fig.className = "inline-art";
+    fig.innerHTML = `<img src="${artUrl(im.src)}" alt="" loading="lazy">` +
+      (im.caption ? `<figcaption>${esc(im.caption)}</figcaption>` : "");
+    const phrase = String(im.after || "").toLowerCase();
+    const anchor = phrase && [...box.querySelectorAll(":scope > p")].find((p) => p.textContent.toLowerCase().includes(phrase));
+    if (anchor) anchor.after(fig);
+    else box.append(fig);
+  }
+}
+
+// The roll at the end of a special tale: the raiders it belongs to, each on their profile banner.
+// It stands in for the post's own line of names, so the paragraph naming most of them goes.
+function renderRoll(t, box) {
+  const el = document.getElementById("rRoll");
+  const roll = (t.special && t.special.roll) || [];
+  el.hidden = !roll.length;
+  if (roll.length) {
+    const names = roll.map((n) => String(n).toLowerCase());
+    const line = [...box.querySelectorAll(":scope > p")].find((p) => {
+      const text = p.textContent.toLowerCase();
+      return names.filter((n) => text.includes(n)).length > names.length / 2;
+    });
+    if (line) line.remove();
+  }
+  el.innerHTML = roll.length
+    ? `<h2>${esc(t.special.rollTitle || "The raiders")}</h2>
+       ${t.special.rollSub ? `<p class="roll-sub">${esc(t.special.rollSub)}</p>` : ""}
+       <div class="roll-grid">${roll
+         .map((n) => {
+           const k = String(n).toLowerCase();
+           const bg = artUrl(`images/_thumb/profile-bg/${k}/${k}.webp`);
+           return `<div class="roll-card" style="background-image:url('${bg}')"><span>${esc(n)}</span></div>`;
+         })
+         .join("")}</div>`
+    : "";
+}
+
 function navLink(t, label) {
   return t ? `${label}<b>${esc(t.title)}</b>` : "";
 }
@@ -97,11 +145,11 @@ function openTale(id) {
   document.getElementById("rDate").textContent = fmtDate(t.date);
   document.getElementById("rTitle").textContent = t.title;
   document.getElementById("rBody").innerHTML = RatsMD.render(withoutTitle(t.body, t.title));
-  // the drop cap goes on the first paragraph that is prose, not the dateline
-  const paras = [...document.querySelectorAll("#rBody > p")];
-  const opening = paras.find((p, n) => n > 0 && p.textContent.trim().length > 60) || paras[0];
-  if (opening) opening.classList.add("opening");
-
+  placeExtraArt(document.getElementById("rBody"), t.images);
+  const special = document.getElementById("rSpecial");
+  special.hidden = !t.special;
+  special.textContent = specialLabel(t);
+  renderRoll(t, document.getElementById("rBody"));
   // newer to the left, older to the right, like turning back through the book
   const newer = TALES[i - 1], older = TALES[i + 1];
   const prev = document.getElementById("rPrev"), next = document.getElementById("rNext");
@@ -112,6 +160,21 @@ function openTale(id) {
 
   document.getElementById("list").hidden = true;
   document.getElementById("reader").hidden = false;
+
+  // the drop cap goes on the first paragraph that is prose, not the dateline. It needs at least two
+  // lines beside it: a one-line opening takes in the next paragraph (measured now the reader is shown).
+  const paras = [...document.querySelectorAll("#rBody > p")];
+  const opening = paras.find((p, n) => n > 0 && p.textContent.trim().length > 60) || paras[0];
+  if (opening) {
+    const lh = parseFloat(getComputedStyle(opening).lineHeight) || 30;
+    const next = opening.nextElementSibling;
+    if (opening.offsetHeight < lh * 1.5 && next && next.tagName === "P") {
+      opening.append(" ", ...next.childNodes);
+      next.remove();
+    }
+    opening.classList.add("opening");
+  }
+
   document.title = "RATS — " + t.title;
   window.scrollTo(0, 0);
 }
@@ -139,7 +202,7 @@ async function load() {
   const fromFb = published.map((t) => Object.assign({}, t, { id: "t-" + t.key }));
   TALES = [...committed, ...fromFb]
     .filter((t) => t && t.body)
-    .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    .sort((a, b) => (b.special ? 1 : 0) - (a.special ? 1 : 0) || String(b.date || "").localeCompare(String(a.date || "")));
   status.textContent = TALES.length ? "" : "No tales yet. The Loremaster is sharpening his quill.";
   renderList();
   route();

@@ -8,8 +8,9 @@
 
 - **Rat:** dark fur, prominent whiskers, fierce eyes, clawed hands. **Dark-souls aesthetic kept within WoW Horde style.**
 - **Armor:** battered runed plate, tattered **crimson cloak**.
-- **Weapon(s):** an **enormous two-handed greatsword** with **molten-gold runes** (point-down at rest, or
-  swung out wreathed in consecration fire). ⚠️ **RECURRING RENDER PROBLEM — always spell out sword
+- **Weapon(s):** an **enormous two-handed greatsword** with **molten-gold runes** (at rest: **slung across
+  his BACK** in a leather harness, grip over the right shoulder, blade down past the left hip — the user's
+  preferred carry; point-down also works; or swung out wreathed in consecration fire). ⚠️ **RECURRING RENDER PROBLEM — always spell out sword
   construction:** models keep putting his hands in the *middle* of the blade / the handle mid-blade, glowing
   blade on both sides of the grip, or the sword vanishing behind his head/body. In EVERY prompt describe the
   sword as ONE continuous whole weapon read bottom-to-tip: **pommel → grip → crossguard → blade**, BOTH hands
