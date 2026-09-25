@@ -150,7 +150,7 @@ code { white-space: nowrap }
 .steps { grid-template-columns: repeat(3, minmax(0, 1fr)) }
 .blk { margin-top: 34px }
 .blk-hd h2 { font-size: 24px }
-#list.cards { grid-template-columns: repeat(4, minmax(0, 1fr)) }
+#list.cards { grid-template-columns: repeat(3, minmax(0, 1fr)) }
 .cards.two, #listOptional.cards { grid-template-columns: repeat(2, minmax(0, 1fr)) }
 .cards { gap: 12px; margin-top: 12px }
 .a-main { padding: 14px; gap: 8px }
