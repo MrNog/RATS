@@ -472,6 +472,12 @@ function buildRankFilter(data) {
     });
   sel.value = cur;
 }
+// "26 Jul 2026", the site's date format
+function fmtDay(d) {
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return d.getDate() + " " + MON[d.getMonth()] + " " + d.getFullYear();
+}
+
 function fmtStale(ms) {
   if (!ms) return "never";
   const d = Math.floor((Date.now() - ms) / 86400000);
@@ -526,7 +532,7 @@ function paint() {
   document.getElementById("stats").innerHTML = cards
     .map(
       (c) =>
-        `<div class="stat"><div class="n"${c[0] === "Last import" ? ' style="font-size:15px;line-height:1.35"' : ""}>${c[1]}</div><div class="l">${c[0]}</div></div>`
+        `<div class="stat${c[0] === "Last import" ? " txt" : ""}"><div class="n">${c[1]}</div><div class="l">${c[0]}</div></div>`
     )
     .join("");
 
@@ -565,7 +571,7 @@ function boot() {
     document.getElementById("roster").innerHTML = "";
     return;
   }
-  const when = data.exportedAt ? new Date(data.exportedAt * 1000).toLocaleDateString() : "unknown";
+  const when = data.exportedAt ? fmtDay(new Date(data.exportedAt * 1000)) : "unknown";
   document.getElementById("metaLine").innerHTML =
     `<b>${esc(data.guildName || "Guild")}</b> &middot; ${esc(data.realm || "")} &middot; ${data.roster.length} members &middot; exported ${esc(when)}`;
   buildRankFilter(data);

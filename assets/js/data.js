@@ -735,27 +735,29 @@ window.RatsData = (function () {
   // ---- access gate: block the page until the guild key is entered ----
   let _unlocked = false;
 
-  // create the full-screen blocker immediately (synchronously) so officer content never flashes
+  // create the full-screen blocker immediately (synchronously) so officer content never flashes.
+  // It stops under the site bar, so a visitor without the key can still leave. Looks: .gate-* in site.css.
   function _makeOverlay() {
     const ov = document.createElement("div");
     ov.id = "ratsGate";
+    ov.className = "gate";
     ov.style.cssText =
-      "position:fixed;inset:0;z-index:99999;background:#0f1012;display:flex;align-items:center;justify-content:center;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#8a8d93";
-    ov.innerHTML = '<div style="font-size:40px;line-height:1">🧀🔒</div>';
+      "position:fixed;left:0;right:0;bottom:0;top:var(--bar-h,0px);z-index:99999;background-color:#0f1012;display:flex;align-items:center;justify-content:center";
+    ov.innerHTML = '<div class="gate-wait">🧀🔒</div>';
     (document.body || document.documentElement).appendChild(ov);
     return ov;
   }
 
   function _lockUI(ov, resolve, verify) {
     ov.innerHTML =
-      '<div style="background:#1b1d21;border:1px solid #34373d;border-radius:12px;padding:30px 28px;max-width:360px;width:90%;text-align:center;box-shadow:0 16px 50px rgba(0,0,0,.6)">' +
-      '<div style="font-size:46px;line-height:1;margin-bottom:8px">🧀🔒</div>' +
-      '<div style="color:#fff;font-weight:800;font-size:18px;letter-spacing:.5px">No cheese without a key!</div>' +
-      '<div style="color:#8a8d93;font-size:13px;margin:6px 0 16px">Officers only — enter the guild key to access the RATS tools.</div>' +
-      '<input id="ratsGatePass" type="password" placeholder="Guild key" autocomplete="current-password" style="width:100%;height:40px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:8px;padding:0 12px;font-size:14px;text-align:center;color-scheme:dark">' +
-      '<div id="ratsGateErr" style="color:#ff6b6b;font-size:12px;min-height:16px;margin:8px 0"></div>' +
-      '<button id="ratsGateBtn" style="width:100%;height:40px;background:#c0943a;color:#1b1d21;border:0;border-radius:8px;font-weight:800;cursor:pointer;font-size:14px">Unlock 🐀</button>' +
-      "</div>";
+      '<form class="gate-card">' +
+      '<p class="gate-eyebrow">Officers only</p>' +
+      '<h2 class="gate-title">No cheese without a key</h2>' +
+      '<p class="gate-sub">Enter the guild key to open the RATS officer tools.</p>' +
+      '<input id="ratsGatePass" class="gate-input" type="password" placeholder="Guild key" autocomplete="current-password">' +
+      '<div id="ratsGateErr" class="gate-err"></div>' +
+      '<button id="ratsGateBtn" class="gate-btn" type="submit">Unlock 🐀</button>' +
+      "</form>";
     document.body.appendChild(ov);
     const inp = ov.querySelector("#ratsGatePass"),
       err = ov.querySelector("#ratsGateErr"),
@@ -767,22 +769,23 @@ window.RatsData = (function () {
       const pass = inp.value;
       if (!pass) return;
       btn.disabled = true;
-      err.style.color = "#8a8d93";
+      err.className = "gate-err wait";
       err.textContent = "Checking…";
       try {
         await verify(pass);
         ov.remove();
         resolve(true);
       } catch (e) {
-        err.style.color = "#ff6b6b";
+        err.className = "gate-err";
         err.textContent = "Wrong key — try again.";
         btn.disabled = false;
         inp.select();
       }
     }
-    btn.onclick = tryUnlock;
-    inp.onkeydown = function (e) {
-      if (e.key === "Enter") tryUnlock();
+    // Enter and the button both submit the form
+    ov.querySelector("form").onsubmit = function (e) {
+      e.preventDefault();
+      tryUnlock();
     };
   }
 

@@ -290,6 +290,7 @@ The picture on a card of the hub page (`index.html`), one per page it links to. 
 - One dominant key light per card, and **each card a different light colour** (brazier gold, sunset,
   epic purple, forge orange...) so the grid does not read as one image repeated.
 
+
 ---
 
 ## 🧱 Reusable prompt block (fill the [BRACKETS])

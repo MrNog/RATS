@@ -13,32 +13,28 @@
   <!-- shared -->
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <!-- page-specific -->
   <link rel="stylesheet" href="comp.css">
 </head>
 
 <body>
-  <div class="wrap">
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:4px">
-      <a href="../index.html"
-        style="display:inline-flex;align-items:center;justify-content:center;gap:6px;color:#9aa0a6;text-decoration:none;font-size:13px;font-weight:600;background:#202225;border:1px solid #2f3137;border-radius:6px;height:30px;padding:0 12px"
-        onmouseover="this.style.borderColor='#c0943a';this.style.color='#fff'"
-        onmouseout="this.style.borderColor='#2f3137';this.style.color='#9aa0a6'">← Back to Tools</a>
-      <h1 style="margin:0"><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="3" width="7" height="7" rx="1" />
-          <rect x="14" y="14" width="7" height="7" rx="1" />
-          <rect x="3" y="14" width="7" height="7" rx="1" />
-        </svg> RATS — Raid Comp Viewer</h1>
-      <a href="../history/index.html"
-        style="margin-left:auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:#9aa0a6;background:#202225;border:1px solid #2f3137;border-radius:6px;height:30px;padding:0 12px;font-weight:600;font-size:13px"
-        onmouseover="this.style.borderColor='#c0943a';this.style.color='#fff'"
-        onmouseout="this.style.borderColor='#2f3137';this.style.color='#9aa0a6'">📊 Attendance →</a>
-      <button onclick="openImport()">📥 Import JSON</button>
-    </div>
+  <header class="site-bar" data-root="../.." data-page="comp" data-area="officer"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-comp.jpg" alt=""></div>
 
-    <div class="controls" style="margin-top:14px">
+  <div class="wrap wide">
+    <header class="phead">
+      <p class="eyebrow">Officer tools</p>
+      <h1>Raid Comp</h1>
+      <p class="lede">Paste the Raid-Helper composition, fix specs and groups, then <b>post it to Discord</b> and
+        <b>save the raid</b> for attendance.</p>
+      <span class="actions">
+        <a class="btn" href="../history/index.html">📊 Attendance →</a>
+        <button onclick="openImport()">📥 Import JSON</button>
+      </span>
+    </header>
+
+    <div class="controls panel">
       <input type="date" id="dateIn" title="Raid date" data-cal-format="weekday" />
       <div class="segs" id="sizeSegs" title="Raid size">
         <button class="seg active" data-s="25" onclick="setSize(this)">25-man</button>
@@ -56,24 +52,21 @@
         <button class="seg active" data-d="" onclick="setDiff(this)">Normal</button>
         <button class="seg" data-d="HM" onclick="setDiff(this)">Heroic</button>
       </div>
-      <button onclick="openRosterPicker()" style="margin-left:auto">👥 Add raiders from roster</button>
+      <button class="btn push" onclick="openRosterPicker()">👥 Add raiders from roster</button>
     </div>
 
     <!-- Import modal -->
-    <div id="importModal"
-      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:flex-start;justify-content:center;padding:60px 16px;overflow:auto"
-      onclick="if(event.target===this) closeImport()">
-      <div
-        style="background:#1b1d21;border:1px solid #34373d;border-radius:10px;max-width:760px;width:100%;padding:20px;box-shadow:0 14px 44px rgba(0,0,0,.55)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-          <h2 style="margin:0;color:#fff;font-size:18px">📥 Paste the composition JSON</h2>
-          <button class="alt" onclick="closeImport()" style="padding:6px 11px">✕</button>
+    <div id="importModal" class="modal" onclick="if(event.target===this) closeImport()">
+      <div class="mbox">
+        <div class="mhead">
+          <h2>Paste the composition JSON</h2>
+          <button class="alt x" onclick="closeImport()" aria-label="Close">✕</button>
         </div>
-        <p class="sub" style="margin:0 0 12px">In Discord open the Raid-Helper <b>Composition Tool</b>, copy its JSON
-          export, and paste it below.</p>
-        <textarea id="jsonIn" placeholder="Paste the Composition Tool JSON here…" style="height:220px"></textarea>
+        <p class="sub">In Discord open the Raid-Helper <b>Composition Tool</b>, copy its JSON export, and paste it
+          below.</p>
+        <textarea id="jsonIn" placeholder="Paste the Composition Tool JSON here…"></textarea>
         <div class="err" id="modalErr"></div>
-        <div class="controls" style="margin-top:12px">
+        <div class="controls">
           <button onclick="importRender()">Render &amp; Close</button>
           <button class="alt" onclick="loadSample()">Load sample</button>
           <button class="alt" onclick="closeImport()">Cancel</button>
@@ -82,48 +75,36 @@
     </div>
 
     <!-- Roster multi-select modal -->
-    <div id="rosterModal"
-      style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:flex-start;justify-content:center;padding:48px 16px;overflow:auto"
-      onclick="if(event.target===this) closeRosterPicker()">
-      <div
-        style="background:#1b1d21;border:1px solid #34373d;border-radius:10px;max-width:820px;width:100%;padding:18px;box-shadow:0 14px 44px rgba(0,0,0,.55)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <h2 style="margin:0;color:#fff;font-size:18px">👥 Add raiders from the roster</h2>
-          <button class="alt" onclick="closeRosterPicker()" style="padding:6px 11px">✕</button>
+    <div id="rosterModal" class="modal" onclick="if(event.target===this) closeRosterPicker()">
+      <div class="mbox wide">
+        <div class="mhead">
+          <h2>Add raiders from the roster</h2>
+          <button class="alt x" onclick="closeRosterPicker()" aria-label="Close">✕</button>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-          <input type="text" id="rpSearch" placeholder="Search…" oninput="renderRosterPicker()"
-            style="flex:1;min-width:160px;height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px">
-          <label
-            style="display:inline-flex;align-items:center;gap:6px;color:#8a8d93;font-size:13px;cursor:pointer"><input
-              type="checkbox" id="rpAlts" onchange="renderRosterPicker()"> include alts</label>
-          <button class="alt" onclick="rpSelectAll(true)" style="padding:6px 11px">Select all</button>
-          <button class="alt" onclick="rpSelectAll(false)" style="padding:6px 11px">Clear</button>
+        <div class="rp-tools">
+          <input type="text" id="rpSearch" placeholder="Search…" oninput="renderRosterPicker()">
+          <label class="chk"><input type="checkbox" id="rpAlts" onchange="renderRosterPicker()"> include alts</label>
+          <button class="alt" onclick="rpSelectAll(true)">Select all</button>
+          <button class="alt" onclick="rpSelectAll(false)">Clear</button>
         </div>
-        <div id="rosterList"
-          style="max-height:52vh;overflow:auto;border:1px solid #2a2c31;border-radius:8px;padding:10px;background:#161719">
-        </div>
-        <div
-          style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2c31;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span class="sub" style="margin:0;color:var(--accent);font-weight:700">➕ Add a pug</span>
+        <div id="rosterList" class="rp-list"></div>
+        <div class="rp-pug">
+          <span class="rp-pug-lbl">➕ Add a pug</span>
           <input type="text" id="pugName" placeholder="Name (kept exactly as typed)"
-            onkeydown="if(event.key==='Enter')addPug()"
-            style="flex:1;min-width:150px;height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px">
-          <select id="pugClass" onchange="fillPugSpecs()"
-            style="height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 8px"></select>
-          <select id="pugSpec"
-            style="height:36px;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 8px"></select>
-          <button class="alt" onclick="addPug()" style="padding:6px 12px">Add pug</button>
+            onkeydown="if(event.key==='Enter')addPug()">
+          <select id="pugClass" onchange="fillPugSpecs()"></select>
+          <select id="pugSpec"></select>
+          <button class="alt" onclick="addPug()">Add pug</button>
         </div>
-        <div class="controls" style="margin-top:12px;align-items:center">
+        <div class="controls rp-foot">
           <button onclick="applyRosterPicker()">Add selected to comp</button>
           <button class="alt" onclick="closeRosterPicker()">Cancel</button>
-          <span class="sub" id="rpCount" style="margin:0">0 selected</span>
+          <span class="sub" id="rpCount">0 selected</span>
         </div>
       </div>
     </div>
 
-    <div class="barrow" style="margin-top:12px">
+    <div class="barrow">
       <button id="postBtn" onclick="postWebhook()" disabled>📣 Post to Discord</button>
       <button id="updateHistBtn" class="alt" onclick="saveToHistory('update')" disabled
         title="Overwrite the raid you loaded from History (keeps its id)." style="display:none">💾 Update this raid</button>
@@ -146,7 +127,7 @@
       <div id="boardTitle">Raid Composition</div>
       <div id="boardDesc"></div>
       <div class="grid" id="grid"></div>
-      <div id="noshowBox" style="margin-top:14px"></div>
+      <div id="noshowBox"></div>
       <div class="foot" id="foot"></div>
     </div>
   </div>
@@ -154,6 +135,7 @@
   <script src="../../assets/js/data.js"></script>
   <script src="../../assets/js/datepicker.js"></script>
   <script src="comp.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

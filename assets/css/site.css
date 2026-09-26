@@ -163,3 +163,51 @@ body {
 }
 .sb-nav a.sb-officer[aria-current="page"] { color: #16120a }
 @media (prefers-reduced-motion: reduce) { .sb-nav a.sb-officer { transition: none } .sb-nav a.sb-officer:hover { transform: none } }
+
+/* ---------- lock screens: the guild-key gate (data.js) and the admin password (admin.js) ---------- */
+.gate {
+  background-color: #0f1012;
+  background-image:
+    radial-gradient(ellipse at 50% 45%, rgba(20, 21, 23, .55) 0%, rgba(15, 16, 18, .96) 70%),
+    url("../../images/hub/band-officer.jpg");
+  background-size: cover;
+  background-position: center 40%;
+  font-family: var(--body);
+}
+.gate-wait { font-size: 40px; line-height: 1 }
+.gate-card {
+  width: min(380px, calc(100vw - 32px));
+  padding: 30px 28px 26px;
+  text-align: center;
+  background: rgba(27, 29, 33, .92);
+  border: 1px solid var(--line-warm);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.gate-eyebrow {
+  margin: 0 0 10px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--accent);
+}
+.gate-title {
+  margin: 0; font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1.15;
+  text-transform: none; letter-spacing: 0; color: var(--title);
+}
+.gate-sub { margin: 8px 0 18px; font-size: 14px; color: var(--lede) }
+.gate-input {
+  width: 100%; height: 42px; padding: 0 12px;
+  background: var(--field); color: var(--white);
+  border: 1px solid var(--field-border); border-radius: var(--radius);
+  font: inherit; font-size: 14px; text-align: center; color-scheme: dark;
+}
+.gate-input:focus { outline: none; border-color: var(--accent) }
+.gate-err { min-height: 18px; margin: 8px 0; font-size: 12.5px; color: #ff6b6b }
+.gate-err.wait { color: var(--text-dim-2) }
+.gate-btn {
+  width: 100%; height: 42px; border: 0; border-radius: var(--radius); cursor: pointer;
+  background: var(--accent); color: #16120a; font: inherit; font-weight: 700; font-size: 14px;
+}
+.gate-btn:hover { background: var(--accent-hi) }
+.gate-btn:disabled { opacity: .5; cursor: wait }

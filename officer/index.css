@@ -1,114 +1,57 @@
-/* officer hub — centered splash (theme.css supplies tokens + base) */
-body {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.wrap {
-  max-width: 560px;
-  width: 100%;
-  text-align: center;
-  padding: 0;
-}
+/* officer tools home — a launcher: compact tiles, every tool visible at once.
+   Chrome (bar, header, band, footer) comes from site.css. */
 
-h1 {
-  font-size: 27px;
-  letter-spacing: -0.2px;
-  margin: 0 0 6px;
-}
-p.sub {
-  color: var(--text-dim-2);
-  margin: 0 0 30px;
-}
+a { color: inherit; text-decoration: none }
 
-.tools {
-  display: grid;
-  gap: 9px;
-}
-/* group labels that organize the tools */
-.grouplbl {
-  text-align: left;
-  color: var(--text-dim-2);
-  font-size: 10.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1.4px;
-  margin: 20px 2px 3px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
-}
-.tools > .grouplbl:first-child {
-  margin-top: 0;
-}
-a.tool {
-  display: block;
-  text-decoration: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 13px 16px;
-  text-align: left;
-  transition:
-    border-color 0.15s,
-    background 0.15s,
-    box-shadow 0.15s,
-    transform 0.08s;
-}
-a.tool:hover {
-  border-color: var(--accent);
-  background: var(--surface-2);
-  box-shadow: 0 0 0 1px var(--accent) inset;
-  transform: translateY(-1px);
-}
-/* icon inherits the gold title color; nudge it a touch brighter on hover */
-a.tool .t {
+/* group label: gold caps with a rule running off to the right (same as the hub) */
+.grp {
+  margin: 30px 0 14px;
+  font-size: 14px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
   color: var(--accent);
-  font-weight: 800;
-  font-size: 15px;
+  display: flex; align-items: center; gap: 14px;
 }
-a.tool .t svg {
-  margin-right: 4px;
-  opacity: 0.9;
-  transition: opacity 0.15s;
-}
-a.tool:hover .t svg {
-  opacity: 1;
-}
-a.tool .d {
-  color: var(--text-dim);
-  font-size: 12.5px;
-  margin-top: 3px;
-  line-height: 1.45;
-}
-.foot {
-  color: var(--text-faint);
-  font-size: 12px;
-  margin-top: 30px;
-}
+.grp::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: var(--accent) }
+.grp::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-warm), transparent) }
+.phead + .grp { margin-top: 4px }
 
-/* top-right button row — flex so buttons auto-space and never overlap regardless of label width */
-.topbar {
-  position: fixed;
-  top: 14px;
-  right: 16px;
-  z-index: 5;
-  display: flex;
-  gap: 8px;
+/* three across at every desktop width, so a group of three always fills the row */
+.tgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px }
+/* a group of two shares the row instead of leaving a gap */
+.tgrid.two { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+@media (max-width: 1000px) { .tgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+@media (max-width: 640px) { .tgrid, .tgrid.two { grid-template-columns: minmax(0, 1fr) } }
+
+/* a tool: name + one line on the left, the tool's art filling the right of the tile */
+.tool {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center;
+  min-height: 150px; padding: 20px 22px;
+  background: #120f0c; border: 1px solid var(--line-warm); border-radius: var(--radius-lg);
+  transition: border-color .15s, transform .15s;
 }
-.topbar .pillbtn {
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  color: var(--text-dim);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 6px 10px;
+.tool:hover { border-color: var(--accent); transform: translateY(-2px) }
+.tool > .bg {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 75%; height: 100%;
+  object-fit: cover; object-position: center 40%;
+  filter: saturate(1.25) contrast(1.05);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+  transition: filter .2s, transform .3s;
 }
-.topbar .pillbtn:hover {
-  border-color: var(--accent);
-  color: var(--white);
+.tool:hover > .bg { filter: saturate(1.4) contrast(1.08) brightness(1.08); transform: scale(1.04) }
+/* keep the words readable over the art */
+.tool::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, #120f0c 24%, rgba(18, 15, 12, .7) 48%, rgba(18, 15, 12, 0) 78%);
 }
+.tool > .t-body { position: relative; z-index: 1 }
+.t-body { text-shadow: 0 1px 8px rgba(0, 0, 0, .8) }
+
+.t-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; max-width: 30ch }
+.t-body b { font-family: var(--display); font-weight: 400; font-size: 22px; line-height: 1.2; color: var(--heading) }
+.tool:hover .t-body b { color: var(--accent-hi) }
+.t-body .d { font-size: 14.5px; line-height: 1.45; color: var(--text-dim) }
+/* live line from this browser's cached data (roster import, last saved raid) */
+.t-body .meta { font-size: 12.5px; font-weight: 600; color: var(--text-faint) }
+.t-body .meta[hidden] { display: none }
+.t-body .meta b { font-family: var(--body); font-size: 12.5px; font-weight: 700; color: var(--accent) }

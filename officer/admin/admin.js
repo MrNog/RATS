@@ -275,21 +275,22 @@ function adminLogout() {
 }
 
 function lockOverlay(blob) {
+  // same lock screen as the guild-key gate (.gate-* in site.css), under the site bar
   const ov = document.createElement("div");
+  ov.className = "gate";
   ov.style.cssText =
-    "position:fixed;inset:0;z-index:999;background:#0f1012;display:flex;align-items:center;justify-content:center";
-  const card = document.createElement("div");
-  card.style.cssText =
-    "background:#202225;border:1px solid #2f3137;border-radius:10px;padding:24px;max-width:340px;width:90%;text-align:center";
-  card.innerHTML =
-    '<div style="font-size:38px;line-height:1">&#128295;&#128274;</div>' +
-    '<div style="color:#fff;font-weight:800;font-size:17px;margin:8px 0 4px">Admin only</div>' +
-    '<div style="color:#8a8d93;font-size:13px;margin-bottom:12px">Enter the admin password.</div>' +
-    '<input id="ap" type="password" placeholder="Admin password" style="width:100%;background:#0f1012;color:#fff;border:1px solid #333;border-radius:6px;padding:0 10px;height:36px;font-size:13px;text-align:center;color-scheme:dark">' +
-    '<div id="ae" style="color:#ff6b6b;font-size:12px;min-height:16px;margin:8px 0"></div>' +
-    '<button id="ab" style="width:100%;background:#c0943a;color:#1b1d21;border:0;border-radius:6px;height:36px;font-weight:700;cursor:pointer;font-size:13px">Unlock</button>';
-  ov.appendChild(card);
+    "position:fixed;left:0;right:0;bottom:0;top:var(--bar-h,0px);z-index:999;display:flex;align-items:center;justify-content:center";
+  ov.innerHTML =
+    '<form class="gate-card">' +
+    '<p class="gate-eyebrow">GM only</p>' +
+    '<h2 class="gate-title">Admin Console</h2>' +
+    '<p class="gate-sub">Enter the admin password.</p>' +
+    '<input id="ap" class="gate-input" type="password" placeholder="Admin password" autocomplete="current-password">' +
+    '<div id="ae" class="gate-err"></div>' +
+    '<button id="ab" class="gate-btn" type="submit">Unlock</button>' +
+    "</form>";
   document.body.appendChild(ov);
+  const card = ov.querySelector("form");
   const ip = card.querySelector("#ap"),
     ae = card.querySelector("#ae"),
     ab = card.querySelector("#ab");
@@ -300,7 +301,7 @@ function lockOverlay(blob) {
     const p = ip.value;
     if (!p) return;
     ab.disabled = true;
-    ae.style.color = "#8a8d93";
+    ae.className = "gate-err wait";
     ae.textContent = "Checking...";
     try {
       await RatsData.decrypt(blob, p);
@@ -308,15 +309,16 @@ function lockOverlay(blob) {
       ov.remove();
       showConsole();
     } catch (e) {
-      ae.style.color = "#ff6b6b";
+      ae.className = "gate-err";
       ae.textContent = "Wrong password.";
       ab.disabled = false;
       ip.select();
     }
   }
-  ab.onclick = go;
-  ip.onkeydown = function (e) {
-    if (e.key === "Enter") go();
+  // Enter and the button both submit the form
+  card.onsubmit = function (e) {
+    e.preventDefault();
+    go();
   };
 }
 

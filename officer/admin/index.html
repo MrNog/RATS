@@ -13,100 +13,113 @@
   <!-- shared -->
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <!-- page-specific -->
   <link rel="stylesheet" href="admin.css">
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="row">
-      <a class="btn" href="../index.html">&#8592; Back to Tools</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path
-            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-        </svg> RATS &#8212; Admin Console</h1>
-    </div>
-    <p class="sub" id="banner" style="margin:8px 0 0">Manage the guild key, the lock, and webhooks. Officers / GM only.
-    </p>
+  <header class="site-bar" data-root="../.." data-page="admin" data-area="officer"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-admin.jpg" alt=""></div>
+
+  <div class="wrap wide">
+    <header class="phead">
+      <p class="eyebrow">Officer tools · GM only</p>
+      <h1>Admin Console</h1>
+      <p class="lede" id="banner">The guild key and the lock, the wow-logs API key, the Discord invite and the
+        webhooks. <b>Officers / GM only.</b></p>
+    </header>
 
     <div id="console" style="display:none">
 
       <div id="statusRow" class="statusRow"></div>
 
-      <div class="card">
-        <h2>&#128273; Guild key &amp; lock</h2>
-        <p class="sub">The key officers type to unlock the tools. Arm the lock &#8212; works with no roster needed.</p>
-        <div class="frow">
-          <input type="password" id="guildKey" placeholder="Guild key (the password officers will use)">
-          <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('guildKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
-          <button class="btn" onclick="armLock()">&#128274; Arm lock &#8212; download gate.json</button>
-        </div>
-        <p class="sub">Commit the downloaded <code>gate.json</code> &#8594; the index lock turns on. Share the key in
-          the officer channel.</p>
-      </div>
-
-      <div class="card">
-        <h2>&#128273; WoW-Logs API key</h2>
-        <p class="sub">The <code>wl_live_&#8230;</code> key the Rankings page uses to pull guild logs. Stored only in
-          your browser &#8212; <strong style="color:#fff">never committed</strong>. Get one at Account &#8594; Public
-          API Keys on wow-logs.co.in.</p>
-        <div class="frow">
-          <input type="password" id="logsApiKey" placeholder="wl_live_&#8230; (or wl_test_&#8230;)" autocomplete="off">
-          <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('logsApiKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
-          <button type="button" class="dark" onclick="testLogsApiKey()">Test</button>
-          <button class="btn" onclick="saveLogsApiKey()">&#128190; Save key</button>
-        </div>
-        <p class="sub" id="logsApiHint">Free tier: 30 req/min, 15k/month. The Rankings &#128260; Fetch reads it from
-          here.</p>
-        <div class="apiusage" id="apiUsage">
-          <div class="au-row">
-            <span class="au-label">Monthly calls used</span>
-            <span class="au-count"><b id="auCount">&#8212;</b> <span class="au-cap" id="auCap">/ 15,000</span></span>
+      <h3 class="grp">Access</h3>
+      <div class="cols">
+        <div class="card">
+          <h2>Guild key &amp; lock</h2>
+          <p class="sub">The key officers type to unlock the tools. Arm the lock — works with no roster needed.</p>
+          <div class="frow">
+            <input type="password" id="guildKey" placeholder="Guild key (the password officers will use)">
+            <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('guildKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
           </div>
-          <div class="au-bar"><i id="auBar" style="width:0%"></i></div>
-          <p class="au-note" id="auNote">Loading&#8230;</p>
-          <div class="frow" style="margin-top:8px">
-            <button type="button" class="dark" onclick="checkApiUsage()">&#128260; Refresh (live check)</button>
+          <div class="frow">
+            <button class="btn" onclick="armLock()">&#128274; Arm lock — download gate.json</button>
+          </div>
+          <p class="sub">Commit the downloaded <code>gate.json</code> → the index lock turns on. Share the key in
+            the officer channel.</p>
+        </div>
+
+        <div class="card">
+          <h2>Admin password</h2>
+          <p class="sub">Locks this console (separate from the guild key — only you should know it).</p>
+          <div class="frow">
+            <input type="password" id="adminPass" placeholder="Set / change admin password">
+          </div>
+          <div class="frow">
+            <button onclick="setAdmin()">Set admin password — download admin.json</button>
+          </div>
+          <p class="sub">Commit the downloaded <code>admin.json</code> → this console requires that password.</p>
+        </div>
+      </div>
+
+      <h3 class="grp">Connections</h3>
+      <div class="cols">
+        <div class="card">
+          <h2>WoW-Logs API key</h2>
+          <p class="sub">The <code>wl_live_…</code> key the Rankings page uses to pull guild logs. Kept in this
+            browser and shared encrypted with the officers — <b>never committed</b>. Get one at Account → Public
+            API Keys on wow-logs.co.in.</p>
+          <div class="frow">
+            <input type="password" id="logsApiKey" placeholder="wl_live_… (or wl_test_…)" autocomplete="off">
+            <button type="button" class="dark icon-btn" title="show/hide" onclick="var u=document.getElementById('logsApiKey');u.type=u.type==='password'?'text':'password'">&#128065;</button>
+            <button type="button" class="dark" onclick="testLogsApiKey()">Test</button>
+            <button class="btn" onclick="saveLogsApiKey()">&#128190; Save key</button>
+          </div>
+          <p class="sub" id="logsApiHint">Free tier: 30 req/min, 15k/month. The Rankings &#128260; Fetch reads it
+            from here.</p>
+          <div class="apiusage" id="apiUsage">
+            <div class="au-row">
+              <span class="au-label">Monthly calls used</span>
+              <span class="au-count"><b id="auCount">—</b> <span class="au-cap" id="auCap">/ 15,000</span></span>
+            </div>
+            <div class="au-bar"><i id="auBar" style="width:0%"></i></div>
+            <p class="au-note" id="auNote">Loading…</p>
+            <div class="frow">
+              <button type="button" class="dark" onclick="checkApiUsage()">&#128260; Refresh (live check)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Discord invite</h2>
+          <p class="sub">The link behind the <b>Discord</b> button in the site bar. Paste a full invite or just the
+            code. Saves to Firebase — every visitor gets it, no commit needed.</p>
+          <div class="frow">
+            <input type="text" id="discordInvite" placeholder="https://discord.gg/… (or just the code)" autocomplete="off">
+          </div>
+          <div class="frow">
+            <button type="button" class="dark" onclick="testDiscordInvite()">Open</button>
+            <button class="btn" onclick="saveDiscordInvite()">&#128190; Save invite</button>
           </div>
         </div>
       </div>
 
+      <h3 class="grp">Discord webhooks</h3>
       <div class="card">
-        <h2>&#128279; Discord invite</h2>
-        <p class="sub">The link behind the <strong style="color:#fff">Discord</strong> button in the site bar. Paste a
-          full invite or just the code. Saves to Firebase &#8212; every visitor gets it, no commit needed.</p>
-        <div class="frow">
-          <input type="text" id="discordInvite" placeholder="https://discord.gg/&#8230; (or just the code)" autocomplete="off">
-          <button type="button" class="dark" onclick="testDiscordInvite()">Open</button>
-          <button class="btn" onclick="saveDiscordInvite()">&#128190; Save invite</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>&#128227; Discord webhooks</h2>
-        <p class="sub">Names are <strong style="color:#fff">fixed</strong> &#8212; tools find the right hook by name.
-          Only paste/edit the URL. Leave blank to disable. Stored only in your browser &#8212; never committed.</p>
+        <p class="sub">Names are <b>fixed</b> — tools find the right hook by name. Only paste/edit the URL. Leave
+          blank to disable. Stored only in your browser — never committed.</p>
         <div id="hookList"></div>
         <div class="frow">
           <button onclick="saveHooks()">&#128190; Save webhooks</button>
         </div>
       </div>
 
-      <div class="card">
-        <h2>&#128295; Admin password</h2>
-        <p class="sub">Locks this console (separate from the guild key &#8212; only you should know it).</p>
-        <div class="frow">
-          <input type="password" id="adminPass" placeholder="Set / change admin password">
-          <button onclick="setAdmin()">Set admin password &#8212; download admin.json</button>
-        </div>
-        <p class="sub">Commit the downloaded <code>admin.json</code> &#8594; this console requires that password.</p>
-      </div>
-
+      <h3 class="grp danger">Danger zone</h3>
       <div class="card danger">
-        <h2>&#9888;&#65039; Reset (this browser only)</h2>
-        <p class="sub">Clears values saved in <strong style="color:#fff">your browser</strong> &#8212; it does not
-          touch committed <code>gate.json</code>/<code>admin.json</code> or live Firebase data.</p>
+        <h2>Reset (this browser only)</h2>
+        <p class="sub">Clears values saved in <b>your browser</b> — it does not touch committed
+          <code>gate.json</code>/<code>admin.json</code> or live Firebase data.</p>
         <div class="frow">
           <button type="button" class="del" onclick="forgetGuildKey()">&#128273; Forget guild key</button>
           <button type="button" class="del" onclick="forgetLogsApiKey()">&#128273; Forget API key</button>
@@ -121,6 +134,7 @@
 
   <script src="../../assets/js/data.js"></script>
   <script src="admin.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

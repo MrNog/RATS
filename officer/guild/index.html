@@ -13,24 +13,24 @@
   <!-- shared -->
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <!-- page-specific -->
   <link rel="stylesheet" href="guild.css">
 </head>
 
 <body>
+  <header class="site-bar" data-root="../.." data-page="guild" data-area="officer"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-guild.jpg" alt=""></div>
+
   <div class="wrap wide">
-    <div class="head">
-      <a class="btn" href="../index.html">← Back to Tools</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg> RATS — Guild Roster</h1>
-      <button id="importBtn" onclick="openModal()">📥 Import roster</button>
-    </div>
-    <p class="sub" id="metaLine">Import your guild roster JSON (from the in-game export) to build the database.</p>
+    <header class="phead">
+      <p class="eyebrow">Officer tools</p>
+      <h1>Guild Roster</h1>
+      <p class="lede" id="metaLine">Import your guild roster JSON (from the in-game export) to build the database.</p>
+      <span class="actions">
+        <button id="importBtn" onclick="openModal()">📥 Import roster</button>
+      </span>
+    </header>
 
     <div class="stats" id="stats"></div>
 
@@ -51,7 +51,7 @@
   <div id="modal" onclick="if(event.target===this) closeModal()">
     <div class="box">
       <div class="mhead">
-        <h2>📥 Paste guild roster JSON</h2>
+        <h2>Paste the roster JSON</h2>
         <button class="alt" onclick="closeModal()">✕</button>
       </div>
       <p class="sub">Run the in-game roster export, copy its JSON, and paste it below. It <b>merges</b> with the current
@@ -69,6 +69,7 @@
 
   <script src="../../assets/js/data.js"></script>
   <script src="guild.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

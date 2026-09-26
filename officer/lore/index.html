@@ -13,88 +13,101 @@
   <!-- shared -->
   <link rel="stylesheet" href="../../assets/css/theme.css">
   <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="../../assets/css/site.css">
   <!-- page-specific -->
   <link rel="stylesheet" href="lore.css">
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="row">
-      <a class="btn" href="../index.html">← Back to Tools</a>
-      <h1><svg class="hicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-        </svg> RATS — Lore &amp; Stories</h1>
-    </div>
-    <p class="sub">Write a tale about the raid and post it to Discord — markdown + images. For the storytellers of the
-      Rats. 🐀</p>
+  <header class="site-bar" data-root="../.." data-page="lore-post" data-area="officer"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-lore-post.jpg" alt=""></div>
 
-    <label class="lbl">Post to</label>
-    <div class="row" style="gap:8px">
-      <select id="hookSel" style="flex:1;min-width:200px"></select>
-      <button class="alt" onclick="insertExample()">✨ Insert example</button>
-    </div>
+  <div class="wrap wide">
+    <header class="phead">
+      <p class="eyebrow">Officer tools</p>
+      <h1>Lore &amp; Stories</h1>
+      <p class="lede">Write a tale about the raid and post it to Discord — markdown and images. For the
+        <b>storytellers of the Rats</b>. 🐀</p>
+      <span class="actions">
+        <a class="btn" href="../../public/lore/index.html">📜 Chronicles →</a>
+      </span>
+    </header>
 
-    <label class="lbl">Mention people (real Discord pings)</label>
-    <div class="row" style="gap:8px">
-      <select id="mentionSel" style="flex:1;min-width:200px"></select>
-      <button class="alt" onclick="insertMention()">@ Insert</button>
-      <button class="alt" onclick="toggleMentionMgr()">＋ Manage</button>
-    </div>
-    <div id="mentionMgr"
-      style="display:none;background:#1b1d21;border:1px solid #2f3137;border-radius:8px;padding:12px;margin-top:8px">
-      <div class="sub" style="margin:0 0 8px">In Discord turn on <b>Settings → Advanced → Developer Mode</b>, then
-        right-click a
-        person → <b>Copy User ID</b> (or a role → Copy Role ID). Paste it here to save a reusable @mention.</div>
-      <div class="row" style="gap:8px">
-        <input type="text" id="mLabel" placeholder="Label (e.g. Foug)" style="flex:1;min-width:120px">
-        <input type="text" id="mId" placeholder="Discord ID (numbers)" style="flex:1;min-width:120px">
-        <div class="segs" id="mTypeSegs" title="Mention type">
-          <button type="button" class="seg active" data-v="user" onclick="setMType(this)">User</button>
-          <button type="button" class="seg" data-v="role" onclick="setMType(this)">Role</button>
+    <section class="panel">
+      <h2 class="psec">Where it goes</h2>
+      <div class="two">
+        <div>
+          <label class="lbl" for="hookSel">Post to</label>
+          <div class="frow">
+            <select id="hookSel" class="grow"></select>
+            <button class="alt" onclick="insertExample()">✨ Insert example</button>
+          </div>
         </div>
-        <input type="hidden" id="mType" value="user">
-        <button class="alt" onclick="addMention()">Save</button>
+        <div>
+          <label class="lbl" for="mentionSel">Mention people (real Discord pings)</label>
+          <div class="frow">
+            <select id="mentionSel" class="grow"></select>
+            <button class="alt" onclick="insertMention()">@ Insert</button>
+            <button class="alt" onclick="toggleMentionMgr()">＋ Manage</button>
+          </div>
+        </div>
       </div>
-      <div id="mList" style="margin-top:8px"></div>
-    </div>
-
-    <div class="grid">
-      <div>
-        <label class="lbl">Story <span class="count" id="count">0 / 2000</span></label>
-        <textarea id="body"
-          placeholder="# :crossed_swords: A New Era Begins :crossed_swords:&#10;&#10;Write the legend here… **bold**, *italics*, :emoji:, @names."
-          oninput="renderPreview()"></textarea>
+      <div id="mentionMgr" class="mgr" style="display:none">
+        <div class="sub">In Discord turn on <b>Settings → Advanced → Developer Mode</b>, then right-click a person →
+          <b>Copy User ID</b> (or a role → Copy Role ID). Paste it here to save a reusable @mention.</div>
+        <div class="frow">
+          <input type="text" id="mLabel" placeholder="Label (e.g. Foug)" class="grow">
+          <input type="text" id="mId" placeholder="Discord ID (numbers)" class="grow">
+          <div class="segs" id="mTypeSegs" title="Mention type">
+            <button type="button" class="seg active" data-v="user" onclick="setMType(this)">User</button>
+            <button type="button" class="seg" data-v="role" onclick="setMType(this)">Role</button>
+          </div>
+          <input type="hidden" id="mType" value="user">
+          <button class="alt" onclick="addMention()">Save</button>
+        </div>
+        <div id="mList"></div>
       </div>
-      <div>
-        <label class="lbl">Preview (approx.)</label>
-        <div class="preview" id="preview"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="psec">The tale</h2>
+      <div class="grid">
+        <div>
+          <label class="lbl" for="body">Story <span class="count" id="count">0 / 2000</span></label>
+          <textarea id="body"
+            placeholder="# :crossed_swords: A New Era Begins :crossed_swords:&#10;&#10;Write the legend here… **bold**, *italics*, :emoji:, @names."
+            oninput="renderPreview()"></textarea>
+        </div>
+        <div>
+          <label class="lbl">Preview (approx.)</label>
+          <div class="preview" id="preview"></div>
+        </div>
       </div>
-    </div>
 
-    <label class="lbl">Images (optional — up to 10, drag or pick)</label>
-    <input type="file" id="files" accept="image/*" multiple onchange="addFiles(this.files)"
-      style="background:#0f1012;border:1px dashed #444;border-radius:8px;padding:14px;width:100%;color:#9aa0a6;cursor:pointer">
-    <div class="thumbs" id="thumbs"></div>
+      <label class="lbl" for="files">Images (optional — up to 10, drag or pick)</label>
+      <input type="file" id="files" class="drop" accept="image/*" multiple onchange="addFiles(this.files)">
+      <div class="thumbs" id="thumbs"></div>
+    </section>
 
-    <label class="lbl">Also on the site</label>
-    <div class="sitepub">
-      <label class="chk"><input type="checkbox" id="pubSite" checked> Publish this tale on the
-        <a href="../../public/lore/index.html">Chronicles page</a> too</label>
-      <div class="row" style="gap:8px">
-        <input type="text" id="pubTitle" placeholder="Title (empty = the story's first heading)" style="flex:1;min-width:200px">
-        <select id="pubImage" style="flex:1;min-width:200px" aria-label="Art shown with the tale on the site"></select>
+    <section class="panel">
+      <h2 class="psec">Also on the site</h2>
+      <div class="sitepub">
+        <label class="chk"><input type="checkbox" id="pubSite" checked> Publish this tale on the
+          <a href="../../public/lore/index.html">Chronicles page</a> too</label>
+        <div class="frow">
+          <input type="text" id="pubTitle" class="grow" placeholder="Title (empty = the story's first heading)">
+          <select id="pubImage" class="grow" aria-label="Art shown with the tale on the site"></select>
+        </div>
+        <div class="sub">The site cannot reuse the Discord upload, so the art comes from the gallery. New art? Put
+          it in <code>images/lore/</code> first.</div>
       </div>
-      <div class="sub" style="margin:6px 0 0">The site cannot reuse the Discord upload, so the art comes from the
-        gallery. New art? Put it in <code>images/lore/</code> first.</div>
-    </div>
+    </section>
 
-    <div class="row" style="margin-top:18px">
+    <div class="postbar">
       <button id="postBtn" onclick="postLore()">📣 Post to Discord</button>
       <button class="alt" onclick="publishSiteOnly()" title="For a tale already in Discord">📜 Site only</button>
-      <span class="sub" style="margin:0">Posts ping <code>@everyone</code>. Webhooks are set in the <a
-          href="../admin/index.html" style="color:#c0943a">Admin console</a>.</span>
+      <span class="sub">Posts ping <code>@everyone</code>. Webhooks are set in the
+        <a href="../admin/index.html">Admin console</a>.</span>
     </div>
     <div class="msg" id="msg"></div>
   </div>
@@ -102,6 +115,7 @@
   <script src="../../assets/js/data.js"></script>
   <script src="../../assets/js/discord-md.js"></script>
   <script src="lore.js"></script>
+  <script src="../../assets/js/nav.js"></script>
 </body>
 
 </html>

@@ -6,23 +6,138 @@
   --header: #9aa0a6;
 }
 
-/* the raid grid genuinely needs the room — page-level width exception */
-.wrap {
-  max-width: 1280px;
+/* the raid grid genuinely needs the room — page-level width exception (the bar follows it too;
+   big screens keep site.css's wider value) */
+@media (max-width: 1599px) {
+  :root {
+    --wrap-wide: 1280px;
+  }
 }
 
-h1 {
-  margin: 0 0 4px;
-}
-.sub {
-  margin: 0 0 16px;
-}
 .controls {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   margin-bottom: 12px;
+}
+/* the raid settings row sits in a panel, like the other officer toolbars */
+.controls.panel {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.push {
+  margin-left: auto;
+}
+
+/* ---- modals (import + roster picker); comp.js flips display to flex ---- */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 16px;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(3px);
+}
+.mbox {
+  width: 100%;
+  max-width: 760px;
+  padding: 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+.mbox.wide {
+  max-width: 820px;
+}
+.mhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.mhead h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 24px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--heading);
+}
+.mbox > .sub {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.mbox textarea {
+  height: 220px;
+}
+.mbox .controls {
+  margin: 12px 0 0;
+}
+button.alt.x {
+  padding: 0 11px;
+}
+.rp-tools {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 8px 0 10px;
+}
+.rp-tools #rpSearch {
+  flex: 1;
+  min-width: 160px;
+}
+label.chk {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.rp-list {
+  max-height: 52vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  background: var(--surface-3);
+}
+.rp-pug {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.rp-pug-lbl {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+}
+.rp-pug #pugName {
+  flex: 1;
+  min-width: 150px;
+}
+.rp-pug select {
+  min-width: 120px;
+}
+.rp-foot {
+  align-items: center;
+}
+.rp-foot .sub {
+  margin: 0;
 }
 
 textarea {
@@ -73,8 +188,14 @@ input[type="password"] {
 }
 
 button.alt {
-  background: var(--rowhover);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+button.alt:hover {
+  border-color: var(--accent);
   color: var(--white);
+  filter: none;
 }
 
 .slot .acts {
@@ -120,17 +241,19 @@ button.alt {
 /* ---- the board that gets screenshotted ---- */
 #board {
   background: var(--surface-2);
-  border: 1px solid #2a2c31;
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-xl);
+  padding: 22px;
   margin-top: 8px;
 }
+/* stays in the body face: raid titles carry dates and sizes, and Marcellus draws old-style numbers */
 #boardTitle {
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--accent);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--title);
   margin: 0 0 4px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 #boardDesc {
   color: var(--muted);
@@ -214,11 +337,14 @@ body.dragging .nsbox.nsempty {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+#noshowBox {
+  margin-top: 14px;
+}
 .foot {
   margin-top: 16px;
   color: var(--muted);
   font-size: 12px;
-  border-top: 1px solid #2a2c31;
+  border-top: 1px solid var(--border);
   padding-top: 10px;
 }
 
@@ -260,6 +386,7 @@ body.dragging .nsbox.nsempty {
 
 /* flat action rows + clean tip list */
 .barrow {
+  margin-top: 12px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;

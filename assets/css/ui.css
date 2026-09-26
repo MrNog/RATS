@@ -77,6 +77,7 @@ input[type=text], input[type=date], input[type=number], input[type=password], se
 }
 textarea { padding: 8px 12px; font-family: var(--font); resize: vertical }
 input:focus, select:focus, textarea:focus { border-color: var(--accent) }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent) }
 /* keep a real, visible focus ring for keyboard users (mouse clicks don't trigger :focus-visible) */
 input:focus-visible, select:focus-visible, textarea:focus-visible,
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible {

@@ -6,12 +6,37 @@
   --header: #9aa0a6;
 }
 
-h2 {
-  font-size: 15px;
-  color: var(--accent);
-  margin: 26px 0 10px;
-  letter-spacing: 0.3px;
+/* section titles: display face with a warm rule running off to the right */
+h2.hsec {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 30px 0 12px;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 24px;
+  color: var(--heading);
   text-transform: none;
+  letter-spacing: 0;
+}
+h2.hsec::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-warm);
+}
+h2.hsec .cnt {
+  font-family: var(--body);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-faint);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.legend {
+  margin: -4px 0 12px;
+  line-height: 1.55;
 }
 .sub {
   color: var(--muted);
@@ -24,6 +49,10 @@ h2 {
   gap: 10px;
   align-items: stretch;
   margin: 14px 0 4px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 .flbl {
   color: var(--muted);
@@ -234,7 +263,7 @@ th.pctcol {
 
 /* raid log */
 .raid {
-  background: var(--row);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 8px;
@@ -250,11 +279,14 @@ th.pctcol {
   box-sizing: border-box;
 }
 .raid > .head:hover {
-  background: var(--rowhover);
+  background: rgba(192, 148, 58, 0.06);
+}
+.raid.open {
+  border-color: var(--line-warm);
 }
 .raid .date {
-  font-weight: 800;
-  color: var(--accent);
+  font-weight: 700;
+  color: var(--accent-hi);
   min-width: 130px;
 }
 .szbadge {
@@ -541,17 +573,18 @@ th.pctcol {
   #log { max-height: 72vh; }
 }
 .explain {
-  margin: 10px 0 2px;
+  margin: 0 0 6px;
   background: var(--surface-2);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-lg);
-  padding: 6px 14px;
+  padding: 6px 16px;
 }
 .explain summary {
   cursor: pointer;
-  color: var(--white);
+  color: var(--heading);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 14.5px;
   padding: 6px 0;
   list-style: none;
 }
@@ -576,6 +609,9 @@ th.pctcol {
 }
 
 @media (max-width: 680px) {
+  .segs {
+    flex-wrap: wrap;
+  }
   .ggrid {
     grid-template-columns: 1fr;
   }

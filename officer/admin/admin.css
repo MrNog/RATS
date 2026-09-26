@@ -1,14 +1,62 @@
-/* more breathing room between cards + inside them */
-.card {
-  padding: 20px 22px;
-  margin-bottom: 18px;
+/* group label: gold caps with a rule running off (same as the tools home) */
+.grp {
+  margin: 34px 0 14px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.grp::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.grp::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-warm), transparent);
+}
+.grp.danger {
+  color: #ff8f8f;
+}
+.grp.danger::before {
+  background: #ff8f8f;
 }
 
-/* section titles inside cards — not the uppercase theme h2 */
-h2 {
-  font-size: 16px;
+/* two cards side by side, one column on a narrow screen */
+.cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  margin: 0;
+  padding: 20px 22px;
+}
+
+/* card titles in the display face */
+.card h2 {
   margin: 0 0 6px;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 22px;
   text-transform: none;
+  letter-spacing: 0;
+  color: var(--heading);
 }
 
 /* the descriptive lines under a title — give them room before the controls */
@@ -16,13 +64,16 @@ h2 {
   line-height: 1.5;
   margin: 0 0 14px;
 }
+.card .sub b {
+  color: var(--white);
+}
 /* the trailing hint line after the controls */
 .card .frow + .sub {
   margin: 12px 0 0;
 }
-/* space the control row off the description */
-.card .frow {
-  margin-top: 4px;
+/* stacked control rows */
+.card .frow + .frow {
+  margin-top: 10px;
 }
 
 /* full-width settings fields (base styling from ui.css) */
@@ -73,8 +124,21 @@ textarea {
   min-width: 200px;
 }
 
-.msg {
-  min-height: 18px;
+/* status message: a toast at the bottom of the screen, so it shows next to whatever card you used */
+#msg:not(:empty) {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  z-index: 60;
+  margin: 0;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 10px 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-warm);
+  border-radius: 999px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
+  font-weight: 600;
 }
 
 /* status pills under the banner */
@@ -82,19 +146,20 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 4px 0 18px;
+  margin: 0 0 6px;
 }
 .statPill {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   border-radius: 999px;
-  padding: 4px 12px;
+  padding: 5px 13px;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: rgba(28, 29, 32, 0.85);
 }
 .statPill.ok {
-  color: var(--accent);
-  border-color: var(--accent);
+  color: var(--accent-hi);
+  border-color: rgba(192, 148, 58, 0.6);
+  background: rgba(192, 148, 58, 0.1);
 }
 .statPill.off {
   color: var(--text-dim-2);
@@ -159,4 +224,7 @@ textarea {
   margin: 8px 0 0;
   font-size: 11.5px;
   color: #6e7178;
+}
+.apiusage .frow {
+  margin-top: 10px;
 }

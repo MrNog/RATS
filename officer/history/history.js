@@ -428,8 +428,8 @@ function renderAttendance() {
   const raids = filteredRaids();
   const { rows, total } = computeAttendance(raids);
   const sf = SIZE; // always "25" or "10" — the size filter has no "all" option
-  document.getElementById("attHead").textContent =
-    "📊 Attendance (" + sf + "-man) — " + total + " raid" + (total != 1 ? "s" : "") + " tracked";
+  document.getElementById("attHead").innerHTML =
+    'Attendance <span class="cnt">' + sf + "-man · " + total + " raid" + (total != 1 ? "s" : "") + " tracked</span>";
 
   const lg = document.getElementById("legend");
   // key with context — the full rules live in the "How attendance works" panel above.
