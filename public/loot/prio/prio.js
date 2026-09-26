@@ -234,7 +234,7 @@
     var head =
       '<p class="lnote">Since <b>' + esc(m.lootFrom) + "</b> the raid wins about <b>" + rate +
       "</b> items per raider per ICC 25 night. <b>Owed</b> = what your nights should have given you − what you won. " +
-      "<b>±" + m.luckMargin + "</b> or more moves you inside your group on every BiS ladder. Click a row for the items.</p>";
+      "<b>+" + m.luckMargin + "</b> or more owed moves you up inside your group; <b>" + m.luckMargin + "</b> or more ahead drops you to the bottom of every BiS ladder, still ahead of anyone below you with fewer raid days. Click a row for the items.</p>";
     var rows = list.map(function (p) {
       var tone = p.luck === 0 ? "owed" : p.luck === 2 ? "lucky" : "even";
       var half = Math.round((Math.abs(p.owed) / maxAbs) * 50);

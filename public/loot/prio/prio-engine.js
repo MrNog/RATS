@@ -171,6 +171,33 @@
       (b.p.score - a.p.score);
   }
 
+  // Guild policy: a raider the rolls have clearly served well drops to the bottom
+  // of the item's ladder, officer or not -- but not below someone who has raided
+  // less than they have. Each lucky raider is lifted back over the run of
+  // lower-attendance names at the end, and stops at the first name with as many
+  // raid days as theirs. The "already won" tail stays last.
+  //
+  // This is a pass after the sort, not a term in rankCandidates: "ahead of you
+  // only if they raided at least as much" does not hold transitively, and a sort
+  // fed a comparator like that returns whatever order it happens to reach.
+  function orderLadder(list) {
+    list.sort(rankCandidates);
+    var lucky = [], rest = [];
+    list.forEach(function (c) {
+      (!c.won && luckOf(c.p) === 2 ? lucky : rest).push(c);
+    });
+    lucky.forEach(function (c) {
+      var mine = c.p.att || 0;
+      var at = rest.length;
+      // walk up from the bottom over the won tail and anyone with fewer raid days
+      while (at > 0 && (rest[at - 1].won || (rest[at - 1].p.att || 0) < mine)) at--;
+      rest.splice(at, 0, c);
+    });
+    list.length = 0;
+    Array.prototype.push.apply(list, rest);
+    return list;
+  }
+
   // ---- the items we gate, and who the sheet says wants them --------------
   // `band` returns a priority group: 0 first, 1 next. Inside a band, our own
   // performance + attendance decides.
@@ -1332,7 +1359,7 @@
           if (c.off && c.band <= worstMain) c.band = worstMain + 1;
         });
       }
-      cand.sort(rankCandidates);
+      orderLadder(cand);
 
       // An item both roles want must SHOW both roles. Keep the best few of each
       // band rather than letting one band fill the whole list -- a healer reading
@@ -1361,7 +1388,7 @@
           var got = bands[b].filter(function (c) { return c.won; }).slice(0, 2);
           shown = shown.concat(live, got);
         });
-        shown.sort(rankCandidates);
+        orderLadder(shown);
       } else {
         shown = cand;
       }
