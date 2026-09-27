@@ -2687,46 +2687,55 @@
       "25-Player Normal": [
         {
           "slot": "Sword",
+          "id": "50427",
           "name": "Bloodsurge, Kel'Thuzad's Blade of Agony",
           "type": "Main Hand"
         },
         {
           "slot": "Mace",
+          "id": "50428",
           "name": "Royal Scepter of Terenas II",
           "type": "Main Hand"
         },
         {
           "slot": "Axe",
+          "id": "50012",
           "name": "Havoc's Call, Blade of Lordaeron Kings",
           "type": "One-Hand"
         },
         {
           "slot": "Dagger",
+          "id": "50426",
           "name": "Heaven's Fall, Kryss of a Thousand Lies",
           "type": "One-Hand"
         },
         {
           "slot": "Mace",
+          "id": "49997",
           "name": "Mithrios, Bronzebeard's Legacy",
           "type": "One-Hand"
         },
         {
           "slot": "Crossbow",
+          "id": "49981",
           "name": "Fal'inrush, Defender of Quel'thalas",
           "type": "Ranged"
         },
         {
           "slot": "Staff",
+          "id": "50429",
           "name": "Archus, Greatstaff of Antonidas",
           "type": "Two-Hand"
         },
         {
           "slot": "Sword",
+          "id": "50070",
           "name": "Glorenzelg, High-Blade of the Silver Hand",
           "type": "Two-Hand"
         },
         {
           "slot": "Polearm",
+          "id": "50425",
           "name": "Oathbinder, Charge of the Ranger-General",
           "type": "Two-Hand"
         }
@@ -2734,46 +2743,55 @@
       "25-Player Heroic": [
         {
           "slot": "Sword",
+          "id": "50732",
           "name": "Bloodsurge, Kel'Thuzad's Blade of Agony",
           "type": "Main Hand"
         },
         {
           "slot": "Mace",
+          "id": "50734",
           "name": "Royal Scepter of Terenas II",
           "type": "Main Hand"
         },
         {
           "slot": "Axe",
+          "id": "50737",
           "name": "Havoc's Call, Blade of Lordaeron Kings",
           "type": "One-Hand"
         },
         {
           "slot": "Dagger",
+          "id": "50736",
           "name": "Heaven's Fall, Kryss of a Thousand Lies",
           "type": "One-Hand"
         },
         {
           "slot": "Mace",
+          "id": "50738",
           "name": "Mithrios, Bronzebeard's Legacy",
           "type": "One-Hand"
         },
         {
           "slot": "Crossbow",
+          "id": "50733",
           "name": "Fal'inrush, Defender of Quel'thalas",
           "type": "Ranged"
         },
         {
           "slot": "Staff",
+          "id": "50731",
           "name": "Archus, Greatstaff of Antonidas",
           "type": "Two-Hand"
         },
         {
           "slot": "Sword",
+          "id": "50730",
           "name": "Glorenzelg, High-Blade of the Silver Hand",
           "type": "Two-Hand"
         },
         {
           "slot": "Polearm",
+          "id": "50735",
           "name": "Oathbinder, Charge of the Ranger-General",
           "type": "Two-Hand"
         }
@@ -2781,46 +2799,55 @@
       "10-Player Normal": [
         {
           "slot": "Fist Weapon",
+          "id": "51801",
           "name": "Pugius, Fist of Defiance",
           "type": "Main Hand"
         },
         {
           "slot": "Dagger",
+          "id": "51803",
           "name": "Tel'thas, Dagger of the Blood King",
           "type": "Main Hand"
         },
         {
           "slot": "Mace",
+          "id": "51798",
           "name": "Valius, Gavel of the Lightbringer",
           "type": "Main Hand"
         },
         {
           "slot": "Dagger",
+          "id": "51800",
           "name": "Stormfury, Black Blade of the Betrayer",
           "type": "One-Hand"
         },
         {
           "slot": "Axe",
+          "id": "51795",
           "name": "Troggbane, Axe of the Frostborne King",
           "type": "One-Hand"
         },
         {
           "slot": "Crossbow",
+          "id": "51802",
           "name": "Windrunner's Heartseeker",
           "type": "Ranged"
         },
         {
           "slot": "Staff",
+          "id": "51799",
           "name": "Halion, Staff of Forgotten Love",
           "type": "Two-Hand"
         },
         {
           "slot": "Staff",
+          "id": "51797",
           "name": "Tainted Twig of Nordrassil",
           "type": "Two-Hand"
         },
         {
           "slot": "Mace",
+          "id": "51796",
           "name": "Warmace of Menethil",
           "type": "Two-Hand"
         }
@@ -2828,46 +2855,55 @@
       "10-Player Heroic": [
         {
           "slot": "Fist Weapon",
+          "id": "51941",
           "name": "Pugius, Fist of Defiance",
           "type": "Main Hand"
         },
         {
           "slot": "Dagger",
+          "id": "51939",
           "name": "Tel'thas, Dagger of the Blood King",
           "type": "Main Hand"
         },
         {
           "slot": "Mace",
+          "id": "51944",
           "name": "Valius, Gavel of the Lightbringer",
           "type": "Main Hand"
         },
         {
           "slot": "Dagger",
+          "id": "51942",
           "name": "Stormfury, Black Blade of the Betrayer",
           "type": "One-Hand"
         },
         {
           "slot": "Axe",
+          "id": "51947",
           "name": "Troggbane, Axe of the Frostborne King",
           "type": "One-Hand"
         },
         {
           "slot": "Crossbow",
+          "id": "51940",
           "name": "Windrunner's Heartseeker",
           "type": "Ranged"
         },
         {
           "slot": "Staff",
+          "id": "51943",
           "name": "Halion, Staff of Forgotten Love",
           "type": "Two-Hand"
         },
         {
           "slot": "Staff",
+          "id": "51945",
           "name": "Tainted Twig of Nordrassil",
           "type": "Two-Hand"
         },
         {
           "slot": "Mace",
+          "id": "51946",
           "name": "Warmace of Menethil",
           "type": "Two-Hand"
         }
