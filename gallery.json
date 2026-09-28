@@ -1129,6 +1129,14 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/shockaa/shocka mage.png",
+    "title": "Shocka Mage",
+    "caption": "",
+    "date": "2026-09",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/shockaa/shockaa.png",
     "title": "Shockaa",
     "caption": "",
