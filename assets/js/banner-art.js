@@ -26,13 +26,15 @@
   };
 
   var FOCUS = {};
+  var focusLoaded = false;
   function frameAll() {
     document.querySelectorAll("img.rb-art[data-key]").forEach(frame);
   }
-  fetch(ROOT + "profile-bg/focus.json")
+  var focusReady = fetch(ROOT + "profile-bg/focus.json")
     .then(function (r) { return r.ok ? r.json() : {}; })
     .then(function (j) { FOCUS = j || {}; frameAll(); })
-    .catch(function () {});
+    .catch(function () {})
+    .then(function () { focusLoaded = true; });
   window.addEventListener("resize", frameAll);
 
   function frame(img) {
@@ -52,6 +54,7 @@
 
   // `main` (optional): the player's main. An alt's art sits in the main's folder
   // (profile-bg/<main>/<alt>), so that is tried first, then <name>/<name>, then the class banner.
+  // Without the main, focus.json (which lists every banner) finds the folder before the class banner.
   // `big` (optional): use the 1000px copies.
   function html(name, cls, className, main, big) {
     var base = big ? BASE_LG : BASE;
@@ -67,12 +70,34 @@
     // each step: "url~focus key"; the class banner has no window of its own, so its key is empty
     return (
       '<img class="rb-art ' + (className || "") + '" src="' + src(mf) + '" data-key="' + esc(mf + "/" + lc + ".png") +
-      '" data-fb="' + esc(chain.join("|")) + '" alt="" loading="lazy" onload="RatsBanner.frame(this)" ' +
+      '" data-fb="' + esc(chain.join("|")) + '" data-name="' + esc(lc) + '" data-base="' + esc(base) +
+      '" alt="" loading="lazy" onload="RatsBanner.frame(this)" ' +
       'onerror="RatsBanner.next(this)">'
     );
   }
+  // the banner of `lc` in whatever folder holds it, from focus.json ("<main>/<lc>.png")
+  function keyOf(lc) {
+    var end = "/" + lc + ".png";
+    for (var k in FOCUS) {
+      if (k.slice(-end.length) === end) return k;
+    }
+    return null;
+  }
   function next(img) {
     var c = (img.dataset.fb || "").split("|").filter(Boolean);
+    var lc = img.dataset.name;
+    if (lc && (!c.length || !c[0].split("~")[1])) {
+      // the own-folder guesses failed: ask focus.json before the class banner
+      if (!focusLoaded) return focusReady.then(function () { next(img); });
+      var key = keyOf(lc);
+      delete img.dataset.name;
+      if (key && key !== img.dataset.key) {
+        img.removeAttribute("style");
+        img.dataset.key = key;
+        img.src = img.dataset.base + key.split("/").map(encodeURIComponent).join("/").replace(/\.png$/, ".webp");
+        return;
+      }
+    }
     if (!c.length) return img.remove();
     img.dataset.fb = c.slice(1).join("|");
     var step = c[0].split("~");

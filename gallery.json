@@ -1129,6 +1129,15 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/shockaa/shackaa.png",
+    "title": "Shackaa",
+    "caption": "",
+    "date": "2026-09",
+    "people": "shockaa",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/shockaa/shockaa.png",
     "title": "Shockaa",
     "caption": "",
