@@ -173,27 +173,6 @@
     return list;
   }
 
-  // Guild rule: a raid logger (comes to our main run, no extra raid on the main -- confirmed by
-  // their Okanvil letters) goes to the end of THEIR CLASS on every ladder. Everyone
-  // else keeps their place: the class's slots stay where they are, and inside those
-  // slots the loggers take the last ones.
-  function sinkLoggersInClass(list) {
-    var byCls = {};
-    list.forEach(function (c, i) {
-      if (c.won || c.missed || c.lowAtt != null) return;
-      var k = c.p.cls || "?";
-      (byCls[k] = byCls[k] || []).push(i);
-    });
-    Object.keys(byCls).forEach(function (k) {
-      var slots = byCls[k];
-      var members = slots.map(function (i) { return list[i]; });
-      var ordered = members.filter(function (c) { return !c.only25; })
-        .concat(members.filter(function (c) { return c.only25; }));
-      slots.forEach(function (i, j) { list[i] = ordered[j]; });
-    });
-    return list;
-  }
-
   // Guild policy: a raider the rolls have clearly served well drops to the bottom
   // of the item's ladder, officer or not, whatever their attendance -- ordered among
   // themselves by the same rules, and above only the "already won" tail.
@@ -923,22 +902,21 @@
     var logs = rank.logs || [];
     var altMap = rank.altMap || {};
     // who is on the "Missed our ID" list (needs history; absent = nobody is)
-    // "25 only": comes to our 25, no 10-man on the main -- shown, never reorders
-    var missedId = {}, only25 = {}, lowAtt = {};
+    // extra raids (10-mans on the main): effort, shown to settle a close call, never reorders
+    var missedId = {}, extra10 = {}, lowAtt = {};
     if (data.history && w.RatsAtt) {
       var attOpts = {
         raids: data.history.raids || [], roster: roster, joined: joined,
         vac: data.vacations || [], excuses: data.history.excuses || {},
         elsewhere: data.history.elsewhere || {}, letters: data.history.letters || {},
         ourIds: data.history.ourIds || {}, rules: data.history.attRules || null,
-        exempt: data.history.exempt10 || {},
       };
       missedId = w.RatsAtt.compute(attOpts).listed;
       // attendance % over the last LOW_WEEKS lockouts, mains only
       var cut = w.RatsAtt.lockoutStart(new Date(Date.now() - (LOW_WEEKS - 1) * 7 * 86400000));
       w.RatsAtt.compute(Object.assign({}, attOpts, { filter: function (r) { return r.date >= cut; } })).rows
         .forEach(function (row) { if (row.pct != null && row.pct < LOW_ATT) lowAtt[row.name.toLowerCase()] = row.pct; });
-      only25 = w.RatsAtt.tenMan(attOpts).loggers;
+      extra10 = w.RatsAtt.tenMan(attOpts).totals;
     }
     var lootBlob = data.loot || {};
     var loot = lootBlob.loot || (Array.isArray(lootBlob) ? lootBlob : []);
@@ -1334,7 +1312,7 @@
         c.won = !!wonNames[c.p.name.toLowerCase()];
         c.missed = !!missedId[c.p.name.toLowerCase()];
         c.lowAtt = lowAtt[c.p.name.toLowerCase()] != null ? lowAtt[c.p.name.toLowerCase()] : null;
-        c.only25 = !!only25[c.p.name.toLowerCase()];
+        c.extra10 = extra10[c.p.name.toLowerCase()] || 0;
         // One night cannot buy the front of the queue. An unproven raider sits a
         // band lower than their spec would otherwise earn -- still on the list, and
         // it costs them nothing permanent: the tag lifts the moment they raid again.
@@ -1392,7 +1370,6 @@
       }
       orderLadder(cand);
       sinkMissed(cand);
-      sinkLoggersInClass(cand);
 
       // An item both roles want must SHOW both roles. Keep the best few of each
       // band rather than letting one band fill the whole list -- a healer reading
@@ -1423,7 +1400,6 @@
         });
         orderLadder(shown);
         sinkMissed(shown);
-        sinkLoggersInClass(shown);
       } else {
         shown = cand;
       }
@@ -1437,7 +1413,7 @@
             score: c.p.score, perf: c.p.perf, att: c.p.att,
             icc: c.p.icc, iccpct: c.p.iccpct, iccdps: c.p.iccdps,
             band: c.band, offspec: !!c.off, won: c.won, low: !!c.low,
-            unproven: !!c.unproven, tail: !!c.tail, missed: !!c.missed, lowAtt: c.lowAtt, only25: !!c.only25,
+            unproven: !!c.unproven, tail: !!c.tail, missed: !!c.missed, lowAtt: c.lowAtt, extra10: c.extra10 || 0,
             owed: c.p.owed || 0, luck: luckOf(c.p),
           };
         }),

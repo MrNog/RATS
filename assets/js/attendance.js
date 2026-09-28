@@ -22,7 +22,7 @@
    snapshot, and show extra-raid effort.
 
    window.RatsAtt.compute(opts)  -> { chains, rows, listed }
-   window.RatsAtt.tenMan(opts)   -> { weeks, rows, loggers }
+   window.RatsAtt.tenMan(opts)   -> { weeks, rows, totals }
 */
 (function (w) {
   "use strict";
@@ -65,10 +65,15 @@
     return p ? p.short + " " + p.size : String(ref);
   }
 
+  // Until the first Okanvil import brings the guild's rules, attendance runs on these,
+  // so the saved raids (and loot prio) keep working from day one.
+  var DEFAULT_RULES = { must: ["ICC25"], extra: ["ICC10"], all: false };
   function rulesOf(opts) {
-    var r = (opts && opts.rules) || {};
+    var r = opts && opts.rules;
+    var dflt = !r || !Array.isArray(r.must);
+    if (dflt) r = DEFAULT_RULES;
     var clean = function (l) { return (Array.isArray(l) ? l : []).filter(parseRef); };
-    return { must: clean(r.must), extra: clean(r.extra), all: !!r.all, t: r.t || 0, by: r.by || "" };
+    return { must: clean(r.must), extra: clean(r.extra), all: !!r.all, t: r.t || 0, by: r.by || "", dflt: dflt };
   }
   function mustLabel(rules) {
     if (!rules.must.length) return "";
@@ -237,10 +242,15 @@
     var runs = {}; // wed -> ref -> [raids]
     var weeks = {};
     (opts.raids || []).forEach(function (r) {
-      var ref = refOfRaid(r);
-      if (!ref || !isMust[ref] || !usable(r)) return;
+      if (!usable(r)) return;
       if (opts.filter && !opts.filter(r)) return;
+      var ref = refOfRaid(r);
       var wed = lockoutStart(r.date);
+      if (!ref || !isMust[ref]) {
+        // before the rules existed, every 25-man we saved (not optional) was mandatory
+        if (wed >= SINCE || raidSize(r) !== 25) return;
+        ref = rules.must[0];
+      }
       weeks[wed] = true;
       var byRef = (runs[wed] = runs[wed] || {});
       (byRef[ref] = byRef[ref] || []).push(r);
@@ -304,7 +314,8 @@
       // combined by the rule: in with us once they are in enough of the mandatory raids
       var hits = {}, present = new Set(), saved = {};
       raids.forEach(function (x) { x.present.forEach(function (k) { hits[k] = (hits[k] || 0) + 1; }); });
-      var need = rules.all ? raids.length : 1;
+      // an old week has one run filed under the first rule raid, so one is enough there
+      var need = rules.all && wed >= SINCE ? raids.length : 1;
       Object.keys(hits).forEach(function (k) { if (hits[k] >= need) present.add(k); });
       raids.forEach(function (x) {
         Object.keys(x.saved).forEach(function (k) {
@@ -340,7 +351,9 @@
         if (c.vac.has(key) || c.nights.some(function (r) { return onVacation(opts.vac, m.name, r.date); })) st = "vac";
         else if (markFor(excuses, c.wed, m.name)) st = "excused";
         else if (proof) st = "elsewhere";         // locked elsewhere: can't come night 2 either
-        else if (c.open) st = "open";
+        // the lockout is still open, but once our run is in, not being in it is a miss
+        // (joining a second night turns it back into "in")
+        else if (c.open && !c.nights.length) st = "open";
         else st = "absent";
         marks.push({ c: c, st: st, proof: proof });
       });
@@ -369,28 +382,35 @@
     return { chains: chains, rows: rows, listed: listed, rules: rules };
   }
 
-  // ---- extra-raid effort (information only) ----
-  // Per main, the last TEN_WEEKS lockout weeks: with us in the mandatory raid(s)? any
-  // extra raid on the MAIN (Okanvil letter, guild or pug; or a saved raid played on the
-  // main)? Alts don't count. "ours only" = 2+ weeks with us and no extra raid at all.
-  // opts: compute()'s opts + { exempt {} }
+  // ---- extra-raid effort ----
+  // How many extra raids (the 10-mans) each main has done on the MAIN during the week:
+  // Okanvil letters (guild or pug) and the saved raids they played. Alts don't count.
+  // It is effort, never a penalty: loot prio shows it to settle a close call.
+  // cells = the last TEN_WEEKS lockouts, newest first, for "this week".
   function tenMan(opts) {
     var rules = rulesOf(opts);
     var R = rosterIndex(opts.roster, w.RatsData && RatsData.aliasFor);
     var today = opts.today || new Date();
     var weeks = [];
     for (var i = 0; i < TEN_WEEKS; i++) weeks.push(lockoutStart(new Date(today.getTime() - i * 7 * 86400000)));
-    if (!rules.extra.length) return { weeks: weeks, rows: [], loggers: {}, rules: rules };
+    if (!rules.extra.length) return { weeks: weeks, rows: [], totals: {}, rules: rules };
     var isExtra = {};
     rules.extra.forEach(function (ref) { isExtra[ref] = true; });
     var main = compute(Object.assign({}, opts, { filter: null }));
-    var byWeek = {};
-    main.chains.forEach(function (c) { byWeek[c.wed] = c; });
     var extra = {}, heard = {};
+    // every extra raid a main has done, all time: one per raid per lockout, however we
+    // heard of it (a letter and a saved raid of the same ID are one raid)
+    var done = {};
+    function count(m, wed, ref) {
+      (done[m] = done[m] || {})[wed + "|" + ref] = true;
+    }
     lettersOf(opts).forEach(function (l) {
       var m = R.resolveMain(l.n).toLowerCase();
       heard[m] = true;
-      if (isExtra[l.z + l.size] && R.onMain(l.n)) ((extra[l.week] = extra[l.week] || {})[m] = l.z + l.size);
+      if (isExtra[l.z + l.size] && R.onMain(l.n)) {
+        (extra[l.week] = extra[l.week] || {})[m] = l.z + l.size;
+        count(m, l.week, l.z + l.size);
+      }
     });
     (opts.raids || []).forEach(function (r) {
       var ref = refOfRaid(r);
@@ -398,42 +418,33 @@
       var wed = lockoutStart(r.date);
       (r.groups || []).forEach(function (g) {
         (g.members || []).forEach(function (mm) {
-          if (R.onMain(mm.name)) (extra[wed] = extra[wed] || {})[R.resolveMain(mm.name).toLowerCase()] = ref;
+          if (!R.onMain(mm.name)) return;
+          var m = R.resolveMain(mm.name).toLowerCase();
+          (extra[wed] = extra[wed] || {})[m] = ref;
+          count(m, wed, ref);
         });
       });
     });
     var raided = new Set();
     main.chains.forEach(function (c) { c.present.forEach(function (k) { raided.add(k); }); });
-    var exempt = opts.exempt || {};
-    var loggers = {};
+    var totals = {};
     var rows = poolOf(R, raided).map(function (m) {
       var k = m.name.toLowerCase();
-      var w25 = 0, w10 = 0;
       var cells = weeks.map(function (wk) {
-        var c = byWeek[wk];
-        var ours = !!(c && c.present.has(k)), ex = (extra[wk] && extra[wk][k]) || null;
-        if (ours) w25++;
-        if (ex) w10++;
-        return { week: wk, ours: ours, extra: ex };
+        return { week: wk, extra: (extra[wk] && extra[wk][k]) || null };
       });
-      var ex = exempt[safeKey(normName(m.name))] || null;
-      var addon = !!heard[k];
-      // without Okanvil a pug is invisible, so "ours only" is only a suspicion
-      var verdict = ex ? "exempt"
-        : w10 > 0 ? "effort"
-          : w25 >= 2 ? (addon ? "only25" : "only25?")
-            : "little";
-      if (verdict === "only25") loggers[k] = { weeks25: w25 };
+      var total = Object.keys(done[k] || {}).length;
+      if (total) totals[k] = total;
       return {
         name: m.name, cls: m["class"] || "", rankIndex: m.rankIndex != null ? m.rankIndex : 99,
-        rankName: m.rankName || "", cells: cells, w25: w25, w10: w10, verdict: verdict, exempt: ex, addon: addon,
+        rankName: m.rankName || "", cells: cells, total: total, thisWeek: !!cells[0].extra,
+        addon: !!heard[k], // without Okanvil only the 10-mans we saved can be seen
       };
     });
-    var order = { only25: 0, "only25?": 1, little: 2, effort: 3, exempt: 4 };
     rows.sort(function (a, b) {
-      return (order[a.verdict] - order[b.verdict]) || (a.rankIndex - b.rankIndex) || a.name.localeCompare(b.name);
+      return (b.total - a.total) || (a.rankIndex - b.rankIndex) || a.name.localeCompare(b.name);
     });
-    return { weeks: weeks, rows: rows, loggers: loggers, rules: rules };
+    return { weeks: weeks, rows: rows, totals: totals, rules: rules };
   }
 
   w.RatsAtt = {

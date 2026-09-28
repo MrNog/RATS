@@ -122,7 +122,7 @@
       (p.low ? " — off the pace for our raid" : "") +
       (p.lowAtt != null ? " — came to only " + p.lowAtt + "% of our main runs in 8 weeks: bottom of the ladder" : "") +
       (p.missed ? " — pugged a mandatory raid without an excuse: bottom of the ladder until they have come to " + (window.RatsAtt ? RatsAtt.REDEEM : 3) + " of our main runs" : "") +
-      (p.only25 ? " — raid logger: only comes to our main run, no extra raid on the main in " + (window.RatsAtt ? RatsAtt.TEN_WEEKS : 4) + " weeks, so last of their class" : "") +
+      (p.extra10 ? " — " + p.extra10 + " extra raid" + (p.extra10 === 1 ? "" : "s") + " (10-man) on the main" : "") +
       (p.tail ? " — holds this group open, last in line until he proves it" : "") +
       (p.luck === 0 ? " — owed: " + p.owed + " items behind the raid's rate" : "") +
       (p.luck === 2 ? " — well served: " + Math.abs(p.owed) + " items ahead of the raid's rate" : "");
@@ -134,7 +134,7 @@
       (p.low ? '<i class="tag low">low</i>' : "") +
       (p.lowAtt != null ? '<i class="tag lowatt">' + p.lowAtt + '%</i>' : "") +
       (p.missed ? '<i class="tag missed">missed ID</i>' : "") +
-      (p.only25 ? '<i class="tag only25">logger</i>' : "") +
+      (p.extra10 ? '<i class="tag extra10" title="Extra raids (10-man) on the main">10m ' + p.extra10 + '</i>' : "") +
       (!p.won && p.luck === 2 ? '<i class="tag lucky">lucky</i>' : "") +
       "</span>"
     );

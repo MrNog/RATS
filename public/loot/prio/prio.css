@@ -103,7 +103,7 @@
 .prio .tag.low { color: #b06a6a; border-color: #5c3434 }
 .prio .tag.missed { color: #ff8a8a; border-color: #6e2e2e; background: #3a1c1c }
 .prio .tag.lowatt { color: #e6b866; border-color: #5a4a26 }
-.prio .tag.only25 { color: #b8a27a; border-color: #4a4232 }
+.prio .tag.extra10 { color: #b8a27a; border-color: #4a4232 }
 .prio .tag.owed { color: #7fd99a; border-color: #2f5a3c }
 .prio .tag.lucky { color: #e0b25a; border-color: #5c4a24 }
 .prio .pr-legend .tag { margin-left: 0 }

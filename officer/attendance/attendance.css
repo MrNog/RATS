@@ -54,7 +54,8 @@
 .col.top h2 { border-bottom-color: #7fcf95 }
 .col.midc h2 { border-bottom-color: #e6b866 }
 .col.bot h2 { border-bottom-color: #ff8a8a }
-.col ol { list-style: none; margin: 0; padding: 0 }
+/* about 12 names tall, the rest scrolls */
+.col ol { list-style: none; margin: 0; padding: 0 4px 0 0; max-height: 460px; overflow-y: auto; overscroll-behavior: contain }
 .col li {
   display: grid; grid-template-columns: 22px 1fr auto; align-items: center; gap: 0 10px;
   padding: 6px 2px; border-bottom: 1px solid var(--surface-2);
@@ -72,7 +73,6 @@
 .col.midc .val { color: #e6b866 } .col.midc .bar i { background: #e6b866 }
 .col.bot .val { color: #ff8a8a } .col.bot .bar i { background: #ff8a8a }
 .col .none { margin: 14px 2px; color: var(--text-dim-2); font-size: 13px }
-.btn.more { width: 100%; margin-top: 8px; justify-content: center }
 
 .tag { flex: none; font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: .03em; border: 1px solid; border-radius: 3px; padding: 0 5px }
 .tag.miss { color: #ff8a8a; border-color: #5a3328 }

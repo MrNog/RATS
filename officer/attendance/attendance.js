@@ -15,7 +15,6 @@ const CLASS_COLOR = {
 // rank tag colours, by the tag ("Warchief Rat" -> WR); anything else is dim
 const RANK_COLOR = { KR: "#b37fe0", WF: "#c0392b", WR: "#e05a5a", RR: "#e0a060", SR: "#8a8d93" };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const SHOW = 12; // names per column before "Show all"
 
 const $ = (id) => document.getElementById(id);
 function esc(s) {
@@ -70,7 +69,7 @@ function attOpts(extra) {
   return Object.assign({
     raids: HIST.raids || [], roster: g.roster || [], joined: g.joined || {}, vac: VAC,
     excuses: HIST.excuses || {}, elsewhere: HIST.elsewhere || {}, letters: HIST.letters || {},
-    ourIds: HIST.ourIds || {}, rules: HIST.attRules || null, exempt: HIST.exempt10 || {},
+    ourIds: HIST.ourIds || {}, rules: HIST.attRules || null,
   }, extra || {});
 }
 // the period picked: raids from the lockout week N-1 weeks back
@@ -97,6 +96,7 @@ function renderRules(rules) {
   const parts = [];
   if (rules.must.length) parts.push(`Mandatory <b>${esc(RatsAtt.mustLabel(rules))}</b>`);
   if (rules.extra.length) parts.push(`Extra <b>${esc(RatsAtt.extraLabel(rules))}</b>`);
+  if (rules.dflt) parts.push('<span class="dim">default until the first Okanvil import</span>');
   parts.push("raiders and mains only, alts count for their main");
   $("rules").innerHTML = parts.join('<span class="sep">·</span>');
 }
@@ -105,18 +105,14 @@ function renderRules(rules) {
 // cols: [{ key, title, range, tone, items: [{ r, right, sub, tags, bar }] }]
 function columns(cols) {
   return `<div class="board">${cols.map((c) => {
-    const open = !!UI.open[c.key];
-    const shown = open ? c.items : c.items.slice(0, SHOW);
-    const li = shown.map((it, i) => `
+    const li = c.items.map((it, i) => `
       <li><span class="pos">${i + 1}</span>
         <span class="who">${rankTag(it.r.rankName)}${nameHtml(it.r)}${it.tags || ""}<span class="runs">${it.sub || ""}</span></span>
         <span class="val">${it.right}</span>
         <span class="bar"><i style="width:${Math.max(it.bar || 0, 3)}%"></i></span>${it.after || ""}</li>`).join("");
-    const more = c.items.length > SHOW
-      ? `<button class="btn more" type="button" data-more="${c.key}">${open ? "Show less" : "Show all " + c.items.length}</button>` : "";
     return `<div class="col ${c.tone}">
         <h2>${c.title} <span class="rng">${c.range}</span><span class="c">${c.items.length}</span></h2>
-        ${c.items.length ? `<ol>${li}</ol>${more}` : `<p class="none">${c.none || "Nobody."}</p>`}
+        ${c.items.length ? `<ol>${li}</ol>` : `<p class="none">${c.none || "Nobody."}</p>`}
       </div>`;
   }).join("")}</div>`;
 }
@@ -248,8 +244,8 @@ function renderWeek() {
 }
 
 // ---------------------------------------------------------------- extra raids
-// Same three columns, by weeks with an extra raid on the main. Bottom = raid loggers:
-// they come to our main run and do nothing else (information only, officers decide).
+// Who does the 10-mans on their main during the week, and how many. Effort only:
+// nothing here costs anyone a place.
 function renderExtra() {
   const el = $("vextra");
   const t = RatsAtt.tenMan(attOpts());
@@ -258,30 +254,21 @@ function renderExtra() {
     el.innerHTML = empty("No extra raids chosen yet.");
     return;
   }
-  const W = RatsAtt.TEN_WEEKS;
-  const rows = t.rows.filter((r) => whoOk(r) && searchOk(r) && r.verdict !== "little");
-  const item = (r) => {
-    const raids = [...new Set(r.cells.map((c) => c.extra).filter(Boolean))].map(RatsAtt.refLabel).join(", ");
-    return {
-      r, right: r.w10 + "/" + W, sub: raids, bar: (100 * r.w10) / W,
-      tags: r.verdict === "only25?" ? '<i class="tag vac" title="No Okanvil: only guild runs could be checked">no addon</i>' : "",
-      after: /^only25/.test(r.verdict)
-        ? `<button type="button" class="btn xs" data-act="exempt" data-n="${esc(r.name)}" title="Already geared: extra raids give them nothing">Exempt</button>` : "",
-    };
-  };
-  const by = (a, b) => b.w10 - a.w10 || b.w25 - a.w25 || a.rankIndex - b.rankIndex || a.name.localeCompare(b.name);
-  const most = rows.filter((r) => r.verdict === "effort" && r.w10 >= 2).sort(by).map(item);
-  const some = rows.filter((r) => r.verdict === "effort" && r.w10 < 2).sort(by).map(item);
-  const loggers = rows.filter((r) => /^only25/.test(r.verdict)).sort(by).map(item);
-  const exempt = rows.filter((r) => r.verdict === "exempt");
+  const rows = t.rows.filter((r) => whoOk(r) && searchOk(r));
+  const top = Math.max(1, ...rows.map((r) => r.total));
+  const item = (r) => ({
+    r, right: String(r.total), bar: (100 * r.total) / top,
+    tags: r.addon ? "" : '<i class="tag vac" title="No Okanvil: only the 10-mans we saved are counted">no addon</i>',
+  });
+  // rows come sorted by total, most first
+  const now = rows.filter((r) => r.thisWeek).map(item);
+  const before = rows.filter((r) => r.total > 0 && !r.thisWeek).map(item);
+  const none = rows.filter((r) => r.total === 0).map(item);
   el.innerHTML = columns([
-    { key: "xmost", title: "Most effort", range: `2+ of ${W} weeks`, tone: "top", items: most },
-    { key: "xsome", title: "Some", range: `1 of ${W} weeks`, tone: "midc", items: some },
-    { key: "xlog", title: "Loggers", range: "ours only", tone: "bot", items: loggers, none: "No raid loggers. 🧀" },
-  ]) + (exempt.length
-    ? `<p class="foot">Exempt: ${exempt.map((r) => nameHtml(r) +
-      ` <button type="button" class="btn xs" data-act="unexempt" data-n="${esc(r.name)}">Undo</button>`).join('<span class="sep">·</span>')}</p>`
-    : "");
+    { key: "xnow", title: "This week", range: "did a 10-man", tone: "top", items: now },
+    { key: "xbefore", title: "Earlier", range: "not this week yet", tone: "midc", items: before },
+    { key: "xnone", title: "None yet", range: "no extra raid seen", tone: "", items: none },
+  ]);
 }
 
 // ---------------------------------------------------------------- raids (the old History log)
@@ -614,11 +601,6 @@ document.addEventListener("click", (ev) => {
     render();
     return;
   }
-  if (t.dataset.more) {
-    UI.open[t.dataset.more] = !UI.open[t.dataset.more];
-    render();
-    return;
-  }
   const act = t.dataset.act, n = t.dataset.n, wed = t.dataset.wed;
   if (act === "excuse") {
     UI.editing = { wed, name: n };
@@ -634,9 +616,6 @@ document.addEventListener("click", (ev) => {
     const id = HIST.excuses[RatsAtt.excuseId(RatsAtt.weekKey(wed), n)] ? RatsAtt.excuseId(RatsAtt.weekKey(wed), n)
       : RatsAtt.excuseId("icc25|" + wed, n);
     saveHistField("excuses", id, null, n + "'s excuse removed.");
-  } else if (act === "exempt" || act === "unexempt") {
-    saveHistField("exempt10", RatsAtt.safeKey(RatsAtt.normName(n)), act === "exempt" ? { ts: Date.now() } : null,
-      act === "exempt" ? n + " exempt." : n + " no longer exempt.");
   }
 });
 document.addEventListener("keydown", (ev) => {
