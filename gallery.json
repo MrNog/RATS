@@ -1120,20 +1120,20 @@
   },
   {
     "cat": "profile-bg",
-    "file": "images/profile-bg/shmurda/shmurda.png",
-    "title": "Shmurda",
-    "caption": "",
-    "date": "2026-07",
-    "people": "shmurda",
-    "wide": true
-  },
-  {
-    "cat": "profile-bg",
     "file": "images/profile-bg/shockaa/shackaa.png",
     "title": "Shackaa",
     "caption": "",
     "date": "2026-09",
     "people": "shockaa",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/shmurda/shmurda.png",
+    "title": "Shmurda",
+    "caption": "",
+    "date": "2026-07",
+    "people": "shmurda",
     "wide": true
   },
   {
