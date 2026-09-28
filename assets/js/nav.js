@@ -31,7 +31,7 @@
     ["tools", "Tools", "officer/index.html"],
     ["guild", "Guild", "officer/guild/index.html"],
     ["comp", "Comp", "officer/comp/index.html"],
-    ["history", "Attendance", "officer/history/index.html"],
+    ["attendance", "Attendance", "officer/attendance/index.html"],
     ["loot-prio", "Loot Prio", "public/loot/index.html?tab=priority"],
     ["lore-post", "Lore", "officer/lore/index.html"],
     ["admin", "Admin", "officer/admin/index.html"],

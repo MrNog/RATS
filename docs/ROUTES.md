@@ -23,7 +23,7 @@ officer/                            PRIVATE tools (gated by guild key)
   index.html                        officer landing / menu
   guild/index.html                  roster browser                     (+ guild.css/.js)
   comp/index.html                   raid comp builder                  (+ comp.css/.js)
-  history/index.html                attendance + raid log              (+ history.css/.js)
+  attendance/index.html             attendance board (top/middle/bottom), this week, extra raids, raid log, Okanvil import (+ attendance.css/.js)
   lore/index.html                   post raid stories to Discord (+ the site) (+ lore.css/.js)
   admin/index.html                  maintainer console                 (+ admin.css/.js)
 assets/                             SHARED
@@ -67,7 +67,7 @@ assets/                             SHARED
 | `officer/index.html`               | hub           | `../index.html`                                         |
 | `officer/index.html`               | vacations     | `../public/vacations/index.html`                        |
 | `officer/<tool>/`                  | officer hub   | `../index.html`                                         |
-| `officer/history/`                 | vacations     | `../../public/vacations/index html`                     |
+| `officer/attendance/`              | vacations     | `../../public/vacations/index html`                     |
 | `public/<page>/`                   | hub           | `../../index.html`                                      |
 | `officer/index.html`               | okanvil       | `../public/okanvil/index.html` (preview)                 |
 | `public/vacations/` (officer mode) | officer hub   | `../../officer/index.html` (set in vacations.js `boot`) |

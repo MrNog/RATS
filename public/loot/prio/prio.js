@@ -75,8 +75,28 @@
     return g || ["Armour", 7];
   }
 
+  // ICC in kill order; a boss not listed here sorts after, alphabetically
+  var BOSS_ORDER = [/marrowgar/i, /deathwhisper/i, /gunship|skybreaker|orgrim/i, /saurfang/i, /festergut/i,
+    /rotface/i, /putricide/i, /blood prince|council/i, /lana|blood-queen|blood queen/i, /valithria|dreamwalker/i,
+    /sindragosa/i, /lich king/i];
+  function bossRank(b) {
+    for (var i = 0; i < BOSS_ORDER.length; i++) if (BOSS_ORDER[i].test(b || "")) return i;
+    return 50;
+  }
+  // the heading an item sits under, and its place: [name, order]
+  function keyOf(it) {
+    return GROUP_BY === "type" ? groupOf(it.item) : [it.boss || "Other", bossRank(it.boss)];
+  }
+
   var DATA = null, RAW = null, LOADED = false, LOADING = false;
-  var VIEW = "bis", TIER = "all", QUERY = "", MIN_DAYS = 1;
+  var VIEW = "bis", TIER = "all", QUERY = "";
+  // A raider needs 3 raid days with us to be on a ladder at all: one or two nights
+  // are a visit, not a claim on loot.
+  var MIN_DAYS = 3;
+  // Group the list by the boss that drops it (what the raid is fighting) or by the
+  // kind of item (what an officer looks under when "a trinket dropped").
+  var GROUP_BY = "boss";
+  try { if (localStorage.getItem("ratsPrioGroup") === "type") GROUP_BY = "type"; } catch (e) {}
   // How many names a ladder shows before "+N": the one who gets it and the next few.
   var SHOWN = 4;
   // Folded groups, opened ladders and opened luck rows. Not remembered between
@@ -84,6 +104,11 @@
   var CLOSED = {}, OPEN_ITEM = {}, OPEN_LUCK = {};
 
   function $(id) { return document.getElementById(id); }
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function shortDay(s) {
+    var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || ""));
+    return m ? Number(m[3]) + " " + MONTHS[Number(m[2]) - 1] : String(s || "");
+  }
 
   // ---- BiS list: one compact card per item ----------------------------
   function nameHtml(p, isNext) {
@@ -95,6 +120,9 @@
       (p.offspec ? " — off-spec, takes leftovers" : "") +
       (p.unproven ? " — only " + (p.icc || 0) + " ICC 25 night" + (p.icc === 1 ? "" : "s") + " so far" : "") +
       (p.low ? " — off the pace for our raid" : "") +
+      (p.lowAtt != null ? " — came to only " + p.lowAtt + "% of our main runs in 8 weeks: bottom of the ladder" : "") +
+      (p.missed ? " — pugged a mandatory raid without an excuse: bottom of the ladder until they have come to " + (window.RatsAtt ? RatsAtt.REDEEM : 3) + " of our main runs" : "") +
+      (p.only25 ? " — raid logger: only comes to our main run, no extra raid on the main in " + (window.RatsAtt ? RatsAtt.TEN_WEEKS : 4) + " weeks, so last of their class" : "") +
       (p.tail ? " — holds this group open, last in line until he proves it" : "") +
       (p.luck === 0 ? " — owed: " + p.owed + " items behind the raid's rate" : "") +
       (p.luck === 2 ? " — well served: " + Math.abs(p.owed) + " items ahead of the raid's rate" : "");
@@ -104,7 +132,9 @@
       (p.offspec ? '<i class="tag">off</i>' : "") +
       (p.unproven ? '<i class="tag new">new</i>' : "") +
       (p.low ? '<i class="tag low">low</i>' : "") +
-      (!p.won && p.luck === 0 ? '<i class="tag owed">owed</i>' : "") +
+      (p.lowAtt != null ? '<i class="tag lowatt">' + p.lowAtt + '%</i>' : "") +
+      (p.missed ? '<i class="tag missed">missed ID</i>' : "") +
+      (p.only25 ? '<i class="tag only25">logger</i>' : "") +
       (!p.won && p.luck === 2 ? '<i class="tag lucky">lucky</i>' : "") +
       "</span>"
     );
@@ -151,7 +181,9 @@
       '<div class="pi-main">' +
       '<div class="pi-hd"><span class="pi-name">' + esc(it.item) + "</span>" +
       '<span class="pi-tier">' + esc(TIER_LABEL[it.tier] || it.tier) + "</span></div>" +
-      '<div class="pi-sub">' + esc(it.boss) + ' · <span title="Fusion sheet priority">' + esc(it.prio) + "</span></div>" +
+      // the sub line names what the heading does not: the kind under a boss, the boss under a kind
+      '<div class="pi-sub">' + esc(GROUP_BY === "boss" ? groupOf(it.item)[0] : it.boss) +
+      ' · <span title="Fusion sheet priority">' + esc(it.prio) + "</span></div>" +
       '<div class="pi-names">' + ladderHtml(it) + "</div>" +
       "</div></li>"
     );
@@ -181,20 +213,21 @@
     if (!grid || !DATA) return;
     var list = DATA.items.filter(matches);
     list.sort(function (a, b) {
-      var ga = groupOf(a.item), gb = groupOf(b.item);
-      return (ga[1] - gb[1]) ||
+      var ga = keyOf(a), gb = keyOf(b);
+      return (ga[1] - gb[1]) || ga[0].localeCompare(gb[0]) ||
+        (GROUP_BY === "boss" ? groupOf(a.item)[1] - groupOf(b.item)[1] : 0) ||
         (tokenRank(a.item) - tokenRank(b.item)) ||
         ((a.tier === "R" ? 0 : 1) - (b.tier === "R" ? 0 : 1)) ||
         a.item.localeCompare(b.item);
     });
     var counts = {};
     list.forEach(function (it) {
-      var g = groupOf(it.item)[0];
+      var g = keyOf(it)[0];
       counts[g] = (counts[g] || 0) + 1;
     });
     var html = "", group = null;
     list.forEach(function (it) {
-      var g = groupOf(it.item)[0];
+      var g = keyOf(it)[0];
       if (g !== group) {
         if (group !== null) html += "</ul>";
         group = g;
@@ -213,7 +246,7 @@
     $("prCount").textContent = list.length + " of " + DATA.items.length + " items";
     var names = Object.keys(counts);
     $("prCollapse").textContent = names.length && names.every(function (g) { return CLOSED[g]; })
-      ? "⊞ Expand all" : "⊟ Collapse all";
+      ? "Expand all" : "Collapse all";
   }
 
   // ---- Loot luck: items won against what the ICC nights should give -----
@@ -234,7 +267,7 @@
     var head =
       '<p class="lnote">Since <b>' + esc(m.lootFrom) + "</b> the raid wins about <b>" + rate +
       "</b> items per raider per ICC 25 night. <b>Owed</b> = what your nights should have given you − what you won. " +
-      "<b>+" + m.luckMargin + "</b> or more owed moves you up inside your group; <b>" + m.luckMargin + "</b> or more ahead drops you to the bottom of every BiS ladder, still ahead of anyone below you with fewer raid days. Click a row for the items.</p>";
+      "<b>" + m.luckMargin + "</b> or more ahead drops you to the bottom of every BiS ladder. Click a row for the items.</p>";
     var rows = list.map(function (p) {
       var tone = p.luck === 0 ? "owed" : p.luck === 2 ? "lucky" : "even";
       var half = Math.round((Math.abs(p.owed) / maxAbs) * 50);
@@ -269,10 +302,19 @@
     if (VIEW === "bis") renderBis(); else renderLuck();
   }
 
+  // a segmented control: the pressed button is the picked one
+  function press(sel, pick) {
+    Array.prototype.forEach.call(document.querySelectorAll("#priority " + sel), function (b) {
+      b.setAttribute("aria-pressed", String(b === pick));
+    });
+  }
+
   function setView(v) {
     VIEW = v;
-    Array.prototype.forEach.call(document.querySelectorAll("#priority .vbtn"), function (b) {
-      b.classList.toggle("active", b.getAttribute("data-view") === v);
+    press(".vbtn", document.querySelector('#priority .vbtn[data-view="' + v + '"]'));
+    // the BiS list's own controls step aside on Loot luck
+    Array.prototype.forEach.call(document.querySelectorAll("#priority .bis-only"), function (e) {
+      e.hidden = v !== "bis";
     });
     $("prBis").hidden = v !== "bis";
     $("prLuck").hidden = v !== "luck";
@@ -374,6 +416,9 @@
       fbGet("roster"),
       fbGet("rankings"),
       fbGet("loot"),
+      // history + vacations feed the "Missed our ID" rule (officer tab only)
+      window.RatsData ? RatsData.loadHistory({ interactive: false }).catch(function () { return null; }) : null,
+      window.RatsData ? RatsData.loadVacations().catch(function () { return []; }) : [],
       // icons.json gives art + slot for items nobody has won yet; the loot node
       // carries a real slug for everything that HAS dropped.
       fetch("prio/icons.json", { cache: force ? "reload" : "default" })
@@ -382,7 +427,7 @@
     ]).then(function (res) {
       LOADING = false;
       if (refresh) refresh.disabled = false;
-      var roster = res[0], rankings = res[1], loot = res[2], icons = res[3];
+      var roster = res[0], rankings = res[1], loot = res[2], history = res[3], vacations = res[4], icons = res[5];
       if (!roster || !rankings) {
         $("prGrid").innerHTML = '<div class="pr-empty">Could not reach the guild database. ' +
           "Check that you are online, then refresh.</div>";
@@ -398,14 +443,13 @@
       ((loot && loot.loot) || []).forEach(function (l) {
         if (l && l.name && l.icon) ICONS[String(l.name).toLowerCase()] = l.icon;
       });
-      RAW = { roster: roster, rankings: rankings, loot: loot };
+      RAW = { roster: roster, rankings: rankings, loot: loot, history: history, vacations: vacations || [] };
       DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
       LOADED = true;
       var m = DATA.meta;
       $("prMeta").innerHTML =
-        "<i><b>" + m.active + "</b> raiders</i>" +
-        "<i><b>" + m.raidDays + "</b> raid days</i>" +
-        "<i>last raid <b>" + esc(m.lastRaid) + "</b></i>";
+        '<b>' + m.active + '</b> raiders<i class="dot">·</i><b>' + m.raidDays + '</b> raid days' +
+        '<i class="dot">·</i>last raid <b>' + esc(shortDay(m.lastRaid)) + '</b>';
       render();
     }).catch(function (e) {
       LOADING = false;
@@ -436,10 +480,16 @@
       }
       var tb = t.closest(".tbtn");
       if (tb) {
-        Array.prototype.forEach.call(root.querySelectorAll(".tbtn"), function (x) {
-          x.classList.toggle("active", x === tb);
-        });
+        press(".tbtn", tb);
         TIER = tb.getAttribute("data-tier");
+        return renderBis();
+      }
+      var gb = t.closest(".gbtn");
+      if (gb) {
+        press(".gbtn", gb);
+        GROUP_BY = gb.getAttribute("data-by");
+        try { localStorage.setItem("ratsPrioGroup", GROUP_BY); } catch (err) {}
+        CLOSED = {};
         return renderBis();
       }
       var row = t.closest(".lrow");
@@ -450,7 +500,7 @@
       }
       if (t.closest("#prCollapse") && DATA) {
         var names = {};
-        DATA.items.filter(matches).forEach(function (x) { names[groupOf(x.item)[0]] = 1; });
+        DATA.items.filter(matches).forEach(function (x) { names[keyOf(x)[0]] = 1; });
         var keys = Object.keys(names);
         var allShut = keys.length && keys.every(function (k) { return CLOSED[k]; });
         keys.forEach(function (k) { CLOSED[k] = !allShut; });
@@ -467,8 +517,8 @@
       if (ex && DATA) {
         var text = exportText();
         var done = function () {
-          ex.textContent = "✓ Copied";
-          setTimeout(function () { ex.textContent = "⧉ Export for Okanvil"; }, 1800);
+          ex.textContent = "Copied";
+          setTimeout(function () { ex.textContent = "Export for Okanvil"; }, 1800);
         };
         // clipboard API needs a secure context; fall back to a selectable box
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -481,12 +531,6 @@
     $("prQ").addEventListener("input", function (e) {
       QUERY = e.target.value.trim().toLowerCase();
       renderBis();
-    });
-    $("prMinDays").addEventListener("change", function (e) {
-      MIN_DAYS = parseInt(e.target.value, 10) || 1;
-      if (!RAW) return; // still loading
-      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
-      render();
     });
   }
 

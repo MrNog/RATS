@@ -154,35 +154,9 @@ input[type="password"] {
   min-width: 280px;
 }
 
-.segs {
-  display: inline-flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2px;
-}
-.seg {
-  background: transparent;
-  border: 0;
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 0 11px;
-  height: 24px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.seg:hover {
-  color: var(--white);
-}
-.seg.active {
-  background: var(--accent);
-  color: var(--surface-2);
-}
+
+
+
 .sug:hover {
   background: var(--row);
 }

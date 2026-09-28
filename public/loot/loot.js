@@ -20,7 +20,7 @@
     return Math.floor((Date.now() / 1000 - ts) / 86400);
   };
   // Unix seconds of the Wednesday 00:00 that opened the lockout containing `d`
-  // (WotLK weekly reset is Wednesday; same rule as officer/history/history.js lockoutStart).
+  // (WotLK weekly reset is Wednesday; same rule as RatsAtt.lockoutStart in assets/js/attendance.js).
   function lockoutStartTs(d) {
     var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     x.setDate(x.getDate() - ((x.getDay() - 3 + 7) % 7));

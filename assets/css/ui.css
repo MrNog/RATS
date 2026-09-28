@@ -147,3 +147,39 @@ h2.sec:hover { color: var(--accent-hi) }
 }
 .seclist table { margin-top: 0 }
 .seclist thead th { position: sticky; top: 0; background: var(--surface-3); z-index: 1 }
+
+/* ---- segmented toggle: the site standard (a few choices in one pill, the picked one lifted) ----
+   Markup: <span class="segs"><button class="seg active">A</button>…</span>, or
+   <span class="sg"><button aria-pressed="true">A</button>…</span>. One definition for every
+   page: pages never restyle .segs/.seg, they only size or colour a variant. */
+.segs, .sg {
+  display: inline-flex; align-items: center;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 2px;
+}
+.segs .seg, .sg > button {
+  box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: auto; min-width: 0; padding: 5px 11px; border: 0; border-radius: 5px;
+  background: transparent; color: var(--text-dim-2); filter: none;
+  font: 600 13px/1.3 var(--body, var(--font)); white-space: nowrap; cursor: pointer;
+}
+.segs .seg:hover, .sg > button:hover { color: var(--white); filter: none }
+.segs .seg.active, .sg > button[aria-pressed="true"] {
+  background: var(--surface); color: var(--accent-hi); box-shadow: inset 0 0 0 1px var(--line-warm, #3a3530);
+}
+.segs .seg:focus, .sg > button:focus { outline: none }
+.segs .seg:focus-visible, .sg > button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px }
+/* a choice with nothing behind it yet (a raid with no loot): dim, still clickable */
+.segs .seg.empty { opacity: .5 }
+.segs .seg.empty.active { opacity: 1 }
+
+/* ---- underline tabs: the site standard ---- */
+.tabs { display: flex; gap: 22px; flex-wrap: wrap; border-bottom: 1px solid var(--border) }
+.tabs .tab {
+  height: auto; padding: 9px 2px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  background: transparent; color: var(--text-dim-2); filter: none;
+  font: 600 14px var(--body, var(--font)); cursor: pointer;
+}
+.tabs .tab:hover { color: var(--white); filter: none }
+.tabs .tab.active { color: var(--accent-hi); border-bottom-color: var(--accent) }
+.tabs .tab:focus { outline: none }
+.tabs .tab:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px }

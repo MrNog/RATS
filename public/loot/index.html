@@ -62,9 +62,9 @@
     </div>
 
     <div class="tabs">
-      <button class="tab active" data-t="run" onclick="setTab(this)">📦 By run</button>
-      <button class="tab" data-t="player" onclick="setTab(this)">🐀 By player</button>
-      <button class="tab" id="prioTab" data-t="priority" onclick="setTab(this)" hidden>⚖️ Priority</button>
+      <button class="tab active" data-t="run" onclick="setTab(this)">By run</button>
+      <button class="tab" data-t="player" onclick="setTab(this)">By player</button>
+      <button class="tab" id="prioTab" data-t="priority" onclick="setTab(this)" hidden>Priority</button>
     </div>
 
     <section class="panel" data-panel="run">
@@ -83,62 +83,52 @@
 
     <!-- officer-only: the BiS priority ladders + loot luck, built by prio/prio.js -->
     <section class="panel prio" data-panel="priority" id="priority" hidden>
-      <div class="pr-top">
-        <div class="views" role="tablist" aria-label="Priority view">
-          <button class="vbtn active" data-view="bis" type="button" role="tab">⚔️ BiS list</button>
-          <button class="vbtn" data-view="luck" type="button" role="tab">🍀 Loot luck</button>
-        </div>
-        <div class="pr-meta" id="prMeta"></div>
-        <div class="pr-acts">
-          <button id="prExport" class="btn" type="button" title="Copy every ladder as a Lua table for Okanvil">⧉ Export for Okanvil</button>
-          <button id="prRefresh" class="btn" type="button" title="Re-read roster, logs and loot">↻ Refresh</button>
-        </div>
+      <!-- one line of controls (approved mock: claude.ai/artifact/BwhPjYqHBFysCRjh5LcdAD) -->
+      <div class="pr-ctl">
+        <span class="sg" role="group" aria-label="View">
+          <button class="vbtn" data-view="bis" type="button" aria-pressed="true">BiS list</button>
+          <button class="vbtn" data-view="luck" type="button" aria-pressed="false">Loot luck</button>
+        </span>
+        <span class="sg bis-only" role="group" aria-label="Items">
+          <button class="tbtn" data-tier="all" type="button" aria-pressed="true">All</button>
+          <button class="tbtn" data-tier="R" type="button" aria-pressed="false">Reserved</button>
+          <button class="tbtn" data-tier="P" type="button" aria-pressed="false">Prio roll</button>
+        </span>
+        <span class="lbl bis-only">Group</span>
+        <span class="sg bis-only" role="group" aria-label="Group by">
+          <button class="gbtn" data-by="boss" type="button" aria-pressed="true">Boss</button>
+          <button class="gbtn" data-by="type" type="button" aria-pressed="false">Type</button>
+        </span>
+        <input id="prQ" class="pr-search bis-only" type="text" placeholder="Find an item or player" autocomplete="off">
       </div>
-      <p class="creed">
-        <b>Player &gt; class</b> trumps every decision on this list — it is where the call starts, not where it
-        ends. ICC 25 only.
-        <button type="button" id="prWhy" class="whybtn" aria-expanded="false">why</button>
-      </p>
-      <div class="whybox" id="prWhyBox" hidden>
-        <p>Only items <b>two or more classes</b> want. Post the raid and refresh — winners get struck through,
-          the next name lights up. Pugs and no-shows drop off.</p>
-        <p>Inside a group the order is: <b>officers first</b> (guild policy), then <b>loot luck</b> — someone
-          who has won 2+ items fewer than their ICC nights should have given them goes ahead of someone 2+
-          items ahead — then output, and where two are within 5% the one with more raid days goes ahead.</p>
-        <p class="src">Prio from the <b>Fusion P4 sheet</b> (Joardee + Pummel), built on PTR logs and aimed at
-          Putricide and the Lich King. One guild's data — disagree and say so.</p>
+
+      <!-- the numbers in one sentence, the actions as quiet links -->
+      <div class="pr-meta">
+        <span id="prMeta"></span>
+        <span class="bis-only"><i class="dot">·</i>Player &gt; class decides first</span>
+        <button type="button" id="prWhy" class="lnk bis-only" aria-expanded="false">why</button>
+        <span class="pr-acts">
+          <span id="prCount" class="pr-count bis-only"></span>
+          <button id="prCollapse" class="lnk bis-only" type="button">Collapse all</button>
+          <button id="prExport" class="lnk" type="button" title="Copy every ladder as a Lua table for Okanvil">Export for Okanvil</button>
+          <button id="prRefresh" class="lnk" type="button" title="Re-read roster, logs and loot">Refresh</button>
+        </span>
       </div>
+      <p class="whybox" id="prWhyBox" hidden>Only items two or more classes want. Inside a group: officers
+        first, then output in our main-run nights; raid days only break a tie. Someone 2+ items ahead of their
+        share drops to the bottom. Prio from the Fusion P4 sheet (Joardee + Pummel).</p>
       <textarea id="prExportBox" class="ta pr-exportbox" readonly hidden></textarea>
 
       <div id="prBis">
-        <div class="pr-ctl">
-          <input id="prQ" type="text" placeholder="Filter item or player…" autocomplete="off">
-          <div class="segs" role="group" aria-label="Tier filter">
-            <button class="seg tbtn active" data-tier="all" type="button">All</button>
-            <button class="seg tbtn" data-tier="R" type="button">Reserved</button>
-            <button class="seg tbtn" data-tier="P" type="button">Prio roll</button>
-          </div>
-          <button id="prCollapse" class="btn" type="button">⊟ Collapse all</button>
-          <label class="pr-mind" title="Hide raiders with fewer raid days than this">min raids
-            <select id="prMinDays">
-              <option value="1" selected>1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="5">5</option>
-              <option value="8">8</option>
-            </select>
-          </label>
-          <span id="prCount" class="pr-count"></span>
-        </div>
         <div class="pr-legend">
           <span><b class="lg-first">Name</b> gets it now</span>
           <span><span class="sep">&rsaquo;</span> next</span>
           <span><span class="sep drop">&raquo;</span> lower group</span>
           <span><i class="tag">off</i> off-spec</span>
-          <span><i class="tag new">new</i> few ICC 25 nights</span>
+          <span><i class="tag new">new</i> few nights</span>
           <span><i class="tag low">low</i> off the pace</span>
-          <span><i class="tag owed">owed</i> unlucky, moved up</span>
-          <span><i class="tag lucky">lucky</i> well served, moved to the bottom</span>
+          <span><i class="tag lowatt">34%</i> rarely raids</span>
+          <span><i class="tag missed">missed ID</i> pugged</span>
           <span><b class="lg-won">Name</b> already won</span>
         </div>
         <div id="prGrid" aria-live="polite"></div>
@@ -199,6 +189,7 @@
 
   <script src="../../assets/js/utils.js"></script>
   <script src="../../assets/js/data.js"></script>
+  <script src="../../assets/js/attendance.js"></script>
   <script src="prio/prio-engine.js"></script>
   <script src="prio/prio.js"></script>
   <script src="../../assets/js/banner-art.js"></script>
