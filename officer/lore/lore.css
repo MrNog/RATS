@@ -128,37 +128,9 @@ button.alt:hover {
   color: #fff;
 }
 
-/* segmented toggle (User / Role) — our own dark style, no native dropdown */
-.segs {
-  display: inline-flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2px;
-  height: var(--ctl-h);
-}
-.segs .seg {
-  background: transparent;
-  border: 0;
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 0 13px;
-  height: 24px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.segs .seg:hover {
-  color: var(--white);
-  filter: none;
-}
-.segs .seg.active {
-  background: var(--accent);
-  color: var(--surface-2);
-}
+
+
+
 
 /* native file picker styled to match (the "Choose Files" button) */
 input[type="file"]::file-selector-button {

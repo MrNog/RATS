@@ -123,10 +123,6 @@
     return out;
   }
 
-  // Inside a band, output leads -- but only where output actually separates people.
-  // Kobee and Grokara sat 1% apart with 32 raid days against 4, and the queue was
-  // decided by that 1%. Within this margin the numbers are the same night to night,
-  // so the raider who keeps showing up goes first; a real gap still wins on merit.
   // rankIndex 0 = King Rat (GM), 1 = Warchief Rat (officer). Everyone below is a
   // raider. Read from the live roster, so a promotion or a step-down takes effect
   // on the next refresh with nothing here to edit.
@@ -136,15 +132,10 @@
 
   function luckOf(p) { return p.luck == null ? 1 : p.luck; }
 
-  var TIE_BAND = 0.05;
+  // Guild policy: priority is performance. Output decides; attendance only breaks
+  // an exact tie.
   function byOutputThenLoyalty(a, b) {
-    var sa = standing(a), sb = standing(b);
-    var best = Math.max(sa, sb);
-    if (best > 0 && Math.abs(sa - sb) / best <= TIE_BAND) {
-      var da = (a.att || 0), db = (b.att || 0);
-      if (da !== db) return db - da;
-    }
-    return sb - sa;
+    return (standing(b) - standing(a)) || ((b.att || 0) - (a.att || 0));
   }
 
   // The queue order, in one place. This ran as two copies -- the display trim
@@ -163,38 +154,57 @@
       // decides which classes want an item at all -- an officer never jumps
       // into a group the sheet did not put them in.
       ((officer(b.p) ? 1 : 0) - (officer(a.p) ? 1 : 0)) ||
-      // Loot luck, still inside the band: whoever the rolls have clearly passed over
-      // goes ahead of someone clearly well served, even on less output. Between
-      // people about even, output decides as before.
-      (luckOf(a.p) - luckOf(b.p)) ||
       byOutputThenLoyalty(a.p, b.p) ||
       (b.p.score - a.p.score);
   }
 
+  // Guild rule: a main saved to another ID of a mandatory raid (assets/js/attendance.js) sits at the
+  // bottom of every ladder until they come to a main run again -- below every live
+  // candidate, above only the people who already won the item.
+  // GM's rule (Grunho): whoever barely raids with us sees no loot either. Under
+  // LOW_ATT of our main runs in the last LOW_WEEKS weeks sits under every live
+  // candidate; a pugger (above) sits lower still. Order: live, low, pugged, won.
+  var LOW_ATT = 50, LOW_WEEKS = 8;
+  function sinkMissed(list) {
+    var live = [], low = [], missed = [], won = [];
+    list.forEach(function (c) { (c.won ? won : c.missed ? missed : c.lowAtt != null ? low : live).push(c); });
+    list.length = 0;
+    Array.prototype.push.apply(list, live.concat(low, missed, won));
+    return list;
+  }
+
+  // Guild rule: a raid logger (comes to our main run, no extra raid on the main -- confirmed by
+  // their Okanvil letters) goes to the end of THEIR CLASS on every ladder. Everyone
+  // else keeps their place: the class's slots stay where they are, and inside those
+  // slots the loggers take the last ones.
+  function sinkLoggersInClass(list) {
+    var byCls = {};
+    list.forEach(function (c, i) {
+      if (c.won || c.missed || c.lowAtt != null) return;
+      var k = c.p.cls || "?";
+      (byCls[k] = byCls[k] || []).push(i);
+    });
+    Object.keys(byCls).forEach(function (k) {
+      var slots = byCls[k];
+      var members = slots.map(function (i) { return list[i]; });
+      var ordered = members.filter(function (c) { return !c.only25; })
+        .concat(members.filter(function (c) { return c.only25; }));
+      slots.forEach(function (i, j) { list[i] = ordered[j]; });
+    });
+    return list;
+  }
+
   // Guild policy: a raider the rolls have clearly served well drops to the bottom
-  // of the item's ladder, officer or not -- but not below someone who has raided
-  // less than they have. Each lucky raider is lifted back over the run of
-  // lower-attendance names at the end, and stops at the first name with as many
-  // raid days as theirs. The "already won" tail stays last.
-  //
-  // This is a pass after the sort, not a term in rankCandidates: "ahead of you
-  // only if they raided at least as much" does not hold transitively, and a sort
-  // fed a comparator like that returns whatever order it happens to reach.
+  // of the item's ladder, officer or not, whatever their attendance -- ordered among
+  // themselves by the same rules, and above only the "already won" tail.
   function orderLadder(list) {
     list.sort(rankCandidates);
-    var lucky = [], rest = [];
+    var live = [], lucky = [], won = [];
     list.forEach(function (c) {
-      (!c.won && luckOf(c.p) === 2 ? lucky : rest).push(c);
-    });
-    lucky.forEach(function (c) {
-      var mine = c.p.att || 0;
-      var at = rest.length;
-      // walk up from the bottom over the won tail and anyone with fewer raid days
-      while (at > 0 && (rest[at - 1].won || (rest[at - 1].p.att || 0) < mine)) at--;
-      rest.splice(at, 0, c);
+      (c.won ? won : luckOf(c.p) === 2 ? lucky : live).push(c);
     });
     list.length = 0;
-    Array.prototype.push.apply(list, rest);
+    Array.prototype.push.apply(list, live.concat(lucky, won));
     return list;
   }
 
@@ -912,6 +922,24 @@
     var rank = (data.rankings && data.rankings.data) || {};
     var logs = rank.logs || [];
     var altMap = rank.altMap || {};
+    // who is on the "Missed our ID" list (needs history; absent = nobody is)
+    // "25 only": comes to our 25, no 10-man on the main -- shown, never reorders
+    var missedId = {}, only25 = {}, lowAtt = {};
+    if (data.history && w.RatsAtt) {
+      var attOpts = {
+        raids: data.history.raids || [], roster: roster, joined: joined,
+        vac: data.vacations || [], excuses: data.history.excuses || {},
+        elsewhere: data.history.elsewhere || {}, letters: data.history.letters || {},
+        ourIds: data.history.ourIds || {}, rules: data.history.attRules || null,
+        exempt: data.history.exempt10 || {},
+      };
+      missedId = w.RatsAtt.compute(attOpts).listed;
+      // attendance % over the last LOW_WEEKS lockouts, mains only
+      var cut = w.RatsAtt.lockoutStart(new Date(Date.now() - (LOW_WEEKS - 1) * 7 * 86400000));
+      w.RatsAtt.compute(Object.assign({}, attOpts, { filter: function (r) { return r.date >= cut; } })).rows
+        .forEach(function (row) { if (row.pct != null && row.pct < LOW_ATT) lowAtt[row.name.toLowerCase()] = row.pct; });
+      only25 = w.RatsAtt.tenMan(attOpts).loggers;
+    }
     var lootBlob = data.loot || {};
     var loot = lootBlob.loot || (Array.isArray(lootBlob) ? lootBlob : []);
 
@@ -1304,6 +1332,9 @@
       // they keep turning up, which hiding them would never allow.
       cand.forEach(function (c) {
         c.won = !!wonNames[c.p.name.toLowerCase()];
+        c.missed = !!missedId[c.p.name.toLowerCase()];
+        c.lowAtt = lowAtt[c.p.name.toLowerCase()] != null ? lowAtt[c.p.name.toLowerCase()] : null;
+        c.only25 = !!only25[c.p.name.toLowerCase()];
         // One night cannot buy the front of the queue. An unproven raider sits a
         // band lower than their spec would otherwise earn -- still on the list, and
         // it costs them nothing permanent: the tag lifts the moment they raid again.
@@ -1360,6 +1391,8 @@
         });
       }
       orderLadder(cand);
+      sinkMissed(cand);
+      sinkLoggersInClass(cand);
 
       // An item both roles want must SHOW both roles. Keep the best few of each
       // band rather than letting one band fill the whole list -- a healer reading
@@ -1389,6 +1422,8 @@
           shown = shown.concat(live, got);
         });
         orderLadder(shown);
+        sinkMissed(shown);
+        sinkLoggersInClass(shown);
       } else {
         shown = cand;
       }
@@ -1402,7 +1437,7 @@
             score: c.p.score, perf: c.p.perf, att: c.p.att,
             icc: c.p.icc, iccpct: c.p.iccpct, iccdps: c.p.iccdps,
             band: c.band, offspec: !!c.off, won: c.won, low: !!c.low,
-            unproven: !!c.unproven, tail: !!c.tail,
+            unproven: !!c.unproven, tail: !!c.tail, missed: !!c.missed, lowAtt: c.lowAtt, only25: !!c.only25,
             owed: c.p.owed || 0, luck: luckOf(c.p),
           };
         }),

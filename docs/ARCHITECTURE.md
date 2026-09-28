@@ -31,7 +31,7 @@ officer/
   index.*    officer landing + access gate
   guild/     roster browser (armory links, fangs, join dates, low-level group, stale alert)
   comp/      raid comp builder + Save to history + optional toggle  (.wrap width 1280 — the one exception)
-  history/   attendance % + raid log (size-aware, optional toggle)
+  attendance/  attendance board + raid log (rules from Okanvil, optional toggle)
   lore/      post raid stories (markdown + images) to a Discord webhook
   admin/     maintainer console (keys, webhooks, roster/history, backup)
 assets/

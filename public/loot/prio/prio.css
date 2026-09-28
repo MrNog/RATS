@@ -5,47 +5,32 @@
 .row.ctrls[hidden], .searchbar[hidden] { display: none }
 .prio [hidden] { display: none !important }
 
-/* ---- top: view switch · counts · actions ---- */
-.prio .pr-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 4px 0 10px }
-.prio .views { display: flex; gap: 4px }
-.prio .vbtn {
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
-  height: auto; padding: 7px 14px; font-size: 13px; font-weight: 700; color: var(--text-dim-2); cursor: pointer;
+/* ---- one line of controls (approved mock: claude.ai/artifact/BwhPjYqHBFysCRjh5LcdAD) ---- */
+.prio .pr-ctl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 12px }
+.prio .lbl { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint) }
+.prio .pr-search {
+  margin-left: auto; width: 230px; max-width: 100%; height: 34px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px;
 }
-.prio .vbtn:hover { color: var(--text); filter: none }
-.prio .vbtn.active { color: #16120a; background: var(--accent); border-color: var(--accent) }
-.prio .pr-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto }
-.prio .pr-meta i {
-  font-style: normal; font-size: 11.5px; color: var(--text-dim-2);
-  border: 1px solid var(--border); border-radius: 999px; padding: 2px 9px;
-}
-.prio .pr-meta i b { color: var(--text); font-weight: 700 }
-.prio .pr-acts { display: flex; gap: 6px }
+.prio .pr-search:focus { border-color: var(--accent) }
 
-.prio .creed {
-  margin: 0 0 12px; padding: 9px 14px; font-size: 12.5px; color: var(--text-dim);
-  border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 var(--radius) var(--radius) 0;
+/* ---- the numbers in one sentence, actions as quiet links ---- */
+.prio .pr-meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 0; margin-bottom: 10px;
+  border-block: 1px solid var(--border); font-size: 13px; color: var(--text-dim);
 }
-.prio .creed b { color: var(--accent) }
-.prio .whybtn {
-  background: none; border: 0; height: auto; padding: 0 0 0 6px; cursor: pointer;
-  font-size: 11.5px; color: var(--text-faint); text-decoration: underline dotted;
-}
-.prio .whybtn:hover { color: var(--accent); filter: none }
-.prio .whybox { margin: -4px 0 12px; font-size: 12.5px; color: var(--text-dim); line-height: 1.5 }
-.prio .whybox p { margin: 6px 0 0; max-width: 110ch }
-.prio .whybox b { color: var(--text) }
-.prio .whybox .src { color: var(--text-faint) }
+.prio .pr-meta b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums }
+.prio .pr-meta .dot { font-style: normal; color: var(--text-faint); margin: 0 7px }
+.prio .pr-acts { margin-left: auto; display: flex; align-items: center; gap: 16px }
+.prio .pr-count { font-size: 12px; color: var(--text-faint) }
+.prio .lnk { all: unset; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-dim-2) }
+.prio .lnk:hover { color: var(--accent-hi) }
+.prio .lnk:disabled { opacity: .5; cursor: default }
+.prio .lnk:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; border-radius: 2px }
+.prio .whybox { margin: -2px 0 12px; font-size: 13px; color: var(--text-dim); line-height: 1.5; max-width: 90ch }
 .prio .pr-exportbox { width: 100%; min-height: 220px; margin: 0 0 12px; font: 12px/1.4 monospace }
-
-/* ---- BiS list controls + key ---- */
-.prio .pr-ctl { display: flex; align-items: center; gap: 10px; flex-wrap: wrap }
-.prio .pr-ctl input { flex: 1 1 240px; min-width: 180px }
-.prio .pr-mind { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-dim-2); white-space: nowrap }
-.prio .pr-mind select { height: var(--ctl-h); padding: 0 6px; font-size: 12px }
-.prio .pr-count { margin-left: auto; font-size: 11.5px; color: var(--text-faint) }
 .prio .pr-legend {
-  display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 4px; font-size: 11.5px; color: var(--text-dim-2);
+  display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0 0 6px; font-size: 12px; color: var(--text-dim-2);
 }
 .prio .pr-legend > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap }
 .prio .lg-first { color: var(--text); font-weight: 700 }
@@ -116,6 +101,9 @@
 }
 .prio .tag.new { color: #6f9c6f; border-color: #34502f }
 .prio .tag.low { color: #b06a6a; border-color: #5c3434 }
+.prio .tag.missed { color: #ff8a8a; border-color: #6e2e2e; background: #3a1c1c }
+.prio .tag.lowatt { color: #e6b866; border-color: #5a4a26 }
+.prio .tag.only25 { color: #b8a27a; border-color: #4a4232 }
 .prio .tag.owed { color: #7fd99a; border-color: #2f5a3c }
 .prio .tag.lucky { color: #e0b25a; border-color: #5c4a24 }
 .prio .pr-legend .tag { margin-left: 0 }
@@ -163,14 +151,13 @@
 
 @media (max-width: 760px) {
   .prio .pis { grid-template-columns: minmax(0, 1fr) }
-  .prio .pr-meta { margin-left: 0 }
+  .prio .pr-search { margin-left: 0; width: 100% }
+  .prio .pr-acts { margin-left: 0 }
   .prio .lrow { grid-template-columns: 1fr auto auto; row-gap: 6px }
   .prio .lrow .lstat { grid-row: 2 }
   .prio .lrow .lbar { grid-column: 1 / -1; grid-row: 3 }
 }
 
-/* the Loot page's .seg cells are sized for "ICC" / "25-man"; these labels are longer */
-.prio .pr-ctl .seg { padding: 6px 14px }
-.prio .pr-mind select { width: auto; min-width: 56px }
-/* the global focus ring is sized for real buttons; on this inline link it boxed the word */
-.prio .whybtn:focus-visible { outline: 1px dotted var(--accent); outline-offset: 1px; border-radius: 2px }
+/* the one action here that goes somewhere else: gold, so it is found at a glance */
+.prio #prExport { color: var(--accent-hi) }
+.prio #prExport:hover { color: var(--white) }

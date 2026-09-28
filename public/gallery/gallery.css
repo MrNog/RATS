@@ -72,39 +72,11 @@ svg.gs-icon {
   background: var(--surface);
 }
 
-/* category tabs */
-.tabs {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 12px 0 4px;
-}
-.tab {
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dim);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 6px 14px;
-  height: auto;
-  transition: border-color 0.15s, color 0.15s;
-}
-.tab:hover {
-  border-color: var(--accent);
-  color: var(--white);
-}
-.tab:focus-visible,
+/* category tabs: the site's underline tabs (ui.css .tabs/.tab), a count beside each */
+.tabs { margin: 12px 0 4px }
 .tile:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-.tab.active {
-  background: var(--accent);
-  color: var(--surface-2);
-  border-color: var(--accent);
 }
 
 /* JS masonry (tiles absolutely positioned into the shortest column -> no gaps) */
@@ -289,12 +261,12 @@ dialog#lb::backdrop {
 .phead .gtotal b { color: var(--accent-hi); font-size: 18px; font-weight: 800; margin-right: 3px; font-variant-numeric: tabular-nums }
 
 /* tabs: how much each one holds */
-.tab { display: inline-flex; align-items: center; gap: 7px }
+.tabs .tab { display: inline-flex; align-items: center; gap: 7px }
 .tab .tn {
   font-style: normal; font-size: 11px; font-weight: 700; color: var(--text-faint);
   background: rgba(255, 255, 255, .06); border-radius: 999px; padding: 1px 7px; font-variant-numeric: tabular-nums;
 }
-.tab.active .tn { color: #16120a; background: rgba(22, 18, 10, .18) }
+.tab.active .tn { color: var(--accent-hi); background: rgba(224, 184, 96, .12) }
 
 /* tiles: the title sits on the art, the art grows a little under the pointer */
 .tile { border-color: var(--border); box-shadow: 0 6px 18px -10px rgba(0, 0, 0, .7) }
@@ -322,8 +294,7 @@ dialog#lb::backdrop {
 .phead .actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end }
 .phead .gsearch { margin: 0; width: 280px; max-width: 100% }
 .galbar { margin-top: 8px }
-.tab { padding: 5px 10px; gap: 6px; font-size: 12.5px }
-.galbar .tabs { gap: 6px }
+.galbar .tabs { gap: 18px }
 @media (max-width: 760px) { .phead .actions { justify-content: flex-start } .phead .gsearch { width: 100% } }
 
 /* ---------- spotlight + shelves (All) and a tidy grid (one category / a search) ---------- */

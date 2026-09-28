@@ -137,61 +137,8 @@
   overflow-x: auto;
 }
 
-.segs {
-  display: inline-flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 2px;
-}
-.seg {
-  background: transparent;
-  border: 0;
-  color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 6px 13px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  height: auto;
-}
-.seg:hover {
-  color: var(--white);
-  filter: none;
-}
-.seg.active {
-  background: var(--accent);
-  color: var(--surface-2);
-}
 
-.tabs {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin: 12px 0 0;
-  border-bottom: 1px solid var(--border);
-}
-.tab {
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--text-dim);
-  font-size: 14px;
-  font-weight: 700;
-  padding: 9px 14px;
-  cursor: pointer;
-  margin-bottom: -1px;
-  height: auto;
-  border-radius: 0;
-}
-.tab:hover {
-  color: var(--white);
-  filter: none;
-}
-.tab.active {
-  color: var(--white);
-  border-bottom-color: var(--accent);
-}
+.tabs { margin: 12px 0 0 }
 .panel {
   margin-top: 14px;
 }
@@ -215,36 +162,29 @@
   text-transform: uppercase;
   color: var(--accent);
 }
-/* metric toggle — discreet, pushed to the right; plain text tabs, active = gold underline */
+/* metric + difficulty toggles: the site's segmented toggle (ui.css .segs), under their own
+   class names because the page's script builds and flips them by .metricbar/.mbtn */
 .metricbar {
-  display: inline-flex;
-  gap: 14px;
-  margin-left: auto; /* push to the far right of the board header */
+  display: inline-flex; align-items: center; margin-left: auto; /* push to the far right of the board header */
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 7px; padding: 2px;
 }
 /* [hidden] must win over display:inline-flex (e.g. #boardDiff is hidden on non-split raids like Ulduar) */
 .metricbar[hidden] {
   display: none;
 }
 .mbtn {
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  color: var(--text-dim-2);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 2px 1px 4px;
-  cursor: pointer;
-  height: auto;
-  border-radius: 0;
+  height: auto; padding: 5px 11px; border: 0; border-radius: 5px; background: transparent;
+  color: var(--text-dim-2); font: 600 13px/1.3 var(--body, var(--font)); cursor: pointer; filter: none;
 }
 .mbtn:hover {
   color: var(--white);
   filter: none;
 }
 .mbtn.active {
-  color: var(--text);
-  border-bottom-color: var(--accent);
+  background: var(--surface); color: var(--accent-hi); box-shadow: inset 0 0 0 1px var(--line-warm, #3a3530);
 }
+.mbtn:focus { outline: none }
+.mbtn:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px }
 /* Guild-progress card: same framed board-head as the Leaderboards. The verdict + stat grid live inside
    it (in .proghead-body, below a divider); the per-boss table is a separate card below. */
 .proghead {
@@ -270,8 +210,7 @@
    separated by a thin divider. Only the DPS/HPS bar keeps margin-left:auto to push the whole group right. */
 .board-head .boarddiff {
   margin-left: auto;
-  padding-right: 14px;
-  border-right: 1px solid var(--border-2);
+  margin-right: 10px;
 }
 /* when the diff bar is VISIBLE it pushes the group right, so the DPS/HPS bar drops its own auto-margin.
    (:not([hidden]) — on Ulduar the diff bar is hidden, so DPS/HPS keeps margin-left:auto and stays right) */

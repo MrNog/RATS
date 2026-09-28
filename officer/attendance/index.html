@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#141517" />
+  <link rel="preconnect" href="https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app" crossorigin />
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E🧀%3C/text%3E%3C/svg%3E" />
+  <title>RATS — Attendance</title>
+
+  <!-- shared -->
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/ui.css">
+  <link rel="stylesheet" href="../../assets/css/site.css">
+  <!-- page-specific -->
+  <link rel="stylesheet" href="attendance.css">
+</head>
+
+<body>
+  <header class="site-bar" data-root="../.." data-page="attendance" data-area="officer"></header>
+  <div class="band" aria-hidden="true"><img src="../../images/hub/band-attendance.jpg" alt=""></div>
+
+  <div class="wrap wide">
+    <header class="phead">
+      <p class="eyebrow">Officer tools</p>
+      <h1>Attendance</h1>
+      <p class="lede" id="rules">Loading…</p>
+      <span class="actions">
+        <button id="impBtn" type="button">Import from Okanvil</button>
+      </span>
+    </header>
+    <div id="msg" class="msg"></div>
+
+    <nav class="atabs" role="tablist" aria-label="View">
+      <button class="atab" type="button" role="tab" data-v="board">Board</button>
+      <button class="atab" type="button" role="tab" data-v="week">This week</button>
+      <button class="atab" type="button" role="tab" data-v="extra">Extra raids</button>
+      <button class="atab" type="button" role="tab" data-v="raids">Raids</button>
+    </nav>
+
+    <!-- one line of controls, shared by Board and Extra raids -->
+    <div class="ctl" id="ctl">
+      <span class="lbl" data-for="board">Period</span>
+      <span class="sg" data-for="board" data-seg="period">
+        <button type="button" data-val="4">4 weeks</button>
+        <button type="button" data-val="8">8 weeks</button>
+        <button type="button" data-val="all">All time</button>
+      </span>
+      <span class="lbl" data-for="board week extra">Who</span>
+      <span class="sg" data-for="board week extra" data-seg="who">
+        <button type="button" data-val="raiders">Raiders</button>
+        <button type="button" data-val="all">+ Sewer Rats</button>
+      </span>
+      <span class="sg" data-for="raids" data-seg="size">
+        <button type="button" data-val="all">All</button>
+        <button type="button" data-val="25">25</button>
+        <button type="button" data-val="10">10</button>
+      </span>
+      <input class="search" id="q" type="text" placeholder="Find a raider" autocomplete="off">
+    </div>
+
+    <section id="vboard" class="view"></section>
+    <section id="vweek" class="view" hidden></section>
+    <section id="vextra" class="view" hidden></section>
+    <section id="vraids" class="view" hidden></section>
+    <!-- one shared actions menu, placed under whichever ⋯ was clicked -->
+    <div class="rmenu" id="rmenu" hidden>
+      <button type="button" data-ract="players">Open players</button>
+      <button type="button" data-ract="rename">Rename</button>
+      <button type="button" data-ract="comp">Edit in Comp</button>
+      <button type="button" data-ract="discord">Post to Discord</button>
+      <button type="button" data-ract="export">Export</button>
+      <button type="button" data-ract="delete" class="del">Delete raid</button>
+    </div>
+  </div>
+
+  <!-- Import: paste the one line Okanvil copies, read the summary, save -->
+  <dialog id="impDlg" class="impdlg">
+    <h3>Import from Okanvil</h3>
+    <p class="sub">In game: <b>Attendance → Export for site</b>, Ctrl+C, paste below.</p>
+    <textarea id="impIn" rows="2" placeholder="OKV1:ATT:…" spellcheck="false"></textarea>
+    <p id="impSum" class="impsum"></p>
+    <div class="impbtns">
+      <button id="impCancel" class="btn" type="button">Cancel</button>
+      <button id="impSave" type="button" disabled>Save</button>
+    </div>
+  </dialog>
+
+  <script src="../../assets/js/data.js"></script>
+  <script src="../../assets/js/attendance.js"></script>
+  <script src="attendance.js"></script>
+  <script src="../../assets/js/nav.js"></script>
+</body>
+
+</html>
