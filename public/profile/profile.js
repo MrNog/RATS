@@ -712,8 +712,21 @@
     band.classList.remove("noart");
     band.style.setProperty("--col", col);
     img.dataset.chain = chain.join("|");
+    var located = false;
     img.onerror = function () {
       var c = (img.dataset.chain || "").split("|").filter(Boolean);
+      // Own-folder guesses failed: ask focus.json where this toon's banner really sits (the
+      // art can be filed under another main, e.g. shockaa/shackaa.png) before the class banner.
+      var own = c.filter(function (u) { return u.indexOf("/_class/") < 0; });
+      if (!own.length && !located && window.RatsBanner && window.RatsBanner.locate) {
+        located = true;
+        window.RatsBanner.locate(name).then(function (key) {
+          var found = key && bg + key.split("/").map(U.enc).join("/");
+          if (found && found !== img.getAttribute("src")) img.src = found;
+          else img.onerror();
+        });
+        return;
+      }
       if (c.length) {
         img.dataset.chain = c.slice(1).join("|");
         img.src = c[0];

@@ -107,5 +107,14 @@
     img.src = step[0];
   }
 
-  window.RatsBanner = { html: html, frame: frame, next: next };
+  // The folder that holds `name`'s banner, as "<main>/<name>.png", or null. For callers that
+  // build their own <img> (the profile hero): the art's main folder can differ from the
+  // guild's main, and only focus.json knows where the file really sits.
+  function locate(name) {
+    return focusReady.then(function () {
+      return keyOf(String(name).toLowerCase());
+    });
+  }
+
+  window.RatsBanner = { html: html, frame: frame, next: next, locate: locate };
 })();
