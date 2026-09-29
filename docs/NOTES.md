@@ -12,7 +12,7 @@ GitHub Pages. Public landing + gated officer tools, merged into one `rats/` fold
 
 - **Push via the Fork GUI**, no `gh` CLI, no CI build. Pages publishes on push. Leave the
   repo commit-ready; don't push unless asked.
-- **Edit source in `Projects\rats`** — never the live WoW AddOns copy of anything.
+- **Edit source in `Projects\apps\rats`** — never the live WoW AddOns copy of anything.
 - **Run locally with a server** (`python -m http.server 8000` or Live Server) — `file://`
   blocks fetch/crypto/webhooks.
 - **Firebase is the source of truth** and reads cost money (free tier). Never re-fetch on

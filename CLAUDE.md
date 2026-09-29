@@ -8,7 +8,7 @@ re-derive the conventions.
 
 - Plain **HTML + vanilla JS**, no build step, no framework. Hosted on **GitHub Pages**.
 - The user **deploys via the Fork GUI** (no `gh` CLI, no CI build). Leave the repo commit-ready; don't push unless asked.
-- Edit the source **here in `Projects\rats`** — never the live WoW AddOns copy.
+- Edit the source **here in `Projects\apps\rats`** — never the live WoW AddOns copy.
 
 ## Layout
 
