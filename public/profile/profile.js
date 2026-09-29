@@ -337,8 +337,9 @@
     return _tankCache[k];
   }
   // isTank is a CAREER fact, not a per-scope one: a main tank stays "a tank" on every raid tab, even a
-  // raid where he didn't tank this week. True if he tanks in ANY scope (careerStandings role "T"). The
-  // per-scope tankStats then handles "no tank fights in THIS scope" (shows an empty-but-correct tank card).
+  // raid where he didn't tank this week. True when his tank fights (careerStandings role "T") outweigh
+  // his DPS fights across all scopes, so an off-spec tank (e.g. a DPS DK who tanks now and then) keeps
+  // the DPS view. The per-scope tankStats then handles "no tank fights in THIS scope".
   var _isTankCache = {}, _isTankKey = "";
   function isTank(name) {
     if (!L) return false;
@@ -346,8 +347,12 @@
     if (_isTankKey !== snapKey) { _isTankCache = {}; _isTankKey = snapKey; }
     var k = ck(name);
     if (!(k in _isTankCache)) {
-      var st = L.careerStandings(name);
-      _isTankCache[k] = st.some(function (x) { return x.role === "T"; });
+      var tankF = 0, dpsF = 0;
+      L.careerStandings(name).forEach(function (x) {
+        if (x.role === "T") tankF += x.fights || 0;
+        else if (x.role === "D") dpsF += x.fights || 0;
+      });
+      _isTankCache[k] = tankF > 0 && tankF >= dpsF;
     }
     return _isTankCache[k];
   }

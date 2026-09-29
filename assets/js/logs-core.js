@@ -444,6 +444,7 @@
                 if (normNm(r.n) === key && trole[key] !== "HEALER" && isTankFight(r)) myTankFights++;
               });
             });
+            var onBoard = false;
             [["D", false], ["H", true]].forEach(function (pair) {
               var rf = pair[0], wantHealer = pair[1];
               var board = aggregate(logs, wantHealer, 1); // ranked by the blend, best→worst
@@ -451,6 +452,7 @@
               for (var i = 0; i < board.length; i++) if (board[i].key === key) { idx = i; break; }
               if (idx < 0) return;
               var me = board[idx];
+              onBoard = true;
               var srv = serverPctFor(me.name);
               // guild standing 0..1 (top of the bracket = 1). But a board of ONE isn't "#1 in the guild"
               // — there's no pack to top. With no server data either, we can't judge this scope, so it's
@@ -466,7 +468,10 @@
             });
             // TANK scope entry: a tank has no DPS/HPS ladder, but tanking the front IS the contribution.
             // Emit one entry counting their tank fights, standing = 1 (doing the job), no server parse.
-            if (myTankFights > 0) {
+            // Only when they're a de-facto tank in this scope (roster Protection or >= half their fights
+            // tanked) or tanking is all they did here (no DPS/HPS board entry) — a DPS who off-tanked a
+            // couple of pulls is still a DPS here.
+            if (myTankFights > 0 && (isT[key] || !onBoard)) {
               out.push({
                 raid: raid, size: size, diff: diff, role: "T",
                 fights: myTankFights, boardSize: null, guildRank: null,
