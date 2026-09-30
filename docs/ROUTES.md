@@ -11,7 +11,7 @@ relative links by depth (table at the bottom) and fix this map.
 /index.html                         HUB — public landing (Officer Tools card → officer/)
 public/                             PUBLIC pages (everyone)
   addons/index.html                 addons · WeakAuras · patch        (+ addons.css/.js)
-  okanvil/index.html                Okanvil addon landing page        (+ okanvil.css/.js; shots in images/okanvil/)
+  okanvil/index.html                redirect to Okanor's Forge (mrnog.github.io/Okanor-s-Forge/okanvil/)
                                     public, but not linked from the hub until launch
   gallery/index.html                art/lore gallery                   (+ gallery.css/.js)
   vacations/index.html              vacations — role-aware (see note)  (+ vacations.css/.js)
@@ -69,7 +69,7 @@ assets/                             SHARED
 | `officer/<tool>/`                  | officer hub   | `../index.html`                                         |
 | `officer/attendance/`              | vacations     | `../../public/vacations/index html`                     |
 | `public/<page>/`                   | hub           | `../../index.html`                                      |
-| `officer/index.html`               | okanvil       | `../public/okanvil/index.html` (preview)                 |
+| `officer/index.html`               | okanvil       | Okanor's Forge okanvil/ page (external)                 |
 | `public/vacations/` (officer mode) | officer hub   | `../../officer/index.html` (set in vacations.js `boot`) |
 
 ## Asset-link prefix by depth (count the folders to `/`)
