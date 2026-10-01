@@ -313,6 +313,14 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Shockaa Cleansing.png",
+    "title": "Shockaa Cleansing",
+    "caption": "",
+    "date": "2026-10",
+    "people": "shockaa"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Someday Frozen King.png",
     "title": "Someday Frozen King",
     "caption": "",
