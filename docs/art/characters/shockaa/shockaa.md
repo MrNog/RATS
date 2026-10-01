@@ -2,6 +2,7 @@
 
 - **Class / spec:** **Elemental Shaman — DPS** (MAIN)
 - **Rank:** Raider Rat
+- **Discord:** `<@269201538013069314>`
 - **Commissioned:** 11 Jul 2026 · profile-banner sweep (one banner per raider)
 - **Toon name:** **Shockaa** (profile banners are keyed by this exact toon name, lowercased).
 - **⭐ ELITE TIER — #5 DPS guild-wide (avg ~5,560).** Give him a big, dramatic, storm-scale composition.
