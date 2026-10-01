@@ -38,6 +38,7 @@ ART = {
     "when-the-gate-learned-to-choose": "images/warchief-fangs/Fangs End.png",
     "someday-the-frozen-king": "images/lore/Someday Frozen King.png",
     "shockaa-the-cleansing": "images/lore/Shockaa Cleansing.png",
+    "lich-king-the-last-three": "images/lore/Last Three.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
