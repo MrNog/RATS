@@ -2,6 +2,7 @@
 
 - **Class / spec:** Protection Warrior
 - **Rank:** Guild Master / Warchief
+- **Discord:** `<@1295762889730297917>`
 - **Commissioned:** founding officer (seeded from the original library)
 
 ## Locked look (never changes between images)

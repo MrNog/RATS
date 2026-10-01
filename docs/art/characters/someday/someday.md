@@ -2,6 +2,7 @@
 
 - **Class / spec:** **Fire Mage — DPS** (MAIN)
 - **Rank:** Raider Rat
+- **Discord:** `<@857062920743550996>`
 - **Commissioned:** 15 Sep 2026 · ICC intake sweep (joined during the ICC tier)
 - **Toon name:** **Someday** (profile banners are keyed by this exact toon name, lowercased).
 

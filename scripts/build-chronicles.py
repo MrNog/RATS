@@ -36,6 +36,7 @@ ART = {
     "razorscale-chained-drake": "images/lore/Razor Achiv.png",
     "grunho-the-pardon": "images/lore/Grunho love.png",
     "when-the-gate-learned-to-choose": "images/warchief-fangs/Fangs End.png",
+    "someday-the-frozen-king": "images/lore/Someday Frozen King.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -47,6 +48,7 @@ DATES = {
     "razorscale-chained-drake": "2026-07-01",
     "when-the-gate-learned-to-choose": "2026-09-19",
     "grunho-the-pardon": "2026-09-22",
+    "someday-the-frozen-king": "2026-10-01",
 }
 
 
@@ -63,6 +65,7 @@ MENTIONS = {
     "284762766944894996": "Tchilly",
     "671395320550129680": "Cryptwall",
     "358687313183768597": "Yahmom",
+    "857062920743550996": "Someday",
 }
 
 # More art inside a tale, beyond the hero image. "after" is a phrase from the paragraph the picture

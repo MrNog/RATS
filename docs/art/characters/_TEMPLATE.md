@@ -6,6 +6,7 @@
 
 - **Class / spec:** [e.g. Fury Warrior]
 - **Rank:** [Warchief / Fang / rat — see note below]
+- **Discord:** `<@ID>` — the player's Discord user ID; every guild post @mentions them with it (`<@MISSING_ID>` until known)
 - **Commissioned:** [DD Mon YYYY] · by [who asked]
 
 ## Locked look (never changes between images)
