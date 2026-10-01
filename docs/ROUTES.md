@@ -8,7 +8,7 @@ relative links by depth (table at the bottom) and fix this map.
 ## Tiers (root is symmetric: hub · public · officer · assets)
 
 ```
-/index.html                         HUB — public landing (Officer Tools card → officer/)
+/index.html                         HUB — public landing (Officer Tools card → officer/, shown only once unlocked)
 public/                             PUBLIC pages (everyone)
   addons/index.html                 addons · WeakAuras · patch        (+ addons.css/.js)
   okanvil/index.html                redirect to Okanor's Forge (mrnog.github.io/Okanor-s-Forge/okanvil/)

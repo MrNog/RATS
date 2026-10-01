@@ -155,6 +155,7 @@ a { color: inherit; text-decoration: none }
 .officer:hover { border-color: var(--accent) }
 .officer:hover > img { opacity: .5 }
 .officer:hover .arr { transform: translateX(4px) }
+.officer[hidden] { display: none }
 
 @media (max-width: 960px) {
   .grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)) }

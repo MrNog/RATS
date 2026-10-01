@@ -811,6 +811,13 @@ window.RatsData = (function () {
           if (r && (r.enc || r.ct)) blob = r;
         } catch (e) {}
       }
+      // the wow-logs key is always stored ciphered with the guild key, so it doubles as the lock
+      if (!blob) {
+        try {
+          const k = await fbGet("config/logsApiKey");
+          if (k && (k.enc || k.ct)) blob = k;
+        } catch (e) {}
+      }
     }
     // Fallback (no Firebase, e.g. a static/committed-JSON deploy or local file://): the encrypted
     // check files sit next to the page. Only tried when Firebase didn't already arm the lock.
@@ -829,12 +836,14 @@ window.RatsData = (function () {
         } catch (e) {}
       }
     }
-    if (!blob) {
+    // nothing to check the key against: open only on a local dev copy, otherwise stay locked
+    if (!blob && IS_DEV) {
       ov.remove();
       _unlocked = true;
       return true;
-    } // no lock armed -> open
+    }
     const verify = async function (pass) {
+      if (!blob) throw new Error("lock unreachable");
       const obj = await decrypt(blob, pass);
       if (obj && obj.roster) cache(obj);
       setPass(pass);
@@ -848,7 +857,7 @@ window.RatsData = (function () {
         ov.remove();
         return true;
       } catch (e) {
-        clearPass();
+        if (blob) clearPass(); // a Firebase blip must not wipe a good key
       }
     }
     return new Promise(function (res) {

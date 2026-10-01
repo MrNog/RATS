@@ -144,7 +144,7 @@
     </div>
 
     <!-- ============ OFFICERS ============ -->
-    <a class="officer" href="officer/index.html">
+    <a class="officer" id="officerCard" href="officer/index.html" hidden>
       <img src="images/_thumb/hub/officer.webp" srcset="images/_thumb/hub/officer.webp 500w, images/_thumb/hub-lg/officer.webp 1400w" sizes="(min-width: 900px) 50vw, 100vw" alt="" loading="lazy">
       <span class="o-copy"><svg>
           <use href="#i-key" />
@@ -161,6 +161,10 @@
     <span>Horde · Warmane Onyxia</span>
   </footer>
 
+  <script>
+    // only browsers already unlocked with the guild key see the way in
+    try { if (localStorage.getItem("ratsGuildKey")) document.getElementById("officerCard").hidden = false; } catch (e) {}
+  </script>
   <script src="assets/js/nav.js"></script>
 </body>
 
