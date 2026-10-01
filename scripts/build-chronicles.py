@@ -51,6 +51,7 @@ DATES = {
     "when-the-gate-learned-to-choose": "2026-09-19",
     "grunho-the-pardon": "2026-09-22",
     "someday-the-frozen-king": "2026-10-01",
+    "lich-king-the-last-three": "2026-10-01",
 }
 
 
