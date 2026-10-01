@@ -212,6 +212,7 @@ async function postLore() {
         try {
           await publishToSite(raw);
           site = " …and on the site.";
+          populatePublished();
         } catch (e) {
           site = " (the site copy failed: " + e.message + " — use 📜 Site only to retry)";
         }
@@ -266,6 +267,7 @@ async function publishSiteOnly() {
   try {
     await publishToSite(raw);
     msg("✅ On the Chronicles page. 📜");
+    populatePublished();
   } catch (e) {
     msg("❌ Could not publish on the site: " + e.message, "#ff6b6b");
   }
@@ -296,7 +298,38 @@ async function populateSiteImages() {
   }
 }
 
+// ---- tales this tool published (Firebase `lore`), newest first, each deletable ----
+async function populatePublished() {
+  const box = document.getElementById("pubList");
+  let list = [];
+  try {
+    list = await RatsData.loadLore();
+  } catch (e) {}
+  list.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+  box.innerHTML = list.length
+    ? list
+        .map(
+          (t) =>
+            `<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="flex:1">${esc(t.title || "Untitled")} <span style="color:#6e7178;font-size:11px">${esc(t.date || "")}</span></span>
+     <button class="alt" style="padding:4px 9px" onclick="deletePublished('${esc(t.key)}')" title="Take it off the site">🗑</button></div>`
+        )
+        .join("")
+    : '<div class="sub" style="margin:0">Nothing published from here yet.</div>';
+}
+async function deletePublished(key) {
+  const t = (await RatsData.loadLore()).find((x) => x.key === key);
+  if (!confirm("Delete “" + ((t && t.title) || "this tale") + "” from the site?")) return;
+  try {
+    await RatsData.removeLore(key);
+    msg("🗑 Removed from the Chronicles page.");
+  } catch (e) {
+    msg("❌ Could not delete: " + e.message, "#ff6b6b");
+  }
+  populatePublished();
+}
+
 populateHooks();
 populateMentions();
 populateSiteImages();
+populatePublished();
 renderPreview();

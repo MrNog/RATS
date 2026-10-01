@@ -199,7 +199,13 @@ async function load() {
       .catch(() => []),
     RatsData.loadLore().catch(() => []),
   ]);
-  const fromFb = published.map((t) => Object.assign({}, t, { id: "t-" + t.key }));
+  // A tale sent from the Lore tool and later committed exists in both; the committed copy wins.
+  // Titles are compared as plain words (the tool's title keeps the heading's emoji).
+  const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const have = new Set(committed.map((t) => norm(t.title)));
+  const fromFb = published
+    .filter((t) => !have.has(norm(t.title)))
+    .map((t) => Object.assign({}, t, { id: "t-" + t.key }));
   TALES = [...committed, ...fromFb]
     .filter((t) => t && t.body)
     .sort((a, b) => (b.special ? 1 : 0) - (a.special ? 1 : 0) || String(b.date || "").localeCompare(String(a.date || "")));

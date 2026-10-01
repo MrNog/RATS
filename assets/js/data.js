@@ -350,6 +350,10 @@ window.RatsData = (function () {
     try { localStorage.removeItem(LORE_LS); } catch (e) {}
     return key;
   }
+  async function removeLore(key) {
+    await fbDelete("lore/" + key);
+    try { localStorage.removeItem(LORE_LS); } catch (e) {}
+  }
 
   // download a json file (manual-commit fallback when Firebase is off)
   function download(name, obj) {
@@ -931,6 +935,7 @@ window.RatsData = (function () {
     loadProfiles,
     loadLore,
     publishLore,
+    removeLore,
     loadRoster,
     loadHistory,
     cachedHistory,
