@@ -54,7 +54,7 @@ And every rat on that roof gave the best they had. The dead fell. The winged one
 Then, as the old rite of the Sewer demands, ten rats took their seats upon the fallen king. Sat. Stood. Sat. Stood. With great respect. Mostly.
 
 Carve these names into the ice forever — **[the Kingslayers](<https://mrnog.github.io/RATS/public/lore/#lich-king-10-kill>):**
-🐀 **<@1295762889730297917> · <@323497935210020866> · <@170571891784810498> · <@146677218280603648> · <@357676115260866561> · <@295517084417261578> · <@363487377357799436> · <@284762766944894996> · <@671395320550129680> · <@358687313183768597>**
+🐀 **<@1295762889730297917> · <@146677218280603648> · <@323497935210020866> · <@170571891784810498> · <@357676115260866561> · <@295517084417261578> · <@363487377357799436> · <@284762766944894996> · <@671395320550129680> · <@358687313183768597>**
 
 For the Horde. For the cheese. 🐀🧀
 
@@ -189,8 +189,8 @@ Do NOT include: any lettering, title, name, watermark or logo; any figure on or 
 - **Lore:** the Lich King falls on the Frozen Throne platform; Frostmourne breaks and the helm is left on
   the ice. "Kingslayer" is the real title for the kill.
 - **@mentions:** the Kingslayers line pings all ten, in roster order (user-supplied IDs):
-  Grunho `1295762889730297917` · Okanor `323497935210020866` · Rellik `170571891784810498` ·
-  Kobee `146677218280603648` · Onetreeheals `357676115260866561` · Shmurda `295517084417261578` ·
+  Grunho `1295762889730297917` · Okanor `146677218280603648` · Rellik `323497935210020866` ·
+  Kobee `170571891784810498` · Onetreeheals `357676115260866561` · Shmurda `295517084417261578` ·
   Lecoque `363487377357799436` · Tchilly `284762766944894996` · Cryptwall `671395320550129680` ·
   Yahmom `358687313183768597`. Grunho is also tagged in the orb paragraph; the quote line keeps his
   plain name.

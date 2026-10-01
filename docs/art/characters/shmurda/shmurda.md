@@ -2,6 +2,7 @@
 
 - **Class / spec:** **Arms Warrior — DPS** (MAIN)
 - **Rank:** Raider Rat
+- **Discord:** `<@295517084417261578>`
 - **Commissioned:** 11 Jul 2026 · profile-banner sweep (one banner per raider)
 - **Toon name:** **Shmurda** (profile banners are keyed by this exact toon name, lowercased).
 - **⭐ Strong tier — #13 DPS guild-wide (avg ~5,000).** Give him real weight and impact.

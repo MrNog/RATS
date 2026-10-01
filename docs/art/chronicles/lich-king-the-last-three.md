@@ -25,9 +25,9 @@ The first tank fell. The second took his place, and fell. The king did not hurry
 
 **<@295517084417261578>** was never a tank. He is a warrior of the two-handed blade, built to break things, not to hold them. But there was no one else. So he stepped in front of the Lich King, raised his steel, and *took the king's attention* — and kept it.
 
-**<@146677218280603648>**, the last blade in the raid, did not look at the bodies or the numbers. Poison, steel, the king's back. Again. Again.
+**<@170571891784810498>**, the last blade in the raid, did not look at the bodies or the numbers. Poison, steel, the king's back. Again. Again.
 
-And **<@323497935210020866>**, the last healer, poured every drop of Light he had left into one warrior who should never have been standing there.
+And **<@146677218280603648>**, the last healer, poured every drop of Light he had left into one warrior who should never have been standing there.
 
 Fourteen. Twelve. The king struck, and Shmurda did not fall. Eleven. The Light held.
 

@@ -2,6 +2,7 @@
 
 - **Class / spec:** Assassination Rogue
 - **Rank:** Warchief
+- **Discord:** `<@170571891784810498>`
 - **Toon name:** **Kobee** (profile banners are keyed by this exact toon name, lowercased). "Kobe" is his
   Discord nick, not the in-game name — see `NAME_ALIASES` in `assets/js/data.js`.
 - **Commissioned:** founding officer (seeded from the original library)

@@ -2,6 +2,7 @@
 
 - **Class / spec:** Holy Paladin (frontline healer) (MAIN)
 - **Rank:** Warchief
+- **Discord:** `<@146677218280603648>`
 - **Commissioned:** founding officer
 - **Alts:** Rogue (Okanata) · Blood DK (Okanath) · Elemental Shaman (Okanstorm) · Feral Druid (Okanthorn) —
   see the **Alts** section at the bottom.
