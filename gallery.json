@@ -291,6 +291,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Last Three.png",
+    "title": "Last Three",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/ninja shama reroll.png",
     "title": "Ninja Shama Reroll",
     "caption": "",
