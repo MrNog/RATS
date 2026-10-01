@@ -37,6 +37,7 @@ ART = {
     "grunho-the-pardon": "images/lore/Grunho love.png",
     "when-the-gate-learned-to-choose": "images/warchief-fangs/Fangs End.png",
     "someday-the-frozen-king": "images/lore/Someday Frozen King.png",
+    "shockaa-the-cleansing": "images/lore/Shockaa Cleansing.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -66,6 +67,7 @@ MENTIONS = {
     "671395320550129680": "Cryptwall",
     "358687313183768597": "Yahmom",
     "857062920743550996": "Someday",
+    "269201538013069314": "Shockaa",
 }
 
 # More art inside a tale, beyond the hero image. "after" is a phrase from the paragraph the picture
@@ -91,13 +93,8 @@ SPECIAL = {
 }
 
 
-def for_site(body):
-    """The Discord post as the site shows it: pings named, and the lines that were only
-    wrapped to keep the .md readable joined back into their paragraph."""
-    body = re.sub(r"<@!?(\d+)>", lambda m: MENTIONS.get(m.group(1), ""), body)
-    # A Discord masked link ("[the Kingslayers](<url>)") points readers at this very page; on the site
-    # it keeps only its words.
-    body = re.sub(r"\[([^\]]+)\]\(<?https?://[^)>\s]+>?\)", r"\1", body)
+def unwrap(body):
+    """Join back the lines that were only wrapped to keep the .md readable into their paragraph."""
     paras = []
     for para in re.split(r"\n\s*\n", body):
         out = []
@@ -109,6 +106,15 @@ def for_site(body):
                 out.append(line)
         paras.append("\n".join(out))
     return "\n\n".join(paras)
+
+
+def for_site(body):
+    """The Discord post as the site shows it: pings named and wrapped lines joined."""
+    body = re.sub(r"<@!?(\d+)>", lambda m: MENTIONS.get(m.group(1), ""), body)
+    # A Discord masked link ("[the Kingslayers](<url>)") points readers at this very page; on the site
+    # it keeps only its words.
+    body = re.sub(r"\[([^\]]+)\]\(<?https?://[^)>\s]+>?\)", r"\1", body)
+    return unwrap(body)
 
 
 def first_commit_date(path):
@@ -149,6 +155,8 @@ def main():
             "id": slug,
             "title": title,
             "body": for_site(body),
+            # the post exactly as it went to Discord (pings intact), for the officer re-post button
+            "discord": unwrap(body),
             "image": ART.get(slug, ""),
             "date": DATES.get(slug) or first_commit_date(os.path.join("docs", "art", "chronicles", name)),
         }

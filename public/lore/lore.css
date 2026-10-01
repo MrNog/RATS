@@ -99,6 +99,16 @@ a:hover .read::after { transform: translateX(4px) }
 .r-art:empty + .r-in { margin-top: 30px }
 .r-back { display: inline-block; margin-bottom: 26px; color: var(--text-dim-2); text-decoration: none; font-size: 14px }
 .r-back:hover { color: var(--accent-hi) }
+/* officer-only re-post of the tale to the lore webhook */
+.r-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap }
+.r-post {
+  font: 600 13px var(--lo-body); color: var(--accent-hi); background: transparent; cursor: pointer;
+  border: 1px solid var(--lo-line); border-radius: 20px; padding: 5px 14px;
+}
+.r-post:hover:not(:disabled) { border-color: var(--accent) }
+.r-post:disabled { opacity: .5; cursor: default }
+.r-msg { margin: -16px 0 20px; font-size: 14px; min-height: 0 }
+.r-msg:empty { display: none }
 .r-in > h1 {
   font-family: var(--lo-display); font-weight: 400;
   font-size: clamp(36px, 5vw, 56px); line-height: 1.06; margin: 0 0 30px; color: var(--lo-title);

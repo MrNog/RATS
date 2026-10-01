@@ -133,6 +133,53 @@ function renderRoll(t, box) {
     : "";
 }
 
+// ---- officer: send a tale to Discord ----
+// Posts through the lore webhook saved in this browser by the Admin console, with the tale's art
+// attached. Committed tales carry `discord` (the post with its pings); Lore-tool tales only have
+// the site body, so they go out with names instead of pings.
+const WH_RE = /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/\S+/;
+const LORE_HOOK_RE = /loremaster|lore|stor|tale|chronicle|legend/i;
+
+function loreHook() {
+  let hooks = [];
+  try {
+    hooks = JSON.parse(localStorage.getItem("ratsWebhooks") || "[]") || [];
+  } catch (e) {}
+  return hooks.find((h) => h && LORE_HOOK_RE.test(h.name) && WH_RE.test(h.url)) || null;
+}
+
+function postMsg(t, c) {
+  const e = document.getElementById("rMsg");
+  e.style.color = c || "#7CFC8A";
+  e.textContent = t || "";
+}
+
+async function postTale(t) {
+  const hook = loreHook();
+  if (!hook) return postMsg("❌ No lore webhook in this browser. Add one named “LoreMaster” in the Admin console.", "#ff6b6b");
+  const content = RatsMD.emojify(t.discord || t.body);
+  if (content.length > 2000) return postMsg("❌ Too long for Discord (" + content.length + " / 2000).", "#ff6b6b");
+  if (!confirm("Post “" + t.title + "” to Discord (" + hook.name + ")? It pings everyone it mentions.")) return;
+
+  const btn = document.getElementById("rPost");
+  btn.disabled = true;
+  postMsg("⏳ Posting…", "#9aa0a6");
+  try {
+    const fd = new FormData();
+    fd.append("payload_json", JSON.stringify({ content, allowed_mentions: { parse: ["users", "roles", "everyone"] } }));
+    if (t.image) {
+      const img = await fetch(artUrl(t.image));
+      if (img.ok) fd.append("files[0]", await img.blob(), t.image.split("/").pop());
+    }
+    const r = await fetch(hook.url, { method: "POST", body: fd });
+    if (r.ok) postMsg("✅ Posted to “" + hook.name + "”.");
+    else postMsg("❌ Discord rejected it (HTTP " + r.status + ").", "#ff6b6b");
+  } catch (e) {
+    postMsg("❌ Post blocked (" + e.message + "). Works on the hosted https site.", "#ff6b6b");
+  }
+  btn.disabled = false;
+}
+
 function navLink(t, label) {
   return t ? `${label}<b>${esc(t.title)}</b>` : "";
 }
@@ -150,6 +197,11 @@ function openTale(id) {
   special.hidden = !t.special;
   special.textContent = specialLabel(t);
   renderRoll(t, document.getElementById("rBody"));
+  const post = document.getElementById("rPost");
+  post.hidden = !RatsData.isOfficer();
+  post.disabled = false;
+  post.onclick = () => postTale(t);
+  postMsg("");
   // newer to the left, older to the right, like turning back through the book
   const newer = TALES[i - 1], older = TALES[i + 1];
   const prev = document.getElementById("rPrev"), next = document.getElementById("rNext");
