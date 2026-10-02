@@ -269,7 +269,19 @@ function importRoster() {
   }
   document.getElementById("modalErr").textContent = "";
   pendingImport = data;
-  showDiff(load(), data);
+  const old = load();
+  showDiff(old, data);
+  // An export taken before the game loaded the offline members holds only whoever was
+  // online; merging it would drop everyone else. No real night loses half the guild.
+  const oldCount = old && Array.isArray(old.roster) ? old.roster.length : 0;
+  const lost = data._diff ? data._diff.left.length : 0;
+  if (oldCount && lost > oldCount / 2) {
+    document.getElementById("modalErr").textContent =
+      `This export has only ${data.roster.length} of ${oldCount} members: it was taken before the offline ` +
+      `members loaded. Not merged. In game: /reload, wait a few seconds, then Export roster again.`;
+    pendingImport = null;
+    return;
+  }
   document.getElementById("confirmBtn").style.display = "";
 }
 
