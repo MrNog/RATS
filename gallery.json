@@ -229,6 +229,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Blood Queen Dark Two.png",
+    "title": "Blood Queen Dark Two",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Blood Queen Flames.png",
     "title": "Blood Queen Flames",
     "caption": "",
