@@ -31,14 +31,17 @@
 
 - **02 Jul 2026 — added the profile-banner (BG) prompt below.** Folder is `kobe/` (main), toon file is
   `kobee.png` (in-game name Kobee).
+- **02 Oct 2026 — new profile banner** (rain-soaked rooftop at night, two crimson daggers, moon on the
+  left). Now `images/profile-bg/kobee/kobee.png`; the July one kept as `kobee1.png`. Also the Okanvil
+  Ranking portrait (`Okanvil/Media/Ranking/kobee.blp`).
 
 ---
 
 ## Profile-banner (BG) prompts — 4:1, NO text
 
 STYLE.md Format B: no text/logo, LEFT ~third dark for the page overlay, rat in the RIGHT portion, class
-colour is the dominant glow. Save as `images/profile-bg/kobe/kobee.png` — the profile page loads it by the
-in-game toon name (**Kobee**), lowercased, under his main folder `kobe/`.
+colour is the dominant glow. Save as `images/profile-bg/kobee/kobee.png` — the profile page loads it by the
+in-game toon name (**Kobee**), lowercased, under his main folder `kobee/`.
 
 ### Kobee — Assassination Rogue · `images/profile-bg/kobe/kobee.png`
 
@@ -60,4 +63,31 @@ Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO speckl
 Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 4:1 ultra-wide landscape.
 
 Do NOT include: any lettering, title, name, watermark, logo or insignia; two tails or any extra tail, extra or duplicated limbs/arms/heads, a THIRD weapon or any weapon beyond the two daggers, a sword, a shield, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, arms bending the wrong way or twisted behind the body, a detached / floating / over-tilted head, a broken or too-long neck, impossible or unbalanced poses; frost-blue or fel-green magic glow, fire tones; cute / pretty / soft / dainty styling, pastel or pink colours, chubby / fat / overweight build, dust/smoke speckle-particles filling the air, speckled noise, heavy haze, a busy left third, modern clothing, human faces, Alliance symbols, excessive bloom that hides the rat, plain white background.
+```
+
+### Kobee v2 — off-centre (rat hard RIGHT) · `images/profile-bg/kobee/kobee.png`
+
+v1 landed dead-centre (crouched on the gargoyle, mid-frame). v2 pins him to the RIGHT ~30% and leaves the
+left two-thirds as open rainy rooftop/sky.
+
+```
+Digital fantasy illustration, cinematic 4:1 ultra-wide profile banner / hero strip (e.g. 2400x600), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia — pure illustration only, all text added later by the page.
+
+Subject: Kobee, an anthropomorphic Assassination Rogue rat — lean and low, dark fur, sharp fierce eyes, prominent whiskers, clawed hands; a grim, hardened shadow-killer, HALF his hooded face hidden in darkness, NOT cute or soft. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Battle-worn dark hooded LEATHERS with crimson trim, hood up, tattered wraps, thin smoke curling around him; his body half-DISSOLVING into shadow at the edges.
+
+Weapons: DUAL-WIELD — TWO big curved DAGGERS with crimson-trimmed blades, ONE in each clawed hand, REVERSED (ice-pick) grip. Exactly two daggers, one per hand — never stacked, no third weapon, no sword.
+
+Pose & camera: low camera angle looking slightly up. He stands upright in near side-profile at the very edge of a tall stone chimney stack, body turned toward the LEFT, peering down into the city below. One dagger held flat along his forearm, blade resting just under his chin, its edge catching a thin line of moonlight; the other arm hangs low behind him, dagger point down, rain dripping off the tip. His tattered cloak and smoke trail off behind him to the right, cut by the frame edge.
+
+Composition (STRICT — NOT centred): the rat occupies ONLY the RIGHT ~30% of the strip, his body close to the right edge (head roughly at 75–80% of the width), partly cropped by the right frame edge. The CENTRE and LEFT two-thirds are EMPTY of any figure: open, dark rainy sky and soft, out-of-focus rooftops falling away into black — calm low-detail negative space for page text. The moon sits small and low on the far left, faint and dim. No gargoyle or any big prop in the middle of the frame. Correct proportions, face clear where lit, natural joints and neck.
+
+Setting: a dark, desaturated rain-soaked ruined city at night — wet slate rooftops and broken spires far below, a few faint amber lantern windows, rain streaks, kept shadowy and low-detail so it never competes; pure backdrop.
+
+Color palette & lighting: black leathers, crimson trim, steel-blue night, deep shadow. COLD MOONLIGHT from the left rim-lights his hood, whiskers and the blade under his chin; a touch of AMBER lantern glow from below on his right side; subtle Rogue amber-yellow tint. High contrast — mostly shadow, a few sharp lit edges; the left of the strip falls to near-black.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO speckled glowing dots filling the frame, NO heavy haze, NO blown-out bloom. Razor-sharp focus on the rat's face, hands and dagger edges; smoke/shadow soft and deliberate, NOT particulate noise.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 4:1 ultra-wide landscape.
+
+Do NOT include: the rat in the centre of the frame, any figure in the middle or left of the strip, a gargoyle or large central prop; any lettering, title, name, watermark, logo or insignia; two tails or any extra tail, extra or duplicated limbs/arms/heads, a THIRD weapon or any weapon beyond the two daggers, a sword, a shield, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, arms bending the wrong way, a detached / floating / over-tilted head, a broken or too-long neck, impossible or unbalanced poses; frost-blue or fel-green magic glow, fire tones; cute / pretty / soft / dainty styling, pastel or pink colours, chubby build, dust/smoke speckle-particles filling the air, heavy haze, a busy left side, modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
 ```
