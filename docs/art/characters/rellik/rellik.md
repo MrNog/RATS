@@ -2,6 +2,7 @@
 
 - **Class / spec:** Retribution Paladin
 - **Rank:** Warchief
+- **Discord:** `<@323497935210020866>`
 - **Commissioned:** founding officer (seeded from the original library)
 
 ## Locked look (never changes between images)

@@ -3,6 +3,7 @@
 - **Class / spec:** **Retribution Paladin — DPS** (MAIN) · também joga **Protection** (mesmo rato, spec tank)
 - **Rank:** Raider Rat
 - **Commissioned:** 15 Sep 2026 · ICC intake sweep (promoted up through the ICC tier)
+- **Discord:** `<@1245098422705590316>`
 - **Toon name:** **Mongoloide** (profile banners are keyed by this exact toon name, lowercased).
 
 > Paladins are separated by **character**, not spec. **Okanor** = Holy, amber rune-seams, the Light forged

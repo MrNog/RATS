@@ -39,6 +39,8 @@ ART = {
     "someday-the-frozen-king": "images/lore/Someday Frozen King.png",
     "shockaa-the-cleansing": "images/lore/Shockaa Cleansing.png",
     "lich-king-the-last-three": "images/lore/Last Three.png",
+    "blood-quickening-the-whole-room": "images/lore/Blood Quickening Whole Room.png",
+    "blood-quickening-the-flames": "images/lore/Blood Queen Flames.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -52,6 +54,15 @@ DATES = {
     "grunho-the-pardon": "2026-09-22",
     "someday-the-frozen-king": "2026-10-01",
     "lich-king-the-last-three": "2026-10-01",
+    "blood-quickening-the-whole-room": "2026-10-01",
+    "blood-quickening-the-flames": "2026-10-01",
+}
+
+# Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
+# so a lower number sits further down among tales of the same date; unlisted tales count as 0.
+NIGHT_ORDER = {
+    "blood-quickening-the-whole-room": -2,
+    "blood-quickening-the-flames": -1,
 }
 
 
@@ -70,6 +81,7 @@ MENTIONS = {
     "358687313183768597": "Yahmom",
     "857062920743550996": "Someday",
     "269201538013069314": "Shockaa",
+    "1245098422705590316": "Mongoloide",
 }
 
 # More art inside a tale, beyond the hero image. "after" is a phrase from the paragraph the picture
@@ -167,7 +179,7 @@ def main():
         if slug in SPECIAL:
             tale["special"] = SPECIAL[slug]
         tales.append(tale)
-    tales.sort(key=lambda t: (bool(t.get("special")), t["date"]), reverse=True)
+    tales.sort(key=lambda t: (bool(t.get("special")), t["date"], NIGHT_ORDER.get(t["id"], 0)), reverse=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(tales, f, ensure_ascii=False, indent=1)
