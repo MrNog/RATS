@@ -999,6 +999,15 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/kobee/kobee1.png",
+    "title": "Kobee1",
+    "caption": "",
+    "date": "2026-10",
+    "people": "kobee",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/lecoque/lecoque.png",
     "title": "Lecoque",
     "caption": "",
