@@ -219,6 +219,15 @@ function profilesForPublish(roster) {
   });
   return map;
 }
+// The rankings boards show only names on their stored guild list, which a Fetch used to be the only
+// thing to update: someone who left still ranked until the next Fetch. Swap in the current names.
+async function refreshRankingsRoster(roster) {
+  if (!RatsData.loadRankings || !RatsData.saveRankings) return;
+  const snap = await RatsData.loadRankings();
+  if (!snap || !snap.data) return;
+  snap.data.rosterNames = roster.map((m) => m.name).filter(Boolean);
+  await RatsData.saveRankings(snap.data);
+}
 async function autoShare(note) {
   const data = load();
   if (!data || !data.roster || !window.RatsData) return;
@@ -373,6 +382,7 @@ function confirmImport() {
   boot();
   if (hadOld) postRosterChanges(diff, importDate);
   autoShare(`Roster merged - ${added} new member${added !== 1 ? "s" : ""}`);
+  if (window.RatsData) refreshRankingsRoster(data.roster).catch(() => {});
 }
 
 // ---- Discord: roster-change log + stale-roster nag (both auto, no UI) ----
