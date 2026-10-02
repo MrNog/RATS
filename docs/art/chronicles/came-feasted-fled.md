@@ -12,17 +12,13 @@ Fazcafe (still in Discord): "exactly, nice conclusion" / "run, you've still got 
 ## Discord post — the chronicle (Lore poster)
 
 ```
-@everyone
-
 *From the Chronicles of the Sewer...*
 
 # 🕯️ Came, Feasted, Fled
 
-There is an old curse in the Sewer, spoken low and never twice in one night: *came, feasted, fled.*
+There is an old curse in the Sewer: *came, feasted, fled.* The rat who walks into the citadel beside you, takes his share of the spoils, and is gone before the torches burn down.
 
-It is the curse of the rat who walks into the citadel beside you, bleeds nothing, takes his share of the spoils — and is gone before the torches burn down.
-
-This afternoon the curse found a Sewer Rat named **Zdral**. A shaman on the lowest rung. He followed the Rats into the cold, ate at their table, and closed his hand around what the dead kings dropped. And then the guild hall heard only this:
+This afternoon it found a Sewer Rat named **Zdral**, a shaman on the lowest rung. He ate at the Rats' table, took what the dead kings dropped, and then the hall heard only this:
 
 *Zdral has left the guild.*
 
@@ -30,7 +26,7 @@ No word. No farewell. Just an empty seat.
 
 Another shaman laughed at the empty seat. **Fazcafe**, who had healed beside the Rats for many seasons, mocked the deserter loudest of all. *Came, feasted, fled,* he sneered.
 
-But the laughter did not last. It turned to loot — who was owed what, who had been passed over, old grudges dragged into the light. For a full hour the argument ran long and cold through the guild halls, word against word, while the rest of the Rats sat at the table and listened in silence.
+But the laughter turned to loot — who was owed what, old grudges dragged into the light. For a full hour the argument ran cold through the guild halls while the Rats listened in silence.
 
 And when the last word was spoken, the hall heard it again:
 
@@ -38,13 +34,13 @@ And when the last word was spoken, the hall heard it again:
 
 The same afternoon. The same plate still warm. The rat who had mocked the deserter walked out through the same door, for the same reason.
 
-Later, **<@146677218280603648>** stepped into the halls, read the message still hanging in the air, and gave the shaman back his own words: *took the loot and left.*
+Later, **Okanor** stepped into the halls, read the message still hanging in the air, and gave the shaman back his own words: *took the loot and left.*
 
 From somewhere outside the walls came the answer: *"Exactly. Nice conclusion."* And one last sneer: *"Run. You've still got time to kick one."*
 
-Two healers gone before nightfall. Two spirits the Rats had carried through the frozen halls, kept alive, kept fed, kept geared.
+Two healers gone before nightfall. Two spirits the Rats had carried through the frozen halls, kept fed, kept geared.
 
-His ancestors did not go with him. The dead of the Sewer stood in the doorway and watched him walk out into the snow, and they did not follow. The dead remember who stood beside them. They remember who left.
+His ancestors stood in the doorway and watched him walk into the snow, and did not follow. The dead remember who stood beside them. They remember who left.
 
 The table is quieter now. The Rats eat in silence, and they count the empty seats.
 
@@ -84,6 +80,6 @@ Do NOT include: any lettering, title, name, watermark or logo; smiles, grins, la
 
 ## Notes
 
-- **@mentions:** Okanor. Fazcafe left the Discord too, so plain bold (no ping). **Zdral has no Discord ID on
+- **No pings** (no @everyone, no @mentions — user's call for this one). Fazcafe left the Discord too, so plain bold (no ping). **Zdral has no Discord ID on
   file** — plain bold.
 - Zdral: Shaman healer (from the loot-prio lists), rank **Sewer Rat**; no character sheet.
