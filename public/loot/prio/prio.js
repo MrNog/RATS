@@ -333,6 +333,12 @@
   // Okanvil ships the ladder as a Lua table: a 3.3.5a client cannot reach this page,
   // and WoW has no JSON parser, so a Lua literal is what loads for free -- the same
   // shape as the addon's other generated data files.
+  // Heroic 25 Marks of Sanctification: same names as the normal ones, different ids.
+  var HEROIC_MARK = {
+    "vanquisher's mark of sanctification": 52028,
+    "protector's mark of sanctification": 52029,
+    "conqueror's mark of sanctification": 52030,
+  };
   function exportText() {
     var L = [];
     L.push("-- ============================================================");
@@ -401,6 +407,16 @@
         (iid ? ", id = " + iid : "") +
         ", g = \"" + q(grp[0]) + "\", go = " + (grp[1] || 0) +
         (it.tier === "R" ? ", r = 1" : "") + " },");
+      // The 25 heroic Mark has the same name as the normal one, so it would share
+      // the normal row; give it its own, with its own id and the same ladder.
+      var hid = it.byClass && HEROIC_MARK[it.item.toLowerCase()];
+      if (hid) {
+        L.push("\t[\"" + q(it.item.toLowerCase()) + " (heroic)\"] = { n = \"" + q(it.item) +
+          " (Heroic)\", p = \"" + q(names.join(" ")) + "\"" +
+          (it.boss ? ", bo = \"" + q(it.boss) + "\"" : "") +
+          (slug ? ", ic = \"" + q(slug) + "\"" : "") +
+          ", id = " + hid + ", g = \"" + q(grp[0]) + "\", go = " + (grp[1] || 0) + " },");
+      }
     });
 
     L.push("\t},");
