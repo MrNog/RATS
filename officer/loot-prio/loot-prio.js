@@ -101,6 +101,11 @@
     var names = "", lastBand = null, shownWon = false;
     if (!it.ladder.length) {
       names = '<span class="nobody">nobody eligible</span>';
+    } else if (it.byClass) {
+      // a class-only item: the classes side by side, no order and no tags
+      names = it.ladder.map(function (p) {
+        return '<span class="pl"><b style="color:' + classColor(p.cls) + '">' + esc(p.name) + "</b></span>";
+      }).join('<span class="sep">/</span>');
     } else {
       it.ladder.forEach(function (p, i) {
         if (i) {
@@ -376,10 +381,15 @@
 
     list.forEach(function (it) {
       var names = [], lastBand = null;
+      // A class-only item goes as ONE token ("Rogue/DeathKnight/Mage"): the addon
+      // numbers every entry of a ladder in chat, and these classes have no order.
+      if (it.byClass) {
+        names.push(it.ladder.map(function (p) { return p.name.replace(/\s+/g, ""); }).join("/"));
+      }
       // Whoever already holds the item is left out entirely, not greyed: in game
       // this list answers "who gets it now", and a name that can no longer take
       // it is one more thing to read past mid-raid.
-      it.ladder.filter(function (p) { return !p.won; }).forEach(function (p, i) {
+      if (!it.byClass) it.ladder.filter(function (p) { return !p.won; }).forEach(function (p, i) {
         if (i) names.push(p.band > lastBand ? ">>" : ">");
         lastBand = p.band;
         // Name|Class, plus the same marks the page shows. The class travels with

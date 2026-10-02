@@ -140,8 +140,16 @@
     );
   }
 
+  // A class-only item: the classes side by side, no order and no tags.
+  function classesHtml(it) {
+    return it.ladder.map(function (p) {
+      return '<span class="pl"><b style="color:' + classColor(p.cls) + '">' + esc(p.name) + "</b></span>";
+    }).join('<span class="sep">/</span>');
+  }
+
   function ladderHtml(it) {
     if (!it.ladder.length) return '<span class="nobody">nobody eligible</span>';
+    if (it.byClass) return classesHtml(it);
     var open = !!OPEN_ITEM[it.item];
     // compact: only people who can still take it, the first few of them
     var live = it.ladder.filter(function (p) { return !p.won; });
@@ -365,9 +373,14 @@
 
     list.forEach(function (it) {
       var names = [], lastBand = null;
+      // A class-only item goes as ONE token ("Rogue/DeathKnight/Mage"): the addon
+      // numbers every entry of a ladder in chat, and these classes have no order.
+      if (it.byClass) {
+        names.push(it.ladder.map(function (p) { return p.name.replace(/\s+/g, ""); }).join("/"));
+      }
       // Whoever already holds the item is left out entirely, not greyed: in game this
       // list answers "who gets it now".
-      it.ladder.filter(function (p) { return !p.won; }).forEach(function (p, i) {
+      if (!it.byClass) it.ladder.filter(function (p) { return !p.won; }).forEach(function (p, i) {
         if (i) names.push(p.band > lastBand ? ">>" : ">");
         lastBand = p.band;
         // Name|Class, so the addon colours the list like this page. No space in the

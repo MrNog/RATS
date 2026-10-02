@@ -88,19 +88,9 @@
   function hunter(p) { return C(p) === "Hunter"; }
   function plateTank(p) { return tank(p) && (C(p) === "Paladin" || C(p) === "Warrior"); }
 
-  // The sheet's tier philosophy, and only that: "your tanks are going to need all
-  // the help they can get... Once that's done, we believe DPS should get priority.
-  // Unholy DK's go last, Mages and Rets near first, and everyone else somewhere in
-  // between." Healers are not placed above DPS anywhere in it, so they sit with
-  // "everyone else" rather than in a band of their own -- and inside that band our
-  // own ICC output decides, which is what stops a bottom-percentile healer
-  // outranking the raid's best DPS on a token.
-  function tierBand(p) {
-    if (R(p) === "TANK") return 0;
-    if (C(p) === "Mage" || S(p) === "Retribution") return 1;
-    if (S(p) === "Unholy") return 3;
-    return 2;
-  }
+  // The order a class-only ladder lists its classes in: the token's own order.
+  var CLASS_ORDER = ["Rogue", "Death Knight", "Mage", "Druid",
+    "Paladin", "Priest", "Warlock", "Warrior", "Hunter", "Shaman"];
 
   // Everyone eligible stays on the list -- but a raider who is genuinely off the pace
   // in OUR raid does not hold the sheet's top group against better players. Measured
@@ -775,25 +765,24 @@
       }],
 
     // ---- Tier tokens ----------------------------------------------------
-    // Marks of Sanctification drop off ICC bosses and buy a T10 piece. The sheet
-    // gives no per-item ladder for them, only a raid-wide order in its tier
-    // philosophy -- tanks first (the Lich King hits very hard and fast), then DPS,
-    // "Unholy DK's go last, Mages and Rets near first". That is what these encode;
-    // nothing finer is invented, because the sheet does not say it.
+    // Marks of Sanctification drop off ICC bosses (25 and 10 heroic) and upgrade a
+    // T10 piece. They go by CLASS, not by person: who still has a piece to upgrade
+    // depends on marks won in runs we never see, so the ladder only names the
+    // classes and the council picks in the room.
     ["Vanquisher's Mark of Sanctification", "ICC bosses", "P",
       "T10 token — Rogue / DK / Mage / Druid",
       function (p) { return has(["Rogue", "Death Knight", "Mage", "Druid"], C(p)); },
-      tierBand],
+      "class"],
 
     ["Conqueror's Mark of Sanctification", "ICC bosses", "P",
       "T10 token — Paladin / Priest / Warlock",
       function (p) { return has(["Paladin", "Priest", "Warlock"], C(p)); },
-      tierBand],
+      "class"],
 
     ["Protector's Mark of Sanctification", "ICC bosses", "P",
       "T10 token — Warrior / Hunter / Shaman",
       function (p) { return has(["Warrior", "Hunter", "Shaman"], C(p)); },
-      tierBand],
+      "class"],
 
     // ---- sheet items the parser would have had to guess at ---------------
     // "(2h)" and faction notes are conditions the prio column cannot express as a
@@ -1269,6 +1258,26 @@
     var items = ITEMS.map(function (row) {
       var name = row[0], boss = row[1], tier = row[2], prio = row[3];
       var elig = row[4], band = row[5];
+
+      // A class-only item names the classes that can use it, never people: nobody
+      // here can see who has already spent a mark (10-man marks, upgrades), so
+      // the council settles it in the room.
+      if (band === "class") {
+        var seen = {}, classes = [];
+        list.forEach(function (p) {
+          if (p.inactive || p.att < minDays || !elig(p) || seen[p.cls]) return;
+          seen[p.cls] = 1;
+        });
+        CLASS_ORDER.forEach(function (c) { if (seen[c]) classes.push(c); });
+        return {
+          item: name, boss: boss, tier: tier, prio: prio,
+          won: [], group: null, byClass: true,
+          ladder: classes.map(function (c) {
+            return { name: c, cls: c, spec: "", band: 0, won: false, isClass: true };
+          }),
+        };
+      }
+
       var won = wonBy[name.toLowerCase()] || [];
       var wonNames = {};
       won.forEach(function (x) { wonNames[x.player.toLowerCase()] = 1; });
