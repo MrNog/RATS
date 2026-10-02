@@ -3189,7 +3189,140 @@
     render();
   }
 
+  // ---- Export to Okanvil (officer) ----------------------------------------------------------------
+  // The in-game Guild > Ranking tab reads this text: the active raid and period, the DPS / Healing /
+  // Tanking boards for 25 and 10, and each toon's best server parse per boss. Normal and Heroic are
+  // ONE board in game, built from each person's best outcome of the two (see the merge below).
+  //
+  // Plain text on purpose -- the officer pastes it into a WoW edit box, and Okanvil compresses it
+  // itself when it shares it over addon comms. Records are lines, fields are commas; the reader drops
+  // record types it does not know, so a field added at the END of a record stays compatible.
+  //   OKR1
+  //   H,<unix time>,<raid key>,<raid label>,<periods, "+" between>
+  //   K,<boss 1>,<boss 2>,...                          raid boss order, for the S records
+  //   B,<size>,<d|h|t>,<period>                        a board follows (dps / healing / tanking)
+  //   P,<name>,<CLASS>,<spec>,<rate>,<pts>,<srv %>,<fights>,<total>,<hc 0|1>  (hc = rate came from Heroic)
+  //   S,<size>,<toon>,<boss idx>:<pct>[h] ...          best server % per boss, h = heroic parse
+  var OKR_CLASS = {
+    "Death Knight": "DEATHKNIGHT", DK: "DEATHKNIGHT", Druid: "DRUID", Hunter: "HUNTER", Mage: "MAGE",
+    Paladin: "PALADIN", Priest: "PRIEST", Rogue: "ROGUE", Shaman: "SHAMAN", Warlock: "WARLOCK",
+    Warrior: "WARRIOR",
+  };
+  function okrField(s) {
+    return String(s == null ? "" : s).replace(/[,;\r\n|]/g, " ");
+  }
+  function okrClass(c) {
+    return OKR_CLASS[c] || String(c || "").toUpperCase().replace(/[^A-Z]/g, "");
+  }
+  function buildOkanvilExport() {
+    var keep = { size: SIZE, diff: PROGDIFF, period: PERIOD };
+    var periods = ["week", "all"]; // the in-game This week / All time toggle
+    var rObj = (DATA.raids || []).filter(function (r) { return r.key === RAID; })[0];
+    var order = BOSS_ORDER[RAID] || [];
+    var lines = ["OKR1", ["H", Math.floor(Date.now() / 1000), RAID, (rObj && rObj.label) || RAID, periods.join("+")].map(okrField).join(",")];
+    if (order.length) lines.push(["K"].concat(order).map(okrField).join(","));
+    var diffs = SPLIT_DIFF_RAIDS[RAID] ? ["nm", "hc"] : [null];
+    var players = 0;
+    try {
+      ["25", "10"].forEach(function (size) {
+        SIZE = size;
+        periods.forEach(function (period) {
+          PERIOD = period;
+          // Each person's BEST outcome of Normal and Heroic: the board (nm or hc) where their rate is
+          // higher -- with the site's own pts from that board -- and the higher of their two server parses.
+          // Picking by rate, not pts: pts are relative to their own board, so a 2-healer Heroic board hands
+          // a 1-fight healer 100 pts.
+          var best = { d: {}, h: {}, t: {} };
+          diffs.forEach(function (df) {
+            if (df) PROGDIFF = df;
+            computeLeaderboards();
+            [["d", DATA.dps], ["h", DATA.hps], ["t", DATA.tank]].forEach(function (pair) {
+              (pair[1] || []).forEach(function (p) {
+                var k = normNm(p.name),
+                  cur = best[pair[0]][k];
+                var srv = p.serverPct;
+                if (cur && cur.srv != null && (srv == null || cur.srv > srv)) srv = cur.srv;
+                if (!cur || (p.rate || 0) > (cur.p.rate || 0)) best[pair[0]][k] = { p: p, hc: df === "hc", srv: srv };
+                else cur.srv = srv;
+              });
+            });
+          });
+          ["d", "h", "t"].forEach(function (b) {
+            var list = Object.keys(best[b]).map(function (k) { return best[b][k]; });
+            if (!list.length) return;
+            list.forEach(function (e) { e.score = e.p.score || 0; });
+            list.sort(function (x, y) { return y.score - x.score; });
+            lines.push(["B", size, b, period].join(","));
+            list.forEach(function (e) {
+              var p = e.p;
+              players++;
+              lines.push(["P", p.name, okrClass(p.class), p.spec || "", Math.round(p.rate || 0),
+                Math.round(e.score * 1000) / 10, e.srv == null ? "" : e.srv,
+                p.fights || 0, Math.round(p.value || 0), e.hc ? 1 : 0].map(okrField).join(","));
+            });
+          });
+        });
+        // best server % per boss, per toon, across both difficulties (season-wide: no period)
+        var bySize = (DATA.serverPct || {})[RAID] && DATA.serverPct[RAID][size];
+        if (!bySize || !order.length) return;
+        var toons = {};
+        (diffs[0] ? diffs : ["nm"]).forEach(function (df) {
+          var bucket = (diffs[0] ? bySize[df] : null) || bySize;
+          var pl = (bucket && bucket.players) || {};
+          Object.keys(pl).forEach(function (nm) {
+            var rec = pl[nm];
+            if (!rec || !(rec.bossPoints > 0)) return; // 0 = never parsed (the API's null)
+            var t = toons[nm] || (toons[nm] = {});
+            Object.keys(rec.bosses || {}).forEach(function (bn) {
+              var v = rec.bosses[bn],
+                i = order.indexOf(bn);
+              if (i < 0 || v == null || !(v > 0)) return;
+              if (!t[i] || v > t[i].v) t[i] = { v: Math.round(v * 10) / 10, hc: df === "hc" };
+            });
+          });
+        });
+        Object.keys(toons).forEach(function (nm) {
+          var cells = Object.keys(toons[nm]).map(function (i) {
+            return i + ":" + toons[nm][i].v + (toons[nm][i].hc ? "h" : "");
+          });
+          if (cells.length) lines.push(["S", size, okrField(nm), cells.join(" ")].join(","));
+        });
+      });
+    } finally {
+      SIZE = keep.size;
+      PROGDIFF = keep.diff;
+      PERIOD = keep.period;
+      computeLeaderboards();
+    }
+    return { text: lines.join("\n"), players: players };
+  }
+  function exportOkanvil() {
+    var msgEl = document.getElementById("fetchMsg");
+    var out = buildOkanvilExport();
+    function say(t, ok) {
+      if (!msgEl) return;
+      msgEl.textContent = t;
+      msgEl.className = "msg " + (ok ? "ok" : "err");
+      msgEl.hidden = false;
+    }
+    if (!out.players) {
+      say("Nothing to export: no board for this raid and period yet.", false);
+      return;
+    }
+    var label = "Okanvil export copied (" + Math.round(out.text.length / 1024) + " KB). In game: Okanvil > Home > Ranking > Import.";
+    function fallback() {
+      // clipboard refused (old browser / no permission): hand the text over to copy by hand
+      window.prompt("Copy this, then paste it in Okanvil > Home > Ranking > Import:", out.text);
+    }
+    try {
+      navigator.clipboard.writeText(out.text).then(function () { say(label, true); }, fallback);
+    } catch (e) {
+      fallback();
+    }
+  }
+
   // expose handlers used by inline onclick
+  window.exportOkanvil = exportOkanvil;
   window.setTab = setTab;
   window.setSize = setSize;
   window.setPeriod = setPeriod;

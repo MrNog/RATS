@@ -92,6 +92,16 @@
   margin: 8px 0 0;
 }
 
+.msg.ok:not(:empty) {
+  color: #b7e4b0;
+  background: #19221a;
+  border: 1px solid #2e4f30;
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
 /* fetch progress — slim gold bar + step/ETA line while the officer Fetch runs */
 .fetchprog { margin: 8px 0 0; }
 .fetchprog .fp-bar {

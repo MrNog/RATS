@@ -300,9 +300,13 @@
 
   function dpsList() { return derive().boards.dps; }
   function hpsList() { return derive().boards.hps; }
-  // person aggregate (for byBoss/records), main+role folded. Prefers DPS line, else HPS.
+  // person aggregate (for byBoss/records), main+role folded: the line they played most. A healer
+  // with two fights on a dps alt (or a few dps fights of their own) must still read as a healer.
   function personAgg(name) {
-    return lineOf(name, "D") || lineOf(name, "H");
+    var d = lineOf(name, "D"),
+      h = lineOf(name, "H");
+    if (d && h) return h.fights > d.fights ? h : d;
+    return d || h;
   }
   // the rat's single best parse in scope: highest per-boss value across their DPS/HPS lines.
   function bestParseOf(name) {
