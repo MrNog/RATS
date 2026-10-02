@@ -61,6 +61,7 @@ DATES = {
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
 # so a lower number sits further down among tales of the same date; unlisted tales count as 0.
 NIGHT_ORDER = {
+    "shockaa-the-cleansing": -3,
     "blood-quickening-the-whole-room": -2,
     "blood-quickening-the-flames": -1,
 }
