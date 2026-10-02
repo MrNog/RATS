@@ -250,6 +250,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Came Feasted Fled.png",
+    "title": "Came Feasted Fled",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/foug dk reroll.png",
     "title": "Foug Dk Reroll",
     "caption": "",
