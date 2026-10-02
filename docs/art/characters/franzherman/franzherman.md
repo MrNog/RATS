@@ -2,6 +2,7 @@
 
 - **Class / spec:** Affliction Warlock (MAIN)
 - **Rank:** rat
+- **Discord:** `<@940982602976858142>`
 - **Commissioned:** sheet + fresh profile banner 02 Jul 2026
 - **Toon name:** **FranzHerman** (profile banners are keyed by this exact toon name, lowercased → `franzherman`).
 

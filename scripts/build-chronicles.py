@@ -41,6 +41,7 @@ ART = {
     "lich-king-the-last-three": "images/lore/Last Three.png",
     "blood-quickening-the-whole-room": "images/lore/Blood Quickening Whole Room.png",
     "blood-quickening-the-flames": "images/lore/Blood Queen Flames.png",
+    "blood-queen-the-dark-two": "images/lore/Blood Queen Dark Two.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -56,6 +57,7 @@ DATES = {
     "lich-king-the-last-three": "2026-10-01",
     "blood-quickening-the-whole-room": "2026-10-01",
     "blood-quickening-the-flames": "2026-10-01",
+    "blood-queen-the-dark-two": "2026-09-25",
 }
 
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
@@ -83,6 +85,8 @@ MENTIONS = {
     "857062920743550996": "Someday",
     "269201538013069314": "Shockaa",
     "1245098422705590316": "Mongoloide",
+    "209740087653564439": "Foug",
+    "940982602976858142": "FranzHerman",
 }
 
 # More art inside a tale, beyond the hero image. "after" is a phrase from the paragraph the picture

@@ -2,6 +2,7 @@
 
 - **Class / spec:** Unholy Death Knight (MAIN)
 - **Rank:** Warchief
+- **Discord:** `<@209740087653564439>`
 - **Commissioned:** founding officer (seeded from the original library) · re-specced to Unholy DK 02 Jul 2026
 - **Alts:** Fouug (Hunter) · Sarveil (Disc Priest) · Paladin (Prot) · Mage — see **Alts** section at the bottom.
 - **Toon names:** DK main = **Foug** (renamed from **Foougg** — old logs/loot still say Foougg) · Hunter = **Fouug** · Priest = **Sarveil**. (Profile banners are keyed
