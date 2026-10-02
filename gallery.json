@@ -229,6 +229,20 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Blood Queen Flames.png",
+    "title": "Blood Queen Flames",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/Blood Quickening Whole Room.png",
+    "title": "Blood Quickening Whole Room",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/foug dk reroll.png",
     "title": "Foug Dk Reroll",
     "caption": "",
