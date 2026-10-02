@@ -2,8 +2,9 @@
 
 02 Oct 2026. Two healers left the guild the same afternoon. Zdral (Resto Shaman, Sewer Rat rank) went first, right after
 loot. Fazcafe / Ninjacaldas (Resto Shaman) laughed at it in Discord ("veio, mamou, bazou!" — came, ate,
-bounced). Okanor: "took the loot and left". A minute later Ninjacaldas left the guild too, salty over
-loot, mocking on his way out ("run, you've still got time to kick one"). Loremaster voice for the
+bounced). Then a 1-hour loot argument in guild chat; after it Ninjacaldas left too, for the same reason.
+Okanor logged in later, saw "Ninjacaldas has left the guild" and threw his words back: "took the loot and left".
+Fazcafe (still in Discord): "exactly, nice conclusion" / "run, you've still got time to kick one". Loremaster voice for the
 **Lore poster** — DARK: desertion and broken faith, not a joke.
 
 ---
@@ -27,15 +28,19 @@ This afternoon the curse found a Sewer Rat named **Zdral**. A shaman on the lowe
 
 No word. No farewell. Just an empty seat.
 
-Another shaman laughed at the empty seat. **Fazcafe**, who had healed beside the Rats for many seasons, mocked the deserter loudest of all. *Came, feasted, fled,* he sneered. **<@146677218280603648>** answered him in four words: *took the loot and left.*
+Another shaman laughed at the empty seat. **Fazcafe**, who had healed beside the Rats for many seasons, mocked the deserter loudest of all. *Came, feasted, fled,* he sneered.
 
-*"Exactly,"* said Fazcafe.
+But the laughter did not last. It turned to loot — who was owed what, who had been passed over, old grudges dragged into the light. For a full hour the argument ran long and cold through the guild halls, word against word, while the rest of the Rats sat at the table and listened in silence.
 
-Then he stood up from the same table.
+And when the last word was spoken, the hall heard it again:
 
 *Ninjacaldas has left the guild.*
 
-The same afternoon. The same plate still warm. The rat who had laughed at the traitor became the second one, and the last thing he left behind was a sneer: *"Run. You've still got time to kick one."*
+The same afternoon. The same plate still warm. The rat who had mocked the deserter walked out through the same door, for the same reason.
+
+Later, **<@146677218280603648>** stepped into the halls, read the message still hanging in the air, and gave the shaman back his own words: *took the loot and left.*
+
+From somewhere outside the walls came the answer: *"Exactly. Nice conclusion."* And one last sneer: *"Run. You've still got time to kick one."*
 
 Two healers gone before nightfall. Two spirits the Rats had carried through the frozen halls, kept alive, kept fed, kept geared.
 
