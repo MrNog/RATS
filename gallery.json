@@ -445,7 +445,15 @@
     "file": "images/warchiefs/Ardil.png",
     "title": "Ardil",
     "caption": "",
-    "date": "2026-06",
+    "date": "2026-10",
+    "people": "ardil"
+  },
+  {
+    "cat": "warchiefs",
+    "file": "images/warchiefs/Ardil 2.png",
+    "title": "Ardil #2",
+    "caption": "",
+    "date": "2026-10",
     "people": "ardil"
   },
   {
@@ -702,6 +710,14 @@
     "date": "2026-06"
   },
   {
+    "cat": "wallpaper",
+    "file": "images/wallpaper/Ardil 4k.png",
+    "title": "Ardil 4K",
+    "caption": "",
+    "date": "2026-10",
+    "people": "ardil"
+  },
+  {
     "cat": "icons",
     "file": "images/icons/FranzHerman.png",
     "title": "FranzHerman",
@@ -849,7 +865,7 @@
     "file": "images/profile-bg/ardil/ardil.png",
     "title": "Ardil",
     "caption": "",
-    "date": "2026-07",
+    "date": "2026-10",
     "people": "ardil",
     "wide": true
   },
