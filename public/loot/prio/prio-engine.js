@@ -1212,9 +1212,9 @@
     // them. Output alone kept feeding the same few raiders while someone who lost every
     // roll stayed where they were. Only ICC 25 gear won since the loot tracking began
     // counts, and only nights from that day on, so a veteran is not "owed" for nights
-    // nobody was recording. Craft mats, legendary fragments and the disenchant / bank
-    // rows are not a person winning an item.
-    var LUCK_SKIP = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
+    // nobody was recording. Craft mats, legendary fragments / quest items and the
+    // disenchant / bank rows are not a person winning an item.
+    var LUCK_SKIP = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne|acidic blood|shadowfrost shard|^(pattern|plans|formula|design|recipe|schematic|glyph):|runed orb|crusader orb|orb of|primordial saronite/i;
     // this many items above / below the raid's rate before it moves anyone
     var LUCK_MARGIN = 2;
     function lootDay(ts) {

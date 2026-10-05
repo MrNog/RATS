@@ -190,6 +190,10 @@
   // Fragments of a legendary — always kept; boss resolved by "last real boss killed" (time).
   // Covers Val'anyr fragments (Ulduar, guild pool) and Shard of Shadowmourne (ICC, questline).
   var FRAGMENT_RE = /fragment.*val'?anyr|val'?anyr.*fragment|shard of shadowmourne/i;
+  // Legendary questline items (Shadowmourne): sit with the fragments on a player card
+  // and never count as loot won. Kept out of FRAGMENT_RE because several Shadowfrost
+  // Shards drop per boss, and the fragment rule would drop all but one on import.
+  var QUEST_RE = /acidic blood|shadowfrost shard/i;
   // Items that ALWAYS go to the guild BANK regardless of who the addon said got them:
   // crafting ORBS only. These are guild-pool mats, not personal loot, so we force
   // player = "Bank" on import (even if it says "Kobee"). Fragments are NOT here — they
@@ -823,7 +827,7 @@
       var main = mainName(l.player);
       var p = (by[main] = by[main] ||
         { name: main, class: mainClass(main) || l.class, items: [], frags: [], crafts: [], last: 0 });
-      if (FRAGMENT_RE.test(l.name || "")) p.frags.push(l);
+      if (FRAGMENT_RE.test(l.name || "") || QUEST_RE.test(l.name || "")) p.frags.push(l);
       else if (SKIP_RE.test(l.name || "")) p.crafts.push(l);
       else p.items.push(l);
       if ((l.ts || 0) > p.last) p.last = l.ts;
@@ -1106,18 +1110,28 @@
   // look like it did nothing. The addon's id is the raid-ID fingerprint and is never
   // hand-edited on the site, so the export always wins and re-importing an old run
   // splits it back apart.
-  function mergeLoot(incoming) {
-    var key = function (l) {
-      return (l.ts || 0) + "|" + l.itemId;
-    };
-    var byKey = {};
-    (DATA.loot || []).forEach(function (l) {
-      byKey[key(l)] = l;
+  // One key per drop. ts|itemId alone can't tell apart two copies of the same item off
+  // one corpse (2x Vanquisher's Mark on Sindragosa share ts and id), so the Nth copy
+  // in a list gets "#N" -- a re-import still lines up copy-for-copy with what's saved.
+  function dropKeys(list) {
+    var n = {};
+    return (list || []).map(function (l) {
+      var k = (l.ts || 0) + "|" + l.itemId;
+      n[k] = (n[k] || 0) + 1;
+      return k + "#" + n[k];
     });
+  }
+  function mergeLoot(incoming) {
+    var byKey = {};
+    var haveKeys = dropKeys(DATA.loot);
+    (DATA.loot || []).forEach(function (l, i) {
+      byKey[haveKeys[i]] = l;
+    });
+    var inKeys = dropKeys(incoming);
     var added = 0,
       enriched = 0;
-    incoming.forEach(function (l) {
-      var k = key(l);
+    incoming.forEach(function (l, i) {
+      var k = inKeys[i];
       var cur = byKey[k];
       if (!cur) {
         DATA.loot.push(l);
@@ -1187,14 +1201,13 @@
     }
     // run the same boss-resolution + de-dup logic as the real import, but READ-ONLY.
     var res = resolveBosses(incoming);
-    var key = function (l) { return (l.ts || 0) + "|" + l.itemId; };
     var have = {};
-    (DATA.loot || []).forEach(function (l) { have[key(l)] = 1; });
-    var news = [], dups = 0, seen = {};
-    res.kept.forEach(function (l) {
-      var k = key(l);
-      if (have[k] || seen[k]) { dups++; return; }
-      seen[k] = 1; news.push(l);
+    dropKeys(DATA.loot).forEach(function (k) { have[k] = 1; });
+    var inKeys = dropKeys(res.kept);
+    var news = [], dups = 0;
+    res.kept.forEach(function (l, i) {
+      if (have[inKeys[i]]) { dups++; return; }
+      news.push(l);
     });
     // build the preview HTML: a summary line + the list of NEW items (boss · item -> winner)
     var rows = news.slice(0, 40).map(function (l) {
@@ -1411,9 +1424,11 @@
         return (a.ts || 0) - (b.ts || 0);
       })
       .forEach(function (l) {
+        // same exact ts = same loot window = separate copies off one corpse, not a dup
         var dup = kept.some(function (k) {
           return (
             k.itemId === l.itemId &&
+            (k.ts || 0) !== (l.ts || 0) &&
             (k.player || null) === (l.player || null) &&
             Math.abs((k.ts || 0) - (l.ts || 0)) <= DEDUP_WINDOW
           );
