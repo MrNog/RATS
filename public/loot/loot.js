@@ -836,6 +836,11 @@
       .map(function (n) {
         return by[n];
       })
+      // only current guild members (plus the Disenchant / Bank pools); people who left
+      // the guild drop off. Their drops stay in the run history. No roster yet = show all.
+      .filter(function (p) {
+        return !ROSTER.length || p.name === DISENCHANT || p.name === BANK || !!guildMember(p.name);
+      })
       .sort(function (a, b) {
         // Disenchant + Bank are pinned to the top; everyone else by real loot count
         if (a.name === DISENCHANT) return -1;

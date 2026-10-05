@@ -324,6 +324,9 @@
     Array.prototype.forEach.call(document.querySelectorAll("#priority .bis-only"), function (e) {
       e.hidden = v !== "bis";
     });
+    Array.prototype.forEach.call(document.querySelectorAll("#priority .luck-only"), function (e) {
+      e.hidden = v !== "luck";
+    });
     $("prBis").hidden = v !== "bis";
     $("prLuck").hidden = v !== "luck";
     render();
@@ -422,6 +425,44 @@
     L.push("\t},");
     L.push("}");
     return L.join(String.fromCharCode(10));
+  }
+
+  // Discord message: raiders behind the raid's loot rate, plus anyone who has
+  // raided and won nothing yet. Same list and order as the Loot luck view.
+  function luckMessage() {
+    var m = DATA.meta;
+    var list = Object.keys(DATA.players)
+      .map(function (k) { return DATA.players[k]; })
+      .filter(function (p) {
+        return !p.inactive && p.lootNights > 0 && (p.luck === 0 || p.lootWon === 0);
+      })
+      .sort(function (a, b) { return (b.owed - a.owed) || (b.lootNights - a.lootNights); });
+    var L = ["🧀 **Loot luck** - ICC 25 since " + U.fmtDate(m.lootFrom)];
+    if (!list.length) {
+      L.push("Every rat is even on cheese right now. 🐀");
+    } else {
+      L.push("Still waiting on their cheese:");
+      list.forEach(function (p) {
+        L.push("• **" + p.name + "** - " + p.lootWon + (p.lootWon === 1 ? " item" : " items") +
+          " in " + p.lootNights + (p.lootNights === 1 ? " night" : " nights") +
+          (p.owed > 0 ? " (owed " + p.owed + ")" : ""));
+      });
+      L.push("They move up the BiS ladders until it evens out. 🐀");
+    }
+    return L.join(String.fromCharCode(10));
+  }
+
+  // copy text, flash the button, or fall back to the selectable box
+  function copyText(btn, text, label) {
+    var done = function () {
+      btn.textContent = "Copied";
+      setTimeout(function () { btn.textContent = label; }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { showExport(text); });
+    } else {
+      showExport(text);
+    }
   }
 
   // Fallback when the clipboard is unavailable: show it, selected, to copy by hand.
@@ -543,19 +584,9 @@
       }
       if (t.closest("#prRefresh")) return load(true);
       var ex = t.closest("#prExport");
-      if (ex && DATA) {
-        var text = exportText();
-        var done = function () {
-          ex.textContent = "Copied";
-          setTimeout(function () { ex.textContent = "Export for Okanvil"; }, 1800);
-        };
-        // clipboard API needs a secure context; fall back to a selectable box
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(done, function () { showExport(text); });
-        } else {
-          showExport(text);
-        }
-      }
+      if (ex && DATA) return copyText(ex, exportText(), "Export for Okanvil");
+      var lm = t.closest("#prLuckMsg");
+      if (lm && DATA) return copyText(lm, luckMessage(), "Copy message");
     });
     $("prQ").addEventListener("input", function (e) {
       QUERY = e.target.value.trim().toLowerCase();
