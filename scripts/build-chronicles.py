@@ -43,6 +43,7 @@ ART = {
     "blood-quickening-the-flames": "images/lore/Blood Queen Flames.png",
     "blood-queen-the-dark-two": "images/lore/Blood Queen Dark Two.png",
     "came-feasted-fled": "images/lore/Came Feasted Fled.png",
+    "rellik-the-wrong-target": "images/lore/Rellik Wrong Target.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -60,6 +61,7 @@ DATES = {
     "blood-quickening-the-flames": "2026-10-01",
     "blood-queen-the-dark-two": "2026-09-25",
     "came-feasted-fled": "2026-10-02",
+    "rellik-the-wrong-target": "2026-10-06",
 }
 
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
