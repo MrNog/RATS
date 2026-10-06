@@ -71,6 +71,10 @@
     INVTYPE_FEET: ["Boots", 18],
   };
   var SLOTS = {};   // item name -> INVTYPE_*, from icons.json
+  // weapons + trinkets stay on the list even when only one class wants them
+  function keepAll(itemName) {
+    return /WEAPON|RANGED|SHIELD|HOLDABLE|RELIC|THROWN|TRINKET/.test(SLOTS[itemName.toLowerCase()] || "");
+  }
 
   var DATA = null, RAW = null, TIER = "all", QUERY = "", MIN_DAYS = 1;
 
@@ -162,7 +166,8 @@
   }
 
   function matches(it) {
-    if (TIER !== "all" && it.tier !== TIER) return false;
+    // a search finds the item under any tier, so a reserved item never looks missing
+    if (!QUERY && TIER !== "all" && it.tier !== TIER) return false;
     if (!QUERY) return true;
     var q = QUERY;
     if (it.item.toLowerCase().indexOf(q) >= 0) return true;
@@ -325,7 +330,7 @@
     minSel.addEventListener("change", function (e) {
       MIN_DAYS = parseInt(e.target.value, 10) || 1;
       if (!RAW) return;                 // still loading
-      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
+      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS, keepAll: keepAll });
       render();
       if (VIEW === "luck") renderLuck();
     });
@@ -601,7 +606,7 @@
       });
 
       RAW = { roster: roster, rankings: rankings, loot: loot };
-      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
+      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS, keepAll: keepAll });
 
       var m = DATA.meta;
       document.getElementById("meta").innerHTML =

@@ -605,6 +605,12 @@
   "q": 4,
   "slot": "INVTYPE_TRINKET"
  },
+ "50354": {
+  "name": "Bauble of True Blood",
+  "icon": "inv_jewelcrafting_gem_28",
+  "q": 4,
+  "slot": "INVTYPE_TRINKET"
+ },
  "50359": {
   "name": "Althor's Abacus",
   "icon": "inv_jewelry_trinket_02",

@@ -307,6 +307,10 @@
     ["Trauma", "Rotface", "P", "Healers without Val'anyr",
       healerNeedsWeapon, function () { return 0; }],
 
+    // Not on the sheet's reserved list: a healer trinket, so healers roll for it.
+    ["Bauble of True Blood", "Blood-Queen Lana'thel", "P", "Healers",
+      healer, function () { return 0; }],
+
     ["Crushing Coldwraith Belt", "Lord Marrowgar", "P", "Mage/Lock/Spriest/Ele > Boomy > healer",
       function (p) { return caster(p) || healer(p); },
       function (p) {
@@ -1446,7 +1450,10 @@
     // Discord post already says -- and an item nobody present can use is noise.
     // Dropping both keeps this a short list you can read mid-raid instead of a
     // 125-row catalogue of the whole instance.
+    // Weapons and trinkets always stay: officers look them up by name, and one
+    // missing reads as a broken list rather than a settled one.
     items = items.filter(function (it) {
+      if (opts.keepAll && opts.keepAll(it.item)) return it.ladder.length > 0;
       var live = it.ladder.filter(function (p) { return !p.won; });
       if (live.length < 2) return false;
       var classes = {};

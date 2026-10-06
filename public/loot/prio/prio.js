@@ -69,6 +69,10 @@
     INVTYPE_FEET: ["Boots", 18],
   };
   var SLOTS = {}; // item name -> INVTYPE_*, from icons.json
+  // weapons + trinkets stay on the list even when only one class wants them
+  function keepAll(itemName) {
+    return /WEAPON|RANGED|SHIELD|HOLDABLE|RELIC|THROWN|TRINKET/.test(SLOTS[itemName.toLowerCase()] || "");
+  }
 
   function groupOf(itemName) {
     var g = GROUPS[SLOTS[itemName.toLowerCase()]];
@@ -198,7 +202,8 @@
   }
 
   function matches(it) {
-    if (TIER !== "all" && it.tier !== TIER) return false;
+    // a search finds the item under any tier, so a reserved item never looks missing
+    if (!QUERY && TIER !== "all" && it.tier !== TIER) return false;
     if (!QUERY) return true;
     var q = QUERY;
     if (it.item.toLowerCase().indexOf(q) >= 0) return true;
@@ -514,7 +519,7 @@
         if (l && l.name && l.icon) ICONS[String(l.name).toLowerCase()] = l.icon;
       });
       RAW = { roster: roster, rankings: rankings, loot: loot, history: history, vacations: vacations || [] };
-      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS });
+      DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS, keepAll: keepAll });
       LOADED = true;
       var m = DATA.meta;
       $("prMeta").innerHTML =
