@@ -587,13 +587,13 @@
   "q": 4,
   "slot": "INVTYPE_WRIST"
  },
- "50348": {
+ "50353": {
   "name": "Dislodged Foreign Object",
   "icon": "inv_jewelry_trinket_01",
   "q": 4,
   "slot": "INVTYPE_TRINKET"
  },
- "50349": {
+ "50352": {
   "name": "Corpse Tongue Coin",
   "icon": "inv_misc_coin_18",
   "q": 4,
