@@ -348,6 +348,14 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Rellik Wrong Target.png",
+    "title": "Rellik Wrong Target",
+    "caption": "",
+    "date": "2026-10",
+    "people": "rellik"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Shockaa Cleansing.png",
     "title": "Shockaa Cleansing",
     "caption": "",
