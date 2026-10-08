@@ -113,6 +113,17 @@
     var n = (r.groups || []).reduce(function (a, g) { return a + (g.members || []).length; }, 0);
     return n > 10 ? 25 : 10;
   }
+  // The players who were IN the raid: groups 1-5 of a 25, 1-2 of a 10. Anyone the
+  // comp parked in a later group sat on the bench -- that is not coming to the raid.
+  function raidMembers(r) {
+    var max = raidSize(r) / 5, out = [];
+    (r.groups || []).forEach(function (g, i) {
+      var m = /(\d+)/.exec(String(g.name || ""));
+      if ((m ? Number(m[1]) : i + 1) > max) return;
+      (g.members || []).forEach(function (mm) { if (mm && mm.name) out.push(mm); });
+    });
+    return out;
+  }
   // a saved raid's rule raid: "ICC25", "ToGC10"… from its free-text description
   function refOfRaid(r) {
     var desc = String(r.desc || "");
@@ -190,10 +201,12 @@
     return { list: list || [], member: member, isAlt: isAlt, resolveMain: resolveMain, onMain: onMain };
   }
 
-  function onVacation(vac, name, date) {
+  // R (optional) lets a vacation filed under an alt cover the main
+  function onVacation(vac, name, date, R) {
     var n = normName(name);
     return (vac || []).some(function (v) {
-      return v.start && normName(v.name) === n && date >= v.start && date <= (v.end || v.start);
+      if (!v.start || date < v.start || date > (v.end || v.start)) return false;
+      return normName(v.name) === n || (!!R && normName(R.resolveMain(v.name)) === n);
     });
   }
 
@@ -255,6 +268,7 @@
       var byRef = (runs[wed] = runs[wed] || {});
       (byRef[ref] = byRef[ref] || []).push(r);
     });
+    var nightIn = new Map(); // raid night -> mains in the raid that night
     var votes = {}; // wed -> ref -> id -> n
     letters.forEach(function (l) {
       var ref = l.z + l.size;
@@ -283,9 +297,10 @@
         var present = new Set();
         nights.forEach(function (r) {
           nightsAll.push(r);
-          (r.groups || []).forEach(function (g) {
-            (g.members || []).forEach(function (m) { present.add(R.resolveMain(m.name).toLowerCase()); });
-          });
+          var inNight = new Set();
+          raidMembers(r).forEach(function (m) { inNight.add(R.resolveMain(m.name).toLowerCase()); });
+          nightIn.set(r, inNight);
+          inNight.forEach(function (k) { present.add(k); });
           (r.noshows || []).forEach(function (m) {
             if (m.vacation) vac.add(R.resolveMain(m.name).toLowerCase());
           });
@@ -348,7 +363,7 @@
           : c.saved[key] ? { id: c.saved[key].id, ref: c.saved[key].ref, by: "letter" }
             : mk ? { id: mk.id || null, by: "officer", reason: mk.reason || "" } : null;
         var st;
-        if (c.vac.has(key) || c.nights.some(function (r) { return onVacation(opts.vac, m.name, r.date); })) st = "vac";
+        if (c.vac.has(key) || c.nights.some(function (r) { return onVacation(opts.vac, m.name, r.date, R); })) st = "vac";
         else if (markFor(excuses, c.wed, m.name)) st = "excused";
         else if (proof) st = "elsewhere";         // locked elsewhere: can't come night 2 either
         // the lockout is still open, but once our run is in, not being in it is a miss
@@ -362,6 +377,23 @@
       for (var i = 0; i < marks.length && last < 0; i++) if (marks[i].st === "elsewhere") last = i;
       var since = last < 0 ? 0 : marks.slice(0, last).filter(function (x) { return x.st === "in"; }).length;
       if (last >= 0 && since < REDEEM) listed[key] = { chain: marks[last].c, left: REDEEM - since };
+      // missed nights in a row, newest first: vacations, excused weeks and nights
+      // before they joined are skipped; any night in the raid ends the run
+      var streak = 0;
+      chains.some(function (c) {
+        if (joinD && c.wed < lockoutStart(joinD)) return true;
+        if (c.vac.has(key) || markFor(excuses, c.wed, m.name)) return false;
+        // in our ID only by letter (no night has them): the whole lockout counts as in
+        var byLetter = c.present.has(key) && !c.nights.some(function (r) { return nightIn.get(r).has(key); });
+        for (var j = c.nights.length - 1; j >= 0; j--) {
+          var r = c.nights[j];
+          if (joinD && r.date < joinD) return true;
+          if (onVacation(opts.vac, m.name, r.date, R)) continue;
+          if (byLetter || nightIn.get(r).has(key)) return true;
+          streak++;
+        }
+        return false;
+      });
       if (!marks.length) return;
       var came = marks.filter(function (x) { return x.st === "in"; }).length;
       var counted = marks.filter(function (x) { return x.st === "in" || x.st === "elsewhere" || x.st === "absent"; }).length;
@@ -373,6 +405,7 @@
         absent: marks.filter(function (x) { return x.st === "absent"; }).length,
         open: marks.some(function (x) { return x.st === "open"; }),
         listed: !!listed[key], redeemLeft: listed[key] ? listed[key].left : 0,
+        streak: streak,
       });
     });
     rows.sort(function (a, b) {
@@ -416,13 +449,11 @@
       var ref = refOfRaid(r);
       if (!r.date || !ref || !isExtra[ref]) return;
       var wed = lockoutStart(r.date);
-      (r.groups || []).forEach(function (g) {
-        (g.members || []).forEach(function (mm) {
-          if (!R.onMain(mm.name)) return;
-          var m = R.resolveMain(mm.name).toLowerCase();
-          (extra[wed] = extra[wed] || {})[m] = ref;
-          count(m, wed, ref);
-        });
+      raidMembers(r).forEach(function (mm) {
+        if (!R.onMain(mm.name)) return;
+        var m = R.resolveMain(mm.name).toLowerCase();
+        (extra[wed] = extra[wed] || {})[m] = ref;
+        count(m, wed, ref);
       });
     });
     var raided = new Set();
@@ -449,7 +480,7 @@
 
   w.RatsAtt = {
     compute: compute, tenMan: tenMan, excuseId: excuseId, weekKey: weekKey, letterKey: letterKey,
-    ourIdKey: ourIdKey, safeKey: safeKey, lockoutStart: lockoutStart, normName: normName,
+    ourIdKey: ourIdKey, safeKey: safeKey, lockoutStart: lockoutStart, normName: normName, raidMembers: raidMembers,
     parseRef: parseRef, refLabel: refLabel, refOfRaid: refOfRaid, rulesOf: rulesOf,
     mustLabel: mustLabel, extraLabel: extraLabel, RULE_RAIDS: RULE_RAIDS,
     SINCE: SINCE, TEN_WEEKS: TEN_WEEKS, REDEEM: REDEEM,

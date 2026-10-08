@@ -161,3 +161,4 @@
 /* the one action here that goes somewhere else: gold, so it is found at a glance */
 .prio #prExport { color: var(--accent-hi) }
 .prio #prExport:hover { color: var(--white) }
+.prio .pi .pl[data-name] { cursor: pointer }

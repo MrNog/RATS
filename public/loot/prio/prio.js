@@ -10,7 +10,7 @@
 (function () {
   "use strict";
   var U = window.RatsUtils;
-  var esc = U.esc, classColor = U.classColor, fbGet = U.fbGet;
+  var esc = U.esc, classColor = U.classColor, fbGet = U.fbGet, fbPost = U.fbPost, fbDelete = U.fbDelete;
 
   var ICON_BASE = "https://wow.zamimg.com/images/wow/icons/",
     ICON_FALLBACK = "inv_misc_questionmark";
@@ -120,11 +120,12 @@
       (p.iccdps ? " — " + p.iccdps + " dps in ICC" : "") +
       (p.iccpct ? ", " + Math.round(p.iccpct) + "th percentile" : "") +
       " — " + p.att + " raid days, " + (p.icc || 0) + " in ICC" +
-      (p.won ? " — already won this" : "") +
+      (p.has ? " — already has it (got it outside our loot). Click to undo" : p.won ? " — already won this" : " — click if they already have it") +
       (p.offspec ? " — off-spec, takes leftovers" : "") +
       (p.unproven ? " — only " + (p.icc || 0) + " ICC 25 night" + (p.icc === 1 ? "" : "s") + " so far" : "") +
       (p.low ? " — off the pace for our raid" : "") +
       (p.lowAtt != null ? " — came to only " + p.lowAtt + "% of our main runs in 8 weeks: bottom of the ladder" : "") +
+      (p.streak ? " — missed our last " + p.streak + " main nights in a row: bottom of the ladder until they come to one" : "") +
       (p.missed ? " — pugged a mandatory raid without an excuse: bottom of the ladder until they have come to " + (window.RatsAtt ? RatsAtt.REDEEM : 3) + " of our main runs" : "") +
       (p.extra10 ? " — " + p.extra10 + " extra raid" + (p.extra10 === 1 ? "" : "s") + " (10-man) on the main" : "") +
       (p.tail ? " — holds this group open, last in line until he proves it" : "") +
@@ -132,11 +133,12 @@
       (p.luck === 2 ? " — well served: " + Math.abs(p.owed) + " items ahead of the raid's rate" : "");
     return (
       '<span class="pl' + (isNext ? " top" : "") + (p.offspec ? " off" : "") + (p.won ? " has" : "") +
-      '" title="' + esc(tip) + '"><b style="color:' + classColor(p.cls) + '">' + esc(p.name) + "</b>" +
+      '" data-name="' + esc(p.name) + '" title="' + esc(tip) + '"><b style="color:' + classColor(p.cls) + '">' + esc(p.name) + "</b>" +
       (p.offspec ? '<i class="tag">off</i>' : "") +
       (p.unproven ? '<i class="tag new">new</i>' : "") +
       (p.low ? '<i class="tag low">low</i>' : "") +
       (p.lowAtt != null ? '<i class="tag lowatt">' + p.lowAtt + '%</i>' : "") +
+      (p.streak ? '<i class="tag lowatt">' + p.streak + ' out</i>' : "") +
       (p.missed ? '<i class="tag missed">missed ID</i>' : "") +
       (p.extra10 ? '<i class="tag extra10" title="Extra raids (10-man) on the main">10m ' + p.extra10 + '</i>' : "") +
       (!p.won && p.luck === 2 ? '<i class="tag lucky">lucky</i>' : "") +
@@ -187,7 +189,7 @@
   function cardHtml(it) {
     var slug = ICONS[it.item.toLowerCase()];
     return (
-      '<li class="pi t-' + it.tier + (OPEN_ITEM[it.item] ? " open" : "") + '">' +
+      '<li class="pi t-' + it.tier + (OPEN_ITEM[it.item] ? " open" : "") + '" data-item="' + esc(it.item) + '">' +
       '<img class="pi-ic" src="' + esc(iconUrl(slug)) + '" alt="" loading="lazy" ' +
       "onerror=\"this.src='" + iconUrl(ICON_FALLBACK) + "'\">" +
       '<div class="pi-main">' +
@@ -491,6 +493,8 @@
       fbGet("roster"),
       fbGet("rankings"),
       fbGet("loot"),
+      // officer marks: "already has it" for items got outside our loot
+      fbGet("lootHas"),
       // history + vacations feed the "Missed our ID" rule (officer tab only)
       window.RatsData ? RatsData.loadHistory({ interactive: false }).catch(function () { return null; }) : null,
       window.RatsData ? RatsData.loadVacations().catch(function () { return []; }) : [],
@@ -502,7 +506,7 @@
     ]).then(function (res) {
       LOADING = false;
       if (refresh) refresh.disabled = false;
-      var roster = res[0], rankings = res[1], loot = res[2], history = res[3], vacations = res[4], icons = res[5];
+      var roster = res[0], rankings = res[1], loot = res[2], hasNode = res[3], history = res[4], vacations = res[5], icons = res[6];
       if (!roster || !rankings) {
         $("prGrid").innerHTML = '<div class="pr-empty">Could not reach the guild database. ' +
           "Check that you are online, then refresh.</div>";
@@ -518,7 +522,10 @@
       ((loot && loot.loot) || []).forEach(function (l) {
         if (l && l.name && l.icon) ICONS[String(l.name).toLowerCase()] = l.icon;
       });
-      RAW = { roster: roster, rankings: rankings, loot: loot, history: history, vacations: vacations || [] };
+      RAW = {
+        roster: roster, rankings: rankings, loot: loot, history: history, vacations: vacations || [],
+        has: Object.keys(hasNode || {}).map(function (k) { return Object.assign({ key: k }, hasNode[k]); }),
+      };
       DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS, keepAll: keepAll });
       LOADED = true;
       var m = DATA.meta;
@@ -532,6 +539,33 @@
       $("prGrid").innerHTML = '<div class="pr-empty">Something went wrong building the list: ' +
         esc(String(e && e.message ? e.message : e)) + "</div>";
     });
+  }
+
+  // ---- "already has it" --------------------------------------------------
+  // A raider who got the item outside our loot (bought the BoE, crafted it, a pug
+  // drop) is marked here and drops to the "already won" tail, like a winner.
+  function rebuild() {
+    DATA = window.RatsPrio.build(RAW, { minDays: MIN_DAYS, keepAll: keepAll });
+    render();
+  }
+  function toggleHas(item, name) {
+    var it = DATA && DATA.items.find(function (x) { return x.item === item; });
+    var p = it && it.ladder.find(function (x) { return x.name === name; });
+    if (!p || (p.won && !p.has)) return; // won in our raid: the loot node says so
+    if (p.has) {
+      if (!window.confirm(name + " does NOT have " + item + " after all?")) return;
+      fbDelete("lootHas/" + p.has).then(function () {
+        RAW.has = RAW.has.filter(function (h) { return h.key !== p.has; });
+        rebuild();
+      }).catch(function (e) { window.alert("Could not save: " + e.message); });
+      return;
+    }
+    if (!window.confirm(name + " already has " + item + " (bought, crafted or from a pug)?")) return;
+    var entry = { item: item, player: name, t: Date.now() };
+    fbPost("lootHas", entry).then(function (key) {
+      RAW.has.push(Object.assign({ key: key }, entry));
+      rebuild();
+    }).catch(function (e) { window.alert("Could not save: " + e.message); });
   }
 
   // ---- wire up ------------------------------------------------------------
@@ -567,6 +601,8 @@
         CLOSED = {};
         return renderBis();
       }
+      var pl = t.closest(".pi .pl[data-name]");
+      if (pl && RAW) return toggleHas(pl.closest(".pi").getAttribute("data-item"), pl.getAttribute("data-name"));
       var row = t.closest(".lrow");
       if (row) {
         var n = row.getAttribute("data-luck");

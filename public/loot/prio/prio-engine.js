@@ -154,12 +154,16 @@
   // GM's rule (Grunho): whoever barely raids with us sees no loot either. Under
   // LOW_ATT of our main runs in the last LOW_WEEKS weeks sits under every live
   // candidate; a pugger (above) sits lower still. Order: live, low, pugged, won.
-  var LOW_ATT = 50, LOW_WEEKS = 8;
+  // Missing MISS_NIGHTS of our main nights in a row (bench included) is the very end
+  // of the list, under everyone still in line, until they come to a night again.
+  var LOW_ATT = 50, LOW_WEEKS = 8, MISS_NIGHTS = 2;
   function sinkMissed(list) {
-    var live = [], low = [], missed = [], won = [];
-    list.forEach(function (c) { (c.won ? won : c.missed ? missed : c.lowAtt != null ? low : live).push(c); });
+    var live = [], low = [], missed = [], out = [], won = [];
+    list.forEach(function (c) {
+      (c.won ? won : c.streak ? out : c.missed ? missed : c.lowAtt != null ? low : live).push(c);
+    });
     list.length = 0;
-    Array.prototype.push.apply(list, live.concat(low, missed, won));
+    Array.prototype.push.apply(list, live.concat(low, missed, out, won));
     return list;
   }
 
@@ -896,7 +900,7 @@
     var altMap = rank.altMap || {};
     // who is on the "Missed our ID" list (needs history; absent = nobody is)
     // extra raids (10-mans on the main): effort, shown to settle a close call, never reorders
-    var missedId = {}, extra10 = {}, lowAtt = {};
+    var missedId = {}, extra10 = {}, lowAtt = {}, streak = {};
     if (data.history && w.RatsAtt) {
       var attOpts = {
         raids: data.history.raids || [], roster: roster, joined: joined,
@@ -904,7 +908,9 @@
         elsewhere: data.history.elsewhere || {}, letters: data.history.letters || {},
         ourIds: data.history.ourIds || {}, rules: data.history.attRules || null,
       };
-      missedId = w.RatsAtt.compute(attOpts).listed;
+      var all = w.RatsAtt.compute(attOpts);
+      missedId = all.listed;
+      all.rows.forEach(function (row) { if (row.streak >= MISS_NIGHTS) streak[row.name.toLowerCase()] = row.streak; });
       // attendance % over the last LOW_WEEKS lockouts, mains only
       var cut = w.RatsAtt.lockoutStart(new Date(Date.now() - (LOW_WEEKS - 1) * 7 * 86400000));
       w.RatsAtt.compute(Object.assign({}, attOpts, { filter: function (r) { return r.date >= cut; } })).rows
@@ -991,6 +997,12 @@
       });
     });
 
+    var today = new Date(), z = function (n) { return String(n).padStart(2, "0"); };
+    var todayStr = today.getFullYear() + "-" + z(today.getMonth() + 1) + "-" + z(today.getDate());
+    var away = {};
+    (data.vacations || []).forEach(function (v) {
+      if (v && v.name && v.start && todayStr >= v.start && todayStr <= (v.end || v.start)) away[mainOf(v.name)] = true;
+    });
     var ND = allDays.length;
     var firstLog = allDays[0] || "";
     var avg = function (a) {
@@ -1110,6 +1122,9 @@
       };
       // Not raiding lately -> off the ladders. Loot goes to people in the raid.
       players[key].inactive = players[key].recent === 0;
+      // On vacation today: not in the raid to take it, so off the ladders too. Never a
+      // penalty -- they are back on the list the day it ends.
+      players[key].away = !!away[key];
     });
 
     // -- rank ICC output against peers in the same role
@@ -1211,6 +1226,14 @@
         player: who, runId: l.runId || "", boss: l.boss || "",
       });
     });
+    // Items a raider got outside our loot (a bought BoE, a craft, a pug drop): an
+    // officer marks them on the page and they count as already won.
+    (data.has || []).forEach(function (h) {
+      if (!h || !h.item || !h.player) return;
+      (wonBy[String(h.item).toLowerCase()] = wonBy[String(h.item).toLowerCase()] || []).push({
+        player: String(h.player), has: h.key || true,
+      });
+    });
 
     // -- loot luck: who has won less, or more, than their ICC nights should have given
     // them. Output alone kept feeding the same few raiders while someone who lost every
@@ -1269,7 +1292,7 @@
       if (band === "class") {
         var seen = {}, classes = [];
         list.forEach(function (p) {
-          if (p.inactive || p.att < minDays || !elig(p) || seen[p.cls]) return;
+          if (p.inactive || p.away || p.att < minDays || !elig(p) || seen[p.cls]) return;
           seen[p.cls] = 1;
         });
         CLASS_ORDER.forEach(function (c) { if (seen[c]) classes.push(c); });
@@ -1284,11 +1307,11 @@
 
       var won = wonBy[name.toLowerCase()] || [];
       var wonNames = {};
-      won.forEach(function (x) { wonNames[x.player.toLowerCase()] = 1; });
+      won.forEach(function (x) { wonNames[x.player.toLowerCase()] = x.has || 1; });
 
       var cand = [];
       list.forEach(function (p) {
-        if (p.inactive) return;
+        if (p.inactive || p.away) return;
         if (p.att < minDays) return;
         if (elig(p)) { cand.push({ p: p, band: band(p), off: null }); return; }
         for (var i = 0; i < p.offspecs.length; i++) {
@@ -1323,9 +1346,11 @@
       // they keep turning up, which hiding them would never allow.
       cand.forEach(function (c) {
         c.won = !!wonNames[c.p.name.toLowerCase()];
+        c.has = typeof wonNames[c.p.name.toLowerCase()] === "string" ? wonNames[c.p.name.toLowerCase()] : null;
         c.missed = !!missedId[c.p.name.toLowerCase()];
         c.lowAtt = lowAtt[c.p.name.toLowerCase()] != null ? lowAtt[c.p.name.toLowerCase()] : null;
         c.extra10 = extra10[c.p.name.toLowerCase()] || 0;
+        c.streak = streak[c.p.name.toLowerCase()] || 0;
         // One night cannot buy the front of the queue. An unproven raider sits a
         // band lower than their spec would otherwise earn -- still on the list, and
         // it costs them nothing permanent: the tag lifts the moment they raid again.
@@ -1425,8 +1450,8 @@
             name: c.p.name, spec: c.p.spec, cls: c.p.cls, role: c.p.role,
             score: c.p.score, perf: c.p.perf, att: c.p.att,
             icc: c.p.icc, iccpct: c.p.iccpct, iccdps: c.p.iccdps,
-            band: c.band, offspec: !!c.off, won: c.won, low: !!c.low,
-            unproven: !!c.unproven, tail: !!c.tail, missed: !!c.missed, lowAtt: c.lowAtt, extra10: c.extra10 || 0,
+            band: c.band, offspec: !!c.off, won: c.won, has: c.has, low: !!c.low,
+            unproven: !!c.unproven, tail: !!c.tail, missed: !!c.missed, lowAtt: c.lowAtt, streak: c.streak, extra10: c.extra10 || 0,
             owed: c.p.owed || 0, luck: luckOf(c.p),
           };
         }),
@@ -1454,6 +1479,8 @@
     // missing reads as a broken list rather than a settled one.
     items = items.filter(function (it) {
       if (opts.keepAll && opts.keepAll(it.item)) return it.ladder.length > 0;
+      // an officer's "already has it" mark stays reachable, so it can be undone
+      if (it.ladder.some(function (p) { return p.has; })) return true;
       var live = it.ladder.filter(function (p) { return !p.won; });
       if (live.length < 2) return false;
       var classes = {};
