@@ -2,7 +2,7 @@
 
 - **Class / spec:** Druid — Balance + Feral (the art carries both: starfall caster AND feral beast)
 - **Rank:** Warchief
-- **Discord:** `<@MISSING_ID>`
+- **Discord:** `<@492483081849012234>`
 - **Commissioned:** founding officer (seeded from the original library) · **re-commissioned 03 Oct 2026** by Ardil
 
 > **03 Oct 2026 redo:** Ardil wasn't happy with the pure-feral look. His ask (DM): "rato bacana com cenas à

@@ -3,6 +3,7 @@
 - **Class / spec:** Shaman — "Degradation" (flavor spec: a corrupted plague-caster; render with Elemental/
   Resto shaman cues — totems, storm-blue lightning — soured into sickly plague-green).
 - **Rank:** rat
+- **Discord:** `<@253555199199674368>`
 - **Commissioned:** 28 Jul 2026 · by Okanor
 
 ## Locked look (never changes between images)
@@ -50,6 +51,10 @@ Locked = the look above. Pose/camera/scene must vary every image (STYLE.md's ONE
   teeth bared in a manic grin, lit hard from below by the off-frame green jar, plain dark backdrop.
 - **iPhone wallpaper (9:19.5):** full figure low-center perched on a broken sewer pipe, the tunnel and
   drain arch rising tall above him into darkness; top ~20% and the very bottom kept dark and simple.
+- **Lore "The Sewer Healer" (21:9):** ✅ *used 08 Oct 2026* (`images/lore/Sewer Healer.png`) — wide braced
+  stance on the Blood Queen's floor, jar raised overhead in the right hand, left hand casting a green-and-blue
+  healing stream to the right, lightning above; Okanor's mace + shield and Ardil's staff abandoned in the
+  left foreground. Don't reuse this pose.
 - **Combat / lore moment:** standing braced mid-cast on a flooded ledge, jar held high overhead in one
   hand, green light spilling down over him while forked storm-blue lightning answers from above; dark
   armored silhouettes recoiling back at the edge of the frame.

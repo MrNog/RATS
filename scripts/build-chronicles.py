@@ -44,6 +44,7 @@ ART = {
     "blood-queen-the-dark-two": "images/lore/Blood Queen Dark Two.png",
     "came-feasted-fled": "images/lore/Came Feasted Fled.png",
     "rellik-the-wrong-target": "images/lore/Rellik Wrong Target.png",
+    "blood-queen-the-sewer-healer": "images/lore/Sewer Healer.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -62,6 +63,7 @@ DATES = {
     "blood-queen-the-dark-two": "2026-09-25",
     "came-feasted-fled": "2026-10-02",
     "rellik-the-wrong-target": "2026-10-06",
+    "blood-queen-the-sewer-healer": "2026-10-08",
 }
 
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
@@ -91,6 +93,8 @@ MENTIONS = {
     "1245098422705590316": "Mongoloide",
     "209740087653564439": "Foug",
     "940982602976858142": "FranzHerman",
+    "253555199199674368": "Mijinho",
+    "492483081849012234": "Ardil",
 }
 
 # More art inside a tale, beyond the hero image. "after" is a phrase from the paragraph the picture
