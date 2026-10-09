@@ -45,6 +45,7 @@ ART = {
     "came-feasted-fled": "images/lore/Came Feasted Fled.png",
     "rellik-the-wrong-target": "images/lore/Rellik Wrong Target.png",
     "blood-queen-the-sewer-healer": "images/lore/Sewer Healer.png",
+    "the-hand-that-claims-three": "images/lore/Empty Shield.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -184,7 +185,8 @@ def main():
             "body": for_site(body),
             # the post exactly as it went to Discord (pings intact), for the officer re-post button
             "discord": unwrap(body),
-            "image": ART.get(slug, ""),
+            # art is registered before it is rendered; it only shows once the file is in images/
+            "image": ART[slug] if os.path.isfile(os.path.join(ROOT, ART.get(slug, ""))) and slug in ART else "",
             "date": DATES.get(slug) or first_commit_date(os.path.join("docs", "art", "chronicles", name)),
         }
         if slug in EXTRA_ART:
