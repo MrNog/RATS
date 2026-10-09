@@ -257,6 +257,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Empty Shield.png",
+    "title": "Empty Shield",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/foug dk reroll.png",
     "title": "Foug Dk Reroll",
     "caption": "",
@@ -734,11 +741,35 @@
   },
   {
     "cat": "icons",
+    "file": "images/icons/ardil.png",
+    "title": "Ardil",
+    "caption": "",
+    "date": "2026-10",
+    "people": "ardil"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/foug.png",
+    "title": "Foug",
+    "caption": "",
+    "date": "2026-10",
+    "people": "foug"
+  },
+  {
+    "cat": "icons",
     "file": "images/icons/FranzHerman.png",
     "title": "FranzHerman",
     "caption": "",
     "date": "2026-06",
     "people": "franzherman"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/grunho.png",
+    "title": "Grunho",
+    "caption": "",
+    "date": "2026-10",
+    "people": "grunho"
   },
   {
     "cat": "icons",
@@ -774,6 +805,14 @@
     "title": "Guild RATS 2",
     "caption": "",
     "date": "2026-06"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/kobee.png",
+    "title": "Kobee",
+    "caption": "",
+    "date": "2026-10",
+    "people": "kobee"
   },
   {
     "cat": "icons",
@@ -842,6 +881,14 @@
     "title": "RatRoster",
     "caption": "",
     "date": "2026-06"
+  },
+  {
+    "cat": "icons",
+    "file": "images/icons/rellik.png",
+    "title": "Rellik",
+    "caption": "",
+    "date": "2026-10",
+    "people": "rellik"
   },
   {
     "cat": "icons",
