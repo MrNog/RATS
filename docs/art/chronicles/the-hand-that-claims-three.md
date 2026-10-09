@@ -21,48 +21,33 @@ lore anchors, **no spell names**.
 
 # 🛡️ The Hand That Claims Three
 
-Long ago, when the Silver Hand was young, the Light gave its paladins a gift for the defence of the weak.
-Lay your hand on a comrade in peril, and the Light will turn the eyes of their attackers upon you.
+Long ago the Light gave the paladins a gift: lay your hand on a comrade in peril, and the Light turns their attackers upon you.
 
 *Up to three of them.*
 
-The old masters never said **which** three. The Light, it turns out, does not ask. It takes whatever is
-nearest the hand and most offended, and it takes it *right now*.
+The old masters never said **which** three. The Light does not ask. It takes whatever is nearest and most offended, and it takes it *right now*.
 
 **<@1295762889730297917>** learned this the hard way.
 
-On the Frozen Throne, the Rat King stood where a king should stand, tower shield raised, and the Lich King
-himself bore down on him. Everything was in order. Then a handful of ghouls went loose among the raid, and
-**<@1245098422705590316>** did the honourable thing. He reached out to protect a comrade, and the Light
-answered him in full.
+On the Frozen Throne the Rat King held the Lich King himself, shield raised, all in order. Then ghouls went loose, and **<@1245098422705590316>** reached out to protect a comrade.
 
 Two ghouls turned. And so did Arthas.
 
-The Lich King of all the Scourge, master of the dead, turned his back on a crowned rat and walked off after
-a paladin with a hammer, because the paladin wanted ghouls. Grunho stood alone on the platform with a raised
-shield and nothing in front of it. It happened once. Then it happened again. Mongoloide wanted the ghouls
-very badly, every time.
+The master of the Scourge turned his back on a crowned rat and walked off after a paladin with a hammer, because the paladin wanted ghouls. It happened once. Then again. Mongoloide wanted the ghouls very badly, every time.
 
 Then came yesterday, in the hall of the Blood Princes.
 
-Grunho had them both. Valanar on one side, Taldaram on the other, two princes of San'layn held tight under
-the crown. Across the room, half a hall away, a little dark orb drifted loose, the sort of thing that
-floats around Keleseth looking sad. **<@323497935210020866>** wanted that orb.
+Grunho had them both, Valanar and Taldaram, held tight under the crown. Half a hall away drifted a little dark orb, the sort that floats around Keleseth looking sad. **<@323497935210020866>** wanted that orb.
 
-Rellik laid his hand on a comrade. The Light looked about for three hostile things. It found one small orb.
+The Light looked for three hostile things. It found one small orb.
 
 It also found two princes.
 
-Valanar and Taldaram, princes of a dead kingdom and lords of the blood, crossed the entire hall without a
-word, following the High Warlord of the Rats to go and stand beside a pebble.
+Two lords of the blood crossed the entire hall without a word, to go and stand beside a pebble.
 
-The Rat King looked at his shield. He looked at the empty floor in front of it. He looked at the orb across
-the room, guarded now by two princes.
+The Rat King looked at his shield, at the empty floor before it, and has since asked the Silver Hand to amend the gift to *"three targets, and NOT the boss."*
 
-He has made a formal request to the Silver Hand that the gift be amended to *"three targets, and NOT the
-boss."*
-
-The Silver Hand has not replied. The Light does not take requests.
+The Light does not take requests.
 
 *So it is written.*
 ```

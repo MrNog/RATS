@@ -195,6 +195,9 @@ def main():
             tale["images"] = EXTRA_ART[slug]
         if slug in SPECIAL:
             tale["special"] = SPECIAL[slug]
+        # Discord refuses a message over 2000 characters, and the pings count at full <@id> length
+        if len(tale["discord"]) > 2000:
+            print(f"!! {slug}: Discord post is {len(tale['discord'])}/2000 characters, too long to post")
         tales.append(tale)
     tales.sort(key=lambda t: (bool(t.get("special")), t["date"], NIGHT_ORDER.get(t["id"], 0)), reverse=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
