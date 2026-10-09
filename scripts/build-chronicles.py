@@ -12,6 +12,7 @@ Firebase `lore` node and the page merges both.
 """
 import json
 import os
+import datetime
 import re
 import subprocess
 
@@ -150,9 +151,10 @@ def first_commit_date(path):
         out = subprocess.run(
             ["git", "log", "--diff-filter=A", "--follow", "--format=%as", "--", path],
             cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
-        return out[-1] if out else ""
+        # not committed yet = a tale written today; an empty date would sort it last
+        return out[-1] if out else datetime.date.today().isoformat()
     except Exception:
-        return ""
+        return datetime.date.today().isoformat()
 
 
 def parse(path):
