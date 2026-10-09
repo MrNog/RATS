@@ -356,6 +356,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Sewer Healer.png",
+    "title": "Sewer Healer",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Shockaa Cleansing.png",
     "title": "Shockaa Cleansing",
     "caption": "",
