@@ -385,6 +385,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Swarm Takes the Throne.png",
+    "title": "Swarm Takes The Throne",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/The paladin Fight.png",
     "title": "The Paladin Fight",
     "caption": "",
