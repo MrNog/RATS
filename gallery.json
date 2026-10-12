@@ -624,6 +624,46 @@
   },
   {
     "cat": "banners",
+    "file": "images/banners/RS 10 HC.png",
+    "title": "RS 10 HC",
+    "caption": "",
+    "date": "2026-10",
+    "wide": true
+  },
+  {
+    "cat": "banners",
+    "file": "images/banners/RS 10.png",
+    "title": "Ruby Sanctum (10-man)",
+    "caption": "",
+    "date": "2026-10",
+    "wide": true
+  },
+  {
+    "cat": "banners",
+    "file": "images/banners/RS 25 HC.png",
+    "title": "RS 25 HC",
+    "caption": "",
+    "date": "2026-10",
+    "wide": true
+  },
+  {
+    "cat": "banners",
+    "file": "images/banners/RS 25.png",
+    "title": "Ruby Sanctum (25-man)",
+    "caption": "",
+    "date": "2026-10",
+    "wide": true
+  },
+  {
+    "cat": "banners",
+    "file": "images/banners/RS Launch.png",
+    "title": "RS Launch",
+    "caption": "",
+    "date": "2026-10",
+    "wide": true
+  },
+  {
+    "cat": "banners",
     "file": "images/banners/ruby.png",
     "title": "Ruby Sanctum",
     "caption": "",
