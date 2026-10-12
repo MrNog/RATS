@@ -48,6 +48,8 @@ ART = {
     "blood-queen-the-sewer-healer": "images/lore/Sewer Healer.png",
     "the-hand-that-claims-three": "images/lore/Empty Shield.png",
     "lich-king-25-kill": "images/lore/Swarm Takes the Throne.png",
+    "foug-three-crowns": "images/lore/Three Crowns.png",
+    "grunho-the-butler": "images/lore/Grunho Butler.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -68,6 +70,7 @@ DATES = {
     "rellik-the-wrong-target": "2026-10-06",
     "blood-queen-the-sewer-healer": "2026-10-08",
     "lich-king-25-kill": "2026-10-12",
+    "foug-three-crowns": "2026-10-12",
 }
 
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
@@ -76,6 +79,7 @@ NIGHT_ORDER = {
     "shockaa-the-cleansing": -3,
     "blood-quickening-the-whole-room": -2,
     "blood-quickening-the-flames": -1,
+    "foug-three-crowns": 1,
 }
 
 
