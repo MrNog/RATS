@@ -47,6 +47,7 @@ ART = {
     "rellik-the-wrong-target": "images/lore/Rellik Wrong Target.png",
     "blood-queen-the-sewer-healer": "images/lore/Sewer Healer.png",
     "the-hand-that-claims-three": "images/lore/Empty Shield.png",
+    "lich-king-25-kill": "images/lore/Swarm Takes the Throne.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -66,6 +67,7 @@ DATES = {
     "came-feasted-fled": "2026-10-02",
     "rellik-the-wrong-target": "2026-10-06",
     "blood-queen-the-sewer-healer": "2026-10-08",
+    "lich-king-25-kill": "2026-10-12",
 }
 
 # Tales from the same night, in the order they happened (lower = earlier). The list is newest-first,
