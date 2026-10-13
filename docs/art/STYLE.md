@@ -219,6 +219,35 @@ watermark low-center, or fully text-free — ask which. Export tall (e.g. 1179×
 Story art for the chronicles. "NO text, NO title, NO watermark, NO logo — pure illustration only." Single
 rat hero (or 2–4), dramatic focal action, epic environment. Apply the **content-safety** rules above.
 
+**⚡ Anime flare (lore only — asked 09 Oct 2026, "mais épico").** Lore art borrows the *staging* of a big
+anime power moment (Solo Leveling, Jujutsu Kaisen, Demon Slayer key frames) while keeping the painterly WoW
+render and the rat faces. Pick 3–4 of these per image, vary which ones, never all at once:
+
+- **Camera that hits:** extreme worm's-eye or high overhead shot, a dutch tilt, or a weapon / hand / claw
+  foreshortened hard toward the lens. Never a flat eye-level side view.
+- **The frozen instant:** a single held key frame, the split second before or at the peak of the moment,
+  with cloak, fur and whiskers whipping in a gust.
+- **Power made visible:** a crisp aura outline in the class colour around the hero, eyes leaving a short
+  light-trail, a giant spectral form of the power (a hand, a beast, a blade of light) at huge scale.
+- **Motion lines:** clean, sharp radial speed-lines or streaks behind the action, pointing at the focus.
+- **Scale contrast:** a small rat against something enormous, a boss, a spell, a structure.
+- **Ground reaction:** a shockwave ring, cracks radiating from a planted foot or weapon, a split in the
+  floor's reflection.
+- **Light like a key frame:** one hard colour against its opposite (gold vs frost-blue, green vs violet),
+  strong rim light, deep black shadows, god-rays used once.
+
+Exceptions to CLEAN RENDER for lore: aura outlines, energy streaks and speed-lines are allowed, as **clean
+sharp shapes**. Dust, ember speckle, haze and blown-out bloom stay banned.
+
+Paste into the lore prompt, after *Composition*:
+
+```
+Anime flare: staged like an epic anime key frame (Solo Leveling style power moment) but rendered in painterly World of Warcraft cinematic style. [CAMERA: e.g. extreme low worm's-eye angle with a slight dutch tilt]. [POWER: e.g. a crisp gold aura outline around the hero, eyes leaving a short light trail]. [MOTION: e.g. clean sharp radial speed-lines behind the action pointing at the focus]. [GROUND: e.g. a shockwave ring and cracks radiating across the floor]. One hard key light against its opposite colour, strong rim light, deep black shadows. Energy shapes are crisp and clean, never particles or haze.
+```
+
+Add to its *Do NOT include*: `chibi or cartoon proportions, big shiny anime eyes, flat cel-shading, manga
+panels, manga sound-effect lettering, human anime faces`.
+
 ### F — Raid banner (Raid-Helper header, 16:9) — *reference: `images/banners/ICC 10.png`*
 The **locked look** (matches ICC 10). The **instance itself is the frame**; a lone rat hero walks into it.
 

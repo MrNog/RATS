@@ -338,10 +338,13 @@
         });
       });
       nightsAll.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+      // mains who sent any letter this week: without a recorded run, only they can be judged
+      var heard = new Set();
+      letters.forEach(function (l) { if (l.week === wed) heard.add(R.resolveMain(l.n).toLowerCase()); });
       return {
         k: weekKey(wed), wed: wed, open: lockoutOpen(wed, opts.today), label: mustLabel(rules),
         raids: raids, nights: nightsAll, first: nightsAll.length ? nightsAll[0].date : wed,
-        present: present, hits: hits, saved: saved, vac: vac,
+        present: present, hits: hits, saved: saved, vac: vac, heard: heard,
         ours: (raids.find(function (x) { return x.ours; }) || {}).ours || null,
       };
     }).sort(function (a, b) { return a.wed < b.wed ? 1 : -1; });
@@ -369,6 +372,8 @@
         // the lockout is still open, but once our run is in, not being in it is a miss
         // (joining a second night turns it back into "in")
         else if (c.open && !c.nights.length) st = "open";
+        // no recorded run and no letter from them: no Okanvil that week, so no proof either way
+        else if (!c.nights.length && !c.heard.has(key)) st = "unknown";
         else st = "absent";
         marks.push({ c: c, st: st, proof: proof });
       });
