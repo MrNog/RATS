@@ -393,6 +393,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Suki Night Shift.png",
+    "title": "Suki Night Shift",
+    "caption": "",
+    "date": "2026-10"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Swarm Takes the Throne.png",
     "title": "Swarm Takes The Throne",
     "caption": "",
