@@ -344,3 +344,8 @@ Art style: World of Warcraft cinematic concept art, painterly brushwork, ultra-d
 
 Do NOT include: two tails or extra tail, extra/duplicated limbs or weapons, weapon+shield in the same hand, malformed hands, floating dust/ember particles, speckled noise, heavy haze, oversized rat, small/indistinct head, name on the side, modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
 ```
+
+### K — Non-rat wallpapers (anime cut)
+Wallpapers with other races in an **anime key-visual** render instead of the painterly one. They keep the
+tone, anatomy, clean-render and content-safety rules; the race's own body rules replace "rat, lean".
+Dwarves: [`wallpapers/dwarves.md`](wallpapers/dwarves.md).

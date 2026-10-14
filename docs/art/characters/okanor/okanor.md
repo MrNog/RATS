@@ -63,6 +63,7 @@ locked look survives whatever the scene's ambient light is.
 - **Mace caveat:** the render still tends toward a round/star mace head; keep pushing "long haft + angular
   FLANGED head, NOT a round ball mace" for a cleaner weapon.
 - Appears in the group/Fangs line-ups (paladin gold glow) — see STYLE.md Templates G/H.
+- **Dwarf version** (anime cut, 16:9 wallpaper, Val'anyr): `wallpapers/dwarves.md` #8 — a one-off, not his locked look.
 
 ### Val'anyr variant (the guild's legendary — use when the piece is about it, or on request)
 

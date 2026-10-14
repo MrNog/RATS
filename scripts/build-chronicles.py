@@ -50,6 +50,7 @@ ART = {
     "lich-king-25-kill": "images/lore/Swarm Takes the Throne.png",
     "foug-three-crowns": "images/lore/Three Crowns.png",
     "grunho-the-butler": "images/lore/Grunho Butler.png",
+    "ratorgina-roedriguez": "images/lore/Suki Night Shift.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
