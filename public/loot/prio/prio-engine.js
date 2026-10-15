@@ -1125,6 +1125,8 @@
       // On vacation today: not in the raid to take it, so off the ladders too. Never a
       // penalty -- they are back on the list the day it ends.
       players[key].away = !!away[key];
+      // Missing our last main nights in a row: nothing is "owed" to someone not coming.
+      players[key].streak = streak[key] || 0;
     });
 
     // -- rank ICC output against peers in the same role
@@ -1260,6 +1262,14 @@
       who = who.toLowerCase();
       (gotBy[who] = gotBy[who] || []).push({ name: String(l.name), boss: l.boss || "", day: day, icon: l.icon || "" });
     });
+    // Marks of Sanctification each raider has taken, any size, any token
+    var marksBy = {};
+    loot.forEach(function (l) {
+      if (!l || !l.player || !/mark of sanctification/i.test(String(l.name || ""))) return;
+      var who = String(l.player);
+      if (/^(disenchant|bank|_)/i.test(who)) return;
+      (marksBy[who.toLowerCase()] = marksBy[who.toLowerCase()] || []).push(l.ts ? lootDay(l.ts) : "");
+    });
     var luckNights = 0, luckItems = 0;
     Object.keys(players).forEach(function (k) {
       var p = players[k];
@@ -1286,21 +1296,37 @@
       var name = row[0], boss = row[1], tier = row[2], prio = row[3];
       var elig = row[4], band = row[5];
 
-      // A class-only item names the classes that can use it, never people: nobody
-      // here can see who has already spent a mark (10-man marks, upgrades), so
-      // the council settles it in the room.
+      // A tier token goes to whoever holds the fewest marks, so they spread across
+      // the raid instead of stacking on one player. Marks won in runs we never see
+      // (pugs, 10 heroic) are not counted; the council can still overrule in the room.
       if (band === "class") {
-        var seen = {}, classes = [];
+        var mk = [];
         list.forEach(function (p) {
-          if (p.inactive || p.away || p.att < minDays || !elig(p) || seen[p.cls]) return;
-          seen[p.cls] = 1;
+          if (p.inactive || p.away || p.att < minDays || !elig(p)) return;
+          var k = p.name.toLowerCase();
+          mk.push({
+            p: p, band: 0, won: false, marks: (marksBy[k] || []).length, markDays: marksBy[k] || [],
+            missed: !!missedId[k], lowAtt: lowAtt[k] != null ? lowAtt[k] : null,
+            streak: streak[k] || 0, extra10: extra10[k] || 0,
+          });
         });
-        CLASS_ORDER.forEach(function (c) { if (seen[c]) classes.push(c); });
+        mk.sort(function (a, b) {
+          return (a.marks - b.marks) || ((b.p.icc || 0) - (a.p.icc || 0)) || (standing(b.p) - standing(a.p));
+        });
+        sinkMissed(mk);
         return {
           item: name, boss: boss, tier: tier, prio: prio,
-          won: [], group: null, byClass: true,
-          ladder: classes.map(function (c) {
-            return { name: c, cls: c, spec: "", band: 0, won: false, isClass: true };
+          won: [], group: null, isMark: true,
+          ladder: mk.map(function (c) {
+            return {
+              name: c.p.name, spec: c.p.spec, cls: c.p.cls, role: c.p.role,
+              score: c.p.score, perf: c.p.perf, att: c.p.att,
+              icc: c.p.icc, iccpct: c.p.iccpct, iccdps: c.p.iccdps,
+              band: c.marks, offspec: false, won: false, has: null,
+              missed: c.missed, lowAtt: c.lowAtt, streak: c.streak, extra10: c.extra10,
+              marks: c.marks, markDays: c.markDays,
+              owed: c.p.owed || 0, luck: luckOf(c.p),
+            };
           }),
         };
       }

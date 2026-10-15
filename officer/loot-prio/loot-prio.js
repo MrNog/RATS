@@ -428,7 +428,7 @@
         (it.tier === "R" ? ", r = 1" : "") + " },");
       // The 25 heroic Mark has the same name as the normal one, so it would share
       // the normal row; give it its own, with its own id and the same ladder.
-      var hid = it.byClass && HEROIC_MARK[it.item.toLowerCase()];
+      var hid = (it.byClass || it.isMark) && HEROIC_MARK[it.item.toLowerCase()];
       if (hid) {
         L.push("\t[\"" + q(it.item.toLowerCase()) + " (heroic)\"] = { n = \"" + q(it.item) +
           " (Heroic)\", p = \"" + q(names.join(" ")) + "\"" +

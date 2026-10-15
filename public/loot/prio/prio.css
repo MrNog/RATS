@@ -105,6 +105,8 @@
 .prio .tag.lowatt { color: #e6b866; border-color: #5a4a26 }
 .prio .tag.extra10 { color: #b8a27a; border-color: #4a4232 }
 .prio .tag.owed { color: #7fd99a; border-color: #2f5a3c }
+.prio .tag.mk0 { color: #7fd99a; border-color: #2f5a3c }
+.prio .tag.mk { color: var(--text-dim) }
 .prio .tag.lucky { color: #e0b25a; border-color: #5c4a24 }
 .prio .pr-legend .tag { margin-left: 0 }
 
@@ -139,6 +141,9 @@
 .prio .lrow.owed .lowed { color: #7fd99a }
 .prio .lrow.lucky .lowed { color: #e0b25a }
 .prio .lrow.even .lowed { color: var(--text-dim) }
+.prio .lrow.out { opacity: .5 }
+.prio .lrow.out .lowed { color: var(--text-dim) }
+.prio .tag.out { color: #e6b866; border-color: #5a4a26 }
 .prio .lrow .tag { justify-self: start; font-size: 9.5px; padding: 1px 4px }
 .prio .litems { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 14px 12px; background: var(--surface); border-bottom: 1px solid var(--border) }
 .prio .lit {

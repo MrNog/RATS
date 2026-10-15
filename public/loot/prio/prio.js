@@ -127,6 +127,7 @@
       (p.lowAtt != null ? " — came to only " + p.lowAtt + "% of our main runs in 8 weeks: bottom of the ladder" : "") +
       (p.streak ? " — missed our last " + p.streak + " main nights in a row: bottom of the ladder until they come to one" : "") +
       (p.missed ? " — pugged a mandatory raid without an excuse: bottom of the ladder until they have come to " + (window.RatsAtt ? RatsAtt.REDEEM : 3) + " of our main runs" : "") +
+      (p.marks != null ? " — " + (p.marks ? p.marks + " mark" + (p.marks === 1 ? "" : "s") + " so far (" + p.markDays.map(shortDay).join(", ") + ")" : "no mark yet") : "") +
       (p.extra10 ? " — " + p.extra10 + " extra raid" + (p.extra10 === 1 ? "" : "s") + " (10-man) on the main" : "") +
       (p.tail ? " — holds this group open, last in line until he proves it" : "") +
       (p.luck === 0 ? " — owed: " + p.owed + " items behind the raid's rate" : "") +
@@ -139,6 +140,7 @@
       (p.low ? '<i class="tag low">low</i>' : "") +
       (p.lowAtt != null ? '<i class="tag lowatt">' + p.lowAtt + '%</i>' : "") +
       (p.streak ? '<i class="tag lowatt">' + p.streak + ' out</i>' : "") +
+      (p.marks != null ? '<i class="tag ' + (p.marks ? "mk" : "mk0") + '">' + p.marks + " mk</i>" : "") +
       (p.missed ? '<i class="tag missed">missed ID</i>' : "") +
       (p.extra10 ? '<i class="tag extra10" title="Extra raids (10-man) on the main">10m ' + p.extra10 + '</i>' : "") +
       (!p.won && p.luck === 2 ? '<i class="tag lucky">lucky</i>' : "") +
@@ -272,7 +274,9 @@
     var list = Object.keys(DATA.players)
       .map(function (k) { return DATA.players[k]; })
       .filter(function (p) { return !p.inactive && p.lootNights > 0; })
-      .sort(function (a, b) { return (b.owed - a.owed) || (b.lootNights - a.lootNights); });
+      .sort(function (a, b) {
+        return ((a.streak ? 1 : 0) - (b.streak ? 1 : 0)) || (b.owed - a.owed) || (b.lootNights - a.lootNights);
+      });
     if (!m.lootFrom || !list.length) {
       el.innerHTML = '<div class="pr-empty">No ICC 25 loot recorded yet — import a raid first.</div>';
       return;
@@ -284,7 +288,7 @@
       "</b> items per raider per ICC 25 night. <b>Owed</b> = what your nights should have given you − what you won. " +
       "<b>" + m.luckMargin + "</b> or more ahead drops you to the bottom of every BiS ladder. Click a row for the items.</p>";
     var rows = list.map(function (p) {
-      var tone = p.luck === 0 ? "owed" : p.luck === 2 ? "lucky" : "even";
+      var tone = p.streak ? "out" : p.luck === 0 ? "owed" : p.luck === 2 ? "lucky" : "even";
       var half = Math.round((Math.abs(p.owed) / maxAbs) * 50);
       var bar = p.owed >= 0
         ? '<i class="lb-pos" style="width:' + half + '%"></i>'
@@ -306,7 +310,8 @@
         '<span class="lstat"><b>' + p.lootExpected + "</b> expected</span>" +
         '<span class="lbar"><span class="lb-mid"></span>' + bar + "</span>" +
         '<span class="lowed">' + (p.owed > 0 ? "+" : "") + p.owed + "</span>" +
-        '<i class="tag ' + tone + '">' + (tone === "even" ? "even" : tone) + "</i>" +
+        '<i class="tag ' + tone + '"' + (p.streak ? ' title="Missed our last ' + p.streak + ' main nights in a row"' : "") + ">" +
+          (p.streak ? p.streak + " out" : tone) + "</i>" +
         "</li>" + items
       );
     }).join("");
@@ -419,7 +424,7 @@
         (it.tier === "R" ? ", r = 1" : "") + " },");
       // The 25 heroic Mark has the same name as the normal one, so it would share
       // the normal row; give it its own, with its own id and the same ladder.
-      var hid = it.byClass && HEROIC_MARK[it.item.toLowerCase()];
+      var hid = (it.byClass || it.isMark) && HEROIC_MARK[it.item.toLowerCase()];
       if (hid) {
         L.push("\t[\"" + q(it.item.toLowerCase()) + " (heroic)\"] = { n = \"" + q(it.item) +
           " (Heroic)\", p = \"" + q(names.join(" ")) + "\"" +
@@ -434,6 +439,24 @@
     return L.join(String.fromCharCode(10));
   }
 
+  // Discord message: who still has no Mark of Sanctification, per token, so the
+  // marks spread across the raid instead of stacking on the same few.
+  function marksMessage() {
+    var L = ["🧀 **Marks of Sanctification** - ICC 25"];
+    var stack = {};
+    DATA.items.filter(function (it) { return it.isMark; }).forEach(function (it) {
+      var tok = it.item.split("'")[0];
+      var none = it.ladder.filter(function (p) { return !p.marks && !p.streak && !p.missed; });
+      it.ladder.forEach(function (p) { if (p.marks >= 2) stack[p.name] = p.marks; });
+      L.push("**" + tok + "** (" + it.prio.replace(/^T10 token — /, "") + "): " +
+        (none.length ? none.map(function (p) { return p.name; }).join(", ") : "everyone has one 🐀"));
+    });
+    var many = Object.keys(stack).sort(function (a, b) { return stack[b] - stack[a]; });
+    if (many.length) L.push("Already have 2+: " + many.map(function (n) { return n + " " + stack[n]; }).join(", "));
+    L.push("Next marks go to the names above first. 🐀");
+    return L.join(String.fromCharCode(10));
+  }
+
   // Discord message: raiders behind the raid's loot rate, plus anyone who has
   // raided and won nothing yet. Same list and order as the Loot luck view.
   function luckMessage() {
@@ -441,7 +464,7 @@
     var list = Object.keys(DATA.players)
       .map(function (k) { return DATA.players[k]; })
       .filter(function (p) {
-        return !p.inactive && p.lootNights > 0 && (p.luck === 0 || p.lootWon === 0);
+        return !p.inactive && !p.streak && p.lootNights > 0 && (p.luck === 0 || p.lootWon === 0);
       })
       .sort(function (a, b) { return (b.owed - a.owed) || (b.lootNights - a.lootNights); });
     var L = ["🧀 **Loot luck** - ICC 25 since " + U.fmtDate(m.lootFrom)];
@@ -626,6 +649,8 @@
       if (t.closest("#prRefresh")) return load(true);
       var ex = t.closest("#prExport");
       if (ex && DATA) return copyText(ex, exportText(), "Export for Okanvil");
+      var mm = t.closest("#prMarksMsg");
+      if (mm && DATA) return copyText(mm, marksMessage(), "Copy marks");
       var lm = t.closest("#prLuckMsg");
       if (lm && DATA) return copyText(lm, luckMessage(), "Copy message");
     });
