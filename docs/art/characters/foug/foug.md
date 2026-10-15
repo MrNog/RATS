@@ -1,12 +1,15 @@
 # Foug — "The Prophet"
 
-- **Class / spec:** Unholy Death Knight (MAIN)
+- **Class / spec:** Holy Paladin (MAIN, toon **Jochiee**, since 15 Oct 2026) · Unholy DK before that
 - **Rank:** Warchief
 - **Discord:** `<@209740087653564439>`
 - **Commissioned:** founding officer (seeded from the original library) · re-specced to Unholy DK 02 Jul 2026
 - **Alts:** Fouug (Hunter) · Sarveil (Disc Priest) · Paladin (Prot) · Mage — see **Alts** section at the bottom.
-- **Toon names:** DK main = **Foug** (renamed from **Foougg** — old logs/loot still say Foougg) · Hunter = **Fouug** · Priest = **Sarveil**. (Profile banners are keyed
+- **Toon names:** Holy Paladin main = **Jochiee** · DK = **Foug** (renamed from **Foougg** — old logs/loot still say Foougg) · Hunter = **Fouug** · Priest = **Sarveil**. (Profile banners are keyed
   by these exact toon names — see the BG-prompts table at the bottom.)
+
+> **15 Oct 2026: main is now the Holy Paladin Jochiee.** His look and prompts are in the **Jochiee** section
+> below the Notes. The look directly below is the DK toon **Foug**: use it only for DK art.
 
 ## Locked look (never changes between images)
 
@@ -56,6 +59,86 @@ him** so the locked look survives whatever the scene's ambient light is.
   (toxic warpstone-green, dripping plague, wasteland). Foug is the **dual-wield veteran knight** — colder,
   cleaner green **rune-glow** on twin swords, Icecrown/necropolis settings, a risen ghoul rather than plague
   clouds. Same class, different flavor.
+- **15 Oct 2026: changed class again, now a Holy Paladin on the toon Jochiee.** The DK stays as an alt.
+
+---
+
+## Jochiee — Holy Paladin · "The Highland Light" (MAIN since 15 Oct 2026)
+
+The same old Scottish veteran, now healing. It has to stay distinct from the other two paladins:
+**Okanor** (Holy) wears dark charcoal plate with amber forge-fire runes, and **Gathlock** (Prot) carries a
+sword and tower shield in iron and molten gold under a crimson cloak. Jochiee is the **Highlander paladin**:
+his clan tartan, a mace, and **Holy Light held in his bare hand**: no shield.
+
+- **Rat:** dark fur going **grey at the muzzle**, prominent whiskers, a scar across the bridge of the snout,
+  eyes lit **warm dawn-gold**, clawed hands. A broad, blunt plate-wearer's muzzle and a strong jaw with a
+  wry half-grin: the funny, loud old soldier who has played every class and is now keeping the raid alive.
+  Grim and seasoned, NOT a soft angelic saint.
+- **Armor:** battle-worn **tarnished ivory-and-gold plate**: dented, scuffed and grimy, gold filigree
+  worn down to the metal at the edges. This is the user's planned "ivory paladin" exception, kept war-worn
+  so it never reads pretty. Over it, his **dark green-and-black clan TARTAN** as a kilt and a plaid sash
+  across the chest, pinned at the shoulder by the round engraved **clan brooch** from his Hunter look.
+- **Weapon(s):** exactly two items, one per hand: ONE **one-handed flanged mace** in the right hand, and
+  the left hand **empty and open**, casting Holy Light. **NO shield of any kind** (the targe was rejected on
+  15 Oct 2026: a small round shield with a light beam read badly). No sword, no tome.
+- **Signature:** the tartan sash and kilt with the clan brooch, plus **raw dawn-gold Holy Light gathered in
+  his open clawed hand**. The tartan is the thread through all his toons.
+
+**Palette & key light:** tarnished ivory, worn gold, dark green-and-black tartan, cold grey stone. Warm
+**dawn-gold holy light** (from the mace head and his open hand) is the key light against cold grey-blue
+Highland weather. Never pink, even though the paladin UI colour is `#F58CBA`.
+
+**Settings to rotate:** a ruined Highland abbey on a cliff at dawn · a storm-lashed sea cliff with a lone
+lighthouse · a misty loch shore with standing stones · a snowy Northrend glen. Don't reuse the Hunter's
+"ridge, loch and castle under god-rays" scene.
+
+### Jochiee · character card — `images/warchiefs/Jochiee.png` (21:9, name + title) ✅ DONE
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen character card (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay.
+
+Subject: Jochiee, an anthropomorphic Holy Paladin rat and a Scottish Highland veteran. Dark fur going grey at the muzzle, prominent whiskers, a scar across the bridge of the snout, eyes lit warm dawn-gold, clawed hands. A broad, blunt muzzle and a strong jaw with a wry, knowing half-grin: an old soldier who has seen everything and still finds it funny. A lean, muscular rat, heavier through the neck and shoulders like a plate-wearer, with EXACTLY ONE tail, one head, two arms, two legs, and well-formed hands. He wears battle-worn TARNISHED IVORY-AND-GOLD plate, dented, scuffed and grimy, the gold filigree worn down to bare metal at the edges, and over it a dark green-and-black CLAN TARTAN kilt and a plaid sash across the chest, pinned at the left shoulder by a round engraved clan brooch. A dark knight who wields the Light, NOT a soft angelic saint.
+
+Gear: exactly ONE weapon. The RIGHT hand holds ONE one-handed flanged MACE, its head glowing with a clean dawn-gold holy light. The LEFT hand is EMPTY and open, with NO shield on that arm. NO extra weapons, ONLY the mace: no shield of any kind, no sword, no book.
+
+Pose: he stands on a broken stone step with one boot raised on it, the mace resting on his right shoulder, and his left hand held open at chest height, palm up, cradling a steady orb of dawn-gold Holy Light that lights his face from below. His chin is up and his head is turned slightly toward the light, with that half-grin. Full standing figure in the central third: the face is large, clear and readable, the head is correctly proportioned to the body and NOT oversized, with headroom above for the title and floor below.
+
+Setting: a ruined Highland abbey on a sea cliff at dawn: roofless grey stone arches, a broken rose window with the sunrise blazing gold through it behind him, wet heather and standing stones, and cold grey sea mist rolling far below.
+
+Visual identity: brush-stroke name "JOCHIEE" centered across the TOP CENTER directly above the rat, in sandy tan-gold (#C8A96E) rough hand-painted brush lettering with bristle texture and grunge edges. Below it, the wide-spaced subtitle "THE HIGHLAND LIGHT", and below that a small Horde insignia flanked by short gold lines —⧖—. A small "RATS" + Horde insignia watermark sits BOTTOM-RIGHT with a faint glow.
+
+Color palette & lighting: tarnished ivory, worn gold, dark green-and-black tartan, cold grey stone. Warm DAWN-GOLD holy light from the mace, the light in his palm and the rose window is the key light on him, with a cold grey-blue ambient from the sea mist behind. High contrast and readable mid-tones, NOT a black image.
+
+Render quality: CLEAN and crisp: clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on the face and hands; the holy light is a clean radiant edge-light, NOT particulate.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: ANY shield (round, targe, buckler or tower), a sword, a book or tome, a bow, runeswords or green necrotic glow (those are his other toons); a second weapon; anything held in the left hand; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated or broken joints, a floating or over-tilted head, a broken or too-long neck; angel wings, a halo, glowing white feathers; pristine shiny white armor; pink or pastel colours; cute / pretty / soft styling, chubby / fat build; the name anywhere but top-center; floating particles, speckled noise, heavy haze; gore, blood, corpses; modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
+```
+
+### Jochiee · profile banner — `images/profile-bg/foug/jochiee.png` (21:9, NO text) ✅ DONE
+
+```
+Digital fantasy illustration, cinematic 21:9 widescreen profile banner (2560x1080), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo, NO insignia: pure illustration only.
+
+Subject: Jochiee, an anthropomorphic Holy Paladin rat and a Scottish Highland veteran. Dark fur going grey at the muzzle, prominent whiskers, a scar across the snout, eyes lit warm dawn-gold, clawed hands; a broad, blunt muzzle and a strong jaw. A lean, muscular rat with EXACTLY ONE tail, one head, two arms, two legs, and well-formed hands. He wears battle-worn TARNISHED IVORY-AND-GOLD plate, dented and grimy, under a dark green-and-black CLAN TARTAN sash and kilt pinned with a round clan brooch, all whipping hard in a sea gale.
+
+Gear: exactly ONE weapon: ONE one-handed flanged MACE in the RIGHT hand. The LEFT hand is EMPTY and open, with NO shield. NO extra weapons, ONLY the mace.
+
+Pose: braced against the storm, he reaches his open LEFT hand forward toward the LEFT of the frame, clawed fingers spread, releasing a wave of dawn-gold Holy Light: a bright, solid sphere of light in his palm with soft rays spilling out over the dark sea, lighting his face and armor. The mace is held low and back by his right hip, its head glowing. He is leaning into the wind with his jaw set and a grin through the rain, his body turned three-quarters to the LEFT. Joints bend naturally, the head sits naturally on the neck, and his weight is believable.
+
+Composition: 21:9 strip. Jochiee fills the RIGHT portion in an upper-body-to-knee crop, with the face large and readable. The LEFT third stays darker and low-detail, made of storm cloud and dark sea with only the soft edge of his light beam, as negative space for text. The camera is slightly low.
+
+Setting: a storm-lashed Highland sea cliff at twilight: black wet rock, rain streaking sideways BEHIND him, huge grey waves breaking far below, and a lone ruined stone lighthouse on the far right, dark.
+
+Color palette & lighting: tarnished ivory, worn gold, dark green-and-black tartan, cold slate-blue storm. WARM DAWN-GOLD from the light in his hand, the mace and his eyes is the dominant glow, lighting his face from the front; cool slate twilight fills the storm so the scene keeps readable MID-TONES, NOT a black image.
+
+Render quality: CLEAN and crisp: NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom; rain only as soft streaks in the background, NEVER a speckle over his face. Razor-sharp focus on the face, the open hand and the mace.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: any lettering, title, name, watermark, logo or insignia; ANY shield (round, targe, buckler or tower), a sword, a book, a bow, runeswords or green glow; a second weapon; anything held in the left hand; a thin laser-like beam; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated or broken joints, a floating or over-tilted head, a broken or too-long neck; angel wings, a halo; pristine white armor; pink or pastel colours; gore, blood, corpses, enemies; the subject centered or filling the left third; an almost-black image; cute / pretty / soft styling, chubby / fat build; speckled noise, heavy haze; modern clothing, human faces, Alliance symbols, excessive bloom, plain white background.
+```
 
 ---
 
@@ -96,11 +179,9 @@ Matched to his favourite commission `images/commissions/Foug 1.png` ("FOUG THE H
   (Priest `#E6E6E6`) — harsh holy power, not a soft wash.
 - **Scenes:** raising the light-shield in a dark gothic cathedral ruin; grounded, hard-edged.
 
-### Paladin — Protection (old alt, NOT yet locked)
+### Paladin — Protection (old alt)
 
-- Foug's Prot Paladin. Intended look (per user): **glorious IVORY-WHITE + gold plate with crimson-red** cloth
-  — a bright, heroic holy champion (the deliberate exception to the "dark plate only" rule), one-hand
-  mace + tower shield. **Not finalised** — lock it when a commission is confirmed.
+- Superseded by **Jochiee** (Holy, below). Reuse Jochiee's look if a Prot piece is ever asked for.
 
 ### Mage — (old alt, NOT yet locked)
 
