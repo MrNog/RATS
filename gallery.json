@@ -541,6 +541,14 @@
   },
   {
     "cat": "warchiefs",
+    "file": "images/warchiefs/Jochiee.png",
+    "title": "Jochiee",
+    "caption": "",
+    "date": "2026-10",
+    "people": "foug"
+  },
+  {
+    "cat": "warchiefs",
     "file": "images/warchiefs/Kobee.png",
     "title": "Kobee",
     "caption": "",
@@ -1115,6 +1123,15 @@
     "caption": "",
     "date": "2026-09",
     "people": "jiskob",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/foug/jochiee.png",
+    "title": "Jochiee",
+    "caption": "",
+    "date": "2026-10",
+    "people": "foug",
     "wide": true
   },
   {
