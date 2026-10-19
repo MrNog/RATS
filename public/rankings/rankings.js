@@ -3214,6 +3214,48 @@
   function okrClass(c) {
     return OKR_CLASS[c] || String(c || "").toUpperCase().replace(/[^A-Z]/g, "");
   }
+  // Our own parse for the bosses the server does not rank (wow-logs has none for
+  // Gunship, Blood Queen or Dreamwalker): each toon's best kill on that boss as a
+  // percentile of every player's best in OUR logs of this raid and size, healers
+  // (HPS) and everyone else (DPS) apart. Season-wide, both difficulties. Marked
+  // `g` so the addon can tell it from a server parse. Fills `toons` in place.
+  function okrGuildParses(toons, order, diffs) {
+    var ranked = {};
+    Object.keys(toons).forEach(function (nm) {
+      Object.keys(toons[nm]).forEach(function (i) { ranked[i] = true; });
+    });
+    var best = {}; // boss idx -> pool (h|d) -> toon -> { v, hc }
+    diffs.forEach(function (df) {
+      if (df) PROGDIFF = df;
+      logsInScope("all").forEach(function (l) {
+        rowsForDiff(l.rows).forEach(function (r) {
+          var i = order.indexOf(r.b);
+          if (i < 0 || ranked[i]) return;
+          var isH = r.r === "HEALER";
+          if (!isH && isTankFight(r)) return;
+          var v = isH ? r.h : r.d;
+          if (!(v > 0)) return;
+          var pool = ((best[i] = best[i] || {})[isH ? "h" : "d"] = best[i][isH ? "h" : "d"] || {});
+          var k = normNm(r.n);
+          if (!pool[k] || v > pool[k].v) pool[k] = { v: v, hc: !!r.hm };
+        });
+      });
+    });
+    Object.keys(best).forEach(function (i) {
+      ["d", "h"].forEach(function (p) {
+        var pool = best[i][p];
+        if (!pool) return;
+        var names = Object.keys(pool).sort(function (a, b) { return pool[b].v - pool[a].v; });
+        var n = names.length;
+        names.forEach(function (k, rank) {
+          var pct = n > 1 ? Math.round(((n - 1 - rank) / (n - 1)) * 1000) / 10 : 100;
+          var t = toons[k] || (toons[k] = {});
+          if (!t[i] || pct > t[i].v) t[i] = { v: pct, hc: pool[k].hc, g: true };
+        });
+      });
+    });
+  }
+
   function buildOkanvilExport() {
     var keep = { size: SIZE, diff: PROGDIFF, period: PERIOD };
     var periods = ["week", "all"]; // the in-game This week / All time toggle
@@ -3281,9 +3323,11 @@
             });
           });
         });
+        okrGuildParses(toons, order, diffs);
         Object.keys(toons).forEach(function (nm) {
           var cells = Object.keys(toons[nm]).map(function (i) {
-            return i + ":" + toons[nm][i].v + (toons[nm][i].hc ? "h" : "");
+            var c = toons[nm][i];
+            return i + ":" + c.v + (c.hc ? "h" : "") + (c.g ? "g" : "");
           });
           if (cells.length) lines.push(["S", size, okrField(nm), cells.join(" ")].join(","));
         });
