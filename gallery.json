@@ -389,7 +389,8 @@
     "file": "images/lore/Someday Frozen King.png",
     "title": "Someday Frozen King",
     "caption": "",
-    "date": "2026-10"
+    "date": "2026-10",
+    "people": "someday"
   },
   {
     "cat": "lore",
@@ -1010,6 +1011,15 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/cehi/cehi.png",
+    "title": "Cehi",
+    "caption": "",
+    "date": "2026-10",
+    "people": "cehi",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/coizinho/coizinho.png",
     "title": "Coizinho",
     "caption": "",
@@ -1199,6 +1209,15 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/martinzz/martinzz.png",
+    "title": "Martinzz",
+    "caption": "",
+    "date": "2026-10",
+    "people": "martinzz",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/mijinho/mijinho.png",
     "title": "Mijinho",
     "caption": "",
@@ -1352,6 +1371,15 @@
   },
   {
     "cat": "profile-bg",
+    "file": "images/profile-bg/shadowfied/shadowfied.png",
+    "title": "Shadowfied",
+    "caption": "",
+    "date": "2026-10",
+    "people": "shadowfied",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
     "file": "images/profile-bg/shmurda/shmurda.png",
     "title": "Shmurda",
     "caption": "",
@@ -1375,6 +1403,15 @@
     "caption": "",
     "date": "2026-07",
     "people": "solanarrage",
+    "wide": true
+  },
+  {
+    "cat": "profile-bg",
+    "file": "images/profile-bg/someday/someday.png",
+    "title": "Someday",
+    "caption": "",
+    "date": "2026-10",
+    "people": "someday",
     "wide": true
   },
   {
