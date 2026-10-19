@@ -1140,9 +1140,6 @@
   // lucky pulls. On Ulduar 25 this is the single biggest source of bad ordering — raising the bar to
   // 35% of the raid's fights cuts "a lower-dps player outranking someone 500+ dps better" from 28
   // cases to 10, while still keeping 19 of 27 raiders on the board.
-  //
-  // (Tested alternative that did NOT work: de-weighting total damage. It makes things WORSE — total is
-  // the variance-stable axis; mean dps is the noisy one on small samples. Hence W_TOTAL stays at 0.6.)
   // ALL TIME is the complete record: no share, no floor, everybody who ever logged a fight is on it.
   // The gate stays on Week/Month, where a short scope is exactly where a couple of lucky pulls can
   // fake a flattering average. On All time the sample is long enough to speak for itself, and the
@@ -1288,12 +1285,35 @@
     // and is not in the future. So on reset day (no new logs yet) Week shows last raided week instead of an
     // empty board, and flips to the current lockout the moment today's log lands. ICC's latest week can
     // differ from Ulduar's — that's why this is computed per raid+size, not globally.
+    // step 1b — guild raids only. A PuG someone uploaded is not a RATS raid: a log counts when at least
+    // half of the people in it are in the guild roster (alts included). Without a roster, every log counts.
+    var guild = rosterSet();
+    if (guild) {
+      matched = matched.filter(function (l) {
+        return isGuildRun(l, guild);
+      });
+    }
     var weekLock = period === "week" ? weekTargetLock(matched) : null;
     var scoped = matched.filter(function (l) {
       return inPeriodDays(l.date, period, weekLock);
     });
     // Collapse same-night duplicate uploads to one canonical log before any stat aggregation.
     return dedupeDuplicates(scoped).keep;
+  }
+  // Are at least half of the people in this log guild members? Counted over its kill rows, one per name.
+  var GUILD_RUN_SHARE = 0.5;
+  function isGuildRun(l, guild) {
+    var seen = {},
+      n = 0,
+      ours = 0;
+    (l.rows || []).forEach(function (r) {
+      var k = normNm(aliasName(r.n));
+      if (!k || seen[k]) return;
+      seen[k] = true;
+      n++;
+      if (guild[k]) ours++;
+    });
+    return n === 0 || ours / n >= GUILD_RUN_SHARE;
   }
   // Latest lockout (Wed→Wed) among these logs that is ≤ the current lockout. null if none.
   function weekTargetLock(logs) {
@@ -1389,11 +1409,15 @@
     return role;
   }
 
-  // Ranking blend: 60% total volume (damage/healing summed) + 40% rate (bayesian dps/hps). Total
-  // rewards turning up to every raid; rate keeps burst-per-fight relevant. Both axes are boss-only
-  // (no trash in the feed) and normalized 0–1 against the board's best before blending.
-  var W_TOTAL = 0.6,
-    W_RATE = 0.4;
+  // Ranking blend: 10% total volume (damage/healing summed) + 90% rate (bayesian dps/hps). The rate
+  // is what a player does per fight; volume mostly counts how many bosses they happened to be in, so
+  // at 60% a full Normal run outranked mains who spent the week on Heroic (Okanata 9 fights / 19.6M
+  // over Shmurda 2 fights / 4.0M, with the better dps and parse). The bayesian shrink and the fight
+  // gate keep a couple of lucky pulls off the top. Both axes are boss-only (no trash in the feed)
+  // and normalized 0–1 against the board's best before blending.
+  var W_TOTAL = 0.1,
+    W_RATE = 0.9;
+  var SHRINK_MIN = 6; // fights of prior pulling a small sample's rate toward the board average
 
   // How much the SERVER percentile counts vs the guild-internal score (they sum to 1).
   // The two boards need DIFFERENT weights, because the two axes have very different spreads on each.
@@ -1564,7 +1588,9 @@
     counts.sort(function (a, b) {
       return a - b;
     });
-    var C = Math.max(3, counts[Math.floor(counts.length / 2)] || 3);
+    // At least SHRINK_MIN fights' worth of the board's average: with the rate carrying 90% of the
+    // score, one strong pull must not out-rank a whole tier of steady raiding.
+    var C = Math.max(SHRINK_MIN, counts[Math.floor(counts.length / 2)] || SHRINK_MIN);
 
     // per-player rate (bayesian) and total; then normalize each axis to the board max and blend.
     //
@@ -1604,7 +1630,7 @@
     var kept = players.filter(function (e) {
       return e.fights >= gate;
     });
-    // internal 60/40 (total volume + bayesian rate), normalized 0–1
+    // internal 10/90 (total volume + bayesian rate), normalized 0–1
     kept.forEach(function (e) {
       e.internal = W_TOTAL * (e.total / maxTotal) + W_RATE * (e.rate / maxRate);
     });
@@ -2242,6 +2268,13 @@
         rKeys.indexOf(raidKeyOf(l)) >= 0
       );
     });
+    // guild raids only, the same rule as logsInScope
+    var guild = rosterSet();
+    if (guild) {
+      matched = matched.filter(function (l) {
+        return isGuildRun(l, guild);
+      });
+    }
     if (period === "week") {
       // "previous" = the last raided lockout BEFORE the one Week is showing, that actually has fights.
       // Anchor to lockouts, not day-age, so the delta survives the reset-day fallback. Skip EMPTY
