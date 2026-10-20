@@ -924,8 +924,8 @@
     //    here any more, so no hand-kept "they left" list is needed.
     var mains = {};
     roster.forEach(function (m) {
-      // rankIndex 4 = Alt: folds into a main, never holds a prio slot of its own.
-      if (m.rankIndex === 4) return;
+      // Alts ("Alt", "Warchief Alt") fold into a main, never hold a prio slot of their own.
+      if (m.rankIndex === 4 || /alt/i.test(m.rankName || "")) return;
       if ((m.level || 0) < 80) return;          // bank alts / levelling chars
       mains[String(m.name).toLowerCase()] = {
         name: m.name, cls: m["class"], rank: m.rankName, rankIndex: m.rankIndex,
@@ -1137,7 +1137,14 @@
       if (p.role === "HEALER" && p.icchps > 0) hpsPool.push(p.icchps);
     });
 
-    var RANK_BUMP = { 0: 6, 1: 5, 2: 3, 5: 0 };
+    // by rank NAME, so adding or reordering a rank in game does not shift the bonus
+    function rankBump(p) {
+      var r = String(p.rank || "").toLowerCase();
+      if (/king/.test(r)) return 6;
+      if (/warchief rat/.test(r)) return 5;
+      if (/raider/.test(r)) return 3;
+      return 0;
+    }
     var nRecent = Math.min(RECENT_WINDOW, ND);
     var nIcc = Object.keys(logs.reduce(function (acc, lg) {
       if (isIcc25(lg)) acc[String(lg.date).slice(0, 10)] = 1;
@@ -1165,7 +1172,7 @@
       // not the case for a drop: performance leads, attendance and standing adjust.
       var activity = (nIcc ? 100 * p.icc / nIcc : 0) * 0.10 +
         (nRecent ? 100 * p.recent / nRecent : 0) * 0.10;
-      var standing = (RANK_BUMP[p.rankIndex] || 0) + (p.fangs ? 4 : 0) + (p.founder ? 2 : 0);
+      var standing = rankBump(p) + (p.fangs ? 4 : 0) + (p.founder ? 2 : 0);
 
       p.score = Math.round((merit * 0.65 + p.attpct * 0.35 + standing + activity) * 10) / 10;
     });
