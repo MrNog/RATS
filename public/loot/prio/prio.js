@@ -127,7 +127,7 @@
       (p.lowAtt != null ? " — came to only " + p.lowAtt + "% of our main runs in 8 weeks: bottom of the ladder" : "") +
       (p.streak ? " — missed our last " + p.streak + " main nights in a row: bottom of the ladder until they come to one" : "") +
       (p.missed ? " — pugged a mandatory raid without an excuse: bottom of the ladder until they have come to " + (window.RatsAtt ? RatsAtt.REDEEM : 3) + " of our main runs" : "") +
-      (p.marks != null ? " — " + (p.marks ? p.marks + " mark" + (p.marks === 1 ? "" : "s") + " so far (" + p.markDays.map(shortDay).join(", ") + ")" : "no mark yet") : "") +
+      (p.marks != null ? " — " + (p.marks ? p.marks + " mark" + (p.marks === 1 ? "" : "s") + " so far (" + p.markDays.map(function (d) { return d ? shortDay(d) : "marked"; }).join(", ") + ")" : "no mark yet") : "") +
       (p.extra10 ? " — " + p.extra10 + " extra raid" + (p.extra10 === 1 ? "" : "s") + " (10-man) on the main" : "") +
       (p.tail ? " — holds this group open, last in line until he proves it" : "") +
       (p.luck === 0 ? " — owed: " + p.owed + " items behind the raid's rate" : "") +
@@ -442,18 +442,26 @@
   // Discord message: who still has no Mark of Sanctification, per token, so the
   // marks spread across the raid instead of stacking on the same few.
   function marksMessage() {
-    var L = ["🧀 **Marks of Sanctification** - ICC 25"];
+    var TOKEN_IC = { Vanquisher: "🗡️", Conqueror: "✨", Protector: "🛡️" };
+    var L = ["🧀 **Marks of Sanctification** · ICC 25", "", "**Still need their first mark**"];
     var stack = {};
     DATA.items.filter(function (it) { return it.isMark; }).forEach(function (it) {
       var tok = it.item.split("'")[0];
       var none = it.ladder.filter(function (p) { return !p.marks && !p.streak && !p.missed; });
       it.ladder.forEach(function (p) { if (p.marks >= 2) stack[p.name] = p.marks; });
-      L.push("**" + tok + "** (" + it.prio.replace(/^T10 token — /, "") + "): " +
-        (none.length ? none.map(function (p) { return p.name; }).join(", ") : "everyone has one 🐀"));
+      L.push((TOKEN_IC[tok] || "•") + " **" + tok + "** — " +
+        (none.length ? none.map(function (p) { return p.name; }).join(", ") : "everyone has one"));
+      L.push("-# " + it.prio.replace(/^T10 token — /, "").replace(/ \/ /g, " · "));
     });
-    var many = Object.keys(stack).sort(function (a, b) { return stack[b] - stack[a]; });
-    if (many.length) L.push("Already have 2+: " + many.map(function (n) { return n + " " + stack[n]; }).join(", "));
-    L.push("Next marks go to the names above first. 🐀");
+    // one line per count, highest first, so the list reads at a glance
+    var byCount = {};
+    Object.keys(stack).forEach(function (n) { (byCount[stack[n]] = byCount[stack[n]] || []).push(n); });
+    var counts = Object.keys(byCount).map(Number).sort(function (a, b) { return b - a; });
+    if (counts.length) {
+      L.push("", "**Already have 2+**");
+      counts.forEach(function (c) { L.push("`" + c + "×` " + byCount[c].join(", ")); });
+    }
+    L.push("", "Next marks go to the first list. 🐀");
     return L.join(String.fromCharCode(10));
   }
 

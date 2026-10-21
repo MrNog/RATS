@@ -1277,6 +1277,12 @@
       if (/^(disenchant|bank|_)/i.test(who)) return;
       (marksBy[who.toLowerCase()] = marksBy[who.toLowerCase()] || []).push(l.ts ? lootDay(l.ts) : "");
     });
+    // and the ones an officer marked by hand: a pug 10-man or a run nobody recorded
+    (data.has || []).forEach(function (h) {
+      if (!h || !h.player || !/mark of sanctification/i.test(String(h.item || ""))) return;
+      var who = String(h.player).toLowerCase();
+      (marksBy[who] = marksBy[who] || []).push("");
+    });
     var luckNights = 0, luckItems = 0;
     Object.keys(players).forEach(function (k) {
       var p = players[k];
