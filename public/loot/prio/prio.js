@@ -354,6 +354,23 @@
     "protector's mark of sanctification": 52029,
     "conqueror's mark of sanctification": 52030,
   };
+  // A heroic Mark upgrades a T10 piece the raider already holds, so whoever has
+  // taken a mark comes first (in the normal ladder's order: fewest marks first,
+  // the upgrades spread out); raiders with no mark yet, who have nothing to
+  // upgrade, after a ">>".
+  function heroicMarkNames(ladder) {
+    var have = ladder.filter(function (p) { return p.marks > 0; });
+    var none = ladder.filter(function (p) { return !(p.marks > 0); });
+    var out = [];
+    [have, none].forEach(function (group, gi) {
+      group.forEach(function (p, i) {
+        if (out.length) out.push(i === 0 && gi > 0 ? ">>" : ">");
+        out.push(p.name + "|" + String(p.cls || "").replace(/\s+/g, ""));
+      });
+    });
+    return out;
+  }
+
   function exportText() {
     var L = [];
     L.push("-- ============================================================");
@@ -423,11 +440,12 @@
         ", g = \"" + q(grp[0]) + "\", go = " + (grp[1] || 0) +
         (it.tier === "R" ? ", r = 1" : "") + " },");
       // The 25 heroic Mark has the same name as the normal one, so it would share
-      // the normal row; give it its own, with its own id and the same ladder.
+      // the normal row; give it its own, with its own id and its own ladder.
       var hid = (it.byClass || it.isMark) && HEROIC_MARK[it.item.toLowerCase()];
       if (hid) {
+        var hnames = it.isMark ? heroicMarkNames(it.ladder) : names;
         L.push("\t[\"" + q(it.item.toLowerCase()) + " (heroic)\"] = { n = \"" + q(it.item) +
-          " (Heroic)\", p = \"" + q(names.join(" ")) + "\"" +
+          " (Heroic)\", p = \"" + q(hnames.join(" ")) + "\"" +
           (it.boss ? ", bo = \"" + q(it.boss) + "\"" : "") +
           (slug ? ", ic = \"" + q(slug) + "\"" : "") +
           ", id = " + hid + ", g = \"" + q(grp[0]) + "\", go = " + (grp[1] || 0) + " },");
