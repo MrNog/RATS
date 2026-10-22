@@ -355,11 +355,15 @@
     "conqueror's mark of sanctification": 52030,
   };
   // A heroic Mark upgrades a T10 piece the raider already holds, so whoever has
-  // taken a mark comes first (in the normal ladder's order: fewest marks first,
-  // the upgrades spread out); raiders with no mark yet, who have nothing to
-  // upgrade, after a ">>".
+  // taken a mark comes first, by ICC attendance (then standing; a raider who
+  // missed our ID last); raiders with no mark yet, who have nothing to upgrade,
+  // after a ">>", in the normal ladder's order.
   function heroicMarkNames(ladder) {
     var have = ladder.filter(function (p) { return p.marks > 0; });
+    have.sort(function (a, b) {
+      return ((a.missed ? 1 : 0) - (b.missed ? 1 : 0)) || ((b.icc || 0) - (a.icc || 0)) ||
+        ((b.score || 0) - (a.score || 0));
+    });
     var none = ladder.filter(function (p) { return !(p.marks > 0); });
     var out = [];
     [have, none].forEach(function (group, gi) {
