@@ -51,6 +51,7 @@ ART = {
     "foug-three-crowns": "images/lore/Three Crowns.png",
     "grunho-the-butler": "images/lore/Grunho Butler.png",
     "ratorgina-roedriguez": "images/lore/Suki Night Shift.png",
+    "grunho-o-maldisposto": "images/lore/Grunho Following.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -112,6 +113,10 @@ EXTRA_ART = {
     "lich-king-10-kill": [
         {"src": "images/lore/Kingslayers Rite.png", "after": "old rite of the Sewer",
          "caption": "The old rite of the Sewer — sat, stood, sat, stood. With great respect. Mostly."},
+    ],
+    "grunho-o-maldisposto": [
+        {"src": "images/lore/Grunho Maldisposto Poster.png", "after": "already standing in front of it",
+         "caption": "Grunho, o Maldisposto — mau feitio, melhor tanque."},
     ],
 }
 
