@@ -288,10 +288,26 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Grunho Following.png",
+    "title": "Grunho Following",
+    "caption": "",
+    "date": "2026-10",
+    "people": "grunho"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Grunho love.png",
     "title": "Grunho Love",
     "caption": "",
     "date": "2026-09",
+    "people": "grunho"
+  },
+  {
+    "cat": "lore",
+    "file": "images/lore/Grunho Maldisposto Poster.png",
+    "title": "Grunho Maldisposto Poster",
+    "caption": "",
+    "date": "2026-10",
     "people": "grunho"
   },
   {
