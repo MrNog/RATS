@@ -201,3 +201,4 @@ code { white-space: nowrap }
 .forge-link span { flex: 1; min-width: 0 }
 .forge-link i { font-style: normal; color: var(--accent-hi) }
 .forge-link:hover { border-color: var(--accent) }
+.forge-link + .forge-link { margin-top: -14px }

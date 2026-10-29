@@ -46,13 +46,6 @@ const ADDONS = [
 // being tested. The entry stays here (URLs, description) so publishing it again
 // is a one-line change: drop the flag.
 const OPTIONAL = [
-  {
-    name: "Rats-Redeemer",
-    emoji: "⚰️",
-    desc: "Battle-res flavour lines. /redeemer",
-    dl: "https://github.com/MrNog/Rats-Redeemer/releases/latest/download/Rats-Redeemer.zip",
-    gh: "https://github.com/MrNog/Rats-Redeemer",
-  },
 ];
 
 // WeakAura tier packs — imported in-game from wago.io (not downloaded).
