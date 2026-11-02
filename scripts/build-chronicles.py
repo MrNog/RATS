@@ -52,6 +52,7 @@ ART = {
     "grunho-the-butler": "images/lore/Grunho Butler.png",
     "ratorgina-roedriguez": "images/lore/Suki Night Shift.png",
     "grunho-o-maldisposto": "images/lore/Grunho Following.png",
+    "icc-10-full-heroic": "images/lore/Heroic Ten.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
@@ -100,6 +101,7 @@ MENTIONS = {
     "358687313183768597": "Yahmom",
     "857062920743550996": "Someday",
     "269201538013069314": "Shockaa",
+    "209402343194624000": "Icycry",
     "1245098422705590316": "Mongoloide",
     "209740087653564439": "Foug",
     "940982602976858142": "FranzHerman",

@@ -1,6 +1,7 @@
 # Icycry — "The Frost Shock"
 
 - **Class / spec:** **Elemental Shaman — DPS** (MAIN)
+- **Discord:** `<@209402343194624000>`
 - **Rank:** Raider Rat
 - **Commissioned:** 21 Sep 2026 · varrimento dos raiders sem banner
 - **Toon name:** **Icycry** (profile banners are keyed by this exact toon name, lowercased).
