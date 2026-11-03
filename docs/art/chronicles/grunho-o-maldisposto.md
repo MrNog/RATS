@@ -8,6 +8,7 @@ deadpan epic over a comic scene. Real WoW lore anchors, **no spell names**, ≤2
 **Contents**
 - [Discord post — the chronicle](#discord-post--the-chronicle-lore-poster)
 - [Hero-art prompt — The Following](#hero-art-prompt--the-following-lore-moment-219-no-text)
+- [Desktop wallpaper prompt — The Following, ultra-wide (32:9)](#desktop-wallpaper-prompt--the-following-ultra-wide-329-no-text)
 - [Notes](#notes)
 
 ---
@@ -74,6 +75,40 @@ Color palette & lighting: near-black charcoal iron and plate, bronze-gold #C69B6
 Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on Grunho's scowl and the nearest henchmen's faces and hands.
 
 Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 21:9 landscape.
+
+Do NOT include: any lettering, title, name, watermark or logo; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, a detached / floating / over-tilted head, impossible poses; gore, blood, corpses; real cartoon characters, yellow pill-shaped creatures, humans, human faces; cute chibi styling, pastel or pink colours, chubby / fat build, floating particles, speckled noise, heavy haze, Alliance symbols, excessive bloom, plain white background.
+```
+
+---
+
+## Desktop wallpaper prompt — The Following, ultra-wide (32:9, NO text)
+
+A text prompt alone never gives back the same picture. **Best route: outpaint the real hero image**
+(`images/lore/Grunho Following.png`): upload it to ChatGPT with this, then upscale to 8K
+(32:9 = 7680x2160 · 21:9 = 7680x3200):
+
+```
+Extend this exact image into an ultra-wide 32:9 desktop wallpaper. Keep the ENTIRE original picture unchanged: same Grunho, same pose, same henchmen, same lighting, colors, painterly style and camera angle. Do NOT redraw, restyle, move or re-pose anything that is already there. Only ADD new scenery on the left and right sides so it continues seamlessly. LEFT: more of the dark Horde hangar, braziers with warm fire, riveted iron walls, red Horde banners, a few more goggled rat henchmen in blue dungarees running to catch up, wet stone floor with reflections. RIGHT: the hangar door opening onto cold blue moonlight, the frozen spires of Icecrown, the rest of the red-rocket zeppelin, more henchmen trailing the swarm. Keep the far left and the bottom edge darker and calmer. NO text, NO logo, NO watermark.
+```
+
+Fallback, from scratch (the hero prompt word for word, only the size changed):
+
+```
+Digital fantasy illustration, ultra-wide cinematic 32:9 panoramic illustration (5120x1440), World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, subtle film-grain texture overlay. NO text, NO title, NO name, NO watermark, NO logo — pure illustration only. Epic painterly style, but the MOMENT is comedic and warm: a grumpy warlord who wants to be left alone, and a whole swarm of devoted henchmen who will not leave his side.
+
+Subject: Grunho, an anthropomorphic Protection Warrior rat warlord — dark fur, fierce RED eyes, prominent whiskers, broad blunt muzzle with a hooked, oversized villain's nose-snout, strong jaw, clawed hands, lean muscular plate-warrior build. EXACTLY ONE tail, one head, two arms, two legs, well-formed hands. Heavy battle-worn black-and-gold plate and an IRON CROWN, styled like a grumpy cartoon supervillain: a long grey-and-charcoal STRIPED SCARF wrapped twice around his neck, its long end trailing behind him, and a long black villain's coat over the plate. His Horde-crested tower shield on his LEFT forearm, no weapon in his hands. He is striding forward toward the viewer, shoulders hunched, deep unimpressed scowl, eyes half-closed in exasperation, clearly NOT looking back.
+
+Behind him: a swarm of 12–16 smaller rat henchmen in round brass goblin-engineering goggles (some ONE lens, some TWO) strapped around their heads, dark-blue rugged leather work DUNGAREES with a small black-and-gold Horde crest on the bib pocket, black work gloves. Still tough warrior rats: lean, wiry, scarred, fierce whiskered faces, but all of them following him with total devotion: one riding on the trailing end of his scarf, two carrying a giant wheel of cheese after him like an offering, one marching in step and copying his scowl exactly, one carrying a spare shield far too big for it, one running to catch up with a goblin rocket on its back, one saluting his back, a few at the rear tripping over each other to keep up. Every henchman has exactly one tail, two arms, two legs; vary snouts, ears and goggles so no two faces match.
+
+Composition: Grunho in the CENTRE-LEFT, sharp focus, walking toward the camera from a low angle so he looms; the swarm fanning out behind him in a messy wedge back into the hangar, getting smaller with distance. Full figures correctly proportioned, joints bend naturally, heads sit naturally on necks.
+
+Setting: a dark Horde war-lair hangar — riveted iron walls, chains, hanging Horde banners, a goblin zeppelin with a bold red rocket painted on its hull moored behind the swarm, warm brazier light from the left, cold moonlight through a hangar door on the right falling across Grunho.
+
+Color palette & lighting: near-black charcoal iron and plate, bronze-gold #C69B6D trim and brass goggles, dark-blue dungarees, warm amber brazier light vs cold blue moonlight. Dark and desaturated so the characters read clearly.
+
+Render quality: CLEAN and crisp — clear air, NO floating dust motes, NO ember particles, NO speckled glowing dots, NO heavy haze, NO blown-out bloom. Razor-sharp focus on Grunho's scowl and the nearest henchmen's faces and hands.
+
+Art style: World of Warcraft cinematic concept art, dark-souls Horde style, painterly brushwork, ultra-detailed, strictly 32:9 ultra-wide landscape.
 
 Do NOT include: any lettering, title, name, watermark or logo; two tails or any extra tail, extra or duplicated limbs/arms/heads, malformed/fused hands, wrong finger count; over-rotated / hyper-extended / broken joints, a detached / floating / over-tilted head, impossible poses; gore, blood, corpses; real cartoon characters, yellow pill-shaped creatures, humans, human faces; cute chibi styling, pastel or pink colours, chubby / fat build, floating particles, speckled noise, heavy haze, Alliance symbols, excessive bloom, plain white background.
 ```
