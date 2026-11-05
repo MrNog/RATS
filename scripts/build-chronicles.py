@@ -53,6 +53,7 @@ ART = {
     "ratorgina-roedriguez": "images/lore/Suki Night Shift.png",
     "grunho-o-maldisposto": "images/lore/Grunho Following.png",
     "icc-10-full-heroic": "images/lore/Heroic Ten.png",
+    "brilliantgem-the-gem-that-flew": "images/lore/Gem That Flew.png",
 }
 
 # The day a tale was posted, for tales added here after they went out on Discord (the commit date
