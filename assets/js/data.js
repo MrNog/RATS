@@ -713,6 +713,36 @@ window.RatsData = (function () {
     return typeof t === "number" ? t : null;
   }
 
+  // PuG logs: raiders' runs outside the guild, in their own plain node so the `rankings` snapshot
+  // stays guild-only. pugLogs/l<logId> = { reportId, reportUrl, raid, raidSlug, size, date, rows[] },
+  // rows holding only the raiders an officer added. Cached for 30 min; `force` skips the cache.
+  const PUG_LS = "ratsPugCache", PUG_TTL = 30 * 60 * 1000;
+  function cachePugLogs(data) {
+    try { localStorage.setItem(PUG_LS, JSON.stringify({ at: Date.now(), data: data || {} })); } catch (e) {}
+  }
+  async function loadPugLogs(force) {
+    if (!force) {
+      try {
+        const c = JSON.parse(localStorage.getItem(PUG_LS) || "null");
+        if (c && Date.now() - c.at < PUG_TTL) return c.data || {};
+      } catch (e) {}
+    }
+    if (!fbOn()) return {};
+    try {
+      const o = (await fbGet("pugLogs")) || {};
+      cachePugLogs(o);
+      return o;
+    } catch (e) {
+      return {}; // a failed read is not an empty node, so it is not cached
+    }
+  }
+  // entry = null removes the log.
+  async function savePugLog(key, entry) {
+    if (!fbOn()) throw new Error("Firebase off.");
+    if (entry) await fbPut("pugLogs/" + key, entry);
+    else await fbDelete("pugLogs/" + key);
+  }
+
   // Log-analysis enrichment (world-readable, written by RatsAnalyzer's push). Nested
   // analysis/{lockout}/{raidSlug}/{size}/{runId} -> { runId, raid, start, bosses{boss{player{...}}} }.
   // The rankings page overlays log-truth role/spec from this onto the API rows (the wow-logs API has
@@ -960,6 +990,9 @@ window.RatsData = (function () {
     loadRankings,
     loadRankingsVersion,
     loadAnalysis,
+    loadPugLogs,
+    savePugLog,
+    cachePugLogs,
     getPass,
     setPass,
     clearPass,

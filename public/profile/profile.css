@@ -727,45 +727,6 @@
   display: none;
 }
 
-/* ============ typeahead dropdown (shared by the header "jump to raider" search) ============ */
-.ac {
-  position: absolute;
-  top: 42px;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  max-height: 300px;
-  overflow: auto;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
-}
-.ac .opt {
-  padding: 7px 11px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.ac .opt:hover {
-  background: #23262b;
-}
-.ac .opt .cdot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  flex: 0 0 auto;
-}
-.ac .none {
-  padding: 8px 11px;
-  color: var(--text-dim-2);
-  font-style: italic;
-  font-size: 13px;
-}
-
 /* header search — "jump to raider" (free for all). Dark field + magnifier, reuses the .ac dropdown. */
 .psearch {
   position: relative;
@@ -1559,3 +1520,11 @@ dialog#artlb::backdrop {
 .pmain { display: flex; flex-direction: column; min-height: 100% }
 .pmain .ppane:not([hidden]) { flex: 1; display: flex; flex-direction: column }
 .pmain .emptyperf { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center }
+
+/* PuG runs */
+.pugruns { display: flex; flex-direction: column; padding: 4px 12px }
+.pugrun { display: grid; grid-template-columns: 70px 1fr auto 70px; align-items: center; gap: 12px; padding: 8px 0; color: var(--text-dim); font-size: 13px; text-decoration: none; font-variant-numeric: tabular-nums }
+.pugrun + .pugrun { border-top: 1px solid var(--border) }
+.pugrun:hover { color: var(--text) }
+.pugrun b { color: var(--text) }
+.pugrun span:last-child { text-align: right }

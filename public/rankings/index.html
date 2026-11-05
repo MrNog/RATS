@@ -48,8 +48,33 @@
             title="Copy this raid's boards (25 + 10, Normal and Heroic merged) for Okanvil's in-game Ranking tab.">
             <span>Export to Okanvil</span>
           </button>
+          <button id="pugBtn" onclick="openPugDlg()"
+            title="Show a raider's runs outside the guild on the board and their profile, without a rank.">
+            <span>Add PuG log</span>
+          </button>
         </span>
     </header>
+
+    <dialog id="pugDlg" class="pugdlg" aria-labelledby="pugTitle">
+      <div class="pughead">
+        <h2 id="pugTitle">Add PuG log</h2>
+        <button class="icon-btn" type="button" onclick="closePugDlg()" aria-label="Close">&times;</button>
+      </div>
+      <div class="pugpick">
+        <label for="pugSearch" class="sr-only">Raider</label>
+        <input id="pugSearch" type="text" placeholder="Search a raider" autocomplete="off" spellcheck="false" autofocus
+          onclick="pugFilter()" oninput="pugFilter()" onkeydown="pugSearchKey(event)">
+        <div id="pugPickList" class="ac" style="display:none" onclick="pugOptClick(event)"></div>
+        <input id="pugRaider" type="hidden">
+      </div>
+      <div id="pugList" class="puglist"></div>
+      <div id="pugProg" class="fetchprog" hidden><div class="fp-bar"><i></i></div></div>
+      <p id="pugMsg" class="pugmsg" role="status"></p>
+      <div class="pugfoot">
+        <button id="pugMore" class="btn" type="button" onclick="pugOlder()" hidden>Older logs</button>
+        <button id="pugSave" type="button" onclick="pugSave()" disabled>Save</button>
+      </div>
+    </dialog>
 
     <div id="fetchMsg" class="msg err" role="alert" hidden></div>
 

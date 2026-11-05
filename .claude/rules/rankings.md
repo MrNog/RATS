@@ -17,6 +17,13 @@ all filters are client-side — zero extra Firebase reads.
 | 🎉 Fun & shame | Deaths · wipe counter · fun awards |
 | 📜 Logs | Per-report badges · filter by raid+size+period |
 
+**Add PuG log** (officer, next to Fetch): pick a raider, tick their logs outside the guild. Stored in `pugLogs`,
+never in the `rankings` snapshot. A PuG card sits in the grid by score with no rank number and moves nobody; it
+never reaches the podium and feeds nothing else (progress, fun, loot, attendance, Okanvil export). The raider's
+profile lists the runs and fills a scope they have no guild parses in; profile ranks stay guild-only.
+Runs already in `pugLogs` show first with no request. The wow-logs list stops at a page with nothing new (Older logs
+continues from the cursor); lists and full logs are kept in memory while the page is open.
+
 **Top controls:** raid segment selector (from API `raids[]`) · 25/10-man toggle · Week / Month / All.
 
 **Period semantics on Guild progress:**
@@ -37,6 +44,7 @@ Base (note the `api.` subdomain and **plural** `guilds`, Bearer key required):
 - `GET /logs/latest` — latest log, full fights + players (was `/latest`)
 - `GET /logs?limit=5` — metadata-only history, paginate via `nextCursor` (was `/reports?limit=10`; **free cap 5**)
 - `GET /logs/{logId}` — one full log, for backfill of older reports
+- Outside any guild: `GET /logs/{logId}`, `GET /players/{realm}/{name}/logs` (see `WOWLOGS_API.md` §7.7)
 - `GET /rankings?raid=&season=&difficulty=&ladder=` — Boss Points leaderboard
 
 ### Real response shape (full log)
@@ -65,7 +73,7 @@ until re-pulled.
 `400 BAD_REQUEST` · `401` (bad key) · `404 NOT_FOUND` (unknown/private guild) · `429 RATE_LIMITED` · `500 SERVER_ERROR`.
 
 ## Fetch strategy
-- Officer's key stays browser-side; **30 rpm / 15k month** (free) — log-list weight = `limit`. Sequence, don't burst.
+- Officer's key stays browser-side; **30 rpm / 15k month** (free) — every request costs 1, list pages included. Sequence, don't burst.
 - First run / backfill: `/logs?limit=5` then `/logs/{id}` per new report. Subsequent: `/logs/latest` only.
 - Compute client-side → write one JSON blob to Firebase `rankings` node (visitors read once/visit, TTL 30 min).
 - `SAMPLE` constant = fallback + data contract while key/`RANKINGS_URL` empty. **Update it to the real nested

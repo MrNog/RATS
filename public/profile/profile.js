@@ -68,6 +68,7 @@
   var PROFILES = {}; // public alt/rank snapshot (Path B) — may be empty
   var VACATIONS = []; // who's away
   var ROSTER = null; // decrypted roster (officer/unlock only)
+  var PUG = {}; // officer-added PuG runs (Firebase `pugLogs`), never part of a rank
 
   // ---------- identity state ----------
   // IS_OFFICER only unlocks the richer *private* roster (extra alt links + tenure) — it is NOT a gate;
@@ -207,7 +208,7 @@
   function derive() {
     if (!L) return { people: {}, boards: { dps: [], hps: [] }, boss: {} };
     L.setData(DATA).setScope({ raid: RAID, size: SIZE, diff: DIFF });
-    var key = RAID + "|" + SIZE + "|" + DIFF + "|" + (DATA.generatedAt || "");
+    var key = RAID + "|" + SIZE + "|" + DIFF + "|" + (DATA.generatedAt || "") + "|" + Object.keys(PUG).length;
     if (_deriveCache && _deriveKey === key) return _deriveCache;
 
     var logs = L.logsInScope("all");
@@ -217,6 +218,26 @@
     var toons = {}; // toonKey|role -> the SAME aggregate shape, per CHARACTER — an alt page reads this
     // (viewing an alt by its own name must show THAT character's parses, not "no parses": the person
     // fold files Ninjacaldas's heals under fazcafe, so a lookup by "ninjacaldas" found nothing.)
+
+    function bump(map, mk, nm, cls, r, isHealer, raidSlug) {
+      var rate = isHealer ? r.h || 0 : r.d || 0;
+      var e =
+        map[mk] ||
+        (map[mk] = {
+          key: mk.split("|")[0], name: nm, cls: cls || r.c, spec: r.s || "",
+          role: isHealer ? "H" : "D", metric: isHealer ? "hps" : "dps",
+          raidSlug: raidSlug || "", sum: 0, fights: 0, best: 0, byBoss: {},
+        });
+      e.sum += rate;
+      e.fights++;
+      if (rate > e.best) e.best = rate;
+      if (!e.cls) e.cls = r.c;
+      // per-boss BEST, in the line's OWN metric (drives placements + best parse).
+      // rate is a FLOAT (e.g. 3150.14 hps) — round on store so every consumer shows a clean integer.
+      var bb = e.byBoss[r.b];
+      if (!bb || rate > bb.value) e.byBoss[r.b] = { value: Math.round(rate), spec: r.s || "" };
+      return e;
+    }
 
     logs.forEach(function (l) {
       L.rowsForDiff(l.rows).forEach(function (r) {
@@ -228,29 +249,34 @@
         var id = L.resolveIdentity(r.n, r.c);
         if (guild && !guild[id.key] && !guild[tk]) return; // guildies only
 
-        var rate = isHealer ? r.h || 0 : r.d || 0;
-        function bump(map, mk, nm, cls) {
-          var e =
-            map[mk] ||
-            (map[mk] = {
-              key: mk.split("|")[0], name: nm, cls: cls || r.c, spec: r.s || "",
-              role: isHealer ? "H" : "D", metric: isHealer ? "hps" : "dps",
-              raidSlug: l.raidSlug || "", sum: 0, fights: 0, best: 0, byBoss: {},
-            });
-          e.sum += rate;
-          e.fights++;
-          if (rate > e.best) e.best = rate;
-          if (!e.cls) e.cls = r.c;
-          // per-boss BEST, in the line's OWN metric (drives placements + best parse).
-          // rate is a FLOAT (e.g. 3150.14 hps) — round on store so every consumer shows a clean integer.
-          var bb = e.byBoss[r.b];
-          if (!bb || rate > bb.value) e.byBoss[r.b] = { value: Math.round(rate), spec: r.s || "" };
-        }
-        bump(people, id.key + "|" + (isHealer ? "H" : "D"), id.name, id.cls || r.c);
+        bump(people, id.key + "|" + (isHealer ? "H" : "D"), id.name, id.cls || r.c, r, isHealer, l.raidSlug);
         // toon line only when the toon is NOT the person's own name (a main's toon line would just
         // duplicate their person line and double the memory for nothing)
-        if (tk !== id.key) bump(toons, tk + "|" + (isHealer ? "H" : "D"), r.n, r.c);
+        if (tk !== id.key) bump(toons, tk + "|" + (isHealer ? "H" : "D"), r.n, r.c, r, isHealer, l.raidSlug);
       });
+    });
+
+    // PuG lines fill a scope the raider has no guild parses in. lineOf reads them last, and the boards
+    // below never see them, so a rank is always guild runs only.
+    var pug = {};
+    Object.keys(PUG).forEach(function (k) {
+      var l = PUG[k];
+      if (!L.matchesRaidSize(l)) return;
+      L.rowsForDiff(l.rows).forEach(function (r) {
+        var isHealer = r.r === "HEALER";
+        if (!isHealer && L.isTankFight(r)) return;
+        var e = bump(pug, L.normNm(r.n) + "|" + (isHealer ? "H" : "D"), r.n, r.c, r, isHealer, l.raidSlug);
+        e.pug = true;
+        if (r.p != null) {
+          e.pctSum = (e.pctSum || 0) + r.p;
+          e.pctN = (e.pctN || 0) + 1;
+        }
+      });
+    });
+    Object.keys(pug).forEach(function (gk) {
+      var e = pug[gk];
+      e.avg = e.sum / e.fights;
+      e.serverPct = e.pctN ? Math.round(e.pctSum / e.pctN) : null;
     });
 
     // finalize per-person AND per-toon lines: average + server percentile (a parse is per CHARACTER,
@@ -287,7 +313,7 @@
       return rows;
     }
 
-    _deriveCache = { people: people, toons: toons, boards: { dps: board("D", "dps"), hps: board("H", "hps") } };
+    _deriveCache = { people: people, toons: toons, pug: pug, boards: { dps: board("D", "dps"), hps: board("H", "hps") } };
     _deriveKey = key;
     return _deriveCache;
   }
@@ -295,7 +321,7 @@
   // so an alt's page shows the alt's parses (Ninjacaldas's heals), not "no parses".
   function lineOf(name, roleFlag) {
     var d = derive(), k = ck(name);
-    return d.people[k + "|" + roleFlag] || d.toons[k + "|" + roleFlag] || null;
+    return d.people[k + "|" + roleFlag] || d.toons[k + "|" + roleFlag] || d.pug[k + "|" + roleFlag] || null;
   }
 
   function dpsList() { return derive().boards.dps; }
@@ -966,6 +992,42 @@
     );
   }
 
+  // This toon's PuG runs, newest first, across every raid: a parse belongs to the character played.
+  function pugRunsHtml(name) {
+    var k = L ? L.normNm(name) : "";
+    var runs = Object.keys(PUG)
+      .map(function (key) {
+        var l = PUG[key];
+        return { l: l, rows: (l.rows || []).filter(function (r) { return L.normNm(r.n) === k; }) };
+      })
+      .filter(function (run) { return run.rows.length; })
+      .sort(function (a, b) { return new Date(b.l.date) - new Date(a.l.date); });
+    if (!runs.length) return "";
+    return (
+      '<div class="psec mt">' + secIcon("performance") + "PuG runs</div>" +
+      '<div class="card pugruns">' +
+      runs
+        .map(function (run) {
+          var rows = run.rows,
+            healer = rows[0].r === "HEALER",
+            dpsRows = rows.filter(function (r) { return !L.isTankFight(r); }),
+            parses = rows.filter(function (r) { return r.p != null; }),
+            rate = dpsRows.reduce(function (s, r) { return s + ((healer ? r.h : r.d) || 0); }, 0) / (dpsRows.length || 1),
+            pct = parses.reduce(function (s, r) { return s + r.p; }, 0) / (parses.length || 1);
+          return (
+            '<a class="pugrun" href="' + esc(run.l.reportUrl) + '" target="_blank" rel="noopener">' +
+            "<b>" + esc(raidLabel(run.l.raidSlug)) + " " + esc(run.l.size) + "</b>" +
+            "<span>" + esc(fmtDate(String(run.l.date).slice(0, 10))) + " · " + rows.length + (rows.length === 1 ? " boss" : " bosses") + "</span>" +
+            "<span>" + (dpsRows.length ? fmt(rate) + (healer ? " HPS" : " DPS") : "Tanking") + "</span>" +
+            "<span>" + (parses.length ? Math.round(pct) + "% srv" : "no parse") + "</span>" +
+            "</a>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
   // Clean "no parses in this scope" state for the Performance column — a centered card, not empty tiles.
   // If this toon HAS logs in other raids, name them so the user knows where to look.
   function emptyPerfCard(name) {
@@ -1121,14 +1183,14 @@
     tiles += rankTile(
       "Avg DPS",
       d ? metricTint(fmt(d.row.value), "dps") : dt ? metricTint(fmt(dt.avg), "dps") : "—",
-      d ? "#" + d.rank + " · " + (d.row.fights || 0) + " fights" : dt ? "on this character · " + dt.fights + " fights" : "no DPS parses in scope",
+      d ? "#" + d.rank + " · " + (d.row.fights || 0) + " fights" : dt ? (dt.pug ? "PuG · " : "on this character · ") + dt.fights + " fights" : "no DPS parses in scope",
       d ? d.rank : null,
       col, TILE_IC.sword
     );
     tiles += rankTile(
       "Avg HPS",
       h ? metricTint(fmt(h.row.value), "hps") : ht ? metricTint(fmt(ht.avg), "hps") : "—",
-      h ? "#" + h.rank + " · " + (h.row.fights || 0) + " fights" : ht ? "on this character · " + ht.fights + " fights" : "off-spec / no heals",
+      h ? "#" + h.rank + " · " + (h.row.fights || 0) + " fights" : ht ? (ht.pug ? "PuG · " : "on this character · ") + ht.fights + " fights" : "off-spec / no heals",
       h ? h.rank : null,
       col, TILE_IC.cross
     );
@@ -1542,6 +1604,7 @@
     var vac = vacFor(name);
 
     var perf = performanceHtml(name, col);
+    perf.body = (perf.body || "") + pugRunsHtml(name);
     var p = raidProgress(name);
     var raidsCell = p.count
       ? rankTile("Raids with the guild", p.count + '<small class="of">' + (p.maxed ? "raids" : "of " + p.next) + "</small>",
@@ -1860,6 +1923,13 @@
         }),
       loadSnapshot(),
     ];
+    if (RatsData.loadPugLogs)
+      jobs.push(
+        RatsData.loadPugLogs().then(function (p) {
+          PUG = p || {};
+          _deriveCache = null;
+        })
+      );
     if (IS_OFFICER)
       jobs.push(
         RatsData.loadRoster({ interactive: false }).then(function (r) {

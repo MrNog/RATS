@@ -304,15 +304,15 @@
 
     // logs matching the active raid + size, within the period window ("week"/"month"/"all").
     function logsInScope(period) {
+      return (DATA.logs || []).filter(function (l) {
+        return matchesRaidSize(l) && inPeriodDays(l.date, period);
+      });
+    }
+    function matchesRaidSize(l) {
       var rObj = (DATA.raids || []).find(function (r) { return r.key === RAID; });
       var rKeys = [RAID, rObj && rObj.label].filter(Boolean).map(function (x) { return String(x).toLowerCase(); });
-      return (DATA.logs || []).filter(function (l) {
-        if (String(l.size).match(/\d+/) && String(l.size).match(/\d+/)[0] !== SIZE) return false;
-        var raidMatch =
-          rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
-        if (!raidMatch) return false;
-        return inPeriodDays(l.date, period);
-      });
+      if (String(l.size).match(/\d+/) && String(l.size).match(/\d+/)[0] !== SIZE) return false;
+      return rKeys.indexOf(String(l.raid).toLowerCase()) >= 0 || rKeys.indexOf(String(l.raidSlug).toLowerCase()) >= 0;
     }
     function inPeriodDays(dateStr, period) {
       if (period === "all" || !period) return true;
@@ -500,6 +500,7 @@
       tankStatsFor: tankStatsFor,
       isTankFight: isTankFight,
       rowsForDiff: rowsForDiff,
+      matchesRaidSize: matchesRaidSize,
       logsInScope: logsInScope,
       inPeriodDays: inPeriodDays,
       serverPctFor: serverPctFor,

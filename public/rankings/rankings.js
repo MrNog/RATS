@@ -1085,25 +1085,29 @@
     var col = classColor(p.class);
     var bar = p.bar != null ? p.bar : Math.round((p.score || 0) * 100);
     return (
-      '<li class="gc" style="--cc:' + col + '">' +
-      '<span class="gc-rank">' + (i + 1) + "</span>" +
+      '<li class="gc' + (p.pug ? " pug" : "") + '" style="--cc:' + col + '">' +
+      '<span class="gc-rank">' + (p.pug ? "&middot;" : i + 1) + "</span>" +
       cicon(p.class, p.spec) +
       '<span class="gc-id">' +
-      '<a class="gc-name" href="' + profileHref(p) + '">' + esc(p.name) + "</a>" +
+      '<span class="gc-line"><a class="gc-name" href="' + profileHref(p) + '">' + esc(p.name) + "</a>" +
+      (p.pug ? '<span class="pugtag" title="From PuG logs. Not ranked, moves nobody.">PuG</span>' : "") + "</span>" +
       // the small card keeps what decides the place — pts and the server parse; the rest is a hover
       '<span class="gc-sub" title="' + esc(subOf(p, kind).replace(/<[^>]+>/g, "")) + '">' +
       ptsHtml(p, kind) + " · " + srvHtml(p) + "</span>" +
       "</span>" +
       '<span class="gc-val"><b>' + rateOf(p, kind) + "</b><small>" + unitOf(kind) + "</small>" +
-      (kind === "tank" ? "" : deltaTag(p.delta, p.streak)) +
+      (kind === "tank" || p.pug ? "" : deltaTag(p.delta, p.streak)) +
       "</span>" +
       '<i class="gc-bar" style="width:' + bar + '%"></i>' +
       "</li>"
     );
   }
 
-  function boardHtml(list, kind) {
+  // pugs = unranked PuG cards, best first. They slot into the grid by score and take no number, so
+  // nobody on the board changes place, and they never reach the podium.
+  function boardHtml(list, kind, pugs) {
     if (!list || !list.length) return "";
+    pugs = pugs || [];
     // podium order on screen: 2nd · 1st · 3rd, the winner in the middle and tallest
     var pod = [1, 0, 2]
       .filter(function (i) {
@@ -1113,12 +1117,14 @@
         return podiumCard(list[i], i, kind);
       })
       .join("");
-    var rest = list
-      .slice(3)
-      .map(function (p, j) {
-        return gridCard(p, j + 3, kind);
-      })
-      .join("");
+    var cards = [],
+      nextPug = 0;
+    list.slice(3).forEach(function (p, j) {
+      while (pugs[nextPug] && pugs[nextPug].score > p.score) cards.push(gridCard(pugs[nextPug++], 0, kind));
+      cards.push(gridCard(p, j + 3, kind));
+    });
+    while (pugs[nextPug]) cards.push(gridCard(pugs[nextPug++], 0, kind));
+    var rest = cards.join("");
     return '<div class="podium n' + Math.min(list.length, 3) + '">' + pod + "</div>" +
       (rest ? '<ol class="lbgrid">' + rest + "</ol>" : "");
   }
@@ -1871,6 +1877,544 @@
     DATA.hps = hps;
     DATA.tank = computeTankBoard(cur);
     DATA.mvp = mvp;
+
+    var pugs = pugLines(pugLogsInScope(cur));
+    DATA.pug = {
+      dps: scorePugs(pugs, "dps", dps),
+      hps: scorePugs(pugs, "hps", hps),
+      tank: scorePugs(pugs, "tank", DATA.tank),
+    };
+  }
+
+  // ---- PuG cards -----------------------------------------------------------------------------
+  // Officer-added runs from outside the guild. They live in PUG (Firebase `pugLogs`), never in
+  // DATA.logs, so every board, award and page that reads the snapshot stays guild-only. A card is
+  // scored against the real board's own maxima and placed by that score; the board itself is
+  // computed before this and is never touched.
+  var PUG = {};
+  var PUG_GUILD_ID = 124;
+  var PUG_PAGES = 6; // list pages read per raider (5 logs each on the free tier)
+
+  // Same raid, size and period as the board. `cur` supplies the board's own Week lockout.
+  function pugLogsInScope(cur) {
+    var weekLock = PERIOD === "week" ? weekTargetLock(cur) : null;
+    return Object.keys(PUG)
+      .map(function (k) {
+        return PUG[k];
+      })
+      .filter(function (l) {
+        if (normSize(l.size) !== SIZE) return false;
+        if (!BOSS_ORDER[RAID] && raidKeyOf(l) !== RAID) return false; // rowsForDiff filters by boss
+        return inPeriodDays(l.date, PERIOD, weekLock);
+      });
+  }
+
+  // One line per toon and board. Best copy of a kill per boss + difficulty + lockout, like aggregate().
+  function pugLines(logs) {
+    var by = {};
+    logs.forEach(function (l) {
+      rowsForDiff(l.rows).forEach(function (r) {
+        var kind = r.r === "HEALER" ? "hps" : isTankFight(r) ? "tank" : "dps";
+        if (kind === "tank" && r.dt == null) return;
+        var gk = kind + "|" + normNm(r.n);
+        var e = by[gk] || (by[gk] = { kind: kind, name: r.n, class: r.c, spec: r.s, reportUrl: l.reportUrl, kills: {} });
+        var fk = (r.b || "") + "|" + (r.hm ? "H" : "N") + "|" + lockoutStart(l.date);
+        var rate = (kind === "hps" ? r.h : kind === "tank" ? r.dt : r.d) || 0;
+        if (!e.kills[fk] || rate > e.kills[fk].rate)
+          e.kills[fk] = { rate: rate, total: (kind === "hps" ? r.heal : r.dmg) || 0, pct: r.p, deaths: r.dth || 0 };
+      });
+    });
+    return Object.keys(by).map(function (gk) {
+      var e = by[gk],
+        kills = Object.keys(e.kills).map(function (k) {
+          return e.kills[k];
+        }),
+        parses = kills.filter(function (k) {
+          return k.pct != null;
+        });
+      e.fights = kills.length;
+      e.mean = kills.reduce(function (s, k) { return s + k.rate; }, 0) / e.fights;
+      e.total = kills.reduce(function (s, k) { return s + (e.kind === "tank" ? k.rate : k.total); }, 0);
+      e.deaths = kills.reduce(function (s, k) { return s + k.deaths; }, 0);
+      e.pct = parses.length ? parses.reduce(function (s, k) { return s + k.pct; }, 0) / parses.length : null;
+      return e;
+    });
+  }
+
+  // aggregate()'s and computeTankBoard()'s formulas, read off the finished board.
+  function scorePugs(lines, kind, board) {
+    function maxOf(key) {
+      return board.reduce(function (m, p) { return Math.max(m, p[key] || 0); }, 0);
+    }
+    var maxRate = maxOf("rate"),
+      maxTotal = maxOf("value"),
+      maxSrv = maxOf("serverPct") || 100,
+      topScore = board.length ? board[0].score || 1 : 1;
+    var out = lines
+      .filter(function (e) {
+        return e.kind === kind;
+      })
+      .map(function (e) {
+        var rate = e.mean;
+        if (kind !== "tank") {
+          var fights = board.reduce(function (s, p) { return s + (p.fights || 0); }, 0);
+          var sum = board.reduce(function (s, p) { return s + (p.mean || 0) * (p.fights || 0); }, 0);
+          var counts = board.map(function (p) { return p.fights || 0; }).sort(function (a, b) { return a - b; });
+          var C = Math.max(SHRINK_MIN, counts[Math.floor(counts.length / 2)] || SHRINK_MIN);
+          if (fights) rate = (e.fights * e.mean + C * (sum / fights)) / (e.fights + C);
+        }
+        var rateAxis = maxRate ? Math.min(1, rate / maxRate) : 1;
+        var score;
+        if (kind === "tank") {
+          score = e.pct != null ? rateAxis * 0.6 + (e.pct / 100) * 0.4 : rateAxis;
+        } else {
+          var internal = W_TOTAL * (maxTotal ? Math.min(1, e.total / maxTotal) : 1) + W_RATE * rateAxis;
+          var wSrv = W_SERVER[kind];
+          score = e.pct != null ? (1 - wSrv) * internal + wSrv * Math.min(1, e.pct / maxSrv) : internal;
+        }
+        return {
+          pug: true,
+          name: e.name,
+          class: e.class,
+          spec: e.spec,
+          rate: Math.round(rate),
+          value: e.total,
+          score: score,
+          fights: e.fights,
+          deaths: e.deaths,
+          survival: Math.round(((e.fights - Math.min(e.deaths, e.fights)) / e.fights) * 100),
+          serverPct: e.pct == null ? null : Math.round(e.pct * 10) / 10,
+          bar: Math.max(6, Math.min(100, Math.round((score / topScore) * 100))),
+          reportUrl: e.reportUrl,
+        };
+      });
+    return out.sort(function (a, b) {
+      return b.score - a.score;
+    });
+  }
+
+  // ---- Add PuG log dialog (officer) -------------------------------------------------------------
+  var pugToken = 0; // a newer pick cancels an older list that is still loading
+  var pugItems = [];
+  var pugNames = [];
+  var pugClass = {};
+  var pugLists = {}; // wow-logs list per raider while the page is open: picking them again costs no request
+  var pugFull = {}; // full logs read on this visit: the same log for a second raider costs no request
+  var pugOpen = null; // the list on screen, for Older logs
+
+  function pugEl(id) {
+    return document.getElementById(id);
+  }
+  function pugMsg(t) {
+    pugEl("pugMsg").textContent = t || "";
+  }
+  function pugRate(err) {
+    return err && (err.status === 429 || err.code === "RATE_LIMITED");
+  }
+  function pugHasToon(l, toon) {
+    var k = normNm(toon);
+    return ((l && l.rows) || []).some(function (r) {
+      return normNm(r.n) === k;
+    });
+  }
+
+  async function openPugDlg() {
+    pugNames = (DATA.rosterNames || []).slice().sort(function (a, b) {
+      return a.localeCompare(b);
+    });
+    pugClass = {};
+    (DATA.logs || []).forEach(function (l) {
+      (l.rows || []).forEach(function (r) {
+        if (r.c) pugClass[normNm(r.n)] = r.c;
+      });
+    });
+    pugEl("pugRaider").value = "";
+    pugEl("pugSearch").value = "";
+    pugPickHide();
+    pugItems = [];
+    pugOpen = null;
+    pugRender(false);
+    pugMsg("");
+    pugEl("pugDlg").showModal();
+    PUG = await RatsData.loadPugLogs(true); // fresh copy: saving merges rows into these entries
+    (await RatsData.loadMembers()).forEach(function (m) {
+      if (m.class) pugClass[normNm(m.name)] = m.class; // alts without a log yet
+    });
+  }
+  function closePugDlg() {
+    pugToken++;
+    pugEl("pugDlg").close();
+  }
+
+  // ---------- raider typeahead ----------
+  function pugMatches() {
+    var q = normNm(pugEl("pugSearch").value);
+    return pugNames.filter(function (n) {
+      return normNm(n).indexOf(q) >= 0;
+    });
+  }
+  function pugFilter() {
+    var box = pugEl("pugPickList"),
+      list = pugMatches();
+    box.innerHTML = list.length
+      ? list
+          .map(function (n) {
+            var col = classColor(pugClass[normNm(n)]);
+            return (
+              '<div class="opt" data-name="' + esc(n) + '"><span class="cdot" style="background:' + col + '"></span>' +
+              '<span style="color:' + col + '">' + esc(n) + "</span></div>"
+            );
+          })
+          .join("")
+      : '<div class="none">No rat by that name.</div>';
+    box.style.display = "block";
+  }
+  function pugPickHide() {
+    pugEl("pugPickList").style.display = "none";
+  }
+  function pugChoose(name) {
+    pugPickHide();
+    pugEl("pugSearch").value = name;
+    if (name === pugEl("pugRaider").value) return;
+    pugEl("pugRaider").value = name;
+    pugPick();
+  }
+  function pugOptClick(e) {
+    var opt = e.target.closest(".opt");
+    if (opt) pugChoose(opt.getAttribute("data-name"));
+  }
+  function pugSearchKey(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      var first = pugMatches()[0];
+      if (first) pugChoose(first);
+    } else if (e.key === "Escape" && pugEl("pugPickList").style.display !== "none") {
+      e.preventDefault(); // first Esc closes the list, not the whole dialog
+      pugPickHide();
+    }
+  }
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".pugpick")) return;
+    pugPickHide();
+    pugEl("pugSearch").value = pugEl("pugRaider").value; // half-typed text never replaces the picked raider
+  });
+
+  function pugIsCandidate(l, inSnapshot) {
+    var guildRun = (l.guilds || []).some(function (g) {
+      return g.id === PUG_GUILD_ID;
+    });
+    return !guildRun && !inSnapshot[l.logId] && l.raid && RAID_LABEL[raidKeyOf({ raidSlug: l.raid.slug, raid: l.raid.name })];
+  }
+  function pugSnapshotIds() {
+    var ids = {};
+    (DATA.logs || []).forEach(function (l) {
+      ids[l.reportId] = true;
+    });
+    return ids;
+  }
+
+  // Newest first. A first look stops at a page with nothing new, so guild runs and logs already saved
+  // cost no further pages; Older logs carries on from the kept cursor until a page has something.
+  async function apiPlayerLogs(key, toon, c, older) {
+    var inSnapshot = pugSnapshotIds();
+    for (var page = 0; page < PUG_PAGES; page++) {
+      var d = await apiGet(
+        "/players/warmane-onyxia/" + encodeURIComponent(toon) + "/logs?limit=5" +
+          (c.cursor ? "&cursor=" + encodeURIComponent(c.cursor) : ""),
+        key
+      );
+      var fresh = (d.logs || []).filter(function (l) {
+        return !c.seen[l.logId];
+      });
+      fresh.forEach(function (l) {
+        c.seen[l.logId] = true;
+        c.logs.push(l);
+      });
+      c.cursor = (fresh.length && d.pagination && d.pagination.nextCursor) || "";
+      if (!c.cursor) return;
+      var hasNew = fresh.some(function (l) {
+        return pugIsCandidate(l, inSnapshot) && !pugHasToon(PUG["l" + l.logId], toon);
+      });
+      if (older ? hasNew : !hasNew) return;
+    }
+  }
+
+  // A raider's logs outside the guild, in a raid we rank, plus any already added further back.
+  function pugItemsFrom(logs, toon) {
+    var inSnapshot = pugSnapshotIds();
+    var items = logs
+      .filter(function (l) {
+        return pugIsCandidate(l, inSnapshot);
+      })
+      .map(function (l) {
+        var raid = raidKeyOf({ raidSlug: l.raid.slug, raid: l.raid.name });
+        return {
+          id: l.logId, url: l.logUrl, raid: RAID_LABEL[raid], size: l.size, date: l.uploadedAt,
+          kills: l.player && l.player.bossKills, added: pugHasToon(PUG["l" + l.logId], toon),
+        };
+      });
+    Object.keys(PUG).forEach(function (k) {
+      var l = PUG[k];
+      if (!pugHasToon(l, toon)) return;
+      if (items.some(function (i) { return String(i.id) === String(l.reportId); })) return;
+      items.push({
+        id: l.reportId, url: l.reportUrl, raid: RAID_LABEL[raidKeyOf(l)] || l.raid, size: l.size,
+        date: l.date, added: true,
+      });
+    });
+    items.forEach(function (it) {
+      it.on = it.added;
+    });
+    return items.sort(function (a, b) {
+      return String(b.date).localeCompare(String(a.date));
+    });
+  }
+
+  function pugStateText(it) {
+    if (it.added) return it.on ? "Added" : "Will be removed";
+    return it.on ? "To add" : "";
+  }
+  function pugRowClass(it) {
+    return "pugrow" + (it.on ? " on" : "") + (it.added && !it.on ? " drop" : "");
+  }
+  function pugRowSub(it) {
+    var state = pugStateText(it),
+      kills = it.kills ? it.kills + (it.kills === 1 ? " boss" : " bosses") : "";
+    return (
+      esc(kills) + (kills && state ? " &middot; " : "") +
+      (state ? '<span class="pugstate">' + state + "</span>" : "")
+    );
+  }
+  function pugRender(loading) {
+    var more = pugEl("pugMore");
+    pugEl("pugList").setAttribute("aria-busy", loading ? "true" : "false");
+    pugEl("pugList").innerHTML =
+      pugItems
+        .map(function (it, i) {
+          return (
+            '<label class="' + pugRowClass(it) + '" id="pugRow' + i + '">' +
+            '<input type="checkbox"' + (it.on ? " checked" : "") + ' onchange="pugToggle(' + i + ', this.checked)">' +
+            '<span class="pugtick" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4"' +
+            ' stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.5 5 9l4.5-6"/></svg></span>' +
+            '<span class="pugraid">' + esc(it.raid) + "</span>" +
+            '<span class="pugtxt"><b>' + esc(normSize(it.size)) + '-man</b><span class="pugdim pugsub">' + pugRowSub(it) + "</span></span>" +
+            '<span class="pugwhen"><span>' + esc(fmtDate(it.date)) + "</span>" +
+            '<a class="pugdim" href="' + esc(it.url) + '" target="_blank" rel="noopener">#' + esc(it.id) + "</a></span></label>"
+          );
+        })
+        .join("") +
+      (loading ? new Array(pugItems.length ? 2 : 4).join('<div class="pugskel" aria-hidden="true"><i></i><i></i><i></i><i></i></div>') : "");
+    more.hidden = loading || !pugOpen || !pugOpen.cursor;
+    pugSaveLabel();
+  }
+  function pugToggle(i, on) {
+    var it = pugItems[i],
+      row = pugEl("pugRow" + i);
+    it.on = on;
+    row.className = pugRowClass(it);
+    row.querySelector(".pugsub").innerHTML = pugRowSub(it);
+    pugSaveLabel();
+  }
+  function pugSaveLabel() {
+    var adds = pugItems.filter(function (it) { return it.on && !it.added; }).length,
+      drops = pugItems.filter(function (it) { return !it.on && it.added; }).length,
+      save = pugEl("pugSave");
+    save.disabled = !adds && !drops;
+    save.textContent =
+      adds && drops ? "Save " + (adds + drops) + " changes" :
+      adds ? "Add " + adds + (adds === 1 ? " log" : " logs") :
+      drops ? "Remove " + drops + (drops === 1 ? " log" : " logs") :
+      "Save";
+  }
+  // While saving the list is locked, so a tick cannot turn Save back on mid-run.
+  function pugBusy(on) {
+    pugEl("pugProg").hidden = !on;
+    pugEl("pugList").inert = on;
+    pugEl("pugMore").disabled = on;
+    if (on) {
+      pugEl("pugSave").disabled = true;
+      pugEl("pugSave").textContent = "Saving...";
+    } else {
+      pugSaveLabel();
+    }
+  }
+
+  // Keep what the raider has ticked while new rows join the list.
+  function pugMerge(toon, c) {
+    var ticks = {};
+    pugItems.forEach(function (it) {
+      ticks[it.id] = it.on;
+    });
+    pugItems = pugItemsFrom(c.logs, toon);
+    pugItems.forEach(function (it) {
+      if (ticks[it.id] !== undefined) it.on = ticks[it.id];
+    });
+  }
+  function pugFetchError(e, name) {
+    return e && e.status === 404 ? "wow-logs has no character called " + name + "." :
+      pugRate(e) ? "Rate limit reached. Try again in a minute." :
+      (e && e.message) || "Could not load the logs.";
+  }
+  function pugEndMsg(name) {
+    pugMsg(pugItems.length ? "" : (pugOpen.cursor ? "No PuG logs in " + name + "'s recent runs." : "No PuG logs found for " + name + "."));
+  }
+  async function pugFetch(name, c, older) {
+    var token = pugToken;
+    pugMsg("Looking for " + name + " on wow-logs...");
+    pugRender(true);
+    API_COST = 0;
+    var failure = null;
+    try {
+      var key = await RatsData.loadApiKey();
+      if (!key) throw new Error("No API key. Save one in the Admin console.");
+      await apiPlayerLogs(key, name, c, older);
+    } catch (e) {
+      failure = e;
+    }
+    if (RatsData.bumpApiUsage) RatsData.bumpApiUsage(API_COST);
+    if (c.logs.length) pugLists[normNm(name)] = c;
+    if (token !== pugToken) return;
+    pugMerge(name, c);
+    pugRender(false);
+    if (failure) pugMsg(pugFetchError(failure, name));
+    else pugEndMsg(name);
+  }
+
+  // Runs already saved show at once from our own data; wow-logs is asked only about the rest.
+  async function pugPick() {
+    var name = pugEl("pugRaider").value;
+    pugToken++;
+    pugItems = [];
+    pugOpen = null;
+    pugMsg("");
+    pugRender(false);
+    if (!name) return;
+    pugItems = pugItemsFrom([], name);
+    pugOpen = pugLists[normNm(name)] || { logs: [], seen: {}, cursor: "" };
+    if (pugOpen.logs.length) {
+      pugMerge(name, pugOpen);
+      pugRender(false);
+      pugEndMsg(name);
+      return;
+    }
+    await pugFetch(name, pugOpen, false);
+  }
+  function pugOlder() {
+    return pugFetch(pugEl("pugRaider").value, pugOpen, true);
+  }
+
+  // Keep only the raider's rows. The tank flag and parse need the whole log, so they are settled here.
+  function pugEntry(log, toon) {
+    var full = logEntry(log),
+      k = normNm(toon),
+      pct = {};
+    function pctKey(boss, hm, name) {
+      return boss + "|" + (hm ? "H" : "N") + "|" + normNm(name);
+    }
+    markTankRows(full.rows);
+    (log.fights || []).forEach(function (f) {
+      if (!f.kill) return;
+      (f.players || []).forEach(function (p) {
+        var v = p.percentiles && p.percentiles.regular;
+        if (v != null) pct[pctKey(f.bossName, /_HC$/.test(f.difficulty || ""), p.name)] = v;
+      });
+    });
+    var rows = full.rows
+      .filter(function (r) {
+        return normNm(r.n) === k;
+      })
+      .map(function (r) {
+        return {
+          n: r.n, c: r.c, s: r.s, r: r.r, d: r.d, h: r.h, dmg: r.dmg, heal: r.heal, b: r.b, hm: r.hm,
+          dth: r.dth, dt: r.dt, p: pct[pctKey(r.b, r.hm, r.n)], _logTank: !!r._tank,
+        };
+      });
+    if (!rows.length) return null;
+    return {
+      reportId: full.reportId, reportUrl: full.reportUrl, raid: full.raid, raidSlug: full.raidSlug,
+      size: full.size, date: full.date, rows: rows,
+    };
+  }
+
+  // A rate limit waits out the minute once, like a Fetch. Anything else is reported for that log.
+  async function pugReadLog(key, id) {
+    if (pugFull[id]) return pugFull[id];
+    var log;
+    try {
+      log = (await apiGet("/logs/" + id, key)).log;
+    } catch (e) {
+      if (!pugRate(e)) throw e;
+      pugMsg("Rate limit. Waiting out the minute...");
+      await new Promise(function (r) { setTimeout(r, 65000); });
+      log = (await apiGet("/logs/" + id, key)).log;
+    }
+    pugFull[id] = log;
+    return log;
+  }
+
+  async function pugSave() {
+    var toon = pugEl("pugRaider").value,
+      token = pugToken,
+      k = normNm(toon),
+      adds = [],
+      drops = [],
+      failed = 0;
+    pugItems.forEach(function (it) {
+      if (it.on && !it.added) adds.push(it);
+      if (!it.on && it.added) drops.push(it);
+    });
+    pugBusy(true);
+    API_COST = 0;
+    try {
+      var key = adds.length ? await RatsData.loadApiKey() : null;
+      if (adds.length && !key) throw new Error("No API key. Save one in the Admin console.");
+      for (var i = 0; i < adds.length; i++) {
+        var known = !!pugFull[adds[i].id];
+        pugMsg("Reading log " + (i + 1) + " of " + adds.length + "...");
+        try {
+          var log = await pugReadLog(key, adds[i].id);
+          var entry = pugEntry(log, toon);
+          if (!entry) { failed++; continue; }
+          var fk = "l" + log.logId,
+            had = PUG[fk];
+          if (had) {
+            entry.rows = (had.rows || [])
+              .filter(function (r) { return normNm(r.n) !== k; })
+              .concat(entry.rows);
+          }
+          await RatsData.savePugLog(fk, entry);
+          PUG[fk] = entry;
+        } catch (e) {
+          failed++;
+        }
+        if (!known && i < adds.length - 1) await new Promise(function (r) { setTimeout(r, 2500); });
+      }
+      for (var j = 0; j < drops.length; j++) {
+        var dk = "l" + drops[j].id,
+          left = ((PUG[dk] && PUG[dk].rows) || []).filter(function (r) { return normNm(r.n) !== k; });
+        try {
+          var next = left.length ? Object.assign({}, PUG[dk], { rows: left }) : null;
+          await RatsData.savePugLog(dk, next);
+          if (next) PUG[dk] = next;
+          else delete PUG[dk];
+        } catch (e) {
+          failed++;
+        }
+      }
+      pugBusy(false);
+      RatsData.cachePugLogs(PUG);
+      if (RatsData.bumpApiUsage) RatsData.bumpApiUsage(API_COST);
+      render();
+      if (failed) {
+        if (token === pugToken) await pugPick();
+        pugMsg(failed + (failed === 1 ? " log" : " logs") + " could not be saved. The others are in.");
+      } else {
+        closePugDlg();
+      }
+    } catch (e) {
+      pugBusy(false);
+      pugMsg((e && e.message) || "Could not save.");
+    }
   }
 
   // Tank board — soaked damage per tanked fight (the tank's "meter"), with deaths + survival as the
@@ -2332,8 +2876,8 @@
       emptyEl = document.getElementById("boardEmpty"),
       secEl = document.getElementById("boardSecondary");
 
-    dpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.dps, "dps");
-    hpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.hps, "hps");
+    dpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.dps, "dps", d.pug.dps);
+    hpsEl2.innerHTML = boardEmpty ? "" : boardHtml(d.hps, "hps", d.pug.hps);
 
     // Tanking board — the toggle button only exists once tank rows with damageTaken exist in scope
     // (data ships since 2026-07-16; pre-fix snapshots have none). If the tab was active and the scope
@@ -2342,7 +2886,7 @@
       tnkBtn = document.getElementById("tankTab");
     var hasTank = !boardEmpty && d.tank && d.tank.length;
     if (tnkBtn) tnkBtn.hidden = !hasTank;
-    if (tnkEl2) tnkEl2.innerHTML = hasTank ? boardHtml(d.tank, "tank") : "";
+    if (tnkEl2) tnkEl2.innerHTML = hasTank ? boardHtml(d.tank, "tank", d.pug.tank) : "";
     if (!hasTank && METRIC === "tank") {
       // flip state directly (no setMetric — it re-renders, and we're inside render)
       METRIC = "dps";
@@ -3181,6 +3725,9 @@
     try {
       if (window.RatsData && RatsData.loadAnalysis) analysis = await RatsData.loadAnalysis();
     } catch (e) {}
+    try {
+      if (window.RatsData && RatsData.loadPugLogs) PUG = await RatsData.loadPugLogs();
+    } catch (e) {}
 
     if (!force && cached && cached.data) {
       // cheap version probe — reuse cache unless Firebase has a newer snapshot
@@ -3406,6 +3953,15 @@
   window.setRaid = setRaid;
   window.setMetric = setMetric;
   window.fetchData = fetchData;
+  window.openPugDlg = openPugDlg;
+  window.closePugDlg = closePugDlg;
+  window.pugPick = pugPick;
+  window.pugFilter = pugFilter;
+  window.pugToggle = pugToggle;
+  window.pugOlder = pugOlder;
+  window.pugOptClick = pugOptClick;
+  window.pugSearchKey = pugSearchKey;
+  window.pugSave = pugSave;
 
   if (IS_OFFICER) {
     var fw = document.getElementById("fetchWrap");

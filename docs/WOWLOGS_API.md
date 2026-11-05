@@ -3,7 +3,10 @@
 What the wow-logs dev **actually shipped** (v1, read-only, Bearer keys). This is the ground-truth
 reference for building `public/rankings/`. Captured from the live docs + `openapi.json` + a real
 `/health` call on 2026-07-06. **Updated 2026-07-16 from the dev's fix batch** (see §8 — deaths,
-damageTaken, `?include=`, monthly counter all shipped; re-verify on the next Fetch).
+damageTaken, `?include=`, monthly counter all shipped; re-verify on the next Fetch). **Updated
+2026-11-05 from the dev's second batch (API 1.1.0, docs + `openapi.json`):** public log detail,
+character log search, per-player `percentiles`, cold-log warm-up, list pages cost 1 — see §7.7–7.9.
+**Not yet tested with our key:** several of those samples are hand-written ("example"), not production.
 
 > ⚠️ This is the **real, shipped** API — it differs from the draft we originally proposed (that old
 > `RANKINGS_API_REQUEST.md` draft has been removed; `.claude/rules/rankings.md` still has the old shape).
@@ -53,9 +56,12 @@ https://api.wow-logs.co.in/api/v1
 | Log-list `limit` max | **5** | 25 |
 
 - **Our key is `free` tier** (confirmed via `/health`: `monthlyLimit 15000`, `rpmLimit 30`, `logsListMax 5`).
-- **Log-list requests cost their `limit` against the RPM budget** — `/logs?limit=5` = 5 of your 30 rpm.
-  Use `/logs` for history; use `/logs/latest` or `/logs/{id}` only when you need full fight payloads.
-- Responses can be server-cached (`meta.cached: true`).
+- **Every request costs 1** against both budgets, including list pages at any `limit` (since 2026-11;
+  they used to cost `limit`) and `POST /logs/{id}/warm`. `limit` only clamps page size.
+- **Failed requests count too** (400, 403, 404, 409, 429); 5xx do not.
+- Use `/logs` for history; use `/logs/latest` or `/logs/{id}` only when you need full fight payloads.
+- Responses can be server-cached (`meta.cached: true`), log detail up to 30 min. `storage`, `warnings`,
+  `guilds[]` and the existence check are always fresh; a deleted or unlisted log is a 404 immediately.
 - **Rate-limit headers** on every response: `X-RateLimit-Limit` (30/min), `X-RateLimit-Remaining` (this
   minute — **DOES** decrement per cost), `X-RateLimit-Cost` (this call's cost), `X-RateLimit-Monthly-Limit`
   (15000), `X-RateLimit-Monthly-Remaining`.
@@ -75,9 +81,10 @@ https://api.wow-logs.co.in/api/v1
 ```
 
 Error codes (+ matching HTTP status): `400 BAD_REQUEST` · `401` (bad/missing key) · `404 NOT_FOUND`
-(unknown or private guild) · `429 RATE_LIMITED` · `500 SERVER_ERROR`.
+(unknown or private guild) · `429 RATE_LIMITED` · `500 SERVER_ERROR`. Warm-up only: `403
+COLD_TIER_FORBIDDEN` · `403 COLD_TIER_QUOTA` · `409 NOT_COLD`. The old `409 COLD_LOG` no longer exists.
 
-## 5. Endpoints (all 11)
+## 5. Endpoints (all 14)
 
 All require `Authorization: Bearer` except `/openapi.json`. `{realm}` = server slug (e.g.
 `warmane-onyxia`), `{guild}` = guild slug (case-insensitive, e.g. `rats`).
@@ -98,9 +105,17 @@ All require `Authorization: Bearer` except `/openapi.json`. `{realm}` = server s
 
 | Method · Path | Returns |
 |---|---|
-| `GET /guilds/{realm}/{guild}/logs?limit=5` | **metadata only** history; paginate with `meta…pagination.nextCursor` (pass as `?cursor=`). Weight = `limit`. |
+| `GET /guilds/{realm}/{guild}/logs?limit=5` | **metadata only** history; paginate with `data.pagination.nextCursor` (pass as `?cursor=`). Costs 1. |
 | `GET /guilds/{realm}/{guild}/logs/latest` | latest log, **full fights + players**. Optional `?include=consumables,interrupts` |
 | `GET /guilds/{realm}/{guild}/logs/{logId}` | one log, full fights + players. Same shape as `/latest`. Optional `?include=…` |
+
+### Any public log, no guild needed (§7.7)
+
+| Method · Path | Returns |
+|---|---|
+| `GET /players/{realm}/{name}/logs?limit=5` | a character's logs (metadata, boss kills only). `{name}` is case-insensitive, URL-encode it |
+| `GET /logs/{logId}` | full log with `guilds[]` instead of `guild`. Optional `?include=…` and `?player=<name>` |
+| `POST /logs/{logId}/warm` | load a cold log for 48 h (§7.9). No body, returns 202 |
 
 ### Guild rankings (Boss Points V2)
 
@@ -138,14 +153,17 @@ data: {
     uploadedAt,            // ISO
     server: { slug, name, serverName },
     raid:   { slug, name, id },
-    size                   // 10 | 25
+    size,                  // 10 | 25
+    storage,               // HOT | COLD | WARMING | WARM block, §7.9
+    logStatus, canonicalLogId, statusMessage   // ONLY on archived duplicates, otherwise absent
   } ],
-  pagination: { limit, nextCursor }   // nextCursor absent on last page — BUT SEE §7.6, cursor cycles
+  pagination: { limit, nextCursor }   // nextCursor null on last page — BUT SEE §7.6, cursor cycles
 }
 ```
 
-> ⚠️ **The history feed does NOT include `logStatus`** — you only learn a log is archived after fetching
-> its full detail. So dedup (§7.5) happens after the per-log fetch, not from the history list.
+> **Since 2026-11 the history feed includes `logStatus`**, so an archived log can be skipped without
+> fetching its detail. If the original is not public or is gone, `logStatus` stays `ARCHIVED` and
+> `canonicalLogId`, `storage`, `raid` and `size` are null.
 
 ### `/logs/latest` and `/logs/{id}` (full)
 
@@ -155,10 +173,11 @@ data: {
   log: {
     logId, logUrl, title, uploadedAt,
     server, raid, size,
-    logStatus,           // null = Original | "ARCHIVED" = superseded, DISCARD it
-    canonicalLogId,      // the Original this archived log was replaced by (null if Original)
-    requestedLogId,      // = the id you asked for
-    effectiveLogId,      // = canonicalLogId when archived, else self
+    logStatus,           // absent/null = Original | "ARCHIVED" = superseded, DISCARD it
+    canonicalLogId,      // the Original this archived log was replaced by
+    requestedLogId,      // only on archived duplicates: the id you asked for
+    effectiveLogId,      // only on archived duplicates: canonicalLogId
+    storage,             // 🆕 2026-11, §7.9
     fights: [ {
       fightId,             // number
       encounter,           // "Northrend Beasts (kill)" — has (kill)/(wipe) suffix
@@ -174,11 +193,13 @@ data: {
         dps, hps,                       // numbers (floats)
         damage, healing,                // numbers
         deaths, damageTaken,            // 🆕 shipped 2026-07-16 — per fight, from summary data (re-verify)
+        percentiles,                    // 🆕 2026-11 { regular, competitive, hardcore }, §7.8
         // activity, overhealing, biggestHit — DO NOT EXIST (always null)
         // with ?include=consumables,interrupts → interrupts + consumables{…} (fixed 2026-07-16; shape TBC — see §8)
       } ]
     } ]
-  }
+  },
+  warnings               // 🆕 2026-11, only when an include was left out, §7.9
 }
 ```
 
@@ -224,8 +245,9 @@ replacement. On the wow-logs site this is the **"Log status" / "Active log"** co
 Real example (RATS, 2026-07-06): `19986 → ARCHIVED → 20458`, `20459 → ARCHIVED → 20922`. So of 11 history
 rows, **only 9 are real**. Build history as: fetch each, drop `ARCHIVED`, keep the rest.
 
-> ⚠️ `logStatus` is **only on the full log detail**, not the `/logs` history list. You must fetch a log
-> to know if it's archived — factor that into the request budget.
+> **Guild path vs public path:** `GET /logs/{id}` on an archived id returns the **original** log (with
+> `requestedLogId`/`effectiveLogId`), or a 404 if the original isn't public. Our guild-path Fetch still
+> checks `logStatus === "ARCHIVED"` and drops it. `/players/…/logs` never lists archived duplicates.
 
 ## 7.6 Pagination cursor bug (reported — dev can't reproduce)
 
@@ -233,7 +255,75 @@ rows, **only 9 are real**. Build history as: fetch each, drop `ARCHIVED`, keep t
 dev couldn't reproduce (2026-07-16) and asked for **guild + cursor + curl** if it happens again — capture
 those during the next Fetch if the loop reappears. Our guard stays regardless (it's harmless): **never
 loop on cursor alone** — dedup by `logId` and stop when a page adds **zero new ids** (or `nextCursor`
-repeats). `apiListLogs` already does this.
+repeats). `apiHistory` already does this. A cursor that can't be read restarts from the newest log.
+
+## 7.7 Any log, no guild (shipped 2026-11)
+
+```jsonc
+// GET /players/warmane-onyxia/Houdiny/logs?limit=2  (hand-written doc sample)
+data: {
+  player: { name, class, realm: { slug, name } },
+  logs: [ {
+    logId, logUrl, title, uploadedAt, server, raid /* null if unrecognised */, size, storage,
+    guilds: [ { id, name, realm } ],              // PUBLIC guilds only; [] = none or private
+    player: { class, specs: [], roles: [], bossKills }   // bossKills = distinct bosses in this log
+  } ],
+  pagination: { limit, nextCursor }
+}
+
+// GET /logs/21704?player=Houdiny  (hand-written doc sample)
+data: {
+  guilds: [ … ],             // replaces the guild-path `guild` block
+  log: { …same as guild log detail… },
+  warnings                   // only if an include was left out
+}
+```
+
+- **Verified live 2026-11-05** (Okanath, 5 logs): list shape matches the sample. Pugs show `guilds: []`,
+  RATS logs show id 124. A Blood DK tank still reports `roles: ["DPS"]`.
+- **Coverage:** only logs where the character has a processed boss kill. Logs with only wipes, trash
+  or unprocessed data are not listed.
+- **Same name on a realm:** the API picks what the site's player search shows: real characters first,
+  then known GUID, then most fights, then newest.
+- **`?player=`** keeps every fight but cuts `players[]` to that character; `[]` when they sat out.
+- **`log.fights[]` here = boss fights only.** Deaths and damageTaken can be null.
+- **Unlisted = invisible:** missing, deleted and unlisted logs all return the same 404.
+- **Public only:** private logs are never returned. `/players/{realm}/{name}` has no profile yet (dev: "soon").
+
+## 7.8 Percentiles (shipped 2026-11)
+
+`fights[].players[].percentiles = { regular, competitive, hardcore }` on guild detail, guild latest
+and public detail. Not a flat `percentile`.
+
+- Taken from the **current season ranking**, per ladder. Healers get HPS percentile, everyone else DPS.
+- The object is always present; a value is null for wipes, unranked fights, ladders the player isn't
+  on, and players without a performance row. A doc cold-log sample shows all three null, so **old
+  logs may have no parse** even though cold logs "always" return percentiles. Treat null as no parse,
+  never as 0.
+- Can lag up to 30 min. Fresh uploads whose ranking hasn't settled aren't cached, so they don't freeze null.
+- Different number from `/rankings`: this is **one fight**, `/rankings` is the season aggregate per boss.
+
+## 7.9 Cold logs & warm-up (shipped 2026-11)
+
+```jsonc
+storage: {
+  state,            // HOT (<3 months) | COLD | WARMING (30-60 s) | WARM (48 h)
+  eventsAvailable,  // true for HOT and WARM
+  warmExpiresAt,    // ISO while WARM, else null
+  message           // null on HOT
+}
+```
+
+- **A cold log still returns everything except `include=`:** metadata, fights, dps/hps, damage,
+  healing, deaths, damageTaken, percentiles. **We only need a warm for consumables/interrupts.**
+- `include=` on a cold log returns **200** with the base data and `warnings[]` (`COLD_LOG_NEEDS_WARM`,
+  `COLD_TIER_FORBIDDEN`, `COLD_TIER_QUOTA`), each `{code, message, logId}`. Warm `warnings[].logId`.
+- **Warm flow:** `POST /logs/{id}/warm` → 202 (`coalesced: true` if already warming) → poll `GET
+  /logs/{id}` every 15 s until `storage.state === "WARM"` → read with `include=`. A GET never warms.
+- **Quota is the key owner's account, not the API tier:** Premium/Guild Premium unlimited; a verified
+  claimed character in the log is free; otherwise **10 loads/month shared with the website**. Warming
+  is free, the load is spent on the first `include=` read per log per 48 h warm.
+- Pro API does not unlock cold logs, and Premium does not raise API limits.
 
 ## 8. Field trust table (free tier)
 
@@ -253,8 +343,10 @@ don't exist. Don't build any widget that needs a ❌ field until the dev adds it
 | `deaths` | players | ✅ **VERIFIED 2026-07-16** (log 23286: real per-fight counts, e.g. 42 deaths in the run) — deaths widgets unlocked |
 | `damageTaken` | players | ✅ **VERIFIED 2026-07-16** — real per-fight totals (tanks ~2-3× a DPS: 2.7M vs ~800K). Powers the squishy award; could sharpen ambiguous-tank detection |
 | `interrupts` | players | ✅ **VERIFIED 2026-07-16** with `?include=interrupts` — real counts (top kicker 20 in one run) |
+| `percentiles{regular,competitive,hardcore}` | players | 🆕 2026-11 — shipped per the docs, **not yet verified on our logs** (see §7.8) |
+| `storage`, `warnings[]` | logs | 🆕 2026-11 — shipped per the docs, not yet verified (see §7.9) |
 | `activity, overhealing, biggestHit` | players | ❌ **always `null`** — dev-confirmed absent |
-| `consumables{}` | players | ⚠️ **shape ships, values DEAD on our logs** (verified 2026-07-16 on 23286 + 22025: block on only ~⅓ of rows, ALL zeros — even known potters). Docs sample (secrets/21704) has real values, so likely only logs processed after the fix get data. Shape: `{potionsUsed, healthstonesUsed, flaskActive, flaskUptime, foodBuff, hadPrepot}` — `potionsUsed` = combat pots only (excludes flasks/food by design, perfect for the Drunkest Rat). **Bug-reported; Drunkest Rat card gates on non-zero data** |
+| `consumables{}` | players | ⚠️ **shape ships, values DEAD on our logs** (verified 2026-07-16 on 23286 + 22025: block on only ~⅓ of rows, ALL zeros — even known potters). Docs sample (secrets/21704) has real values, so likely only logs processed after the fix get data. Shape: `{potionsUsed, healthstonesUsed, flaskActive, flaskUptime, foodBuff, hadPrepot}` — `potionsUsed` = combat pots only (excludes flasks/food by design, perfect for the Drunkest Rat). **Bug-reported; Drunkest Rat card gates on non-zero data.** Dev parked this 2026-11 until we file a new `#bug-reports` entry with a log id. Docs now also list `elixirActive`; `healthstonesUsed` is 0 and `flaskUptime` null in v1 by design |
 
 **Structural facts from real logs:**
 - **Wipes (`kill:false`) carry `players: []`** — no parse. Only kills have player rows.
@@ -362,5 +454,5 @@ averagePercent, bosses{}`.
 - Officer's **🔄 Fetch** (guild-key-gated, key stays in their browser) calls the API, computes, writes
   **one `rankings` snapshot** to Firebase. Visitors read that snapshot once/visit (TTL 30 min), filter client-side.
 - First run / backfill: `/logs?limit=5` (free cap), then `/logs/{id}` per new report. Subsequent: `/logs/latest` only.
-- Respect **30 rpm** — a full backfill of 5 logs = 5 list-weight + 5 detail calls; sequence them, don't burst.
+- Respect **30 rpm** — a full backfill of 5 logs = 1 list page + 5 detail calls; sequence them, don't burst.
 - `SAMPLE` constant in the page stays the fallback while `RANKINGS_URL`/key is empty.

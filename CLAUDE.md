@@ -50,6 +50,7 @@ re-derive the conventions.
 - Realtime DB via unauthenticated REST: `https://rats-tools-default-rtdb.europe-west1.firebasedatabase.app/rats/<node>.json`
 - Nodes: `roster` (encrypted), `history` (encrypted), `vacations` (plain, push-keyed),
   `members` (plain name+class, for the public picker), `gate`, `rankings` (plain snapshot),
+  `pugLogs` (plain, officer-added runs outside the guild: unranked cards on the boards + the raider's profile, never in `rankings`),
   `lore` (plain, push-keyed tales published from the officer Lore tool; the Chronicles page merges it
   with `public/lore/chronicles.json`, which `scripts/build-chronicles.py` builds from `docs/art/chronicles/`).
 - Officer roster/history are **AES-encrypted** (PBKDF2 from the guild key). The gate overlay (`RatsData.gate()`)
@@ -73,7 +74,7 @@ re-derive the conventions.
 
 **`localStorage` keys:** `ratsGuildKey` (officer unlock), `ratsGuild` (decrypted roster cache),
 `ratsHistory` (decrypted history cache), `ratsWebhooks` (named webhook array), `ratsAdminKey`,
-`ratsRankCache` (rankings snapshot + TTL), `ratsStaleNotifiedFor`, plus per-feature seen-counts.
+`ratsRankCache` (rankings snapshot + TTL), `ratsPugCache` (`pugLogs` + TTL), `ratsStaleNotifiedFor`, plus per-feature seen-counts.
 
 ## Formatting rules
 

@@ -13,7 +13,8 @@ globs: ['**/*.html']
 - **Highlight / accent text** uses `var(--accent)`, not blue or green.
 - **Components** (from `ui.css`): `button` (gold) / `button.dark` / `a.btn`·`button.btn` (secondary) / `.icon-btn` /
   `.tbtn` (on-off toggle) / `.del` (danger) / `.card` (panel) / `.pill` / `.seclist` / `.row`·`.frow` / dark fields /
-  `.msg` / `h2.sec`+`.caret`+`.cnt`. Reuse these — don't reinvent a button or panel. Controls are `var(--ctl-h)` tall
+  `.msg` / `h2.sec`+`.caret`+`.cnt` / `.ac` (typeahead: every raider picker is this, with class dot and class-coloured
+  name, never a native `<select>`; see `pugFilter` in `public/rankings/rankings.js`). Reuse these — don't reinvent a button or panel. Controls are `var(--ctl-h)` tall
   (30px); `.icon-btn` is a `var(--ctl-h)` square. Page width is `var(--wrap)` (960) or `.wrap.wide` (1180).
 - **Don't overload a component class name.** `.card` = padded panel; for a different visual give it its own class
   (e.g. gallery `.tile`, files `.ftree`).
