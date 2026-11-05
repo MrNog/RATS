@@ -272,6 +272,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Gem That Flew.png",
+    "title": "Gem That Flew",
+    "caption": "",
+    "date": "2026-11"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Grunho Butler.png",
     "title": "Grunho Butler",
     "caption": "",
