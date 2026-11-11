@@ -257,6 +257,13 @@
   },
   {
     "cat": "lore",
+    "file": "images/lore/Dance for the King.png",
+    "title": "Dance For The King",
+    "caption": "",
+    "date": "2026-11"
+  },
+  {
+    "cat": "lore",
     "file": "images/lore/Empty Shield.png",
     "title": "Empty Shield",
     "caption": "",
