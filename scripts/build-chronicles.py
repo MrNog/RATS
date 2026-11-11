@@ -41,6 +41,7 @@ ART = {
     "shockaa-the-cleansing": "images/lore/Shockaa Cleansing.png",
     "lich-king-the-last-three": "images/lore/Last Three.png",
     "blood-quickening-the-whole-room": "images/lore/Blood Quickening Whole Room.png",
+    "mongoloide-a-dance-for-the-king": "images/lore/Dance for the King.png",
     "blood-quickening-the-flames": "images/lore/Blood Queen Flames.png",
     "blood-queen-the-dark-two": "images/lore/Blood Queen Dark Two.png",
     "came-feasted-fled": "images/lore/Came Feasted Fled.png",
